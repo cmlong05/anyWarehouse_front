@@ -1,6 +1,8 @@
 <script lang="ts">
-	// Accept 'data' as a prop with a 'categories' property
-	export let data: { categories: Array<{ id: number; name: string }> };
+	// 使用 $props() 解构并类型化 props
+	let { data } = $props<{
+		categories: Array<{ id: number; name: string }>
+	}>();
 </script>
 
 <h1>Categories</h1>
