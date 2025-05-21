@@ -1,8 +1,11 @@
-<h1>Categories</h1>
-<p>this is the Categories page.</p>
+<script lang="ts">
+	// Accept 'data' as a prop with a 'categories' property
+	export let data: { categories: Array<{ id: number; name: string }> };
+</script>
 
+<h1>Categories</h1>
 <ul>
-	<li><a href="/categories/one">one</a></li>
-	<li><a href="/categories/two">two</a></li>
-	<li><a href="/categories/three">three</a></li>
+	{#each data.categories as { id, name }}
+		<li><a href={`/categories/${id}`}>{name}</a></li>
+	{/each}
 </ul>
