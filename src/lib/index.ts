@@ -29,9 +29,28 @@ export interface CategoryItem {
     components: Array<any>;
 }
 
-// 分类响应类型
-export interface CategoryResponse {
+// 分类响应类型，修改命名为 CategoryData
+export interface CategoryData {
     id: number;
     name: string;
     items: CategoryItem[];
+}
+
+export interface Container {
+    id: number;
+    fastCode: string;
+    mark: string;
+    image: null | string;
+    volume: number;
+    zz_volume: number;
+    a_volume: number;
+    zz_weight: number;
+    total_weight: number;
+    date_added: string;
+    lft: number;
+    rght: number;
+    tree_id: number;
+    level: number;
+    parent: null | number;
+    barcode: null | string;
 }

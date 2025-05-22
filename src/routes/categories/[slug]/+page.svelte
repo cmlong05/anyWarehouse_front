@@ -1,6 +1,7 @@
 <script lang="ts">
-    import type { CategoryResponse } from '$lib';
-    let { data } = $props<{ category_items: CategoryResponse }>();
+    // 修改导入的类型名
+    import type { CategoryData } from '$lib';
+    let { data } = $props<{ category_items: CategoryData }>();
 </script>
 
 <h1>{data.category_items.name}</h1>
