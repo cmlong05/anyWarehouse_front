@@ -1,11 +1,20 @@
 <script>
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
 <div class="layout">
 	<main>
 		{@render children()}
 	</main>
+
+	<aside>
+		<h2>类目</h2>
+		<ul>
+			{#each data.categories as { id, name }}
+				<li><a href={`/categories/${id}`}>{name}</a></li>
+			{/each}
+		</ul>
+	</aside>
 </div>
 
 <style>
