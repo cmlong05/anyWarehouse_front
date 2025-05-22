@@ -1,8 +1,11 @@
+import { error } from '@sveltejs/kit';
+import { API_BASE_URL } from '$lib/config';
+
 /** @type {import('@sveltejs/kit').ServerLoad} */
 export async function load({ fetch }) {
-    const res = await fetch('http://10.10.10.1:8080/product/api/categories/');
+    const res = await fetch(`${API_BASE_URL}/product/api/categories/`);
     if (!res.ok) {
-        throw new Error('Failed to fetch categories');
+        throw error(res.status, 'Failed to fetch categories');
     }
     const categories = await res.json();
     return { categories };
