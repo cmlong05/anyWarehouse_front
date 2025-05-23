@@ -54,3 +54,10 @@ export interface Container {
     parent: null | number;
     barcode: null | string;
 }
+
+
+export interface Items {
+    id: number;
+    SKU: string;
+    name: string;
+}
