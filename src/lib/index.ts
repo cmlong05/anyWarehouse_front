@@ -3,6 +3,8 @@
 export interface Item {
     id: number;
     SKU: string;
+    SKU_zite: string;
+    SKU_A: string;
     name: string;
     description: string;
     image: string;
@@ -11,6 +13,11 @@ export interface Item {
     s_volume: number;
     b_Price: string;
     currency: string;
+    in_fee: null;
+    date_added: string;
+    barcode: null;
+    category: number[];
+    components: any[];
 }
 
 // 分类响应类型，修改命名为 CategoryData
