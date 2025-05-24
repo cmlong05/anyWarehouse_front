@@ -1,6 +1,6 @@
 // place files you want to import through the `$lib` alias in this folder.
 // 分类物品类型
-export interface CategoryItem {
+export interface Item {
     id: number;
     SKU: string;
     name: string;
@@ -11,29 +11,13 @@ export interface CategoryItem {
     s_volume: number;
     b_Price: string;
     currency: string;
-    in_fee: null | string;
-    date_added: string;
-    barcode: null | string;
-    category: Array<{
-        id: number;
-        name: string;
-        top_category: boolean;
-        description: string;
-        date_added: string;
-        lft: number;
-        rght: number;
-        tree_id: number;
-        level: number;
-        parent: number;
-    }>;
-    components: Array<any>;
 }
 
 // 分类响应类型，修改命名为 CategoryData
 export interface CategoryData {
     id: number;
     name: string;
-    items: CategoryItem[];
+    items: Item[];
 }
 
 export interface Container {

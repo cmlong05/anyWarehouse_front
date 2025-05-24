@@ -9,4 +9,4 @@
 <!-- 修改这里，显示具体属性 -->
 <h1>{data.container.fastCode}</h1>
 <!-- 由于 data.container 是单个对象，不是数组，不需要使用 each 循环 -->
-<li><a href={`/items/${data.container.id}`}>{data.container.fastCode}</a> {data.container.mark} </li>
+<p>{data.container.mark} </p>
