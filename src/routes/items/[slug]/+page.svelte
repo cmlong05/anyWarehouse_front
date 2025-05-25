@@ -65,11 +65,11 @@
             {#each data.categoryItemsArray as category}
                 <div>
                     <p><strong>{category.name}</strong></p>
-                    {#each category.items as siblingItem}
+                    {#each category.items as cateItem}
                         <div>
                             <!-- 考虑此处是否可以优化 -->
-                            {#if siblingItem.SKU != data.item.SKU}
-                                <p> {siblingItem.SKU} {siblingItem.name}</p>
+                            {#if cateItem.SKU != data.item.SKU}
+                                <p><a href="/items/{cateItem.id}"> {cateItem.SKU}</a> {cateItem.name}</p>
                             {/if}
                         </div>
                     {/each}
