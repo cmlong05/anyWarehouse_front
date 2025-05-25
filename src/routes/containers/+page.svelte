@@ -9,9 +9,7 @@
 <ul>
     {#each data.containers as { id, fastCode, mark }}
         <li>
-            <a href={`/containers/${id}`}>
-                 {fastCode}, {mark}
-            </a>
+            <p><a href={`/containers/${id}`}>{fastCode}</a> {mark}</p>
         </li>
     {/each}
 </ul>
