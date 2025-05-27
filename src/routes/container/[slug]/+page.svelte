@@ -1,35 +1,37 @@
 <script lang="ts">
-    export let data;
-
-    // 为 data 定义类型，假设 container 是一个对象，可根据实际情况调整
-    type DataWithContainer = {
-        container: any;
-    };
-
-    const { container } = data as DataWithContainer;
+    import type { ContainerResponse } from '$lib';
+    let { data } = $props<{ containerRes: ContainerResponse }>();
 </script>
 
-{#if container}
+{#if data.containerRes.ancestors.length > 0}
     <!-- 导航格 -->
     <div class="navigation">
         <h2>导航格</h2>
-        {#each container.ancestors as ancestor}
-            <span>{ancestor}</span>
+        {#each data.containerRes.ancestors as ancestor, i}
+            <a href="/container/{ancestor.fastCode}">{ancestor.fastCode}</a>
+            {#if i < data.containerRes.ancestors.length - 1}
+                <span>|</span>
+            {/if}
         {/each}
     </div>
 
     <!-- 主内容 -->
     <div class="main-content">
         <h2>子容器</h2>
-        {#each container.descendants as descendant}
+        {#each data.containerRes.descendants as descendant}
             <div>
-                <p>快速代码: {descendant.fastCode}</p>
-                <p>标记: {descendant.mark}</p>
+                <!-- 添加链接 -->
+                <p>
+                    <a href={`/container/${descendant.fastCode}`} data-sveltekit-reload>
+                        {descendant.fastCode}
+                    </a>
+                    标记: {descendant.mark}
+                </p>
             </div>
         {/each}
 
         <h2>存储信息</h2>
-        {#each container.storages as storage}
+        {#each data.containerRes.storages as storage}
             <div>
                 <p>SKU: {storage.item_SKU}</p>
                 <p>名称: {storage.item_name}</p>
@@ -41,7 +43,7 @@
     <!-- 侧栏 -->
     <div class="sidebar">
         <h2>兄弟容器</h2>
-        {#each container.siblings as sibling}
+        {#each data.containerRes.siblings as sibling}
             <div>
                 <p>快速代码: {sibling.fastCode}</p>
                 <p>标记: {sibling.mark}</p>
