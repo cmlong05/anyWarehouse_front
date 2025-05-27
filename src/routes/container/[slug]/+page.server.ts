@@ -1,8 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
-
 import type { ContainerResponse } from '$lib';
-// 定义响应数据的类型
 
 /** @type {import('@sveltejs/kit').ServerLoad<{ slug: string }>} */
 export async function load({ params, fetch }): Promise<{ containerRes: ContainerResponse }> {

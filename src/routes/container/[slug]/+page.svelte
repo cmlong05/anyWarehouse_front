@@ -1,8 +1,6 @@
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
     let { data } = $props<{ containerRes: ContainerResponse }>();
-
-    console.log('data.containerRes:', data.containerRes);
 </script>
 
 <!-- 导航格 -->
@@ -11,7 +9,7 @@
     {#each data.containerRes.ancestors as ancestor, i}
         <a href="/container/{ancestor.fastCode}">{ancestor.fastCode}</a>
         {#if i < data.containerRes.ancestors.length - 1}
-            <span>|</span>
+            <span>></span>
         {/if}
     {/each}
 </div>
