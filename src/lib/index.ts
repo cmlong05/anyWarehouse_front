@@ -47,6 +47,7 @@ export interface ContainerDetail {
 }
 
 export interface StorageItem {
+    item_id: number;
     item_SKU: string;
     item_name: string;
     quantity: number;

@@ -3,32 +3,6 @@
     let { data } = $props<{ item: Item; categoryItemsArray: CategoryData[] }>();
 </script>
 
-<style>
-    .main-container {
-        display: flex;
-        gap: 20px;
-    }
-    .item-details {
-        flex: 1;
-    }
-    .sibling-items {
-        flex: 0 0 30%;
-    }
-    .item-container {
-        display: flex;
-        gap: 20px;
-    }
-    .image-container {
-        flex: 0 0 30%;
-    }
-    .info-container {
-        flex: 1;
-    }
-    .text-p {
-        white-space: pre-wrap; /* 添加这行 */
-    }
-</style>
-
 {#if data.item}
     <div class="main-container">
         <div class="item-details">
@@ -80,3 +54,29 @@
 {:else}
     <p>暂无商品数据</p>
 {/if}
+
+<style>
+    .main-container {
+        display: flex;
+        gap: 20px;
+    }
+    .item-details {
+        flex: 1;
+    }
+    .sibling-items {
+        flex: 0 0 30%;
+    }
+    .item-container {
+        display: flex;
+        gap: 20px;
+    }
+    .image-container {
+        flex: 0 0 30%;
+    }
+    .info-container {
+        flex: 1;
+    }
+    .text-p {
+        white-space: pre-wrap; /* 添加这行 */
+    }
+</style>

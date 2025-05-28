@@ -21,7 +21,7 @@
         <div>
             <!-- 添加链接 -->
             <p>
-                <a href={`/container/${descendant.fastCode}`} data-sveltekit-reload>
+                <a href={`/container/${descendant.fastCode}`}>
                     {descendant.fastCode}
                 </a>
                 标记: {descendant.mark}
@@ -32,7 +32,7 @@
     <h2>存储信息</h2>
     {#each data.containerRes.storages as storage}
         <div>
-            <p>SKU: {storage.item_SKU}</p>
+            <a href={`/items/${storage.item_id}`}>{storage.item_SKU}</a>
             <p>名称: {storage.item_name}</p>
             <p>数量: {storage.quantity}</p>
         </div>
@@ -41,11 +41,14 @@
 
 <!-- 侧栏 -->
 <div class="sidebar">
-    <h2>兄弟容器</h2>
+    <h2>相邻</h2>
     {#each data.containerRes.siblings as sibling}
         <div>
-            <p>快速代码: {sibling.fastCode}</p>
-            <p>标记: {sibling.mark}</p>
+            <p><a href={`/container/${sibling.fastCode}`} >
+                    {sibling.fastCode}
+                </a>
+                {sibling.mark}
+            </p>
         </div>
     {/each}
 </div>
