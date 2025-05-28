@@ -9,7 +9,7 @@
     {#each data.containerRes.ancestors as ancestor, i}
         <a href="/container/{ancestor.fastCode}">{ancestor.fastCode}</a>
         {#if i < data.containerRes.ancestors.length - 1}
-            <span>></span>
+            <span> &gt;&thinsp; </span>
         {/if}
     {/each}
 </div>
@@ -36,9 +36,11 @@
     <h2>存储信息</h2>
     {#each data.containerRes.storages as storage}
         <div>
-            <a href={`/items/${storage.item_id}`}>{storage.item_SKU}</a>
-            <p>名称: {storage.item_name}</p>
-            <p>数量: {storage.quantity}</p>
+            <p>{storage.quantity} *
+                <a href={`/items/${storage.item_id}`}>{storage.item_SKU}
+                </a> {storage.item_name}
+            </p>
+            
         </div>
     {/each}
 </div>
