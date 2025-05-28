@@ -7,7 +7,7 @@
 	<a href="/">home</a>
 	<a href="/container/Office" >Container</a>
 	<a href="/items">Items</a>
-	<a href="/categories">Categories</a>
+	<a href="/categories/4">Categories</a>
 </nav> 
 
 {@render children()}
