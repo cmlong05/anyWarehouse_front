@@ -16,10 +16,14 @@
 
 <!-- 主内容 -->
 <div class="main-content">
+
+    <h2>本容器</h2>
+    <p><strong>编号：</strong>{data.containerRes.container.fastCode}</p>
+    <p>{data.containerRes.container.mark}</p>
+
     <h2>子容器</h2>
     {#each data.containerRes.descendants as descendant}
         <div>
-            <!-- 添加链接 -->
             <p>
                 <a href={`/container/${descendant.fastCode}`}>
                     {descendant.fastCode}

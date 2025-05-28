@@ -27,7 +27,7 @@ export interface CategoryData {
     items: Item[];
 }
 
-export interface ContainerDetail {
+export interface container {
     id: number;
     fastCode: string;
     mark: string;
@@ -45,35 +45,30 @@ export interface ContainerDetail {
     parent: number | null;
     barcode: string | null;
 }
-
-export interface StorageItem {
+export interface storages {
     item_id: number;
     item_SKU: string;
     item_name: string;
     quantity: number;
 }
-
-export interface DescendantItem {
-    fastCode: string;
-    mark: string;
-}
-
-export interface SiblingItem {
-    fastCode: string;
-    mark: string;
-}
-
 export interface Ancestors {
     fastCode: string;
     mark: string;
 }
-
+export interface Descendants {
+    fastCode: string;
+    mark: string;
+}
+export interface SiblingItem {
+    fastCode: string;
+    mark: string;
+}
 export interface ContainerResponse {
-    container: ContainerDetail;
-    storages: StorageItem[];
+    mainContainer: container;
     ancestors: Ancestors[];
-    descendants: DescendantItem[];
+    descendants: Descendants[];
     siblings: SiblingItem[];
+    storageItem: storages[];
 }
 
 export interface Items {
