@@ -6,6 +6,9 @@
 <!-- 导航格 -->
 <div class="navigation">
     <h2>导航格</h2>
+    {#if data.containerRes.ancestors.length === 0}
+        <p>当前为最顶级容器</p>
+    {/if}
     {#each data.containerRes.ancestors as ancestor, i}
         <a href="/container/{ancestor.fastCode}">{ancestor.fastCode}</a>
         {#if i < data.containerRes.ancestors.length - 1}
@@ -21,22 +24,23 @@
     <p><strong>编号：{data.containerRes.container.fastCode}</strong></p>
     <p>{data.containerRes.container.mark}</p>
     <p>条形码：{data.containerRes.container.barcode}</p>
-    <div style="display: flex; align-items: center; gap: 1em; margin: 1em 0;">
+    <div style="align-items: center; gap: 1em; margin: 1em 0;">
         <span>
-            容量剩余：
-            <strong>{data.containerRes.container.a_volume}</strong>
-            /
-            <strong>{data.containerRes.container.volume}</strong>
+            容量情况：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
         </span>
         <meter
-            value={data.containerRes.container.a_volume}
-            min="0"
-            max={data.containerRes.container.volume}
-            style="
-                display: block;
-                width: {Math.max(100, data.containerRes.container.volume / 100)}px; 
-                <!-- 需要调整 -->
-                height: {Math.max(1.5, 66666/ 10000)}em;"
+        value={data.containerRes.container.a_volume}
+        min="0"
+        max={data.containerRes.container.volume}
+        aria-valuetext="75%"
+
+        style="
+            display: block;
+            max-width: 100%;
+            width: calc(min(100%, {Math.max(100, data.containerRes.container.volume / 100)}px)); 
+            height: 1.5em;
+            box-sizing: border-box;
+            "
         ></meter>
     </div>
 
