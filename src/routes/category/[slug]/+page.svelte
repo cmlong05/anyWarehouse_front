@@ -7,21 +7,27 @@
 
 <!-- 导航格 -->
 <div class="navigation">
-    {#if data.category_details.ancestors.length === 0}
-        <p>当前为最顶级容器</p>
-    {/if}
+    <span>导航：</span>
     {#each data.category_details.ancestors as ancestor, i}
         <a href="/category/{ancestor.id}">{ancestor.name}</a>
-        {#if i < data.category_details.ancestors.length - 1}
+        {#if i < data.category_details.ancestors.length }
             <span> &gt;&thinsp; </span>
         {/if}
     {/each}
+    <span>{data.category_details.category.name} </span>
 </div>
 
+<div class="main-content">
+    <h2>子分类</h2>
+    <ul>
+        {#each data.category_details.descendants as child} 
+            <li><a href={`/category/${child.id}`} >{child.name}</a></li>
+        {/each}
+    </ul>
+</div>
 
 <div class="main-content">
-    <h1>{data.category_details.category.name}</h1>
-    <h2>物品列表</h2>
+    <h2>物品</h2>
     <ul>
         {#each data.category_details.items as { id, SKU, name }}
             <li><a href={`/items/${id}`}>{SKU}</a> {name} </li>
@@ -31,7 +37,7 @@
 
 <!-- 侧栏 -->
 <div class="sidebar">
-    <h2>相邻</h2>
+    <h2>相邻分类</h2>
     {#each data.category_details.siblings as sibling}
         <div>
             <p><a href={`/category/${sibling.id}`} >

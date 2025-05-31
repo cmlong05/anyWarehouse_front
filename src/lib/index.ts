@@ -42,6 +42,7 @@ export interface category {
 export interface CategoryData {
     category: category;
     ancestors: category[];
+    descendants: category[];
     items: Item[];
     siblings: category[];
 }
