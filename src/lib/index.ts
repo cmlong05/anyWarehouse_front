@@ -19,12 +19,31 @@ export interface Item {
     category: number[];
     components: any[];
 }
+export interface Items {
+    id: number;
+    SKU: string;
+    name: string;
+}
 
-// 分类响应类型，修改命名为 CategoryData
-export interface CategoryData {
+
+export interface category {
     id: number;
     name: string;
+    top_category: boolean;
+    description: string;
+    date_added: string;
+    lft: number;
+    rght: number;
+    tree_id: number;
+    level: number;
+    parent: number;
+}
+// 分类响应类型，修改命名为 CategoryData
+export interface CategoryData {
+    category: category;
+    ancestors: category[];
     items: Item[];
+    siblings: category[];
 }
 
 export interface container {
@@ -71,8 +90,3 @@ export interface ContainerResponse {
     storageItem: storages[];
 }
 
-export interface Items {
-    id: number;
-    SKU: string;
-    name: string;
-}
