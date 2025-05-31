@@ -86,19 +86,3 @@
         </div>
     {/each}
 </div>
-
-<style>
-    .navigation {
-        margin-bottom: 20px;
-    }
-
-    .main-content {
-        float: left;
-        width: 70%;
-    }
-
-    .sidebar {
-        float: right;
-        width: 25%;
-    }
-</style>
