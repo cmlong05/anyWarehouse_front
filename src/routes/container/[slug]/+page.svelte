@@ -13,7 +13,6 @@
         {/if}
     {/each}
     <span>{data.containerRes.container.fastCode}</span>
-
 </div>
 
 <!-- 主内容 -->

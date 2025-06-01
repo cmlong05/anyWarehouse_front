@@ -268,7 +268,6 @@ ul.todos button:hover {
     opacity: 1;
 }
 
-
 /* test style for layout */
 .navigation {
     margin-bottom: 20px;
@@ -282,4 +281,22 @@ ul.todos button:hover {
 .sidebar {
     float: right;
     width: 25%;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-container {
+    display: flex;
+    gap: 20px;
+}
+.image-container {
+    flex: 0 0 30%;
+}
+.info-container {
+    flex: 1;
+}
+.text-p {
+    white-space: pre-wrap; /* 添加这行 */
 }
