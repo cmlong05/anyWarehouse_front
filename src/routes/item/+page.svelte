@@ -7,7 +7,7 @@
 {#if data.items.length > 0}
     <ul>
         {#each data.items as { id, SKU, name }}
-            <li><a href={`/items/${id}`}>{SKU}</a> - {name}</li>
+            <li><a href={`/item/${id}`}>{SKU}</a> - {name}</li>
         {/each}
     </ul>
 {:else}

@@ -7,7 +7,7 @@ import type { Item, CategoryData } from '$lib';
 export async function load({ params, fetch }: { params: { slug: string }, fetch: typeof globalThis.fetch }): Promise<{ item: Item; categoryItemsArray: CategoryData[] }> {
     const { slug } = params;
     // 获取当前物品信息
-    const itemRes = await fetch(`${API_BASE_URL}/product/api/items/${slug}/`);
+    const itemRes = await fetch(`${API_BASE_URL}/product/api/item/${slug}/`);
     if (!itemRes.ok) {
         throw error(itemRes.status, 'Failed to fetch item');
     }

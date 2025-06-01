@@ -18,7 +18,7 @@ interface ItemResponse {
  * @returns 包含商品数据的对象
  */
 export async function load({ fetch }: ServerLoad): Promise<{ items: ItemResponse }> {
-    const res: Response = await fetch(`${API_BASE_URL}/product/api/items/`);
+    const res: Response = await fetch(`${API_BASE_URL}/product/api/item/`);
     if (!res.ok) {
         throw error(res.status, 'Failed to fetch items');
     }

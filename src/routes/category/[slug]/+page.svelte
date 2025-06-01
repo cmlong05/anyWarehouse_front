@@ -29,7 +29,7 @@
     <h2>物品</h2>
     <ul>
         {#each data.category_details.items as { id, SKU, name }}
-            <li><a href={`/items/${id}`}>{SKU}</a> {name} </li>
+            <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
         {/each}
     </ul>
 </div>
