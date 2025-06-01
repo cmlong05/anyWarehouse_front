@@ -17,6 +17,7 @@
     <span>{data.category_details.category.name} </span>
 </div>
 
+<!-- 主内容 -->
 <div class="main-content">
     <h2>子分类</h2>
     <ul>
@@ -24,9 +25,7 @@
             <li><a href={`/category/${child.id}`} >{child.name}</a></li>
         {/each}
     </ul>
-</div>
 
-<div class="main-content">
     <h2>物品</h2>
     <ul>
         {#each data.category_details.items as { id, SKU, name }}

@@ -5,16 +5,15 @@
 
 <!-- 导航格 -->
 <div class="navigation">
-    <h2>导航格</h2>
-    {#if data.containerRes.ancestors.length === 0}
-        <p>当前为最顶级容器</p>
-    {/if}
+    <span>导航：</span>
     {#each data.containerRes.ancestors as ancestor, i}
         <a href="/container/{ancestor.fastCode}">{ancestor.fastCode}</a>
-        {#if i < data.containerRes.ancestors.length - 1}
+        {#if i < data.containerRes.ancestors.length}
             <span> &gt;&thinsp; </span>
         {/if}
     {/each}
+    <span>{data.containerRes.container.fastCode}</span>
+
 </div>
 
 <!-- 主内容 -->
