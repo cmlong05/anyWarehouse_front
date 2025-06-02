@@ -1,5 +1,11 @@
 // place files you want to import through the `$lib` alias in this folder.
 // 分类物品类型
+export interface ItemSet{
+    item: Item;
+    categories: category[];
+    anscestors: category[];
+}
+
 export interface Item {
     id: number;
     SKU: string;
@@ -19,12 +25,12 @@ export interface Item {
     category: number[];
     components: any[];
 }
+
 export interface Items {
     id: number;
     SKU: string;
     name: string;
 }
-
 
 export interface category {
     id: number;
