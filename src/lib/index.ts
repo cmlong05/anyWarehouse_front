@@ -1,11 +1,6 @@
 // place files you want to import through the `$lib` alias in this folder.
-// 分类物品类型
-export interface ItemSet{
-    item: Item;
-    categories: category[];
-    anscestors: category[];
-}
 
+// 物品
 export interface Item {
     id: number;
     SKU: string;
@@ -25,13 +20,18 @@ export interface Item {
     category: number[];
     components: any[];
 }
-
 export interface Items {
     id: number;
     SKU: string;
     name: string;
 }
+export interface ItemSet{
+    item: Item;
+    categories: CategoryData[];
+}
 
+
+// 分类
 export interface category {
     id: number;
     name: string;
@@ -53,6 +53,9 @@ export interface CategoryData {
     siblings: category[];
 }
 
+
+
+// 容器类型
 export interface container {
     id: number;
     fastCode: string;
@@ -77,23 +80,23 @@ export interface storages {
     item_name: string;
     quantity: number;
 }
-export interface Ancestors {
+export interface ContainerAncestors {
     fastCode: string;
     mark: string;
 }
-export interface Descendants {
+export interface ContainerDescendants {
     fastCode: string;
     mark: string;
 }
-export interface SiblingItem {
+export interface ContainerSibling {
     fastCode: string;
     mark: string;
 }
 export interface ContainerResponse {
     mainContainer: container;
-    ancestors: Ancestors[];
-    descendants: Descendants[];
-    siblings: SiblingItem[];
+    ancestors: ContainerAncestors[];
+    descendants: ContainerDescendants[];
+    siblings: ContainerSibling[];
     storageItem: storages[];
 }
 
