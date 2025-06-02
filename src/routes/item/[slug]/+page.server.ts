@@ -1,6 +1,5 @@
 import { error } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
-
 import type { ItemSet } from '$lib';
 
 /** @type {import('@sveltejs/kit').ServerLoad} */
