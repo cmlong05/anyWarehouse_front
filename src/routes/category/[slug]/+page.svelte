@@ -39,7 +39,7 @@
 
 <!-- 侧栏 -->
 <div class="sidebar">
-    <h2>相邻分类</h2>
+    <h3>相邻分类</h3>
     {#each data.category_details.siblings as sibling}
         <div>
             <p>

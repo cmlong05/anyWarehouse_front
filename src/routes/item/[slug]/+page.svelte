@@ -41,7 +41,7 @@
 </div>
 
 <div class="sidebar">
-    <h2>同级物品</h2>
+    <h3>同级物品</h3>
     {#each data.itemDetail.categories as category}
         <div>
             <p><strong>{category.name}</strong></p>
