@@ -6,7 +6,7 @@
 
 
 <!-- 导航格 -->
-<div class="navigation">
+<nav class="navigation">
     <span>导航：</span>
     {#each data.category_details.ancestors as ancestor, i}
         <a href="/category/{ancestor.id}">{ancestor.name}</a>
@@ -15,11 +15,11 @@
         {/if}
     {/each}
     <span>{data.category_details.category.name} </span>
-</div>
+</nav>
 
 <!-- 主内容 -->
-<div class="main-content">
-    <div class="main-content">
+<div class="div-left-70">
+    <div class="div-full">
         <ul>
             <h3>子分类</h3>
             {#each data.category_details.descendants as child} 
@@ -27,7 +27,7 @@
             {/each}
         </ul>
     </div>
-    <div class="main-content">
+    <div class="div-full">
         <ul>
             <h3>物品</h3>
             {#each data.category_details.items as { id, SKU, name }}
@@ -38,7 +38,7 @@
 </div>
 
 <!-- 侧栏 -->
-<div class="sidebar">
+<div class="div-right-25">
     <h3>相邻分类</h3>
     {#each data.category_details.siblings as sibling}
         <div>

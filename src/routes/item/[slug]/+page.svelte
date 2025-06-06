@@ -30,7 +30,7 @@
             loading="lazy" 
         />
     </div>
-    <div class="attribute-container">
+    <div class="div-right">
         <p>{data.itemDetail.item.name}</p>
         <p><strong>SKU:</strong> {data.itemDetail.item.SKU}</p>
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
@@ -38,7 +38,7 @@
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
         <p><strong>组件:</strong> {data.itemDetail.item.components.length > 0 ? data.itemDetail.item.components.join(', ') : '无组件'}</p>
     </div>
-    <div class="detail-description">
+    <div class="div-full">
         <p class = "text-p">{data.itemDetail.item.description || '无描述'}</p>
     </div>
 </div>
