@@ -1,21 +1,21 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
     import { API_BASE_URL } from '$lib/config';
+    import { createLogger } from 'vite';
     let { data } = $props<{ itemDetail: ItemSet }>();
 </script>
 
 <!-- 导航格 -->
 <div class="navigation">
-    <span>导航：</span>
     {#each data.itemDetail.categories as category}
         {#each category.ancestors as ancestor, i}
-            <a href="/container/{ancestor.id}">{ancestor.name}</a>
+            <a href="/category/{ancestor.id}">{ancestor.name}</a>
             {#if i < category.ancestors.length}
                 <span> &gt;&thinsp; </span>
             {/if}
         {/each}
+    <a href="/category/{category.category.id}">{category.category.name} </a>
     {/each}    
-    <span></span>
 </div>
 
 <!-- 主内容 -->
@@ -28,15 +28,16 @@
             loading="lazy" 
         />
     </div>
-    <div class="info-container">
+    <div class="attribute-container">
         <p>{data.itemDetail.item.name}</p>
         <p><strong>SKU:</strong> {data.itemDetail.item.SKU}</p>
-        <p class = "text-p">{data.itemDetail.item.description || '无描述'}</p>
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
-        <p><strong>分类:</strong> {data.itemDetail.item.category.join(', ')}</p>
         <p><strong>组件:</strong> {data.itemDetail.item.components.length > 0 ? data.itemDetail.item.components.join(', ') : '无组件'}</p>
+    </div>
+    <div class="detail-description">
+        <p class = "text-p">{data.itemDetail.item.description || '无描述'}</p>
     </div>
 </div>
 
