@@ -18,7 +18,7 @@
 <!-- 主内容 -->
 <div class="div-left-70">
     <div class="div-full ">
-        <p style="align-items: center; gap: 1em; margin: 1em 0;">
+        <p style="align-items: center; gap: 1em; margin:0;">
             <span>
                 容量情况：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
             </span>
@@ -39,8 +39,7 @@
         </p>
     </div>
     <div class="div-full">
-        <p><strong>编号：{data.containerRes.container.fastCode}</strong></p>
-        <p>{data.containerRes.container.mark}</p>
+        <p><strong>{data.containerRes.container.fastCode}</strong> {data.containerRes.container.mark}</p>
         <p>条形码：{data.containerRes.container.barcode}</p>
     </div>
     <div class="div-full">
@@ -51,7 +50,7 @@
                     <a href={`/container/${descendant.fastCode}`}>
                         {descendant.fastCode}
                     </a>
-                    标记: {descendant.mark}
+                    {descendant.mark}
                 </li>
             {/each}
         </ul>
@@ -63,9 +62,12 @@
                 <p>无存储</p>
             {:else}
                 {#each data.containerRes.storages as storage}
-                    <li>{storage.quantity} *
-                            <a href={`/items/${storage.item_id}`}>{storage.item_SKU}
-                            </a> {storage.item_name}
+                    <li>
+                        <span class="width26">
+                            {storage.quantity}
+                        </span> *
+                        <a href={`/items/${storage.item_id}`}>{storage.item_SKU}
+                        </a> {storage.item_name}
                     </li>
                 {/each}
             {/if}
@@ -78,10 +80,14 @@
     <h3>相邻</h3>
     {#each data.containerRes.siblings as sibling}
         <div>
-            <p><a href={`/container/${sibling.fastCode}`} >
-                    {sibling.fastCode}
-                </a>
-                {sibling.mark}
+            <p>
+                {#if sibling.fastCode == data.containerRes.container.fastCode}
+                    <strong>{sibling.fastCode}</strong>
+                {:else}
+                    <a href={`/container/${sibling.fastCode}`} >
+                        {sibling.fastCode}
+                    </a>
+                {/if}
             </p>
         </div>
     {/each}

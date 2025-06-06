@@ -279,6 +279,11 @@ progress:last-child {
 .error {
     color: red;
 }
+.width26 {
+    display: inline-block;
+    width: 26px;
+    text-align: right;
+}
 /* basic class end*/
 
 /*  */
