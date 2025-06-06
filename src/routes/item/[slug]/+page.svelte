@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
     import { API_BASE_URL } from '$lib/config';
-    import { createLogger } from 'vite';
     let { data } = $props<{ itemDetail: ItemSet }>();
 </script>
 
