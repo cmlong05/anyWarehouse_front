@@ -282,11 +282,11 @@ ul.todos button:hover {
 }
 
 .image-container {
-    /* 移除原有的 flex 属性 */
+    width: 35%;
 }
 
 .attribute-container  {
-    /* 移除原有的 flex 属性 */
+    float: right;
 }
 .detail-description {
     flex: 0 0 100%;
