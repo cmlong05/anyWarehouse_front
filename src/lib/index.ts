@@ -28,6 +28,7 @@ export interface Items {
 export interface ItemSet{
     item: Item;
     categories: CategoryData[];
+    storages: storageContainer[];
 }
 
 
@@ -53,7 +54,32 @@ export interface CategoryData {
     siblings: category[];
 }
 
+// 定义 storagestandard 接口
+export interface storagestandard {
+    id: number;
+    quantity: number;
+    text: string;
+    sample: boolean;
+    date_added: string;
+    volume: number;
+    weight: number;
+    container: number;
+    item: number;
+}
+export interface storageItem {
+    item_id: number;
+    item_SKU: string;
+    item_name: string;
+    quantity: number;
+}
 
+// 定义 storageContainer 接口
+export interface storageContainer {
+    container_id: number;
+    container_fastCode: string;
+    mark: string;
+    quantity: number;
+}
 
 // 容器类型
 export interface container {
@@ -74,29 +100,16 @@ export interface container {
     parent: number | null;
     barcode: string | null;
 }
-export interface storages {
-    item_id: number;
-    item_SKU: string;
-    item_name: string;
-    quantity: number;
-}
-export interface ContainerAncestors {
+export interface containerBrief  {
     fastCode: string;
     mark: string;
 }
-export interface ContainerDescendants {
-    fastCode: string;
-    mark: string;
-}
-export interface ContainerSibling {
-    fastCode: string;
-    mark: string;
-}
+
 export interface ContainerResponse {
     mainContainer: container;
-    ancestors: ContainerAncestors[];
-    descendants: ContainerDescendants[];
-    siblings: ContainerSibling[];
-    storageItem: storages[];
+    ancestors: containerBrief[];
+    descendants: containerBrief[];
+    siblings: containerBrief[];
+    storageItem: storageItem[];
 }
 

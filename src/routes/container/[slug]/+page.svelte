@@ -66,7 +66,7 @@
                         <span class="width26">
                             {storage.quantity}
                         </span> *
-                        <a href={`/items/${storage.item_id}`}>{storage.item_SKU}
+                        <a href={`/item/${storage.item_id}`}>{storage.item_SKU}
                         </a> {storage.item_name}
                     </li>
                 {/each}
