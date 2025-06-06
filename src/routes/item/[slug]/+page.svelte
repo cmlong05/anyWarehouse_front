@@ -5,20 +5,23 @@
 </script>
 
 <!-- 导航格 -->
-<div class="navigation">
-    {#each data.itemDetail.categories as category}
+
+{#each data.itemDetail.categories as category, index}
+    <nav class="navigation">
+        <span>{index+1}</span>
         {#each category.ancestors as ancestor, i}
             <a href="/category/{ancestor.id}">{ancestor.name}</a>
             {#if i < category.ancestors.length}
                 <span> &gt;&thinsp; </span>
             {/if}
         {/each}
-    <a href="/category/{category.category.id}">{category.category.name} </a> <br>
-    {/each}    
-</div>
+        <a href="/category/{category.category.id}">{category.category.name} </a> 
+    </nav>
+{/each}    
+
 
 <!-- 主内容 -->
-<div class="main-content">
+<div class="div-left-70">
     <div class="image-container">
         <img 
             src={data.itemDetail.item.image ? `${API_BASE_URL}${data.itemDetail.item.image.trim()}` : ''} 
@@ -40,7 +43,7 @@
     </div>
 </div>
 
-<div class="sidebar">
+<div class="div-right-25">
     <h3>同级物品</h3>
     {#each data.itemDetail.categories as category}
         <div>
