@@ -13,7 +13,7 @@
                 <span> &gt;&thinsp; </span>
             {/if}
         {/each}
-    <a href="/category/{category.category.id}">{category.category.name} </a>
+    <a href="/category/{category.category.id}">{category.category.name} </a> <br>
     {/each}    
 </div>
 
@@ -47,8 +47,9 @@
             <p><strong>{category.name}</strong></p>
             {#each category.items as cateItem}
                 <div>
-                    <!-- 考虑此处是否可以优化 -->
-                    {#if cateItem.SKU != data.itemDetail.item.SKU}
+                    {#if cateItem.SKU == data.itemDetail.item.SKU}
+                        <p> <strong>{cateItem.SKU}</strong> {cateItem.name}</p>
+                    {:else}
                         <p><a href="/item/{cateItem.id}"> {cateItem.SKU}</a> {cateItem.name}</p>
                     {/if}
                 </div>

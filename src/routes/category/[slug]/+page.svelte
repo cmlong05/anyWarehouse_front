@@ -19,19 +19,22 @@
 
 <!-- 主内容 -->
 <div class="main-content">
-    <h2>子分类</h2>
-    <ul>
-        {#each data.category_details.descendants as child} 
-            <li><a href={`/category/${child.id}`} >{child.name}</a></li>
-        {/each}
-    </ul>
-
-    <h2>物品</h2>
-    <ul>
-        {#each data.category_details.items as { id, SKU, name }}
-            <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
-        {/each}
-    </ul>
+    <div class="main-content">
+        <ul>
+            <h3>子分类</h3>
+            {#each data.category_details.descendants as child} 
+                <li><a href={`/category/${child.id}`} >{child.name}</a></li>
+            {/each}
+        </ul>
+    </div>
+    <div class="main-content">
+        <ul>
+            <h3>物品</h3>
+            {#each data.category_details.items as { id, SKU, name }}
+                <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
+            {/each}
+        </ul>
+    </div>
 </div>
 
 <!-- 侧栏 -->
@@ -39,9 +42,15 @@
     <h2>相邻分类</h2>
     {#each data.category_details.siblings as sibling}
         <div>
-            <p><a href={`/category/${sibling.id}`} >
-                    {sibling.name}
-                </a></p>
+            <p>
+                {#if sibling.id == data.category_details.category.id}
+                    <strong>{sibling.name}</strong>
+                {:else}
+                    <a href={`/category/${sibling.id}`} >
+                        {sibling.name}
+                    </a>
+                {/if}
+            </p>
         </div>
     {/each}
 </div>
