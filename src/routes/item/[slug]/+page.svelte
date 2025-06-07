@@ -37,9 +37,24 @@
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
         <p><strong>组件:</strong> {data.itemDetail.item.components.length > 0 ? data.itemDetail.item.components.join(', ') : '无组件'}</p>
+        <div class="div-full">
+            <p><strong>存储:</strong></p>
+            {#if data.itemDetail.storages.length === 0}
+                <p>无存储</p>
+            {:else}
+                <ul>
+                    {#each data.itemDetail.storages as storage}
+                        <li>
+                            <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
+                            </a> --{storage.quantity} -- {storage.mark}
+                        </li>
+                    {/each}
+                </ul>
+            {/if}
+        </div>    
     </div>
     <div class="div-full">
-        <p class = "text-p">{data.itemDetail.item.description || '无描述'}</p>
+        <p class = "text-p">{data.itemDetail.item.description || ''}</p>
     </div>
 </div>
 

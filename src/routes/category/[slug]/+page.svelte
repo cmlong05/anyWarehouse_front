@@ -19,19 +19,19 @@
 
 <!-- 主内容 -->
 <div class="div-left-70">
-    <div class="div-full">
-        <ul>
-            <h3>子分类</h3>
-            {#each data.category_details.descendants as child} 
-                <li><a href={`/category/${child.id}`} >{child.name}</a></li>
-            {/each}
-        </ul>
-    </div>
-    <div class="div-full">
+    <div class="div-left-70">
         <ul>
             <h3>物品</h3>
             {#each data.category_details.items as { id, SKU, name }}
                 <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
+            {/each}
+        </ul>
+    </div>
+    <div class="div-right-25">
+        <ul>
+            <h3>子分类</h3>
+            {#each data.category_details.descendants as child} 
+                <li><a href={`/category/${child.id}`} >{child.name}</a></li>
             {/each}
         </ul>
     </div>
