@@ -61,18 +61,18 @@
 <div class="div-right-25">
     <h3>同级物品</h3>
     {#each data.itemDetail.categories as category}
-        <div>
-            <p><strong>{category.name}</strong></p>
+        <ul>
+            <p><a href="/category/{category.category.id}"><strong>{category.category.name}</strong></a></p>
             {#each category.items as cateItem}
                 <div>
                     {#if cateItem.SKU == data.itemDetail.item.SKU}
-                        <p> <strong>{cateItem.SKU}</strong> {cateItem.name}</p>
+                        <li> <strong>{cateItem.SKU}</strong> {cateItem.name}</li>
                     {:else}
-                        <p><a href="/item/{cateItem.id}"> {cateItem.SKU}</a> {cateItem.name}</p>
+                        <li><a href="/item/{cateItem.id}"> {cateItem.SKU}</a> {cateItem.name}</li>
                     {/if}
                 </div>
             {/each}
-        </div>
+        </ul>
     {/each}
 </div>
 

@@ -35,14 +35,17 @@ body {
 }
 
 /* 元素 */
+p {
+    margin: 0.3em;
+}
+
 :is(h1, h2, h3, h4, h5, h6) {
     font-variant-numeric: tabular-nums;
     font-weight: 400;
     line-height: 1.1;
-}
-:is(h1, h2, h3, h4, h5, h6, p) {
     margin: 1rem .1rem;
 }
+
 code {
     background: var(--bg-2);
     font-family: var(--font-mono);
