@@ -8,7 +8,6 @@
 
 {#each data.itemDetail.categories as category, index}
     <nav class="navigation">
-        <span>{index+1}</span>
         {#each category.ancestors as ancestor, i}
             <a href="/category/{ancestor.id}">{ancestor.name}</a>
             {#if i < category.ancestors.length}
@@ -40,7 +39,7 @@
         <div class="div-full">
             <p><strong>存储:</strong></p>
             {#if data.itemDetail.storages.length === 0}
-                <p>无存储</p>
+                <p>无库存</p>
             {:else}
                 <ul>
                     {#each data.itemDetail.storages as storage}
@@ -59,10 +58,9 @@
 </div>
 
 <div class="div-right-25">
-    <h3>同级物品</h3>
     {#each data.itemDetail.categories as category}
         <ul>
-            <p><a href="/category/{category.category.id}"><strong>{category.category.name}</strong></a></p>
+            <nav class="navside navigation"><a href="/category/{category.category.id}">{category.category.name}</a></nav>
             {#each category.items as cateItem}
                 <div>
                     {#if cateItem.SKU == data.itemDetail.item.SKU}

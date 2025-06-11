@@ -43,7 +43,7 @@ p {
     font-variant-numeric: tabular-nums;
     font-weight: 400;
     line-height: 1.1;
-    margin: 1rem .1rem;
+    margin: 0.35rem .1rem;
 }
 
 code {
@@ -74,12 +74,15 @@ code {
 /* about a href */
 a {
     color: var(--link);
+    text-decoration: none;
 }
 a:hover {
     color: var(--link-hover);
+    text-decoration: none;
 }
 a:active {
     color: var(--link-active);
+    text-decoration: none;
 }
 /* end aobut a href */
 
@@ -136,6 +139,16 @@ form {
 /* end form 等 */
 
 /* ul li */
+ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 0;
+    margin-block-end: 0;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 0px;
+    unicode-bidi: isolate;
+}
 ul:has(form) {
     padding: 0;
     list-style: none;
@@ -205,12 +218,15 @@ ul.todos button:hover {
 
 /* nav 导航 */
 .navigation {
-    margin-bottom: 5px;
+    margin-bottom: 0.5rem;
     padding: 0;
     gap: 0.3em;
     border-radius: 5px; /* 添加圆角 */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 添加阴影 */
     justify-content: left; 
+}
+.navside {
+    justify-content: center; 
 }
 nav {
     background: var(--bg-2);
