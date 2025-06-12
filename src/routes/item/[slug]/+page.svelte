@@ -45,7 +45,7 @@
                     {#each data.itemDetail.storages as storage}
                         <li>
                             <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
-                            </a> --{storage.quantity} -- {storage.mark}
+                            </a> -- {storage.quantity} -- {storage.mark}
                         </li>
                     {/each}
                 </ul>
@@ -53,6 +53,7 @@
         </div>    
     </div>
     <div class="div-full">
+        <p><strong>详情:</strong></p>
         <p class = "text-p">{data.itemDetail.item.description || ''}</p>
     </div>
 </div>

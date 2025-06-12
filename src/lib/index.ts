@@ -105,10 +105,17 @@ export interface containerBrief  {
     mark: string;
 }
 
+export interface containerVerbose  {
+    fastCode: string;
+    mark: string;
+    available_volume: number;
+    base_volume: number;
+}
+
 export interface ContainerResponse {
     mainContainer: container;
     ancestors: containerBrief[];
-    descendants: containerBrief[];
+    descendants: containerVerbose[];
     siblings: containerBrief[];
     storageItem: storageItem[];
 }

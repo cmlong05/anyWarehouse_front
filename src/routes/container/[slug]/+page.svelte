@@ -50,7 +50,7 @@
                     <a href={`/container/${descendant.fastCode}`}>
                         {descendant.fastCode}
                     </a>
-                    {descendant.mark}
+                    -- {descendant.mark} -- <meter value={descendant.available_volume} max={descendant.base_volume}></meter>
                 </li>
             {/each}
         </ul>
