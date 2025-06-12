@@ -79,8 +79,8 @@
 <div class="div-right-25">
     <h3>相邻</h3>
     {#each data.containerRes.siblings as sibling}
-        <div>
-            <p>
+        <ul>
+            <li>
                 {#if sibling.fastCode == data.containerRes.container.fastCode}
                     <strong>{sibling.fastCode}</strong>
                 {:else}
@@ -88,7 +88,8 @@
                         {sibling.fastCode}
                     </a>
                 {/if}
-            </p>
-        </div>
+            </li>
+        </ul>
+
     {/each}
 </div>
