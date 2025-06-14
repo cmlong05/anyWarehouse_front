@@ -5,8 +5,8 @@
 
 <nav>
 	<a href="/">home</a>
-	<a href="/container/Office" >Container</a>
-	<a href="/items">Items</a>
+	<a href="/container/A" >Container</a>
+	<a href="/item">Items</a>
 	<a href="/category/4">Categories</a>
 </nav> 
 

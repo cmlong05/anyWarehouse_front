@@ -1,5 +1,6 @@
 // place files you want to import through the `$lib` alias in this folder.
-// 分类物品类型
+
+// 物品
 export interface Item {
     id: number;
     SKU: string;
@@ -24,8 +25,14 @@ export interface Items {
     SKU: string;
     name: string;
 }
+export interface ItemSet{
+    item: Item;
+    categories: CategoryData[];
+    storages: storageContainer[];
+}
 
 
+// 分类
 export interface category {
     id: number;
     name: string;
@@ -47,6 +54,34 @@ export interface CategoryData {
     siblings: category[];
 }
 
+// 定义 storagestandard 接口
+export interface storagestandard {
+    id: number;
+    quantity: number;
+    text: string;
+    sample: boolean;
+    date_added: string;
+    volume: number;
+    weight: number;
+    container: number;
+    item: number;
+}
+export interface storageItem {
+    item_id: number;
+    item_SKU: string;
+    item_name: string;
+    quantity: number;
+}
+
+// 定义 storageContainer 接口
+export interface storageContainer {
+    container_id: number;
+    container_fastCode: string;
+    mark: string;
+    quantity: number;
+}
+
+// 容器类型
 export interface container {
     id: number;
     fastCode: string;
@@ -65,29 +100,23 @@ export interface container {
     parent: number | null;
     barcode: string | null;
 }
-export interface storages {
-    item_id: number;
-    item_SKU: string;
-    item_name: string;
-    quantity: number;
-}
-export interface Ancestors {
+export interface containerBrief  {
     fastCode: string;
     mark: string;
 }
-export interface Descendants {
+
+export interface containerVerbose  {
     fastCode: string;
     mark: string;
+    available_volume: number;
+    base_volume: number;
 }
-export interface SiblingItem {
-    fastCode: string;
-    mark: string;
-}
+
 export interface ContainerResponse {
     mainContainer: container;
-    ancestors: Ancestors[];
-    descendants: Descendants[];
-    siblings: SiblingItem[];
-    storageItem: storages[];
+    ancestors: containerBrief[];
+    descendants: containerVerbose[];
+    siblings: containerBrief[];
+    storageItem: storageItem[];
 }
 

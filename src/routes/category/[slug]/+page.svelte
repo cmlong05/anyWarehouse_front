@@ -6,7 +6,7 @@
 
 
 <!-- 导航格 -->
-<div class="navigation">
+<nav class="navigation">
     <span>导航：</span>
     {#each data.category_details.ancestors as ancestor, i}
         <a href="/category/{ancestor.id}">{ancestor.name}</a>
@@ -15,33 +15,42 @@
         {/if}
     {/each}
     <span>{data.category_details.category.name} </span>
-</div>
+</nav>
 
 <!-- 主内容 -->
-<div class="main-content">
-    <h2>子分类</h2>
-    <ul>
-        {#each data.category_details.descendants as child} 
-            <li><a href={`/category/${child.id}`} >{child.name}</a></li>
-        {/each}
-    </ul>
-
-    <h2>物品</h2>
-    <ul>
-        {#each data.category_details.items as { id, SKU, name }}
-            <li><a href={`/items/${id}`}>{SKU}</a> {name} </li>
-        {/each}
-    </ul>
+<div class="div-left-70">
+    <div class="div-left-70">
+        <ul>
+            <h3>物品</h3>
+            {#each data.category_details.items as { id, SKU, name }}
+                <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
+            {/each}
+        </ul>
+    </div>
+    <div class="div-right-25">
+        <ul>
+            <h3>子分类</h3>
+            {#each data.category_details.descendants as child} 
+                <li><a href={`/category/${child.id}`} >{child.name}</a></li>
+            {/each}
+        </ul>
+    </div>
 </div>
 
 <!-- 侧栏 -->
-<div class="sidebar">
-    <h2>相邻分类</h2>
+<div class="div-right-25">
+    <h3>相邻分类</h3>
     {#each data.category_details.siblings as sibling}
         <div>
-            <p><a href={`/category/${sibling.id}`} >
-                    {sibling.name}
-                </a></p>
+            <p>
+                {#if sibling.id == data.category_details.category.id}
+                    <strong>{sibling.name}</strong>
+                {:else}
+                    <a href={`/category/${sibling.id}`} >
+                        {sibling.name}
+                    </a>
+                {/if}
+            </p>
         </div>
     {/each}
 </div>
