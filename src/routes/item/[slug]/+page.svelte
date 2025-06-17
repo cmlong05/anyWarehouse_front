@@ -6,7 +6,7 @@
 
 <!-- 导航格 -->
 
-{#each data.itemDetail.categories as category, index}
+{#each data.itemDetail.categories as category}
     <nav class="navigation">
         {#each category.ancestors as ancestor, i}
             <a href="/category/{ancestor.id}">{ancestor.name}</a>
