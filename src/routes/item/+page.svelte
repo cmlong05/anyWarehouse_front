@@ -1,6 +1,6 @@
 <script lang="ts">
-    import type { Items } from '$lib';
-    let { data } = $props<{ items: Items[] }>();
+    import type { BaseItem } from '$lib';
+    let { data } = $props<{ items: BaseItem[] }>();
 </script>
 
 {#if data.items.length > 0}

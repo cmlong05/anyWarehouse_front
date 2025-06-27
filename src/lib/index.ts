@@ -1,12 +1,15 @@
 // place files you want to import through the `$lib` alias in this folder.
 
 // 物品
-export interface Item {
+export interface BaseItem {
     id: number;
     SKU: string;
+    name: string;
+}
+
+export interface Item extends BaseItem  {
     SKU_zite: string;
     SKU_A: string;
-    name: string;
     description: string;
     image: string;
     weight: string;
@@ -20,20 +23,16 @@ export interface Item {
     category: number[];
     components: any[];
 }
-export interface Items {
-    id: number;
-    SKU: string;
-    name: string;
-}
+
 export interface ItemSet{
     item: Item;
     categories: CategoryData[];
-    storages: storageContainer[];
+    storages: StorageContainer[];
 }
 
 
 // 分类
-export interface category {
+export interface Category {
     id: number;
     name: string;
     top_category: boolean;
@@ -47,15 +46,15 @@ export interface category {
 }
 // 分类响应类型，修改命名为 CategoryData
 export interface CategoryData {
-    category: category;
-    ancestors: category[];
-    descendants: category[];
+    category: Category;
+    ancestors: Category[];
+    descendants: Category[];
     items: Item[];
-    siblings: category[];
+    siblings: Category[];
 }
 
 // 定义 storagestandard 接口
-export interface storagestandard {
+export interface Storagestandard {
     id: number;
     quantity: number;
     text: string;
@@ -66,7 +65,7 @@ export interface storagestandard {
     container: number;
     item: number;
 }
-export interface storageItem {
+export interface StorageItem {
     item_id: number;
     item_SKU: string;
     item_name: string;
@@ -74,7 +73,7 @@ export interface storageItem {
 }
 
 // 定义 storageContainer 接口
-export interface storageContainer {
+export interface StorageContainer {
     container_id: number;
     container_fastCode: string;
     mark: string;
@@ -82,7 +81,7 @@ export interface storageContainer {
 }
 
 // 容器类型
-export interface container {
+export interface Container {
     id: number;
     fastCode: string;
     mark: string;
@@ -100,12 +99,12 @@ export interface container {
     parent: number | null;
     barcode: string | null;
 }
-export interface containerBrief  {
+export interface ContainerBrief  {
     fastCode: string;
     mark: string;
 }
 
-export interface containerVerbose  {
+export interface ContainerVerbose  {
     fastCode: string;
     mark: string;
     available_volume: number;
@@ -113,10 +112,10 @@ export interface containerVerbose  {
 }
 
 export interface ContainerResponse {
-    mainContainer: container;
-    ancestors: containerBrief[];
-    descendants: containerVerbose[];
-    siblings: containerBrief[];
-    storageItem: storageItem[];
+    mainContainer: Container;
+    ancestors: ContainerBrief[];
+    descendants: ContainerVerbose[];
+    siblings: ContainerBrief[];
+    storageItem: StorageItem[];
 }
 
