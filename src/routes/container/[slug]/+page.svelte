@@ -67,7 +67,7 @@
                             {storage.quantity}
                         </span> *
                         <a href={`/item/${storage.item_id}`}>{storage.item_SKU}
-                        </a> {storage.item_name}
+                        </a>  - {storage.item_name}
                     </li>
                 {/each}
             {/if}

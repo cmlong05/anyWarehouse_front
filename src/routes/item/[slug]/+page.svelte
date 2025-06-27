@@ -30,7 +30,7 @@
         />
     </div>
     <div class="div-right">
-        <p>{data.itemDetail.item.name}</p>
+        <p><strong>{data.itemDetail.item.name}</strong></p>
         <p><strong>SKU:</strong> {data.itemDetail.item.SKU}</p>
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
@@ -45,7 +45,10 @@
                     {#each data.itemDetail.storages as storage}
                         <li>
                             <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
-                            </a> -- {storage.quantity} -- {storage.mark}
+                            </a> -- {storage.quantity}
+                            {#if storage.mark}
+                               -- {storage.mark}
+                            {/if}
                         </li>
                     {/each}
                 </ul>
