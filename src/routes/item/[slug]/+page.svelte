@@ -45,7 +45,10 @@
                     {#each data.itemDetail.storages as storage}
                         <li>
                             <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
-                            </a> -- {storage.quantity}
+                            </a> -- {storage.quantity} --
+                            <input type="number" value=1 style="width: 4em;"/>
+                            <button>出库</button>
+
                             {#if storage.mark}
                                -- {storage.mark}
                             {/if}
