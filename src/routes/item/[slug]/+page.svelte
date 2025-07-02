@@ -2,6 +2,39 @@
     import type { ItemSet } from '$lib';
     import { API_BASE_URL } from '$lib/config';
     let { data } = $props<{ itemDetail: ItemSet }>();
+
+    const handleStorage = async (storage: any, inputElement: HTMLInputElement) => {
+        const quantity = parseInt(inputElement.value);
+        // if (isNaN(quantity) || quantity <= 0) {
+        //     alert('请输入有效的出库数量');
+        //     return;
+        // }
+        // if (quantity > storage.quantity) {
+        //     alert('出库数量不能超过库存数量');
+        //     return;
+        // }
+        try {
+            const newQuantity = storage.quantity - quantity;
+            const response = await fetch(`${API_BASE_URL}/product/api/storage/${storage.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    quantity: newQuantity
+                }),
+            });
+
+            if (response.ok) {
+                // 假设成功后重新获取数据
+                location.reload();
+            } else {
+                alert('出库失败，请稍后重试');
+            }
+        } catch (error) {
+            alert('网络错误，请检查网络连接');
+        }
+    };
 </script>
 
 <!-- 导航格 -->
@@ -48,8 +81,8 @@
                             </a> -- 
                             <span title="{storage.mark}" style="{storage.mark ? 'background-color: pink;' : ''}">{storage.quantity}</span> 
                             --
-                            <input type="number" value=1 style="width: 4em;"/>
-                            <button>出库</button>
+                            <input type="number" value="1" style="width: 4em;" bind:this={input} />
+                            <button on:click={() => handleStorage(storage, input)}>出库</button>
 
                         </li>
                     {/each}

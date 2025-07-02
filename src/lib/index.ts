@@ -53,7 +53,7 @@ export interface CategoryData {
     siblings: Category[];
 }
 
-// 定义 storagestandard 接口
+// 标准 Storage 接口
 export interface Storagestandard {
     id: number;
     quantity: number;
@@ -65,15 +65,16 @@ export interface Storagestandard {
     container: number;
     item: number;
 }
+// ContainerResponse 组件
 export interface StorageItem {
     item_id: number;
     item_SKU: string;
     item_name: string;
     quantity: number;
 }
-
-// 定义 storageContainer 接口
+// ItemSet 组件
 export interface StorageContainer {
+    id: number,
     container_id: number;
     container_fastCode: string;
     mark: string;
