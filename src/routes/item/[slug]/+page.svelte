@@ -2,6 +2,7 @@
     import type { ItemSet } from '$lib';
     import { API_BASE_URL } from '$lib/config';
     let { data } = $props<{ itemDetail: ItemSet }>();
+    let inputRefs: (HTMLInputElement | null)[] = [];
 
     const handleStorage = async (storage: any, inputElement: HTMLInputElement) => {
         const quantity = parseInt(inputElement.value);
@@ -15,7 +16,7 @@
         // }
         try {
             const newQuantity = storage.quantity - quantity;
-            const response = await fetch(`${API_BASE_URL}/product/api/storage/${storage.id}`, {
+            const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/${storage.id}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,16 +75,26 @@
             {#if data.itemDetail.storages.length === 0}
                 <p>无库存</p>
             {:else}
+            
                 <ul>
-                    {#each data.itemDetail.storages as storage}
+                    {#each data.itemDetail.storages as storage, idx (storage.id)}
                         <li>
                             <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
                             </a> -- 
                             <span title="{storage.mark}" style="{storage.mark ? 'background-color: pink;' : ''}">{storage.quantity}</span> 
                             --
-                            <input type="number" value="1" style="width: 4em;" bind:this={input} />
-                            <button on:click={() => handleStorage(storage, input)}>出库</button>
-
+                            <input
+                                type="number"
+                                value="1"
+                                style="width: 4em;"
+                                bind:this={inputRefs[idx]}
+                            />
+                            <button
+                                onclick={() => {
+                                    const input = inputRefs[idx];
+                                    if (input) handleStorage(storage, input);
+                                }}
+                            >出库</button>
                         </li>
                     {/each}
                 </ul>
