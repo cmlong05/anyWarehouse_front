@@ -90,9 +90,9 @@ a:active {
 button {
     background: var(--link);
     color: var(--bg-1);
-    border-radius: var(--border-radius);
+    border-radius: 60px;
     border: none;
-    padding: .5rem 1rem;
+    padding: .2rem .5rem;
 }
 button, input, select {
     font-family: inherit;
@@ -121,14 +121,14 @@ textarea {
     font-size: .9rem;
 }
 input, textarea {
-    background: var(--bg-1);
+    background: var(--bg-3);
     color: inherit;
 }
 input, textarea, select {
     border: 1px solid var(--bg-2);
     border-radius: var(--border-radius);
     box-sizing: border-box;
-    padding: .5rem;
+    padding: .2rem;
 }
 form {
     flex-direction: column;
