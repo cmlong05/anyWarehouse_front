@@ -4,6 +4,9 @@
     let { data } = $props<{ category_details: CategoryData }>();
 </script>
 
+<svelte:head>
+    <title>分类 {data.category_details.category.name}</title>
+</svelte:head>
 
 <!-- 导航格 -->
 <nav class="navigation">

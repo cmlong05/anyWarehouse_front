@@ -3,6 +3,10 @@
     let { data } = $props<{ items: BaseItem[] }>();
 </script>
 
+<svelte:head>
+    <title>所有商品</title>
+</svelte:head>
+
 {#if data.items.length > 0}
     <ul>
         {#each data.items as { id, SKU, name }}

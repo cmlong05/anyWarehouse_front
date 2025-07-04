@@ -3,6 +3,10 @@
     let { data } = $props<{ containerRes: ContainerResponse }>();
 </script>
 
+<svelte:head>
+    <title>{data.containerRes.container.fastCode}</title>
+</svelte:head>
+
 <!-- 导航格 -->
 <nav class="navigation">
     <span>导航：</span>

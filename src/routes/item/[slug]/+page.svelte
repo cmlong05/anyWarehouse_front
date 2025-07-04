@@ -38,8 +38,11 @@
     };
 </script>
 
-<!-- 导航格 -->
+<svelte:head>
+    <title>{data.itemDetail.item.name}</title>
+</svelte:head>
 
+<!-- 导航格 -->
 {#each data.itemDetail.categories as category}
     <nav class="navigation">
         {#each category.ancestors as ancestor, i}
@@ -81,7 +84,7 @@
                         <li>
                             <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
                             </a> -- 
-                            <span title="{storage.mark}" style="{storage.mark ? 'background-color: pink;' : ''}">{storage.quantity}</span> 
+                            <a title="{storage.mark}" href="/storage/{storage.id}" style="{storage.mark ? 'background-color: pink; padding-left: 8px; padding-right: 8px;' : 'background-color: beige; padding-left: 8px; padding-right: 8px;'}">{storage.quantity} </a>  
                             --
                             <input
                                 type="number"
