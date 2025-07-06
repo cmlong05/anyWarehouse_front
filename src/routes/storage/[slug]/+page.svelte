@@ -9,33 +9,38 @@
 
 <main>
     <!-- 直接以form的形式展示 -->
-    <form>
+    <form method="POST">
         <span>id: {data.storageDetail.id}</span>
         <label>
             名称
-            <input type="text" value={data.storageDetail.item} />
+            <input type="text" name="item" value={data.storageDetail.item} />
         </label>
         <label>
             位置
-            <input type="text" value={data.storageDetail.container} />
+            <input type="text" name="container" value={data.storageDetail.container} />
         </label>
         <label>
             数量
-            <input type="text" value={data.storageDetail.quantity} />
+            <input type="text" name="quantity" value={data.storageDetail.quantity} />
         </label>
         <label>
             备注
-            <input type="text" value={data.storageDetail.text} />
+            <input type="text" name="text" value={data.storageDetail.text} />
         </label>
         <label>
             样品
-            <input type="checkbox" value={data.storageDetail.sample} />
+            <input type="checkbox" name="sample" checked={data.storageDetail.sample} />
         </label>
 
         <div style="display: flex; gap: 10px;">
-            <button>提交修改</button>
-            <button>取消修改</button>
-            <button>删除</button>
+            <button type="submit">提交修改</button>
+            <button
+                onclick={async (event) => {
+                    const button = event.target as HTMLButtonElement;
+                    button.disabled = true;
+                    window.history.back();
+                }}>取消修改</button>
+            <button>删除存储</button>
         </div>
     </form>
 
