@@ -13,15 +13,15 @@
         <span>id: {data.storageDetail.id}</span>
         <label>
             名称
-            <input type="text" name="item" value={data.storageDetail.item} />
+            <input type="text" name="item" value={data.storageDetail.item} required />
         </label>
         <label>
             位置
-            <input type="text" name="container" value={data.storageDetail.container} />
+            <input type="text" name="container" value={data.storageDetail.container} required />
         </label>
         <label>
             数量
-            <input type="text" name="quantity" value={data.storageDetail.quantity} />
+            <input type="text" name="quantity" value={data.storageDetail.quantity} required />
         </label>
         <label>
             备注
