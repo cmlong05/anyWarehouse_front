@@ -12,7 +12,7 @@ export const actions = {
             sample: formData.has('sample'),
         };
         // Replace global fetch with event.fetch
-        const res = await fetch(`${API_BASE_URL}/warehouse/api/storage`, {
+        const res = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -20,9 +20,8 @@ export const actions = {
             body: JSON.stringify(updatedData),
         });
         if (!res.ok) {
-            throw redirect(303, '/storage');
+            throw redirect(303, `/item/`);
         }
-        throw redirect(303, '/storage');
-
+        throw redirect(303, `/item/${formData.get('item')}`);
     }
 }
