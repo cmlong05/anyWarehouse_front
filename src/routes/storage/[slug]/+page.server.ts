@@ -21,7 +21,6 @@ export const actions = {
     const { slug } = params;
     const formData = await request.formData();
     const updatedData = {
-        item: formData.get('item'),
         container: formData.get('container'),
         quantity: formData.get('quantity'),
         text: formData.get('text'),
@@ -41,7 +40,7 @@ export const actions = {
         throw error(res.status, `Failed to update item: ${JSON.stringify(errorData)}`);
     }
     //重定向回去
-    throw redirect(303, `/item/${updatedData.item}`);
+    throw redirect(303, `/item/${formData.get('item')}`);
 },
 };
 

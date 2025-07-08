@@ -32,9 +32,7 @@
         <div style="display: flex; gap: 10px;">
             <button type="submit">提交</button>
             <button
-                onclick={async (event) => {
-                    const button = event.target as HTMLButtonElement;
-                    button.disabled = true;
+                onclick={() => {
                     window.history.back();
                 }}>取消</button>
         </div>

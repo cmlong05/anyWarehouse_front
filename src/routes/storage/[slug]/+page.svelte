@@ -10,10 +10,12 @@
 <main>
     <!-- 直接以form的形式展示 -->
     <form method="POST">
-        <span>id: {data.storageDetail.id}</span>
+        <span>存储id: {data.storageDetail.id}</span>
         <label>
             名称
-            <input type="text" name="item" value={data.storageDetail.item} required />
+            <select name="item" >
+                <option value={data.storageDetail.item}>{data.storageDetail.item}</option>
+            </select>
         </label>
         <label>
             位置
