@@ -120,7 +120,7 @@ textarea {
     font-family: var(--font-mono);
     font-size: .9rem;
 }
-input, textarea {
+input, textarea, select {
     background: var(--bg-3);
     color: inherit;
 }
