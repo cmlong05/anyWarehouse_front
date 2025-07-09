@@ -1,17 +1,10 @@
-# sv
+```
+1.安装bun环境
+2.clone git 仓库 （无需新建项目）
+3. 安装依赖
+4. 运行项目
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
 ```
 
 ## Developing
