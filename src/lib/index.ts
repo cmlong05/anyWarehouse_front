@@ -100,11 +100,14 @@ export interface Container {
     parent: number | null;
     barcode: string | null;
 }
-export interface ContainerBrief  {
+export interface ContainerBriefID  {
+    id: number;
+    fastCode: string;
+}
+export interface ContainerBriefMark  {
     fastCode: string;
     mark: string;
 }
-
 export interface ContainerVerbose  {
     fastCode: string;
     mark: string;
@@ -114,9 +117,9 @@ export interface ContainerVerbose  {
 
 export interface ContainerResponse {
     mainContainer: Container;
-    ancestors: ContainerBrief[];
+    ancestors: ContainerBriefMark[];
     descendants: ContainerVerbose[];
-    siblings: ContainerBrief[];
+    siblings: ContainerBriefMark[];
     storageItem: StorageItem[];
 }
 

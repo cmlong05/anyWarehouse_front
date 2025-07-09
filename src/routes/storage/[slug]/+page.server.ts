@@ -1,17 +1,20 @@
 import { error } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
-import type { Storagestandard } from '$lib';
+import type { Storagestandard, ContainerBriefID } from '$lib';
 
 /** @type {import('@sveltejs/kit').ServerLoad} */
-export async function load({ params, fetch }: { params: { slug: string }, fetch: typeof globalThis.fetch }): Promise<{ storageDetail: Storagestandard }> {
+export async function load({ params, fetch }: { params: { slug: string }, fetch: typeof globalThis.fetch }): Promise<{ storageDetail: Storagestandard, ContainerBriefDetails: ContainerBriefID[] }> {
     const { slug } = params;
     // 获取当前物品信息
     const itemRes = await fetch(`${API_BASE_URL}/warehouse/api/storage/${slug}/`);
-    if (!itemRes.ok) { 
+    const ContainerBriefRes = await fetch(`${API_BASE_URL}/warehouse/api/container-brief/`);
+    if (!itemRes.ok || !ContainerBriefRes.ok) { 
         throw error(itemRes.status, 'Failed to fetch item');
     }
     const storageDetail: Storagestandard = await itemRes.json();
-    return { storageDetail };
+    const ContainerBriefDetails: ContainerBriefID[] = await ContainerBriefRes.json();
+    return { storageDetail, ContainerBriefDetails };
+
 }
 
 import { redirect } from '@sveltejs/kit';

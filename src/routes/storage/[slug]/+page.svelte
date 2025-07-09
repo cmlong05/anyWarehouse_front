@@ -1,6 +1,8 @@
 <script lang="ts">
-    import type { Storagestandard } from '$lib';
-    let { data } = $props<{ storageDetail: Storagestandard }>();
+    import type { Storagestandard, ContainerBriefID } from '$lib';
+
+    let { data } = $props<{ storageDetail: Storagestandard, ContainerBriefDetails: ContainerBriefID[] }>();
+
 </script>
 
 <svelte:head>
@@ -19,7 +21,11 @@
         </label>
         <label>
             位置
-            <input type="text" name="container" value={data.storageDetail.container} required />
+            <select name="container">
+                {#each data.ContainerBriefDetails as ContainerBriefDetail}
+                    <option value={ContainerBriefDetail.id}>{ContainerBriefDetail.fastCode}</option>
+                {/each}
+            </select>
         </label>
         <label>
             数量
