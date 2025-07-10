@@ -1,9 +1,15 @@
 ```
 1.安装bun环境
-2.clone git 仓库 （无需新建项目）
-3. 安装依赖
-4. 运行项目
+powershell -c "irm bun.sh/install.ps1 | iex"
 
+2.clone git 仓库 （无需新建项目）
+git clone git@gitee.com:cmlong/anyWarehouse_front.git
+
+3. 安装依赖
+bun install
+
+4. 运行项目
+bun run dev
 
 ```
 
