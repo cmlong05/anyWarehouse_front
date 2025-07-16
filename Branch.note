@@ -14,3 +14,6 @@
         2. 减少前端页面显示不必整体刷新
         
 # 增加修改数据功能
+
+# 修改static/shared.css为使用tailwindcss
+    修改模板中的class

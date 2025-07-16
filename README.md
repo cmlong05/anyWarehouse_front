@@ -8,6 +8,8 @@ git clone git@gitee.com:cmlong/anyWarehouse_front.git
 3. 安装依赖
 bun install
 
+4. 复制sample配置文件，修改lib/config.ts
+
 4. 运行项目
 bun run dev
 
