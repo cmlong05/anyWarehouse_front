@@ -130,7 +130,6 @@ input, textarea, select {
 }
 form {
     flex-direction: column;
-    align-items: baseline;
     gap: 1rem;
     display: flex;
 }
