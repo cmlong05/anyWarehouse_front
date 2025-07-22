@@ -1,8 +1,14 @@
 <script lang="ts">
     import type { Storagestandard, ContainerBriefID } from '$lib';
+    import Svelecte from 'svelecte';
 
     let { data } = $props<{ storageDetail: Storagestandard, ContainerBriefDetails: ContainerBriefID[] }>();
 
+    // 转换为 Svelecte 需要的格式
+    const selectItems = data.ContainerBriefDetails.map((item: ContainerBriefID) => ({
+        value: item.id,
+        label: item.fastCode
+    }));
 </script>
 
 <svelte:head>
@@ -21,11 +27,12 @@
         </label>
         <label>
             位置
-            <select name="container">
-                {#each data.ContainerBriefDetails as ContainerBriefDetail}
-                    <option value={ContainerBriefDetail.id}>{ContainerBriefDetail.fastCode}</option>
-                {/each}
-            </select>
+            <Svelecte
+                name="container"
+                options={selectItems}
+                value={data.storageDetail.container}
+                required
+            />
         </label>
         <label>
             数量
@@ -51,5 +58,4 @@
             <button>删除存储</button>
         </div>
     </form>
-
 </main>
