@@ -1,19 +1,24 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
     import { API_BASE_URL } from '$lib/config';
+    import { invalidate } from '$app/navigation';
+    
     let { data } = $props<{ itemDetail: ItemSet }>();
     let inputRefs: (HTMLInputElement | null)[] = [];
 
-    const handleStorage = async (storage: any, inputElement: HTMLInputElement) => {
+    const handleStorage = async (event: Event, storage: any, inputElement: HTMLInputElement) => {
+        event.preventDefault();
+        
         const quantity = parseInt(inputElement.value);
-        // if (isNaN(quantity) || quantity <= 0) {
-        //     alert('请输入有效的出库数量');
-        //     return;
-        // }
-        // if (quantity > storage.quantity) {
-        //     alert('出库数量不能超过库存数量');
-        //     return;
-        // }
+        if (isNaN(quantity) || quantity <= 0) {
+            alert('请输入有效的出库数量');
+            return;
+        }
+        if (quantity > storage.quantity) {
+            alert('出库数量不能超过库存数量');
+            return;
+        }
+
         try {
             const newQuantity = storage.quantity - quantity;
             const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/${storage.id}/`, {
@@ -27,12 +32,25 @@
             });
 
             if (response.ok) {
-                // 假设成功后重新获取数据
-                location.reload();
+                // 更新本地数据
+                const updatedStorage = await response.json();
+                // 找到并更新对应的存储记录
+                const index = data.itemDetail.storages.findIndex((s: typeof storage) => s.id === storage.id);
+                if (index !== -1) {
+                    data.itemDetail.storages[index] = {
+                        ...data.itemDetail.storages[index],
+                        ...updatedStorage
+                    };
+                }
+                // 重置输入框
+                inputElement.value = '1';
+                // 强制更新数据
+                data = { ...data };
             } else {
                 alert('出库失败，请稍后重试');
             }
         } catch (error) {
+            console.error('出库错误:', error);
             alert('网络错误，请检查网络连接');
         }
     };
@@ -77,8 +95,7 @@
             <p><strong>存储:</strong></p>
             {#if data.itemDetail.storages.length === 0}
                 <p>无库存</p>
-            {:else}
-            
+            {:else}            
                 <ul>
                     {#each data.itemDetail.storages as storage, idx (storage.id)}
                         <li>
@@ -93,15 +110,17 @@
                                 bind:this={inputRefs[idx]}
                             />
                             <button
-                                onclick={() => {
+                                onclick={(e) => {
                                     const input = inputRefs[idx];
-                                    if (input) handleStorage(storage, input);
+                                    if (input) handleStorage(e, storage, input);
                                 }}
                             >出库</button>
                         </li>
                     {/each}
                 </ul>
             {/if}
+            <a href="/storage/add/{data.itemDetail.item.id}">新建存储</a>
+
         </div>    
     </div>
     <div class="div-full">
