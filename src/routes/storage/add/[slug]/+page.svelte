@@ -23,7 +23,7 @@
 
     // 添加表单处理函数
     function handleSubmit() {
-        return async ({ result }) => {
+        return async ({ result }: { result: { type: string } }) => {
             if (result.type === 'success') {
                 // 提交成功后返回到 item 页面
                 await goto(`/item/${data.item}`);
