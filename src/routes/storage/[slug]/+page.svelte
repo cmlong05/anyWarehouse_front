@@ -16,7 +16,6 @@
 
 <div class="page-header">
     <h2>编辑存储</h2>
-    <p>修改存储记录的信息</p>
 </div>
 
 <StorageForm 
@@ -32,18 +31,3 @@
     }}
     containers={data.containers}
 />
-
-<style>
-    .page-header {
-        margin-bottom: 2rem;
-    }
-
-    .page-header h2 {
-        margin: 0 0 0.5rem 0;
-    }
-
-    .page-header p {
-        color: var(--fg-2);
-        margin: 0;
-    }
-</style>
