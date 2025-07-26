@@ -1,41 +1,24 @@
 <script lang="ts">
-    
+    import StorageForm from '$lib/components/StorageForm.svelte';
+    import type { ContainerBriefID } from '$lib';
+
+    let { data } = $props<{ 
+        data: {
+            containers: ContainerBriefID[];
+        }
+    }>();
 </script>
 
 <svelte:head>
     <title>新建存储</title>
 </svelte:head>
 
-<main>
-    <form method="POST">
-        <label>
-            名称
-            <input type="text" name="item" required />
-        </label>
-        <label>
-            位置
-            <input type="text" name="container"required />
-        </label>
-        <label>
-            数量
-            <input type="text" name="quantity" required />
-        </label>
-        <label>
-            备注
-            <input type="text" name="text" />
-        </label>
-        <label>
-            样品
-            <input type="checkbox" name="sample" />
-        </label>
+<div class="page-header">
+    <h2>新建存储</h2>
+    <p>为物品创建新的存储记录</p>
+</div>
 
-        <div style="display: flex; gap: 10px;">
-            <button type="submit">提交</button>
-            <button
-                onclick={() => {
-                    window.history.back();
-                }}>取消</button>
-        </div>
-    </form>
-
-</main>
+<StorageForm 
+    mode="add"
+    containers={data.containers}
+/>

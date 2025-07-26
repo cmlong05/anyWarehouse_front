@@ -1,69 +1,73 @@
-import { error } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
-import type { ContainerBriefID } from '$lib';
 
-import type { Actions } from '@sveltejs/kit';
-import { fail } from '@sveltejs/kit';
-
-export async function load({ params, fetch }: { params: { slug: string }, fetch: typeof globalThis.fetch }) {
+export async function load({ params, parent }) {
+    const { containers } = await parent();
+    
     try {
-        // 获取容器列表
-        const ContainerBriefRes = await fetch(`${API_BASE_URL}/warehouse/api/container-brief/`);
-        if (!ContainerBriefRes.ok) {
-            throw error(ContainerBriefRes.status, 'Failed to fetch containers');
+        // 获取物品信息以获取 SKU
+        const itemRes = await fetch(`${API_BASE_URL}/product/api/item/${params.slug}/`);
+        let itemSKU = params.slug; // 默认使用 slug
+        
+        if (itemRes.ok) {
+            const itemDetail = await itemRes.json();
+            // 根据你的 ItemSet 结构，SKU 在 item.SKU 中
+            itemSKU = itemDetail.item?.SKU || itemDetail.SKU || params.slug;
         }
-        const ContainerBriefDetails: ContainerBriefID[] = await ContainerBriefRes.json();
-
+        
         return {
-            item: params.slug,  // 从 URL 参数获取 item 编号
-            ContainerBriefDetails
+            item: params.slug,
+            itemSKU,
+            containers
         };
-    } catch (error) {
-        console.error('Load error:', error);
-        throw error;
+    } catch (err) {
+        console.error('Load error:', err);
+        return {
+            item: params.slug,
+            itemSKU: params.slug,
+            containers
+        };
     }
-};
+}
 
 export const actions = {
     default: async ({ request, fetch }) => {
         const formData = await request.formData();
         
-        // 获取表单数据
-        const storage = {
-            item: formData.get('item'),
-            container: formData.get('container'),
-            quantity: formData.get('quantity'),
+        const storageData = {
+            item: Number(formData.get('item')),
+            container: Number(formData.get('container')),
+            quantity: Number(formData.get('quantity')),
             text: formData.get('text') || '',
-            sample: formData.get('sample') === 'on'
+            sample: formData.has('sample')
         };
 
         try {
-            // 发送 POST 请求创建新存储
             const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(storage)
+                body: JSON.stringify(storageData)
             });
 
             if (!response.ok) {
-                const error = await response.json();
+                const error = await response.json().catch(() => ({}));
                 return fail(400, { 
                     error: error.message || '创建存储失败',
-                    data: storage 
+                    data: storageData 
                 });
             }
 
-            // 创建成功，返回成功标志
-            return { success: true };
+            // 创建成功，重定向到物品页面
+            throw redirect(303, `/item/${storageData.item}`);
 
         } catch (error) {
-            console.error('Submit error:', error);
+            console.error('Create storage error:', error);
             return fail(500, { 
                 error: '服务器错误',
-                data: storage 
+                data: storageData 
             });
         }
     }
-} satisfies Actions;
+};

@@ -1,61 +1,49 @@
 <script lang="ts">
+    import StorageForm from '$lib/components/StorageForm.svelte';
     import type { Storagestandard, ContainerBriefID } from '$lib';
-    import Svelecte from 'svelecte';
 
-    let { data } = $props<{ storageDetail: Storagestandard, ContainerBriefDetails: ContainerBriefID[] }>();
-
-    // 转换为 Svelecte 需要的格式
-    const selectItems = data.ContainerBriefDetails.map((item: ContainerBriefID) => ({
-        value: item.id,
-        label: item.fastCode
-    }));
+    let { data } = $props<{ 
+        data: {
+            storageDetail: Storagestandard & { itemSKU?: string }; 
+            containers: ContainerBriefID[];
+        }
+    }>();
 </script>
 
 <svelte:head>
-    <title>存储 {data.storageDetail.fastCode}</title>
+    <title>编辑存储 - ID: {data.storageDetail.id}</title>
 </svelte:head>
 
-<main>
-    <!-- 直接以form的形式展示 -->
-    <form method="POST">
-        <span>存储id: {data.storageDetail.id}</span>
-        <label>
-            名称
-            <select name="item">
-                <option value={data.storageDetail.item}>{data.storageDetail.item}</option>
-            </select>
-        </label>
-        <label>
-            位置
-            <Svelecte
-                name="container"
-                options={selectItems}
-                value={data.storageDetail.container}
-                required
-            />
-        </label>
-        <label>
-            数量
-            <input type="text" name="quantity" value={data.storageDetail.quantity} required />
-        </label>
-        <label>
-            备注
-            <input type="text" name="text" value={data.storageDetail.text} />
-        </label>
-        <label>
-            样品
-            <input type="checkbox" name="sample" checked={data.storageDetail.sample} />
-        </label>
+<div class="page-header">
+    <h2>编辑存储</h2>
+    <p>修改存储记录的信息</p>
+</div>
 
-        <div style="display: flex; gap: 10px;">
-            <button type="submit">提交修改</button>
-            <button
-                onclick={async (event) => {
-                    const button = event.target as HTMLButtonElement;
-                    button.disabled = true;
-                    window.history.back();
-                }}>取消修改</button>
-            <button>删除存储</button>
-        </div>
-    </form>
-</main>
+<StorageForm 
+    mode="edit"
+    initialData={{
+        id: data.storageDetail.id,
+        item: data.storageDetail.item,
+        itemSKU: data.storageDetail.itemSKU,
+        container: data.storageDetail.container,
+        quantity: data.storageDetail.quantity,
+        text: data.storageDetail.text,
+        sample: data.storageDetail.sample
+    }}
+    containers={data.containers}
+/>
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h2 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .page-header p {
+        color: var(--fg-2);
+        margin: 0;
+    }
+</style>

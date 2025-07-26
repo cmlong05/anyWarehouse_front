@@ -303,3 +303,61 @@ select:not([multiple]) {
     background: var(--bg-2);
 }
 
+/* 添加到 static/shared.css */
+.storage-layout {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.storage-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bg-2);
+}
+
+.storage-header h1 {
+    margin: 0;
+}
+
+.storage-main {
+    background: var(--bg-1);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.storage-id {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: var(--bg-2);
+    border-radius: var(--border-radius);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.danger {
+    background: #dc3545;
+}
+
+.danger:hover {
+    background: #c82333;
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    margin: 0 0 0.5rem 0;
+}
+
+.page-header p {
+    color: var(--fg-2);
+    margin: 0;
+}

@@ -1,21 +1,22 @@
 <script lang="ts">
     import type { ContainerBriefID } from '$lib';
-    import Svelecte from 'svelecte';
 
     interface Props {
-        containers: ContainerBriefID[];
+        data: {
+            containers: ContainerBriefID[];
+        };
         children: import('svelte').Snippet;
     }
     
-    let { containers, children }: Props = $props();
+    let { data, children }: Props = $props();
 </script>
 
 <div class="storage-layout">
-    <header>
+    <header class="storage-header">
         <h1>存储管理</h1>
     </header>
 
-    <main>
+    <main class="storage-main">
         {@render children()}
     </main>
 </div>

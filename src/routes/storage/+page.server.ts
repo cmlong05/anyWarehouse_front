@@ -1,27 +1,33 @@
+import { error, redirect } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
-import { redirect } from '@sveltejs/kit';
 
 export const actions = {
-    default: async ({ request }: { request: Request }) => {
+    default: async ({ request, fetch }) => {
         const formData = await request.formData();
         const updatedData = {
-            item: formData.get('item'),
-            container: formData.get('container'),
-            quantity: formData.get('quantity'),
-            text: formData.get('text'),
+            item: Number(formData.get('item')),
+            container: Number(formData.get('container')),
+            quantity: Number(formData.get('quantity')),
+            text: formData.get('text') || '',
             sample: formData.has('sample'),
         };
-        // Replace global fetch with event.fetch
-        const res = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updatedData),
-        });
-        if (!res.ok) {
-            throw redirect(303, `/item/`);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedData),
+            });
+
+            if (!res.ok) {
+                throw error(res.status, 'Failed to create storage');
+            }
+
+            throw redirect(303, `/item/${updatedData.item}`);
+        } catch (err) {
+            throw err;
         }
-        throw redirect(303, `/item/${formData.get('item')}`);
     }
-}
+};
