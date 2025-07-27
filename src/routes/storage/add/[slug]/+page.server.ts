@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { API_BASE_URL } from '$lib/config';
 
-export async function load({ params, parent }) {
+export async function load({ params, parent, fetch }) {
     const { containers } = await parent();
     
     try {
@@ -31,7 +31,7 @@ export async function load({ params, parent }) {
 }
 
 export const actions = {
-    default: async ({ request, fetch }) => {
+    default: async ({ request }) => {
         const formData = await request.formData();
         
         const storageData = {
@@ -43,6 +43,7 @@ export const actions = {
         };
 
         try {
+            // 使用全局的 fetch，而不是从参数中解构
             const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
                 method: 'POST',
                 headers: {
@@ -52,20 +53,29 @@ export const actions = {
             });
 
             if (!response.ok) {
-                const error = await response.json().catch(() => ({}));
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API Error:', errorData);
                 return fail(400, { 
-                    error: error.message || '创建存储失败',
+                    error: errorData.message || '创建存储失败',
                     data: storageData 
                 });
             }
+
+            const result = await response.json();
+            console.log('Storage created successfully:', result);
 
             // 创建成功，重定向到物品页面
             throw redirect(303, `/item/${storageData.item}`);
 
         } catch (error) {
+            // 重新抛出 redirect 异常（SvelteKit 的 redirect 异常有特殊结构）
+            if (error && typeof error === 'object' && 'status' in error && 'location' in error) {
+                throw error;
+            }
+            
             console.error('Create storage error:', error);
             return fail(500, { 
-                error: '服务器错误',
+                error: '服务器错误: ' + (error instanceof Error ? error.message : '未知错误'),
                 data: storageData 
             });
         }
