@@ -1,12 +1,12 @@
 import { error, fail, redirect } from '@sveltejs/kit';
-import { API_BASE_URL } from '$lib/config';
+import { config } from '$lib/config';
 
 export async function load({ params, parent, fetch }) {
     const { containers } = await parent();
     
     try {
         // 获取物品信息以获取 SKU
-        const itemRes = await fetch(`${API_BASE_URL}/product/api/item/${params.slug}/`);
+        const itemRes = await fetch(`${config.API_BASE_URL}/product/api/item/${params.slug}/`);
         let itemSKU = params.slug; // 默认使用 slug
         
         if (itemRes.ok) {
@@ -44,7 +44,7 @@ export const actions = {
 
         try {
             // 使用全局的 fetch，而不是从参数中解构
-            const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
+            const response = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

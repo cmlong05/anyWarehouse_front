@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { API_BASE_URL } from '$lib/config';
+import { config } from '$lib/config';
 import type { BaseItem } from '$lib/index';
 interface ItemResponse {
     items: BaseItem[];
@@ -14,7 +14,7 @@ interface ServerLoad {
  * @returns 包含商品数据的对象
  */
 export async function load({ fetch }: ServerLoad): Promise<{ items: ItemResponse['items'] }> {
-    const res: Response = await fetch(`${API_BASE_URL}/product/api/item/`);
+    const res: Response = await fetch(`${config.API_BASE_URL}/product/api/item/`);
     if (!res.ok) {
         throw error(res.status, 'Failed to fetch items');
     }

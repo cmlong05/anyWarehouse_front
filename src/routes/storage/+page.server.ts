@@ -1,5 +1,5 @@
 import { error, redirect } from '@sveltejs/kit';
-import { API_BASE_URL } from '$lib/config';
+import { config } from '$lib/config';
 
 export const actions = {
     default: async ({ request, fetch }) => {
@@ -13,7 +13,7 @@ export const actions = {
         };
 
         try {
-            const res = await fetch(`${API_BASE_URL}/warehouse/api/storage/`, {
+            const res = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

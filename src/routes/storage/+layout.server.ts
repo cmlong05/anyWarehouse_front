@@ -1,10 +1,10 @@
-import { API_BASE_URL } from '$lib/config';
+import { config } from '$lib/config';
 import { error } from '@sveltejs/kit';
 import type { ContainerBriefID } from '$lib';
 
 export async function load({ fetch }) {
     try {
-        const containerRes = await fetch(`${API_BASE_URL}/warehouse/api/container-brief/`);
+        const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
         if (!containerRes.ok) {
             throw error(containerRes.status, 'Failed to fetch containers');
         }

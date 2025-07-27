@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
-    import { API_BASE_URL } from '$lib/config';
+    import { config } from '$lib/config';
     import { invalidate } from '$app/navigation';
     
     let { data } = $props<{ itemDetail: ItemSet }>();
@@ -21,7 +21,7 @@
 
         try {
             const newQuantity = storage.quantity - quantity;
-            const response = await fetch(`${API_BASE_URL}/warehouse/api/storage/${storage.id}/`, {
+            const response = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${storage.id}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@
 <div class="div-left-70">
     <div class="image-container">
         <img 
-            src={data.itemDetail.item.image ? `${API_BASE_URL}${data.itemDetail.item.image.trim()}` : ''} 
+            src={data.itemDetail.item.image ? `${config.API_BASE_URL}${data.itemDetail.item.image.trim()}` : ''} 
             style="max-width: 100%; height: auto; max-height: 400px;" 
             alt={data.itemDetail.item.name} 
             loading="lazy" 
