@@ -90,6 +90,7 @@
             name="container"
             options={selectItems}
             bind:value={formData.container}
+            searchProps={{ fields: ['label'] }}
             required
         />
     </label>

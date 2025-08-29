@@ -17,3 +17,5 @@
 
 # 修改static/shared.css为使用tailwindcss
     修改模板中的class
+
+# 设置图片服务器

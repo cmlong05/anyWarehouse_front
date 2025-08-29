@@ -20,19 +20,11 @@ bun run dev
 
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-yarn run dev
-```
-
-## Building
-
+## Building 
+# Note we switched to Bun
 To create a production version of your app:
 
-```bash
+```bash 
 yarn run build
 ```
 You can preview the production build with `yarn run preview`.

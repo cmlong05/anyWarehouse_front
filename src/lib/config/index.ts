@@ -1,7 +1,7 @@
 // src/lib/config/index.ts
 interface Config {
   API_BASE_URL: string;
-  IMAGE_BASE_URL: string;
+  // IMAGE_BASE_URL: string;
   APP_NAME: string;
   DEBUG: boolean;
   NODE_ENV: string;
@@ -11,7 +11,7 @@ interface Config {
 function getConfig(): Config {
   const config = {
     API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-    IMAGE_BASE_URL: import.meta.env.VITE_IMAGE_BASE_URL,
+    // IMAGE_BASE_URL: import.meta.env.VITE_IMAGE_BASE_URL,
     APP_NAME: import.meta.env.VITE_APP_NAME || 'AnyWarehouse',
     DEBUG: import.meta.env.VITE_DEBUG === 'true',
     NODE_ENV: import.meta.env.NODE_ENV || 'development'
@@ -21,11 +21,7 @@ function getConfig(): Config {
   if (!config.API_BASE_URL) {
     throw new Error('VITE_API_BASE_URL 环境变量是必需的');
   }
-
-  if (!config.IMAGE_BASE_URL) {
-    throw new Error('VITE_IMAGE_BASE_URL 环境变量是必需的');
-  }
-
+  
   return config;
 }
 

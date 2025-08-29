@@ -5,17 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Essential Commands
 
 ### Development
-- `npm run dev` - Start development server with Vite
-- `bun run dev` - Alternative using Bun runtime (preferred, as documented in README)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-
-### Code Quality
-- `npm run check` - Run Svelte type checking and validation
-- `npm run check:watch` - Run type checking in watch mode
+- `bun run dev` - Start development server with Vite
 
 ### Package Management
-- Uses Yarn as the primary package manager (see package.json packageManager field)
+- Uses Bun as the primary package manager
 - Has both `yarn.lock` and `bun.lock` - project supports both Yarn and Bun
 - README indicates Bun is preferred for development
 
@@ -30,9 +23,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Configuration
 - Environment-based configuration system in `src/lib/config/index.ts`
-- Requires `VITE_API_BASE_URL` and `VITE_IMAGE_BASE_URL` environment variables
+- Requires `VITE_API_BASE_URL` environment variables
 - Configuration throws errors if required environment variables are missing
-- Example config in `src/lib/config.example.ts` shows API endpoints at `http://1.1.1.1:8080`
+- Example config in `src/lib/config.example.ts` 
 
 ### Application Structure
 This is a warehouse management frontend with the following domain areas:
@@ -78,12 +71,12 @@ This is a warehouse management frontend with the following domain areas:
 
 ### Configuration Setup
 1. Copy `src/lib/config.example.ts` to understand required environment variables
-2. Set up `VITE_API_BASE_URL` and `VITE_IMAGE_BASE_URL` environment variables
+2. Set up `VITE_API_BASE_URL` environment variables
 3. Backend API expected to be available at configured endpoints
 
 ### API Integration
 - All API calls go through the config system - never hardcode URLs
-- Backend appears to be a separate service providing REST endpoints under `/warehouse/api/`
+- Backend is a separate service providing python REST API endpoints under like`/warehouse/api/`
 - Image serving also handled by backend at configured IMAGE_BASE_URL
 
 ### Component Development
