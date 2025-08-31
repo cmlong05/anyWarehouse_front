@@ -1,6 +1,8 @@
 <script lang="ts">
     import StorageForm from '$lib/components/StorageForm.svelte';
     import type { StorageStandard, ContainerBriefID } from '$lib';
+    import { goto } from '$app/navigation';
+    import { config } from '$lib/config';
 
     let { data } = $props<{ 
         data: {
@@ -8,6 +10,19 @@
             containers: ContainerBriefID[];
         }
     }>();
+
+    async function handleDelete(storageId: number) {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${storageId}/`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('删除失败');
+        }
+
+        // 删除成功后跳转到物品详情页
+        goto(`/item/${data.storageDetail.item}`);
+    }
 </script>
 
 <svelte:head>
@@ -30,4 +45,5 @@
         sample: data.storageDetail.sample
     }}
     containers={data.containers}
+    onDelete={handleDelete}
 />
