@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
+import { logger } from '$lib/logger';
 
 export async function load({ params, parent, fetch }) {
     const { containers } = await parent();
@@ -21,7 +22,7 @@ export async function load({ params, parent, fetch }) {
             containers
         };
     } catch (err) {
-        console.error('Load error:', err);
+        logger.error('Failed to load item data', err, { itemSlug: params.slug });
         return {
             item: params.slug,
             itemSKU: params.slug,
@@ -54,7 +55,10 @@ export const actions = {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('API Error:', errorData);
+                logger.error('API request failed', errorData, { 
+                    status: response.status,
+                    storageData 
+                });
                 return fail(400, { 
                     error: errorData.message || '创建存储失败',
                     data: storageData 
@@ -62,7 +66,7 @@ export const actions = {
             }
 
             const result = await response.json();
-            console.log('Storage created successfully:', result);
+            logger.info('Storage created successfully', { storageId: result.id, item: storageData.item });
 
             // 创建成功，重定向到物品页面
             throw redirect(303, `/item/${storageData.item}`);
@@ -73,7 +77,7 @@ export const actions = {
                 throw error;
             }
             
-            console.error('Create storage error:', error);
+            logger.error('Create storage failed', error, { storageData });
             return fail(500, { 
                 error: '服务器错误: ' + (error instanceof Error ? error.message : '未知错误'),
                 data: storageData 

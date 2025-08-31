@@ -1,6 +1,6 @@
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
-import type { Storagestandard } from '$lib';
+import type { StorageStandard } from '$lib';
 
 export async function load({ params, fetch, parent }) {
     const { containers } = await parent();
@@ -12,7 +12,7 @@ export async function load({ params, fetch, parent }) {
             throw error(storageRes.status, 'Failed to fetch storage');
         }
         
-        const storageDetail: Storagestandard = await storageRes.json();
+        const storageDetail: StorageStandard = await storageRes.json();
         
         // 获取物品详情以获取 SKU
         const itemRes = await fetch(`${config.API_BASE_URL}/product/api/item/${storageDetail.item}/`);

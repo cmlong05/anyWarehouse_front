@@ -18,6 +18,7 @@
         itemId?: string;
         itemSKU?: string; // 添加模式下的 SKU
         onCancel?: () => void;
+        onDelete?: (storageId: number) => Promise<void>;
     }
 
     let {
@@ -32,7 +33,8 @@
         containers,
         itemId,
         itemSKU,
-        onCancel
+        onCancel,
+        onDelete
     }: Props = $props();
 
     // 转换为 Svelecte 需要的格式
@@ -61,6 +63,20 @@
             onCancel();
         } else {
             window.history.back();
+        }
+    }
+
+    // 删除操作
+    async function handleDelete() {
+        if (!initialData.id || !onDelete) return;
+        
+        const confirmed = confirm('确定要删除这个存储记录吗？这个操作不可撤销。');
+        if (!confirmed) return;
+
+        try {
+            await onDelete(initialData.id);
+        } catch (error) {
+            alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
         }
     }
 </script>
@@ -117,13 +133,8 @@
         <button type="button" onclick={handleCancel}>
             取消
         </button>
-        {#if mode === 'edit'}
-            <button type="button" class="danger" onclick={() => {
-                if (confirm('确定要删除这个存储记录吗？')) {
-                    // 这里可以添加删除逻辑
-                    console.log('删除存储');
-                }
-            }}>
+        {#if mode === 'edit' && onDelete}
+            <button type="button" class="danger" onclick={handleDelete}>
                 删除存储
             </button>
         {/if}

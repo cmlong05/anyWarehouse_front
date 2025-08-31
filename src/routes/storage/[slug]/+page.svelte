@@ -1,10 +1,10 @@
 <script lang="ts">
     import StorageForm from '$lib/components/StorageForm.svelte';
-    import type { Storagestandard, ContainerBriefID } from '$lib';
+    import type { StorageStandard, ContainerBriefID } from '$lib';
 
     let { data } = $props<{ 
         data: {
-            storageDetail: Storagestandard & { itemSKU?: string }; 
+            storageDetail: StorageStandard & { itemSKU?: string }; 
             containers: ContainerBriefID[];
         }
     }>();

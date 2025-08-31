@@ -7,6 +7,14 @@ export interface BaseItem {
     name: string;
 }
 
+// 组件接口
+export interface ItemComponent {
+    id: number;
+    name: string;
+    quantity: number;
+    type?: string;
+}
+
 export interface Item extends BaseItem  {
     SKU_zite: string;
     SKU_A: string;
@@ -17,11 +25,11 @@ export interface Item extends BaseItem  {
     s_volume: number;
     b_Price: string;
     currency: string;
-    in_fee: null;
+    in_fee: number | null;
     date_added: string;
-    barcode: null;
+    barcode: string | null;
     category: number[];
-    components: any[];
+    components: ItemComponent[];
 }
 
 export interface ItemSet{
@@ -54,7 +62,7 @@ export interface CategoryData {
 }
 
 // 标准 Storage 接口
-export interface Storagestandard {
+export interface StorageStandard {
     id: number;
     quantity: number;
     text: string;
