@@ -92,35 +92,35 @@
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
         <p><strong>组件:</strong> {data.itemDetail.item.components.length > 0 ? data.itemDetail.item.components.join(', ') : '无组件'}</p>
         <div class="div-full">
-            <p><strong>存储:</strong></p>
-            {#if data.itemDetail.storages.length === 0}
-                <p>无库存</p>
-            {:else}            
-                <ul>
-                    {#each data.itemDetail.storages as storage, idx (storage.id)}
-                        <li>
-                            <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
-                            </a> -- 
-                            <a title="{storage.mark}" href="/storage/{storage.id}" style="{storage.mark ? 'background-color: pink; padding-left: 8px; padding-right: 8px;' : 'background-color: beige; padding-left: 8px; padding-right: 8px;'}">{storage.quantity} </a>  
-                            --
-                            <input
-                                type="number"
-                                value="1"
-                                style="width: 4em;"
-                                bind:this={inputRefs[idx]}
-                            />
-                            <button
-                                onclick={(e) => {
-                                    const input = inputRefs[idx];
-                                    if (input) handleStorage(e, storage, input);
-                                }}
-                            >出库</button>
-                        </li>
-                    {/each}
-                </ul>
-            {/if}
-            <a href="/storage/add/{data.itemDetail.item.id}">新建存储</a>
-
+            <p><strong>存储:</strong>
+                <a href="/storage/add/{data.itemDetail.item.id}">添加</a>
+            </p>
+            <div>
+                {#if data.itemDetail.storages.length > 0}
+                    <ul>
+                        {#each data.itemDetail.storages as storage, idx (storage.id)}
+                            <li>
+                                <a href={`/container/${storage.container_fastCode}`}>{storage.container_fastCode}
+                                </a> -- 
+                                <a title="{storage.mark}" href="/storage/{storage.id}" style="{storage.mark ? 'background-color: pink; padding-left: 8px; padding-right: 8px;' : 'background-color: beige; padding-left: 8px; padding-right: 8px;'}">{storage.quantity} </a>  
+                                --
+                                <input
+                                    type="number"
+                                    value="1"
+                                    style="width: 4em;"
+                                    bind:this={inputRefs[idx]}
+                                />
+                                <button
+                                    onclick={(e) => {
+                                        const input = inputRefs[idx];
+                                        if (input) handleStorage(e, storage, input);
+                                    }}
+                                >出库</button>
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
+            </div>
         </div>    
     </div>
     <div class="div-full">
