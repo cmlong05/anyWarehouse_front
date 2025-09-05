@@ -1,3 +1,4 @@
+<!-- container/[slug] 存储容器显示页面 -->
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
     let { data } = $props<{ containerRes: ContainerResponse }>();
@@ -43,8 +44,15 @@
         </p>
     </div>
     <div class="div-full">
-        <p><strong>{data.containerRes.container.fastCode}</strong> {data.containerRes.container.mark}</p>
-        <p>条形码：{data.containerRes.container.barcode}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p><strong>{data.containerRes.container.fastCode}</strong> {data.containerRes.container.mark}</p>
+                <p>条形码：{data.containerRes.container.barcode}</p>
+            </div>
+            <a href="/container/{data.containerRes.container.fastCode}/edit" class="btn btn-primary">
+                编辑容器
+            </a>
+        </div>
     </div>
     <div class="div-full">
         <ul>

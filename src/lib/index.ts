@@ -124,10 +124,10 @@ export interface ContainerVerbose  {
 }
 
 export interface ContainerResponse {
-    mainContainer: Container;
+    container: Container;
     ancestors: ContainerBriefMark[];
     descendants: ContainerVerbose[];
     siblings: ContainerBriefMark[];
-    storageItem: StorageItem[];
+    storages: StorageItem[];
 }
 
