@@ -8,6 +8,9 @@
             <a href="/container/add" class="btn btn-primary">
                 添加根容器
             </a>
+            <a href="/category/add" class="btn btn-primary">
+                添加根分类
+            </a>
         </div>
     </div>
 </div>

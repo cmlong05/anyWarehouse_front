@@ -17,7 +17,11 @@
             <span> &gt;&thinsp; </span>
         {/if}
     {/each}
-    <span>{data.category_details.category.name} </span>
+    <span>{data.category_details.category.name}</span>
+    <span> - </span>
+    <a href="/category/{data.category_details.category.id}/edit">编辑</a>
+    <span> - </span>
+    <a href="/category/add?parent={data.category_details.category.id}">添加子分类</a>
 </nav>
 
 <!-- 主内容 -->
@@ -58,4 +62,3 @@
     {/each}
 </div>
 
-<mcfile name="+page.svelte" path="e:\anyWarehouse_front\src\routes\categories\[slug]\+page.svelte"></mcfile>
