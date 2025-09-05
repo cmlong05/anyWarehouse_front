@@ -66,10 +66,6 @@
             alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
         }
     }
-
-        // 调试：打印 categories 和 selectItems
-    console.log('CategoryForm categories:', categories);
-    console.log('CategoryForm selectItems:', selectItems);
 </script>
 
 <form method="POST" use:enhance>
