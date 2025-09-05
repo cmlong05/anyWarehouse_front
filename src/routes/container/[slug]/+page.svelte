@@ -25,7 +25,7 @@
     <div class="div-full ">
         <p style="align-items: center; gap: 1em; margin:0;">
             <span>
-                容量情况：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
+                容量：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
             </span>
             <meter
             value={data.containerRes.container.a_volume}
@@ -46,12 +46,14 @@
     <div class="div-full">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <p><strong>{data.containerRes.container.fastCode}</strong> {data.containerRes.container.mark}</p>
-                <p>条形码：{data.containerRes.container.barcode}</p>
+                <p><strong>{data.containerRes.container.fastCode}</strong>   
+                <a href="/container/{data.containerRes.container.fastCode}/edit" class="btn btn-primary">
+                编辑</a>
+                <a href="/container/add?parent={data.containerRes.container.fastCode}" class="btn btn-secondary">
+                添加子容器</a></p>
+                <p>{data.containerRes.container.mark}</p>
+                <!-- <p>条形码：{data.containerRes.container.barcode}</p> -->
             </div>
-            <a href="/container/{data.containerRes.container.fastCode}/edit" class="btn btn-primary">
-                编辑容器
-            </a>
         </div>
     </div>
     <div class="div-full">

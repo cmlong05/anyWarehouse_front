@@ -19,7 +19,7 @@ export async function load({ params, fetch }): Promise<{ container: Container; c
     const containerData: ContainerResponse = await containerRes.json();
     
     // 获取所有容器列表用于父容器选择
-    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/api/containers/brief/`);
+    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
     let containers: ContainerBriefID[] = [];
     if (containersRes.ok) {
         containers = await containersRes.json();
@@ -41,6 +41,8 @@ export const actions = {
             barcode: formData.get('barcode'),
             mark: formData.get('mark'),
             volume: Number(formData.get('volume')),
+            zz_volume: Number(formData.get('zz_volume')),
+            zz_weight: Number(formData.get('zz_weight')),
             a_volume: Number(formData.get('a_volume')),
             total_weight: Number(formData.get('total_weight')),
             parent: formData.get('parent') || null

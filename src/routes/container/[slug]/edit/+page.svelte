@@ -13,7 +13,7 @@
     }>();
 
     async function handleDelete(containerId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${containerId}/`, {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${data.container.fastCode}/`, {
             method: 'DELETE',
         });
 
@@ -46,6 +46,8 @@
         barcode: data.container.barcode,
         mark: data.container.mark,
         volume: data.container.volume,
+        zz_volume: data.container.zz_volume,
+        zz_weight: data.container.zz_weight,
         a_volume: data.container.a_volume,
         total_weight: data.container.total_weight,
         parent: data.container.parent

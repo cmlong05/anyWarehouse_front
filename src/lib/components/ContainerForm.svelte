@@ -11,6 +11,8 @@
             barcode?: string | null;
             mark: string;
             volume: number;
+            zz_volume?: number;
+            zz_weight?: number;
             a_volume?: number;
             total_weight?: number;
             parent?: number | null;
@@ -27,6 +29,8 @@
             barcode: '',
             mark: '',
             volume: 0,
+            zz_volume: 0,
+            zz_weight: 0,
             a_volume: 0,
             total_weight: 0,
             parent: null
@@ -48,6 +52,8 @@
         barcode: initialData.barcode || '',
         mark: initialData.mark || '',
         volume: initialData.volume || 0,
+        zz_volume: initialData.zz_volume || 0,
+        zz_weight: initialData.zz_weight || 0,
         a_volume: initialData.a_volume || 0,
         total_weight: initialData.total_weight || 0,
         parent: initialData.parent || null
@@ -83,7 +89,32 @@
             容器ID: {initialData.id}
         </div>
     {/if}
-
+    {#if containers.length > 0}
+        <label>
+            父容器
+            {#if mode === 'add' && initialData.parent}
+                <!-- 添加模式下如果有默认父容器，显示为只读 -->
+                {@const parentContainer = containers.find(c => c.id === initialData.parent)}
+                <input 
+                    type="text" 
+                    value={parentContainer ? parentContainer.fastCode : '未知容器'} 
+                    disabled
+                    style="background-color: #f8f9fa; color: #6c757d;"
+                />
+                <input type="hidden" name="parent" value={formData.parent} />
+            {:else}
+                <!-- 编辑模式或无默认父容器时，显示选择器 -->
+                <Svelecte
+                    name="parent"
+                    options={selectItems}
+                    bind:value={formData.parent}
+                    searchProps={{ fields: ['label'] }}
+                    placeholder="选择父容器（可选）"
+                    clearable
+                />
+            {/if}
+        </label>
+    {/if}
     <label>
         快速代码
         <input 
@@ -116,34 +147,44 @@
     </label>
 
     <label>
-        容量
+        总容量
         <input 
             type="number" 
             name="volume" 
             bind:value={formData.volume} 
             required 
             min="1" 
-            placeholder="容器容量"
+            placeholder="容器总容量"
+        />
+    </label>
+
+    <label>
+        自占体积
+        <input 
+            type="number" 
+            name="zz_volume" 
+            bind:value={formData.zz_volume}
+            min="0"
+            step="0.01"
+            placeholder="容器自身占用的体积"
+        />
+    </label>
+
+    <label>
+        箱体自重
+        <input 
+            type="number" 
+            name="zz_weight" 
+            bind:value={formData.zz_weight}
+            min="0"
+            step="0.01"
+            placeholder="容器自身重量"
         />
     </label>
 
     <!-- 隐藏字段，保持现有值 -->
     <input type="hidden" name="a_volume" value={formData.a_volume} />
     <input type="hidden" name="total_weight" value={formData.total_weight} />
-
-    {#if containers.length > 0}
-        <label>
-            父容器
-            <Svelecte
-                name="parent"
-                options={selectItems}
-                bind:value={formData.parent}
-                searchProps={{ fields: ['label'] }}
-                placeholder="选择父容器（可选）"
-                clearable
-            />
-        </label>
-    {/if}
 
     <div class="form-actions">
         <button type="submit">
