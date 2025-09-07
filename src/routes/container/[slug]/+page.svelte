@@ -1,7 +1,14 @@
 <!-- container/[slug] 存储容器显示页面 -->
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
-    let { data } = $props<{ containerRes: ContainerResponse }>();
+    
+    interface Props {
+        data: {
+            containerRes: ContainerResponse;
+        };
+    }
+    
+    let { data }: Props = $props();
 </script>
 
 <svelte:head>
