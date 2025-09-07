@@ -39,9 +39,9 @@
 
     // 表单数据
     let formData = $state({
-        name: initialData.name || '',
-        parent: initialData.parent || null,
-        top_category: initialData.top_category || false
+        name: initialData?.name || '',
+        parent: initialData?.parent || null,
+        top_category: initialData?.top_category || false
     });
 
     // 取消操作
@@ -89,14 +89,27 @@
     {#if categories.length > 0}
         <label>
             父分类
-            <Svelecte
-                name="parent"
-                options={selectItems}
-                bind:value={formData.parent}
-                searchProps={{ fields: ['label'] }}
-                placeholder="选择父分类（可选，留空为顶级分类）"
-                clearable
-            />
+            {#if mode === 'add' && initialData?.parent}
+                <!-- 添加模式下如果有默认父分类，显示为只读 -->
+                {@const parentCategory = categories.find(c => c.id === initialData.parent)}
+                <input 
+                    type="text" 
+                    value={parentCategory ? parentCategory.name : '未知分类'} 
+                    disabled
+                    style="background-color: #f8f9fa; color: #6c757d;"
+                />
+                <input type="hidden" name="parent" value={formData.parent} />
+            {:else}
+                <!-- 编辑模式或无默认父分类时，显示选择器 -->
+                <Svelecte
+                    name="parent"
+                    options={selectItems}
+                    bind:value={formData.parent}
+                    searchProps={{ fields: ['label'] }}
+                    placeholder="选择父分类（可选，留空为顶级分类）"
+                    clearable
+                />
+            {/if}
         </label>
     {/if}
 

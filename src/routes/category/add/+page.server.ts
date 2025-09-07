@@ -18,8 +18,8 @@ export async function load({ url, fetch }): Promise<{ categories: Category[]; pa
         try {
             const categoryRes = await fetch(`${config.API_BASE_URL}/product/api/category/${parentId}/`);
             if (categoryRes.ok) {
-                    const categoryData: Category = await categoryRes.json();
-                    parentCategory = categoryData;
+                const categoryData: CategoryData = await categoryRes.json();
+                parentCategory = categoryData.category;
             }
         } catch (err) {
             console.warn('Failed to fetch parent category:', err);
