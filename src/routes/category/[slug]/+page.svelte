@@ -18,10 +18,10 @@
         {/if}
     {/each}
     <span>{data.category_details.category.name}</span>
+    <span> • </span>
+    <a href="/category/{data.category_details.category.id}/edit" class="edit-link">编辑</a>
     <span> - </span>
-    <a href="/category/{data.category_details.category.id}/edit">编辑</a>
-    <span> - </span>
-    <a href="/category/add?parent={data.category_details.category.id}">添加子分类</a>
+    <a href="/category/add?parent={data.category_details.category.id}" class="edit-link">添加子分类</a>
 </nav>
 
 <!-- 主内容 -->
@@ -61,4 +61,27 @@
         </div>
     {/each}
 </div>
+
+<style>
+    .edit-link {
+        font-size: 0.875rem;
+        color: #6b7280;
+        text-decoration: none;
+        padding: 0.125rem 0.375rem;
+        border-radius: 0.25rem;
+        transition: all 0.2s ease;
+        display: inline-block;
+        position: relative;
+        top: 1px;
+    }
+    
+    .edit-link:hover {
+        color: #374151;
+        text-decoration: none;
+    }
+    
+    .edit-link:active {
+        transform: translateY(1px);
+    }
+</style>
 
