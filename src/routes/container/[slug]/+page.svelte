@@ -54,9 +54,9 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <p><strong>{data.containerRes.container.fastCode}</strong>   
-                <a href="/container/{data.containerRes.container.fastCode}/edit" class="btn btn-primary">
+                <a href="/container/{data.containerRes.container.fastCode}/edit" class="edit-link">
                 编辑</a>
-                <a href="/container/add?parent={data.containerRes.container.fastCode}" class="btn btn-secondary">
+                <a href="/container/add?parent={data.containerRes.container.fastCode}" class="edit-link">
                 添加子容器</a></p>
                 <p>{data.containerRes.container.mark}</p>
                 <!-- <p>条形码：{data.containerRes.container.barcode}</p> -->
