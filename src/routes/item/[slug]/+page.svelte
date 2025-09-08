@@ -71,7 +71,15 @@
         {/each}
         <a href="/category/{category.category.id}">{category.category.name} </a> 
     </nav>
-{/each}    
+{/each}
+
+<!-- 页面操作 -->
+<div class="page-actions">
+    <h1>{data.itemDetail.item.name}</h1>
+    <div class="actions">
+        <a href="/item/{data.itemDetail.item.id}/edit" class="btn btn-primary">编辑商品</a>
+    </div>
+</div>
 
 
 <!-- 主内容 -->
@@ -85,7 +93,6 @@
         />
     </div>
     <div class="div-right">
-        <p><strong>{data.itemDetail.item.name}</strong></p>
         <p><strong>SKU:</strong> {data.itemDetail.item.SKU}</p>
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
@@ -146,3 +153,57 @@
     {/each}
 </div>
 
+<style>
+    .page-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0 2rem 0;
+        padding: 1rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .page-actions h1 {
+        margin: 0;
+        color: #333;
+        font-size: 1.8rem;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.15s ease-in-out;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    @media (max-width: 768px) {
+        .page-actions {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .page-actions h1 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
