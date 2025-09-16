@@ -88,7 +88,15 @@
         if (!initialData?.id || !onDelete) return;
         
         if (confirm('确定要删除这个商品吗？此操作不可撤销。')) {
-            await onDelete(initialData.id);
+            try {
+                deleteLoading = true;
+                await onDelete(initialData.id);
+            } catch (error) {
+                console.error('删除操作失败:', error);
+                alert('删除失败，请稍后重试');
+            } finally {
+                deleteLoading = false;
+            }
         }
     }
 

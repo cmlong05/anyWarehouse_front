@@ -4,13 +4,13 @@
 </script>
 
 <svelte:head>
-    <title>所有商品</title>
+    <title>所有品项</title>
 </svelte:head>
 <div class="content-container">
     <ul>
         <div class="section-header">
-            <h3>所有商品</h3>
-            <a href="/item/add" class="edit-link">添加商品</a>
+            <h3>所有品项</h3>
+            <a href="/item/add" class="edit-link">添加品项</a>
         </div>
 
         {#each data.items as { id, SKU, name }}

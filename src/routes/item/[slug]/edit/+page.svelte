@@ -1,6 +1,7 @@
 <!-- 编辑商品 -->
 <script lang="ts">
     import ItemForm from '$lib/components/ItemForm.svelte';
+    import DeleteNavigationModal from '$lib/components/DeleteNavigationModal.svelte';
     import type { Category, ItemSet } from '$lib';
     import { goto } from '$app/navigation';
     import { config } from '$lib/config';
@@ -12,17 +13,37 @@
         }
     }>();
 
+    let showDeleteModal = $state(false);
+    let deletedItemName = $state('');
+    let deletedItemCategories = $state<Category[]>([]);
+
     async function handleDelete(itemId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/product/api/item/${itemId}/`, {
-            method: 'DELETE',
-        });
+        console.log('删除函数被调用, itemId:', itemId);
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/product/api/item/${itemId}/`, {
+                method: 'DELETE',
+            });
 
-        if (!response.ok) {
-            throw new Error('删除失败');
+            console.log('删除请求响应:', response.status, response.ok);
+
+            if (!response.ok) {
+                throw new Error('删除失败');
+            }
+
+            // 删除成功后，收集信息并显示选择弹框
+            deletedItemName = data.itemData.item.name;
+            // 从itemData.categories中提取分类信息
+            deletedItemCategories = data.itemData.categories.map(cat => cat.category);
+            console.log('设置弹框状态:', {
+                deletedItemName,
+                deletedItemCategories,
+                showDeleteModal: true
+            });
+            showDeleteModal = true;
+        } catch (error) {
+            console.error('删除失败:', error);
+            alert('删除失败，请稍后重试');
         }
-
-        // 删除成功后跳转到商品列表页面
-        goto('/item');
     }
 </script>
 
@@ -56,6 +77,13 @@
     }}
     categories={data.categories}
     onDelete={handleDelete}
+/>
+
+<!-- 删除后的导航选择弹框 -->
+<DeleteNavigationModal 
+    bind:isOpen={showDeleteModal}
+    itemName={deletedItemName}
+    itemCategories={deletedItemCategories}
 />
 
 <style>
