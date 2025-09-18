@@ -38,7 +38,7 @@
     }: Props = $props();
 
     // 转换为 Svelecte 需要的格式
-    const selectItems = containers.map((item: ContainerBriefID) => ({
+    const selectItems = (containers || []).map((item: ContainerBriefID) => ({
         value: item.id,
         label: item.fastCode
     }));

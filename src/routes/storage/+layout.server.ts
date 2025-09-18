@@ -6,7 +6,10 @@ export async function load({ fetch }) {
     try {
         const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
         if (!containerRes.ok) {
-            throw error(containerRes.status, 'Failed to fetch containers');
+            console.error('Failed to fetch containers:', containerRes.status);
+            return {
+                containers: []
+            };
         }
         const containers: ContainerBriefID[] = await containerRes.json();
         
@@ -15,6 +18,9 @@ export async function load({ fetch }) {
         };
     } catch (err) {
         console.error('Layout load error:', err);
-        throw error(500, 'Failed to load container data');
+        // 返回空数组而不是抛出错误，让页面能够正常加载
+        return {
+            containers: []
+        };
     }
 }

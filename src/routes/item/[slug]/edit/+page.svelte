@@ -1,9 +1,8 @@
-<!-- 编辑商品 -->
+<!-- 编辑品项 -->
 <script lang="ts">
     import ItemForm from '$lib/components/ItemForm.svelte';
     import DeleteNavigationModal from '$lib/components/DeleteNavigationModal.svelte';
     import type { Category, ItemSet } from '$lib';
-    import { goto } from '$app/navigation';
     import { config } from '$lib/config';
 
     let { data } = $props<{ 
@@ -33,7 +32,7 @@
             // 删除成功后，收集信息并显示选择弹框
             deletedItemName = data.itemData.item.name;
             // 从itemData.categories中提取分类信息
-            deletedItemCategories = data.itemData.categories.map(cat => cat.category);
+            deletedItemCategories = data.itemData.categories.map((cat: { category: Category }) => cat.category);
             console.log('设置弹框状态:', {
                 deletedItemName,
                 deletedItemCategories,
@@ -48,12 +47,12 @@
 </script>
 
 <svelte:head>
-    <title>编辑商品 - {data.itemData.item.name}</title>
+    <title>编辑品项 - {data.itemData.item.name}</title>
 </svelte:head>
 
 <div class="page-header">
-    <h2>编辑商品</h2>
-    <p>商品：<strong>{data.itemData.item.name}</strong> ({data.itemData.item.SKU})</p>
+    <h2>编辑品项</h2>
+    <p>品项：<strong>{data.itemData.item.name}</strong> ({data.itemData.item.SKU})</p>
 </div>
 
 <ItemForm 

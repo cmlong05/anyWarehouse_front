@@ -76,9 +76,6 @@
 <!-- 页面操作 -->
 <div class="page-actions">
     <h1>{data.itemDetail.item.name}</h1>
-    <div class="actions">
-        <a href="/item/{data.itemDetail.item.id}/edit" class="btn btn-primary">编辑商品</a>
-    </div>
 </div>
 
 
@@ -93,7 +90,9 @@
         />
     </div>
     <div class="div-right">
-        <p><strong>SKU:</strong> {data.itemDetail.item.SKU}</p>
+        <p><strong>SKU:</strong> {data.itemDetail.item.SKU}
+            <a href="/item/{data.itemDetail.item.id}/edit" class="edit-link">编辑</a>
+        </p>
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
@@ -167,32 +166,6 @@
         margin: 0;
         color: #333;
         font-size: 1.8rem;
-    }
-
-    .actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-block;
-        transition: background-color 0.15s ease-in-out;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
     }
 
     @media (max-width: 768px) {
