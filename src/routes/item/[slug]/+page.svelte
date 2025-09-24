@@ -3,7 +3,7 @@
     import { config } from '$lib/config';
     import { invalidate } from '$app/navigation';
     
-    let { data } = $props<{ itemDetail: ItemSet }>();
+    let { data } = $props<{ data: { itemDetail: ItemSet } }>();
     let inputRefs: (HTMLInputElement | null)[] = [];
 
     const handleStorage = async (event: Event, storage: any, inputElement: HTMLInputElement) => {

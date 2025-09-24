@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { goto } from '$app/navigation';
     import type { Category } from '$lib';
     import Svelecte from 'svelecte';
 
@@ -108,9 +109,24 @@
     method="POST" 
     use:enhance={() => {
         formLoading = true;
-        return async ({ update }) => {
-            await update();
-            formLoading = false;
+        return async ({ result }) => {
+            
+            if (result.type === 'redirect') {
+                formLoading = false;
+                // 使用 SvelteKit 的 goto 进行客户端导航
+                await goto(result.location);
+                return;
+            } else if (result.type === 'success') {
+                formLoading = false;
+            } else if (result.type === 'failure') {
+                console.error('提交失败:', result.data);
+                alert(`提交失败: ${result.data?.error || '未知错误'}`);
+                formLoading = false;
+            } else if (result.type === 'error') {
+                console.error('提交错误:', result.error);
+                alert(`提交错误: ${result.error?.message || '未知错误'}`);
+                formLoading = false;
+            }
         };
     }}
 >
@@ -312,11 +328,14 @@
                 <Svelecte 
                     options={selectItems}
                     multiple={true}
-                    name="category"
                     bind:value={formData.category}
                     placeholder="选择商品分类..."
                     class="svelecte-control"
                 />
+                <!-- 隐藏字段确保分类数据正确提交 -->
+                {#each formData.category as categoryId}
+                    <input type="hidden" name="category" value={categoryId} />
+                {/each}
             </div>
         </div>
     </div>

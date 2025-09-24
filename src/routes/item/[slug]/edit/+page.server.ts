@@ -35,23 +35,36 @@ export const actions = {
         const formData = await request.formData();
         
         // 构建更新数据
-        const itemData = {
+        const itemData: any = {
             SKU: formData.get('SKU'),
             name: formData.get('name'),
             SKU_zite: formData.get('SKU_zite') || '',
             SKU_A: formData.get('SKU_A') || '',
             description: formData.get('description') || '',
-            image: formData.get('image') || '',
-            weight: formData.get('weight') || '',
             p_volume: Number(formData.get('p_volume')) || 0,
             s_volume: Number(formData.get('s_volume')) || 0,
-            b_Price: formData.get('b_Price') || '',
             currency: formData.get('currency') || '',
             in_fee: formData.get('in_fee') ? Number(formData.get('in_fee')) : null,
             barcode: formData.get('barcode') || '',
             category: formData.getAll('category').map(id => Number(id))
         };
 
+        // 只在有值时添加可选字段
+        const imageValue = formData.get('image');
+        if (imageValue && imageValue.toString().trim()) {
+            itemData.image = imageValue;
+        }
+
+        const weightValue = formData.get('weight');
+        if (weightValue && weightValue.toString().trim()) {
+            itemData.weight = weightValue;
+        }
+
+        const priceValue = formData.get('b_Price');
+        if (priceValue && priceValue.toString().trim()) {
+            itemData.b_Price = priceValue;
+        }
+        
         try {
             const response = await fetch(`${config.API_BASE_URL}/product/api/item/${slug}/`, {
                 method: 'PATCH',
@@ -71,7 +84,8 @@ export const actions = {
 
             throw redirect(303, `/item/${slug}`);
         } catch (err) {
-            if (err instanceof Response) {
+            // 检查是否为重定向，重定向应该被重新抛出
+            if (err && typeof err === 'object' && 'status' in err && 'location' in err) {
                 throw err; // 重新抛出重定向
             }
             return {
