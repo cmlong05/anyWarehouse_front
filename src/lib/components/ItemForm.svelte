@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms';
     import { goto } from '$app/navigation';
     import type { Category } from '$lib';
+    import { config } from '$lib/config';
     import Svelecte from 'svelecte';
 
     interface Props {
@@ -103,32 +104,138 @@
 
     let deleteLoading = $state(false);
     let formLoading = $state(false);
+    let imageError = $state(false);
+
+    // 处理图片上传
+    let selectedFile = $state<File | null>(null);
+    let previewUrl = $state<string>('');
+    
+    // 专门用于URL输入框的变量，显示用户友好的值
+    let imageUrlInput = $state<string>('');
+
+    // 计算图片显示URL
+    const displayImageUrl = $derived(() => {
+        if (previewUrl) return previewUrl;
+        if (imageUrlInput) {
+            return imageUrlInput.startsWith('http') 
+                ? imageUrlInput 
+                : `${config.API_BASE_URL}${imageUrlInput}`;
+        }
+        if (formData.image) {
+            return formData.image.startsWith('http') 
+                ? formData.image 
+                : `${config.API_BASE_URL}${formData.image}`;
+        }
+        return '';
+    });
+
+    // 初始化URL输入框的值
+    $effect(() => {
+        if (formData.image && !imageUrlInput && !selectedFile) {
+            // 如果是相对路径，显示完整URL；如果已经是完整URL，直接显示
+            imageUrlInput = formData.image.startsWith('http') 
+                ? formData.image 
+                : `${config.API_BASE_URL}${formData.image}`;
+        }
+    });
+
+    // 监听URL输入变化
+    $effect(() => {
+        if (imageUrlInput && !selectedFile) {
+            // 如果输入的是完整URL，直接使用；如果是相对路径，保持原样
+            formData.image = imageUrlInput;
+            previewUrl = ''; // 清除文件预览
+        }
+    });
+
+    function handleImageUpload(event: Event) {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        
+        if (!file.type.startsWith('image/')) {
+            alert('请选择图片文件');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片文件不能超过5MB');
+            return;
+        }
+        
+        selectedFile = file;
+        imageError = false; // 重置错误状态
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (e.target?.result) {
+                previewUrl = e.target.result as string;
+                formData.image = ''; // 清空form数据
+                imageUrlInput = ''; // 清空URL输入显示
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 清除图片
+    function clearImage() {
+        formData.image = '';
+        imageUrlInput = '';
+        selectedFile = null;
+        previewUrl = '';
+        imageError = false;
+        const fileInput = document.getElementById('imageFile') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+    }
+
+    // 处理图片加载错误
+    function handleImageError() {
+        imageError = true;
+    }
+
+    // 表单提交处理
+    async function handleSubmit(event: Event) {
+        event.preventDefault();
+        formLoading = true;
+
+        try {
+            const form = event.target as HTMLFormElement;
+            const formData = new FormData(form);
+            
+            // 处理图片字段：只在选择了新文件时才添加
+            if (selectedFile) {
+                formData.set('image', selectedFile);
+            }
+            // 如果没有选择新文件，不发送image字段，保持现有图片不变
+
+            const apiUrl = mode === 'edit' && initialData?.id 
+                ? `${config.API_BASE_URL}/product/api/item/${initialData.id}/`
+                : `${config.API_BASE_URL}/product/api/item/`;
+
+            const response = await fetch(apiUrl, {
+                method: mode === 'edit' ? 'PATCH' : 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(mode === 'edit' ? '更新成功！' : '添加成功！');
+                await goto(`/item/${mode === 'edit' ? initialData?.id : data.id}`);
+            } else {
+                const error = await response.text();
+                alert(`提交失败: ${error || '未知错误'}`);
+            }
+        } catch (error) {
+            alert(`提交错误: ${error instanceof Error ? error.message : '未知错误'}`);
+        } finally {
+            formLoading = false;
+        }
+    }
 </script>
 
 <form 
     method="POST" 
-    use:enhance={() => {
-        formLoading = true;
-        return async ({ result }) => {
-            
-            if (result.type === 'redirect') {
-                formLoading = false;
-                // 使用 SvelteKit 的 goto 进行客户端导航
-                await goto(result.location);
-                return;
-            } else if (result.type === 'success') {
-                formLoading = false;
-            } else if (result.type === 'failure') {
-                console.error('提交失败:', result.data);
-                alert(`提交失败: ${result.data?.error || '未知错误'}`);
-                formLoading = false;
-            } else if (result.type === 'error') {
-                console.error('提交错误:', result.error);
-                alert(`提交错误: ${result.error?.message || '未知错误'}`);
-                formLoading = false;
-            }
-        };
-    }}
+    enctype="multipart/form-data"
+    onsubmit={handleSubmit}
 >
     <div class="form-grid">
         <!-- 基本信息 -->
@@ -312,15 +419,71 @@
             <h3>其他信息</h3>
             
             <div class="field-group">
-                <label for="image">图片链接</label>
-                <input 
-                    type="url" 
-                    id="image" 
-                    name="image" 
-                    bind:value={formData.image}
-                    maxlength="500"
-                    placeholder="商品图片URL"
-                />
+                <label for="image">商品图片</label>
+                
+                <!-- 图片预览和上传控件区域 -->
+                <div class="image-upload-section">
+                    <!-- 图片预览区域 -->
+                    <div class="image-preview-container">
+                        {#if displayImageUrl()}
+                            <img 
+                                src={displayImageUrl()} 
+                                alt="商品图片预览" 
+                                class="image-preview"
+                                onerror={handleImageError}
+                            />
+                            <div class="image-placeholder" style={imageError ? 'display: flex' : 'display: none'}>
+                                <span>图片加载失败</span>
+                            </div>
+                        {:else}
+                            <div class="image-placeholder">
+                                <span>暂无图片</span>
+                            </div>
+                        {/if}
+                    </div>
+                    
+                    <!-- 上传控件 -->
+                    <div class="image-controls">
+                        <input 
+                            type="file" 
+                            id="imageFile" 
+                            accept="image/*"
+                            style="display: none;"
+                            onchange={handleImageUpload}
+                        />
+                        <button 
+                            type="button" 
+                            class="btn btn-outline"
+                            onclick={() => document.getElementById('imageFile')?.click()}
+                        >
+                            选择图片
+                        </button>
+                        
+                        {#if displayImageUrl()}
+                            <button 
+                                type="button" 
+                                class="btn btn-danger-outline"
+                                onclick={clearImage}
+                            >
+                                清除图片
+                            </button>
+                        {/if}
+                    </div>
+                </div>
+                
+                <!-- URL输入框独占一行 -->
+                <div class="url-input-full-width">
+                    <input 
+                        type="text" 
+                        id="imageUrl" 
+                        bind:value={imageUrlInput}
+                        maxlength="500"
+                        placeholder="或输入图片URL（暂不支持更新）"
+                        class="url-input-full"
+                        readonly={mode === 'edit'}
+                        title={mode === 'edit' ? '编辑模式下请使用文件上传更新图片' : '请输入完整的URL'}
+                    />
+                </div>
             </div>
 
             <div class="field-group">
@@ -352,7 +515,7 @@
         </button>
         
         <button type="submit" class="btn btn-primary" disabled={formLoading}>
-            {formLoading ? '处理中...' : mode === 'add' ? '添加商品' : '更新商品'}
+            {formLoading ? '处理中...' : mode === 'add' ? '添加商品' : '更新'}
         </button>
         
         {#if mode === 'edit' && onDelete && initialData?.id}
@@ -362,7 +525,7 @@
                 onclick={handleDelete}
                 disabled={deleteLoading}
             >
-                {deleteLoading ? '删除中...' : '删除商品'}
+                {deleteLoading ? '删除中...' : '删除'}
             </button>
         {/if}
     </div>
@@ -508,6 +671,98 @@
         background-color: #c82333;
     }
 
+    .btn-outline {
+        background-color: transparent;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-danger-outline {
+        background-color: transparent;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+    }
+
+    .btn-danger-outline:hover:not(:disabled) {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    /* 图片上传样式 */
+    .image-upload-section {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .image-preview-container {
+        flex-shrink: 0;
+        width: 120px;
+        height: 120px;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: #f8f9fa;
+    }
+
+    .image-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-align: center;
+    }
+
+    .image-controls {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* URL输入框独占一行的样式 */
+    .url-input-full-width {
+        margin-top: 1rem;
+        width: 100%;
+    }
+
+    .url-input-full {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        background-color: #f8f9fa;
+    }
+
+    .url-input-full:focus {
+        outline: none;
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        background-color: #ffffff;
+    }
+
+    .url-input-full[readonly] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
     @media (max-width: 768px) {
         .form-grid {
             grid-template-columns: 1fr;
@@ -533,6 +788,22 @@
         }
 
         .btn {
+            width: 100%;
+        }
+
+        .image-upload-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .image-preview-container {
+            width: 100%;
+            height: 200px;
+            align-self: center;
+            max-width: 300px;
+        }
+
+        .image-controls {
             width: 100%;
         }
     }
