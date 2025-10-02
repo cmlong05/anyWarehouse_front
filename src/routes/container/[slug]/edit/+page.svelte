@@ -13,7 +13,7 @@
     }>();
 
     async function handleDelete(containerId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${data.container.fastCode}/`, {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/container/${data.container.fastCode}/`, {
             method: 'DELETE',
         });
 

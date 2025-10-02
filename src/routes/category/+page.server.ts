@@ -4,7 +4,7 @@ import type { Category } from '$lib/index';
 
 export async function load({ fetch }) {
     try {
-        const response = await fetch(`${config.API_BASE_URL}/product/api/category/`);
+        const response = await fetch(`${config.API_BASE_URL}/product/category/`);
         if (!response.ok) {
             throw error(response.status, 'Failed to fetch categories');
         }

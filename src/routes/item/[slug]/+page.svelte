@@ -21,7 +21,7 @@
 
         try {
             const newQuantity = storage.quantity - quantity;
-            const response = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${storage.id}/`, {
+            const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${storage.id}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

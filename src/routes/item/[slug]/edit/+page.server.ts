@@ -7,14 +7,14 @@ export async function load({ params, fetch }) {
     
     try {
         // 获取商品详细信息
-        const itemRes = await fetch(`${config.API_BASE_URL}/product/api/item/${slug}/`);
+        const itemRes = await fetch(`${config.API_BASE_URL}/product/item/${slug}/`);
         if (!itemRes.ok) {
             throw error(itemRes.status, 'Failed to fetch item');
         }
         const itemData: ItemSet = await itemRes.json();
 
         // 获取所有分类
-        const categoriesRes = await fetch(`${config.API_BASE_URL}/product/api/category/`);
+        const categoriesRes = await fetch(`${config.API_BASE_URL}/product/category/`);
         if (!categoriesRes.ok) {
             throw error(categoriesRes.status, 'Failed to fetch categories');
         }
@@ -66,7 +66,7 @@ export const actions = {
         }
         
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/api/item/${slug}/`, {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${slug}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

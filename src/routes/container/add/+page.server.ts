@@ -7,7 +7,7 @@ import type { Container, ContainerBriefID, ContainerResponse } from '$lib';
 
 export async function load({ url, fetch }): Promise<{ containers: ContainerBriefID[]; parentContainer?: Container }> {
     // 获取所有容器列表用于父容器选择
-    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
+    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/container-brief/`);
     let containers: ContainerBriefID[] = [];
     if (containersRes.ok) {
         containers = await containersRes.json();
@@ -19,7 +19,7 @@ export async function load({ url, fetch }): Promise<{ containers: ContainerBrief
     
     if (parentSlug) {
         try {
-            const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${parentSlug}/`);
+            const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/container/${parentSlug}/`);
             if (containerRes.ok) {
                 const containerData: ContainerResponse = await containerRes.json();
                 parentContainer = containerData.container;
@@ -50,7 +50,7 @@ export const actions = {
             parent: formData.get('parent') ? Number(formData.get('parent')) : null
         };
 
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/container/`, {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/container/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

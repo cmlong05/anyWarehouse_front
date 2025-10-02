@@ -2,7 +2,10 @@ import { z } from 'zod';
 
 // 配置验证 schema
 const configSchema = z.object({
-  API_BASE_URL: z.string().url('API_BASE_URL must be a valid URL'),
+  API_BASE_URL: z.string().min(1, 'API_BASE_URL cannot be empty').refine(
+    (val) => val.startsWith('/') || z.string().url().safeParse(val).success,
+    'API_BASE_URL must be a valid URL or start with /'
+  ),
   IMAGE_BASE_URL: z.string().url('IMAGE_BASE_URL must be a valid URL').optional(),
   APP_NAME: z.string().min(1, 'APP_NAME cannot be empty'),
   DEBUG: z.boolean(),

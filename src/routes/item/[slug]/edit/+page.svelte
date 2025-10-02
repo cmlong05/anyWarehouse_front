@@ -19,7 +19,7 @@
     async function handleDelete(itemId: number) {
         console.log('删除函数被调用, itemId:', itemId);
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/api/item/${itemId}/`, {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${itemId}/`, {
                 method: 'DELETE',
             });
 

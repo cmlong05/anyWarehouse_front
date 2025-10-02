@@ -13,7 +13,7 @@ export const actions = {
         };
 
         try {
-            const res = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/`, {
+            const res = await fetch(`${config.API_BASE_URL}/warehouse/storage/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

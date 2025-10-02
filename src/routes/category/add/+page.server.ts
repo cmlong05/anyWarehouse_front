@@ -4,7 +4,7 @@ import type { Category, CategoryData } from '$lib';
 
 export async function load({ url, fetch }): Promise<{ categories: Category[]; parentCategory?: Category }> {
     // 获取所有分类列表用于父分类选择
-    const categoriesRes = await fetch(`${config.API_BASE_URL}/product/api/category/`);
+    const categoriesRes = await fetch(`${config.API_BASE_URL}/product/category/`);
     let categories: Category[] = [];
     if (categoriesRes.ok) {
         categories = await categoriesRes.json();
@@ -16,7 +16,7 @@ export async function load({ url, fetch }): Promise<{ categories: Category[]; pa
     
     if (parentId) {
         try {
-            const categoryRes = await fetch(`${config.API_BASE_URL}/product/api/category/${parentId}/`);
+            const categoryRes = await fetch(`${config.API_BASE_URL}/product/category/${parentId}/`);
             if (categoryRes.ok) {
                 const categoryData: CategoryData = await categoryRes.json();
                 parentCategory = categoryData.category;
@@ -42,7 +42,7 @@ export const actions = {
             top_category: formData.has('top_category')
         };
 
-        const response = await fetch(`${config.API_BASE_URL}/product/api/category/`, {
+        const response = await fetch(`${config.API_BASE_URL}/product/category/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "svelte-kit sync && vite build",
+		"build": "NODE_ENV=production svelte-kit sync && NODE_ENV=production vite build",
 		"preview": "vite preview",
 		"start": "node ./build/index.js",
 		"start:bun": "bun run ./build/index.js",

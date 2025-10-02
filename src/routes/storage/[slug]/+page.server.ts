@@ -7,7 +7,7 @@ export async function load({ params, fetch, parent }) {
     const { slug } = params;
     
     try {
-        const storageRes = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${slug}/`);
+        const storageRes = await fetch(`${config.API_BASE_URL}/warehouse/storage/${slug}/`);
         if (!storageRes.ok) {
             throw error(storageRes.status, 'Failed to fetch storage');
         }
@@ -15,7 +15,7 @@ export async function load({ params, fetch, parent }) {
         const storageDetail: StorageStandard = await storageRes.json();
         
         // 获取物品详情以获取 SKU
-        const itemRes = await fetch(`${config.API_BASE_URL}/product/api/item/${storageDetail.item}/`);
+        const itemRes = await fetch(`${config.API_BASE_URL}/product/item/${storageDetail.item}/`);
         let itemSKU = storageDetail.item.toString(); // 默认使用 ID
         
         if (itemRes.ok) {
@@ -50,7 +50,7 @@ export const actions = {
         };
 
         try {
-            const res = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${slug}/`, {
+            const res = await fetch(`${config.API_BASE_URL}/warehouse/storage/${slug}/`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

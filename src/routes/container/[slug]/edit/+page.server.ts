@@ -12,14 +12,14 @@ export async function load({ params, fetch }): Promise<{ container: Container; c
     const { slug } = params;
     
     // 获取容器详情
-    const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${slug}/`);
+    const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/container/${slug}/`);
     if (!containerRes.ok) {
         throw error(containerRes.status, 'Failed to fetch container');
     }
     const containerData: ContainerResponse = await containerRes.json();
     
     // 获取所有容器列表用于父容器选择
-    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
+    const containersRes = await fetch(`${config.API_BASE_URL}/warehouse/container-brief/`);
     let containers: ContainerBriefID[] = [];
     if (containersRes.ok) {
         containers = await containersRes.json();
@@ -48,7 +48,7 @@ export const actions = {
             parent: formData.get('parent') || null
         };
 
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/container/${slug}/`, {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/container/${slug}/`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

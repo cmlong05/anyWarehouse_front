@@ -8,7 +8,7 @@ interface CategoryResponse {
 
 export async function load({ fetch, url }) {
     try {
-        const res = await fetch(`${config.API_BASE_URL}/product/api/category/`);
+        const res = await fetch(`${config.API_BASE_URL}/product/category/`);
         if (!res.ok) {
             throw error(res.status, 'Failed to fetch categories');
         }
@@ -64,7 +64,7 @@ export const actions = {
         
         try {
             
-            const response = await fetch(`${config.API_BASE_URL}/product/api/item/`, {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

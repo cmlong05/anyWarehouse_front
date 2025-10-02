@@ -12,7 +12,7 @@
     }>();
 
     async function handleDelete(storageId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/api/storage/${storageId}/`, {
+        const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${storageId}/`, {
             method: 'DELETE',
         });
 

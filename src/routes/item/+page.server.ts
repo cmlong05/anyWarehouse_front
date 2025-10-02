@@ -14,10 +14,12 @@ interface ServerLoad {
  * @returns 包含商品数据的对象
  */
 export async function load({ fetch }: ServerLoad): Promise<{ items: ItemResponse['items'] }> {
-    const res: Response = await fetch(`${config.API_BASE_URL}/product/api/item/`);
+    const res: Response = await fetch(`${config.API_BASE_URL}/product/item/`);
+    
     if (!res.ok) {
         throw error(res.status, 'Failed to fetch items');
     }
+    
     const items: ItemResponse['items'] = await res.json();
     return { items };
 }

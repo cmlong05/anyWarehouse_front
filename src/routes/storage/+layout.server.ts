@@ -4,7 +4,7 @@ import type { ContainerBriefID } from '$lib';
 
 export async function load({ fetch }) {
     try {
-        const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/api/container-brief/`);
+        const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/container-brief/`);
         if (!containerRes.ok) {
             console.error('Failed to fetch containers:', containerRes.status);
             return {

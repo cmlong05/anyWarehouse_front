@@ -207,8 +207,8 @@
             // 如果没有选择新文件，不发送image字段，保持现有图片不变
 
             const apiUrl = mode === 'edit' && initialData?.id 
-                ? `${config.API_BASE_URL}/product/api/item/${initialData.id}/`
-                : `${config.API_BASE_URL}/product/api/item/`;
+                ? `${config.API_BASE_URL}/product/item/${initialData.id}/`
+                : `${config.API_BASE_URL}/product/item/`;
 
             const response = await fetch(apiUrl, {
                 method: mode === 'edit' ? 'PATCH' : 'POST',
