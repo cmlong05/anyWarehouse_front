@@ -83,7 +83,7 @@
 <div class="div-left-70">
     <div class="image-container">
         <img 
-            src={data.itemDetail.item.image ? `${config.API_BASE_URL}${data.itemDetail.item.image.trim()}` : ''} 
+            src={data.itemDetail.item.image ? data.itemDetail.item.image.trim() : ''} 
             style="max-width: 100%; height: auto; max-height: 400px;" 
             alt={data.itemDetail.item.name} 
             loading="lazy" 

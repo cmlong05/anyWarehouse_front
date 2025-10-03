@@ -118,12 +118,12 @@
         if (imageUrlInput) {
             return imageUrlInput.startsWith('http') 
                 ? imageUrlInput 
-                : `${config.API_BASE_URL}${imageUrlInput}`;
+                : imageUrlInput;
         }
         if (formData.image) {
             return formData.image.startsWith('http') 
                 ? formData.image 
-                : `${config.API_BASE_URL}${formData.image}`;
+                : formData.image;
         }
         return '';
     });
@@ -134,7 +134,7 @@
             // 如果是相对路径，显示完整URL；如果已经是完整URL，直接显示
             imageUrlInput = formData.image.startsWith('http') 
                 ? formData.image 
-                : `${config.API_BASE_URL}${formData.image}`;
+                : formData.image;
         }
     });
 
