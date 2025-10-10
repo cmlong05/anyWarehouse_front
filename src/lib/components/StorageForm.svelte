@@ -21,27 +21,28 @@
         onDelete?: (storageId: number) => Promise<void>;
     }
 
-    let {
-        mode,
-        initialData = {
+    const { mode, initialData, containers, itemId, itemSKU, onCancel, onDelete } = $props<Props>();
+    
+    // 使用 state 管理内部状态
+    const state = $state({
+        mode: mode,
+        initialData: initialData ?? {
             item: '',
             container: '',
             quantity: '',
             text: '',
             sample: false
         },
-        containers,
-        itemId,
-        itemSKU,
-        onCancel,
-        onDelete
-    }: Props = $props();
+        containers: Array.isArray(containers) ? containers : [],
+        itemId: itemId,
+        itemSKU: itemSKU
+    });
 
     // 转换为 Svelecte 需要的格式
-    const selectItems = (containers || []).map((item: ContainerBriefID) => ({
+    const selectItems = $derived(state.containers.map((item: ContainerBriefID) => ({
         value: item.id,
         label: item.fastCode
-    }));
+    })));
 
     // 表单数据
     let formData = $state({
