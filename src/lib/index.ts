@@ -1,12 +1,23 @@
 // place files you want to import through the `$lib` alias in this folder.
 
 // 物品
-export interface Item {
+export interface BaseItem {
     id: number;
     SKU: string;
+    name: string;
+}
+
+// 组件接口
+export interface ItemComponent {
+    id: number;
+    name: string;
+    quantity: number;
+    type?: string;
+}
+
+export interface Item extends BaseItem  {
     SKU_zite: string;
     SKU_A: string;
-    name: string;
     description: string;
     image: string;
     weight: string;
@@ -14,26 +25,22 @@ export interface Item {
     s_volume: number;
     b_Price: string;
     currency: string;
-    in_fee: null;
+    in_fee: number | null;
     date_added: string;
-    barcode: null;
+    barcode: string | null;
     category: number[];
-    components: any[];
+    components: ItemComponent[];
 }
-export interface Items {
-    id: number;
-    SKU: string;
-    name: string;
-}
+
 export interface ItemSet{
     item: Item;
     categories: CategoryData[];
-    storages: storageContainer[];
+    storages: StorageContainer[];
 }
 
 
 // 分类
-export interface category {
+export interface Category {
     id: number;
     name: string;
     top_category: boolean;
@@ -47,15 +54,15 @@ export interface category {
 }
 // 分类响应类型，修改命名为 CategoryData
 export interface CategoryData {
-    category: category;
-    ancestors: category[];
-    descendants: category[];
+    category: Category;
+    ancestors: Category[];
+    descendants: Category[];
     items: Item[];
-    siblings: category[];
+    siblings: Category[];
 }
 
-// 定义 storagestandard 接口
-export interface storagestandard {
+// 标准 Storage 接口
+export interface StorageStandard {
     id: number;
     quantity: number;
     text: string;
@@ -66,15 +73,16 @@ export interface storagestandard {
     container: number;
     item: number;
 }
-export interface storageItem {
+// ContainerResponse 组件
+export interface StorageItem {
     item_id: number;
     item_SKU: string;
     item_name: string;
     quantity: number;
 }
-
-// 定义 storageContainer 接口
-export interface storageContainer {
+// ItemSet 组件
+export interface StorageContainer {
+    id: number,
     container_id: number;
     container_fastCode: string;
     mark: string;
@@ -82,7 +90,7 @@ export interface storageContainer {
 }
 
 // 容器类型
-export interface container {
+export interface Container {
     id: number;
     fastCode: string;
     mark: string;
@@ -100,12 +108,15 @@ export interface container {
     parent: number | null;
     barcode: string | null;
 }
-export interface containerBrief  {
+export interface ContainerBriefID  {
+    id: number;
+    fastCode: string;
+}
+export interface ContainerBriefMark  {
     fastCode: string;
     mark: string;
 }
-
-export interface containerVerbose  {
+export interface ContainerVerbose  {
     fastCode: string;
     mark: string;
     available_volume: number;
@@ -113,10 +124,10 @@ export interface containerVerbose  {
 }
 
 export interface ContainerResponse {
-    mainContainer: container;
-    ancestors: containerBrief[];
-    descendants: containerVerbose[];
-    siblings: containerBrief[];
-    storageItem: storageItem[];
+    container: Container;
+    ancestors: ContainerBriefMark[];
+    descendants: ContainerVerbose[];
+    siblings: ContainerBriefMark[];
+    storages: StorageItem[];
 }
 

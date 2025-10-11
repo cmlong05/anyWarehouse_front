@@ -1,7 +1,19 @@
+<!-- container/[slug] 存储容器显示页面 -->
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
-    let { data } = $props<{ containerRes: ContainerResponse }>();
+    
+    interface Props {
+        data: {
+            containerRes: ContainerResponse;
+        };
+    }
+    
+    let { data }: Props = $props();
 </script>
+
+<svelte:head>
+    <title>{data.containerRes.container.fastCode}</title>
+</svelte:head>
 
 <!-- 导航格 -->
 <nav class="navigation">
@@ -20,7 +32,7 @@
     <div class="div-full ">
         <p style="align-items: center; gap: 1em; margin:0;">
             <span>
-                容量情况：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
+                容量：<strong>{data.containerRes.container.a_volume} / {data.containerRes.container.volume}</strong>
             </span>
             <meter
             value={data.containerRes.container.a_volume}
@@ -39,8 +51,17 @@
         </p>
     </div>
     <div class="div-full">
-        <p><strong>{data.containerRes.container.fastCode}</strong> {data.containerRes.container.mark}</p>
-        <p>条形码：{data.containerRes.container.barcode}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p><strong>{data.containerRes.container.fastCode}</strong>   
+                <a href="/container/{data.containerRes.container.fastCode}/edit" class="edit-link">
+                编辑</a>
+                <a href="/container/add?parent={data.containerRes.container.fastCode}" class="edit-link">
+                添加子容器</a></p>
+                <p>{data.containerRes.container.mark}</p>
+                <!-- <p>条形码：{data.containerRes.container.barcode}</p> -->
+            </div>
+        </div>
     </div>
     <div class="div-full">
         <ul>
@@ -67,7 +88,7 @@
                             {storage.quantity}
                         </span> *
                         <a href={`/item/${storage.item_id}`}>{storage.item_SKU}
-                        </a> {storage.item_name}
+                        </a>  - {storage.item_name}
                     </li>
                 {/each}
             {/if}

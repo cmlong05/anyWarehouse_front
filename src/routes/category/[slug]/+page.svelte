@@ -4,6 +4,9 @@
     let { data } = $props<{ category_details: CategoryData }>();
 </script>
 
+<svelte:head>
+    <title>分类 {data.category_details.category.name}</title>
+</svelte:head>
 
 <!-- 导航格 -->
 <nav class="navigation">
@@ -14,14 +17,19 @@
             <span> &gt;&thinsp; </span>
         {/if}
     {/each}
-    <span>{data.category_details.category.name} </span>
+    <span>{data.category_details.category.name}</span>
+    <span> • </span>
+    <a href="/category/{data.category_details.category.id}/edit" class="edit-link">编辑</a>
 </nav>
 
 <!-- 主内容 -->
 <div class="div-left-70">
     <div class="div-left-70">
         <ul>
-            <h3>物品</h3>
+            <div class="section-header">
+                <h3>物品</h3>
+                <a href="/item/add?category={data.category_details.category.id}" class="edit-link">添加物品</a>
+            </div>
             {#each data.category_details.items as { id, SKU, name }}
                 <li><a href={`/item/${id}`}>{SKU}</a> {name} </li>
             {/each}
@@ -29,7 +37,10 @@
     </div>
     <div class="div-right-25">
         <ul>
-            <h3>子分类</h3>
+            <div class="section-header">
+                <h3>子分类</h3>
+                <a href="/category/add?parent={data.category_details.category.id}" class="edit-link">添加</a>
+            </div>
             {#each data.category_details.descendants as child} 
                 <li><a href={`/category/${child.id}`} >{child.name}</a></li>
             {/each}
@@ -55,4 +66,24 @@
     {/each}
 </div>
 
-<mcfile name="+page.svelte" path="e:\anyWarehouse_front\src\routes\categories\[slug]\+page.svelte"></mcfile>
+<style>
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: #333;
+    }
+
+    @media (max-width: 768px) {
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>

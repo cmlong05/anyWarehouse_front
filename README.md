@@ -1,32 +1,30 @@
-# sv
+```
+1.安装bun环境
+# windows
+powershell -c "irm bun.sh/install.ps1 | iex"
+# Linux
+curl -fsSL https://bun.sh/install | bash
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+2.clone git 仓库 （无需新建项目）
+git clone git@gitee.com:cmlong/anyWarehouse_front.git
 
-## Creating a project
+3. 安装依赖
+# 网络问题会导致安装处于resolving状态
+bun install
 
-If you're seeing this, you've probably already done this step. Congrats!
+4. 复制配置文件
+.env.example -- .env # 做相应修改
 
-```bash
-# create a new project in the current directory
-npx sv create
+4. 运行项目
+bun run dev
 
-# create a new project in my-app
-npx sv create my-app
 ```
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-yarn run dev
-```
-
-## Building
-
+## Building 
+# Note we switched to Bun
 To create a production version of your app:
 
-```bash
+```bash 
 yarn run build
 ```
 You can preview the production build with `yarn run preview`.
