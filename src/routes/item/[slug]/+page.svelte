@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
     import { config } from '$lib/config';
-    import { invalidate } from '$app/navigation';
-    
+
     let { data } = $props<{ data: { itemDetail: ItemSet } }>();
     let inputRefs: (HTMLInputElement | null)[] = [];
 

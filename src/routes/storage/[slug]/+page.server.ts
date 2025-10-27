@@ -1,4 +1,4 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { StorageStandard } from '$lib';
 
@@ -36,39 +36,3 @@ export async function load({ params, fetch, parent }) {
         throw error(500, 'Failed to load storage data');
     }
 }
-
-export const actions = {
-    default: async ({ params, request, fetch }) => {
-        const { slug } = params;
-        const formData = await request.formData();
-        
-        const updatedData = {
-            container: formData.get('container'),
-            quantity: Number(formData.get('quantity')),
-            text: formData.get('text') || '',
-            sample: formData.has('sample')
-        };
-
-        try {
-            const res = await fetch(`${config.API_BASE_URL}/warehouse/storage/${slug}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(updatedData),
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                console.error('Update error:', errorData);
-                throw error(res.status, `Failed to update storage: ${JSON.stringify(errorData)}`);
-            }
-
-            // 重定向回物品页面
-            throw redirect(303, `/item/${formData.get('item')}`);
-        } catch (err) {
-            console.error('Action error:', err);
-            throw err;
-        }
-    }
-};

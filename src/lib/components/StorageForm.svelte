@@ -1,7 +1,8 @@
 <script lang="ts">
     import type { ContainerBriefID } from '$lib';
     import Svelecte from 'svelecte';
-    import { enhance } from '$app/forms';
+    import { config } from '$lib/config';
+    import { goto } from '$app/navigation';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -21,25 +22,10 @@
         onDelete?: (storageId: number) => Promise<void>;
     }
 
-    const { mode, initialData, containers, itemId, itemSKU, onCancel, onDelete } = $props<Props>();
+    let { mode, initialData, containers, itemId, itemSKU, onCancel, onDelete }: Props = $props();
     
-    // 使用 state 管理内部状态
-    const state = $state({
-        mode: mode,
-        initialData: initialData ?? {
-            item: '',
-            container: '',
-            quantity: '',
-            text: '',
-            sample: false
-        },
-        containers: Array.isArray(containers) ? containers : [],
-        itemId: itemId,
-        itemSKU: itemSKU
-    });
-
     // 转换为 Svelecte 需要的格式
-    const selectItems = $derived(state.containers.map((item: ContainerBriefID) => ({
+    const selectItems = $derived(containers.map((item: ContainerBriefID) => ({
         value: item.id,
         label: item.fastCode
     })));
@@ -57,6 +43,53 @@
     const displayItem = mode === 'edit' 
         ? (initialData?.itemSKU || initialData?.item || '') 
         : (itemSKU || itemId || '');
+
+    // 提交表单
+    async function handleSubmit(event: Event) {
+        event.preventDefault();
+        
+        const submitData = {
+            item: Number(formData.item),
+            container: Number(formData.container),
+            quantity: Number(formData.quantity),
+            text: formData.text || '',
+            sample: formData.sample
+        };
+
+        try {
+            let response;
+            if (mode === 'add') {
+                // 添加新存储
+                response = await fetch(`${config.API_BASE_URL}/warehouse/storage/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            } else {
+                // 更新现有存储
+                response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${initialData?.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            }
+
+            if (response.ok) {
+                // 成功后跳转回物品页面
+                await goto(`/item/${submitData.item}`);
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${JSON.stringify(errorData)}`);
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
+            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+        }
+    }
 
     // 取消操作
     function handleCancel() {
@@ -82,7 +115,7 @@
     }
 </script>
 
-<form method="POST" use:enhance>
+<form onsubmit={handleSubmit}>
     {#if mode === 'edit' && initialData?.id}
         <div class="storage-id">
             存储ID: {initialData.id}

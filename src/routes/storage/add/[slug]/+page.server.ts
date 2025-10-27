@@ -1,4 +1,4 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import { logger } from '$lib/logger';
 
@@ -30,58 +30,3 @@ export async function load({ params, parent, fetch }) {
         };
     }
 }
-
-export const actions = {
-    default: async ({ request }) => {
-        const formData = await request.formData();
-        
-        const storageData = {
-            item: Number(formData.get('item')),
-            container: Number(formData.get('container')),
-            quantity: Number(formData.get('quantity')),
-            text: formData.get('text') || '',
-            sample: formData.has('sample')
-        };
-
-        try {
-            // 使用全局的 fetch，而不是从参数中解构
-            const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(storageData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                logger.error('API request failed', errorData, { 
-                    status: response.status,
-                    storageData 
-                });
-                return fail(400, { 
-                    error: errorData.message || '创建存储失败',
-                    data: storageData 
-                });
-            }
-
-            const result = await response.json();
-            logger.info('Storage created successfully', { storageId: result.id, item: storageData.item });
-
-            // 创建成功，重定向到物品页面
-            throw redirect(303, `/item/${storageData.item}`);
-
-        } catch (error) {
-            // 重新抛出 redirect 异常（SvelteKit 的 redirect 异常有特殊结构）
-            if (error && typeof error === 'object' && 'status' in error && 'location' in error) {
-                throw error;
-            }
-            
-            logger.error('Create storage failed', error, { storageData });
-            return fail(500, { 
-                error: '服务器错误: ' + (error instanceof Error ? error.message : '未知错误'),
-                data: storageData 
-            });
-        }
-    }
-};
