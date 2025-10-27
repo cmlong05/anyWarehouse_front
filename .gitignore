@@ -26,3 +26,4 @@ src/lib/config.ts
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+package-lock.json
