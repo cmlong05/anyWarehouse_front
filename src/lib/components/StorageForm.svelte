@@ -44,19 +44,19 @@
         label: item.fastCode
     })));
 
-    // 表单数据
+    // 表单数据 - 修复：安全访问 initialData 属性
     let formData = $state({
-        item: initialData.item || itemId || '',
-        container: initialData.container || '',
-        quantity: initialData.quantity || '',
-        text: initialData.text || '',
-        sample: initialData.sample || false
+        item: initialData?.item || itemId || '',
+        container: initialData?.container || '',
+        quantity: initialData?.quantity || '',
+        text: initialData?.text || '',
+        sample: initialData?.sample || false
     });
 
-    // 获取显示用的物品标识
+    // 获取显示用的物品标识 - 修复：安全访问 initialData 属性
     const displayItem = mode === 'edit' 
-        ? (initialData.itemSKU || initialData.item) 
-        : (itemSKU || itemId);
+        ? (initialData?.itemSKU || initialData?.item || '') 
+        : (itemSKU || itemId || '');
 
     // 取消操作
     function handleCancel() {
@@ -67,9 +67,9 @@
         }
     }
 
-    // 删除操作
+    // 删除操作 - 修复：安全访问 initialData.id
     async function handleDelete() {
-        if (!initialData.id || !onDelete) return;
+        if (!initialData?.id || !onDelete) return;
         
         const confirmed = confirm('确定要删除这个存储记录吗？这个操作不可撤销。');
         if (!confirmed) return;
@@ -83,7 +83,7 @@
 </script>
 
 <form method="POST" use:enhance>
-    {#if mode === 'edit' && initialData.id}
+    {#if mode === 'edit' && initialData?.id}
         <div class="storage-id">
             存储ID: {initialData.id}
         </div>
