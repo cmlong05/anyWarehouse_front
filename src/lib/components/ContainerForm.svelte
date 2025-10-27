@@ -41,11 +41,18 @@
         onDelete
     }: Props = $props();
 
-    // 转换为 Svelecte 需要的格式
+    // 转换为 Svelecte 需要的格式 - 使用 fastCode 作为 value
     const selectItems = containers.map((item: ContainerBriefID) => ({
-        value: item.id,
+        value: item.fastCode,
         label: item.fastCode
     }));
+
+    // 从 ID 转换为 fastCode (用于初始化表单)
+    const getParentFastCode = (parentId: number | null | undefined): string | null => {
+        if (!parentId) return null;
+        const parentContainer = containers.find((c: ContainerBriefID) => c.id === parentId);
+        return parentContainer ? parentContainer.fastCode : null;
+    };
 
     // 表单数据
     let formData = $state({
@@ -57,7 +64,7 @@
         zz_weight: initialData.zz_weight || 0,
         a_volume: initialData.a_volume || 0,
         total_weight: initialData.total_weight || 0,
-        parent: initialData.parent || null
+        parent: getParentFastCode(initialData.parent)
     });
 
     // 提交表单
@@ -73,7 +80,7 @@
             zz_weight: Number(formData.zz_weight),
             a_volume: Number(formData.a_volume),
             total_weight: Number(formData.total_weight),
-            parent: formData.parent ? Number(formData.parent) : null
+            parent: formData.parent || null  // 现在使用 fastCode
         };
 
         try {
@@ -89,7 +96,7 @@
                 });
             } else {
                 // 更新现有容器
-                response = await fetch(`${config.API_BASE_URL}/warehouse/container/${initialData?.id}/`, {
+                response = await fetch(`${config.API_BASE_URL}/warehouse/container/${initialData?.fastCode}/`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -145,12 +152,11 @@
     {#if containers.length > 0}
         <label>
             父容器
-            {#if mode === 'add' && initialData.parent}
+            {#if mode === 'add' && formData.parent}
                 <!-- 添加模式下如果有默认父容器，显示为只读 -->
-                {@const parentContainer = containers.find(c => c.id === initialData.parent)}
                 <input 
                     type="text" 
-                    value={parentContainer ? parentContainer.fastCode : '未知容器'} 
+                    value={formData.parent}
                     disabled
                     style="background-color: #f8f9fa; color: #6c757d;"
                 />

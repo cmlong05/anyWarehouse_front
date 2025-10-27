@@ -20,7 +20,7 @@ export const containerSchema = z.object({
         .max(999999, '箱体自重不能超过999999')
         .optional()
         .default(0),
-    parent: z.number().optional().nullable()
+    parent: z.string().optional().nullable()
 });
 
 export const categorySchema = z.object({

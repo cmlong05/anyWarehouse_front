@@ -23,7 +23,13 @@
 
         // 删除成功后跳转到父容器页面或首页
         if (data.container.parent) {
-            goto(`/container/${data.container.parent}`);
+            // 从containers列表中查找parent的fastCode
+            const parentContainer = data.containers.find((c: ContainerBriefID) => c.id === data.container.parent);
+            if (parentContainer) {
+                goto(`/container/${parentContainer.fastCode}`);
+            } else {
+                goto('/');
+            }
         } else {
             goto('/');
         }
