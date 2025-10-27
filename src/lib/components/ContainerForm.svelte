@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
     import type { ContainerBriefID } from '$lib';
     import Svelecte from 'svelecte';
+    import { config } from '$lib/config';
+    import { goto } from '$app/navigation';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -59,6 +60,58 @@
         parent: initialData.parent || null
     });
 
+    // 提交表单
+    async function handleSubmit(event: Event) {
+        event.preventDefault();
+        
+        const submitData = {
+            fastCode: formData.fastCode,
+            barcode: formData.barcode || null,
+            mark: formData.mark,
+            volume: Number(formData.volume),
+            zz_volume: Number(formData.zz_volume),
+            zz_weight: Number(formData.zz_weight),
+            a_volume: Number(formData.a_volume),
+            total_weight: Number(formData.total_weight),
+            parent: formData.parent ? Number(formData.parent) : null
+        };
+
+        try {
+            let response;
+            if (mode === 'add') {
+                // 添加新容器
+                response = await fetch(`${config.API_BASE_URL}/warehouse/container/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            } else {
+                // 更新现有容器
+                response = await fetch(`${config.API_BASE_URL}/warehouse/container/${initialData?.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                // 成功后跳转到容器页面
+                await goto(`/container/${result.fastCode || submitData.fastCode}`);
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${JSON.stringify(errorData)}`);
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
+            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+        }
+    }
+
     // 取消操作
     function handleCancel() {
         if (onCancel) {
@@ -83,7 +136,7 @@
     }
 </script>
 
-<form method="POST" use:enhance>
+<form onsubmit={handleSubmit}
     {#if mode === 'edit' && initialData.id}
         <div class="container-id">
             容器ID: {initialData.id}
@@ -101,11 +154,9 @@
                     disabled
                     style="background-color: #f8f9fa; color: #6c757d;"
                 />
-                <input type="hidden" name="parent" value={formData.parent} />
             {:else}
                 <!-- 编辑模式或无默认父容器时，显示选择器 -->
                 <Svelecte
-                    name="parent"
                     options={selectItems}
                     bind:value={formData.parent}
                     searchProps={{ fields: ['label'] }}
@@ -119,7 +170,6 @@
         快速代码
         <input 
             type="text" 
-            name="fastCode" 
             bind:value={formData.fastCode} 
             required 
             placeholder="例如: A1-01"
@@ -130,7 +180,6 @@
         条形码
         <input 
             type="text" 
-            name="barcode" 
             bind:value={formData.barcode}
             placeholder="扫描或输入条形码"
         />
@@ -140,7 +189,6 @@
         标记/备注
         <input 
             type="text" 
-            name="mark" 
             bind:value={formData.mark}
             placeholder="容器描述或标记"
         />
@@ -150,7 +198,6 @@
         总容量
         <input 
             type="number" 
-            name="volume" 
             bind:value={formData.volume} 
             required 
             min="1" 
@@ -162,7 +209,6 @@
         自占体积
         <input 
             type="number" 
-            name="zz_volume" 
             bind:value={formData.zz_volume}
             min="0"
             step="0.01"
@@ -174,17 +220,12 @@
         箱体自重
         <input 
             type="number" 
-            name="zz_weight" 
             bind:value={formData.zz_weight}
             min="0"
             step="0.01"
             placeholder="容器自身重量"
         />
     </label>
-
-    <!-- 隐藏字段，保持现有值 -->
-    <input type="hidden" name="a_volume" value={formData.a_volume} />
-    <input type="hidden" name="total_weight" value={formData.total_weight} />
 
     <div class="form-actions">
         <button type="submit">

@@ -4,7 +4,7 @@
  * @param {Function} fetch - SvelteKit的fetch函数，用于服务器端请求
  * @returns {Promise<{ container: Container; containers: ContainerBriefID[] }>} 包含容器详情和所有容器列表的Promise
  */
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { Container, ContainerBriefID, ContainerResponse } from '$lib';
 
@@ -30,38 +30,3 @@ export async function load({ params, fetch }): Promise<{ container: Container; c
         containers 
     };
 }
-
-export const actions = {
-    default: async ({ params, request, fetch }) => {
-        const { slug } = params;
-        const formData = await request.formData();
-        
-        const updateData = {
-            fastCode: formData.get('fastCode'),
-            barcode: formData.get('barcode'),
-            mark: formData.get('mark'),
-            volume: Number(formData.get('volume')),
-            zz_volume: Number(formData.get('zz_volume')),
-            zz_weight: Number(formData.get('zz_weight')),
-            a_volume: Number(formData.get('a_volume')),
-            total_weight: Number(formData.get('total_weight')),
-            parent: formData.get('parent') || null
-        };
-
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/container/${slug}/`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData)
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw error(response.status, `更新容器失败: ${errorText}`);
-        }
-
-        // 更新成功后重定向到容器详情页
-        throw redirect(302, `/container/${updateData.fastCode}`);
-    }
-};
