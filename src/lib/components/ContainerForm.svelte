@@ -136,7 +136,7 @@
     }
 </script>
 
-<form onsubmit={handleSubmit}
+<form onsubmit={handleSubmit}>
     {#if mode === 'edit' && initialData.id}
         <div class="container-id">
             容器ID: {initialData.id}
