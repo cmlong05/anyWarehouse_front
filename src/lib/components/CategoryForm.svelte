@@ -1,8 +1,8 @@
 <script lang="ts">
-
-    import { enhance } from '$app/forms';
     import type { Category } from '$lib';
     import Svelecte from 'svelecte';
+    import { config } from '$lib/config';
+    import { goto } from '$app/navigation';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -44,6 +44,52 @@
         top_category: initialData?.top_category || false
     });
 
+    // 提交表单
+    async function handleSubmit(event: Event) {
+        event.preventDefault();
+
+        const submitData = {
+            name: formData.name,
+            parent: formData.parent ? Number(formData.parent) : null,
+            top_category: formData.top_category
+        };
+
+        try {
+            let response;
+            if (mode === 'add') {
+                // 添加新分类
+                response = await fetch(`${config.API_BASE_URL}/product/category/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            } else {
+                // 更新现有分类
+                response = await fetch(`${config.API_BASE_URL}/product/category/${initialData?.id}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(submitData),
+                });
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                // 成功后跳转到分类页面
+                await goto(`/category/${result.id || initialData?.id}`);
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${JSON.stringify(errorData)}`);
+            }
+        } catch (error) {
+            console.error('Submit error:', error);
+            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+        }
+    }
+
     // 取消操作
     function handleCancel() {
         if (onCancel) {
@@ -68,7 +114,7 @@
     }
 </script>
 
-<form method="POST" use:enhance>
+<form onsubmit={handleSubmit}>
     {#if mode === 'edit' && initialData.id}
         <div class="category-id">
             分类ID: {initialData.id}
