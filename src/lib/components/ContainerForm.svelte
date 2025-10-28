@@ -67,6 +67,13 @@
         parent: getParentFastCode(initialData.parent)
     });
 
+    // 从 fastCode 转换为 ID (用于提交到后端)
+    const getParentId = (parentFastCode: string | null): number | null => {
+        if (!parentFastCode) return null;
+        const parentContainer = containers.find((c: ContainerBriefID) => c.fastCode === parentFastCode);
+        return parentContainer ? parentContainer.id : null;
+    };
+
     // 提交表单
     async function handleSubmit(event: Event) {
         event.preventDefault();
@@ -80,7 +87,7 @@
             zz_weight: Number(formData.zz_weight),
             a_volume: Number(formData.a_volume),
             total_weight: Number(formData.total_weight),
-            parent: formData.parent || null  // 现在使用 fastCode
+            parent: getParentId(formData.parent)  // 将 fastCode 转换为 id
         };
 
         try {
