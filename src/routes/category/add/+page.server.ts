@@ -42,7 +42,7 @@ export const actions = {
             top_category: formData.has('top_category')
         };
 
-        const response = await fetch(`${config.API_BASE_URL}/product/category/`, {
+        const response = await fetch(`${config.API_BASE_URL}/product/api/category/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
