@@ -67,3 +67,28 @@ export const itemSchema = z.object({
 export type ContainerFormData = z.infer<typeof containerSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
 export type ItemFormData = z.infer<typeof itemSchema>;
+
+// API 响应类型定义
+export interface Item {
+    id: number;
+    SKU: string;
+    name: string;
+    SKU_zite?: string;
+    SKU_A?: string;
+    description?: string;
+    image?: string;
+    weight?: string;
+    p_volume?: number;
+    s_volume?: number;
+    b_Price?: string;
+    currency?: string;
+    in_fee?: number;
+    barcode?: string;
+    category?: number[];
+}
+
+export interface ItemSearchResponse {
+    query: string;
+    count: number;
+    results: Item[];
+}
