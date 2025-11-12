@@ -100,18 +100,18 @@
         }
     }
 
-    // 删除操作 - 修复：安全访问 initialData.id
-    async function handleDelete() {
+    // 删除操作：在 iOS Safari 上，必须在用户手势的同步回调内调用 confirm
+    // 避免在 async 函数中（或 confirm 之前有任何 await/微任务）调用导致弹窗被系统拦截
+    function handleDeleteClick() {
         if (!initialData?.id || !onDelete) return;
-        
+
         const confirmed = confirm('确定要删除这个存储记录吗？这个操作不可撤销。');
         if (!confirmed) return;
 
-        try {
-            await onDelete(initialData.id);
-        } catch (error) {
+        // 将异步删除逻辑放到 confirm 之后执行，保持 confirm 在同步用户手势内触发
+        Promise.resolve(onDelete(initialData.id)).catch((error) => {
             alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
-        }
+        });
     }
 </script>
 
@@ -168,7 +168,7 @@
             取消
         </button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="danger" onclick={handleDelete}>
+            <button type="button" class="danger" onclick={handleDeleteClick}>
                 删除存储
             </button>
         {/if}

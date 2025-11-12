@@ -84,21 +84,24 @@
         }
     }
 
-    // 删除操作
-    async function handleDelete() {
+    // 删除操作：在 iOS Safari 上，必须在用户手势的同步回调内调用 confirm
+    // 避免在 async 函数中（或 confirm 之前有任何 await/微任务）调用导致弹窗被系统拦截
+    function handleDelete() {
         if (!initialData?.id || !onDelete) return;
         
-        if (confirm('确定要删除这个商品吗？此操作不可撤销。')) {
-            try {
-                deleteLoading = true;
-                await onDelete(initialData.id);
-            } catch (error) {
+        const confirmed = confirm('确定要删除这个商品吗？此操作不可撤销。');
+        if (!confirmed) return;
+
+        // 将异步删除逻辑放到 confirm 之后执行，保持 confirm 在同步用户手势内触发
+        deleteLoading = true;
+        Promise.resolve(onDelete(initialData.id))
+            .catch((error) => {
                 console.error('删除操作失败:', error);
                 alert('删除失败，请稍后重试');
-            } finally {
+            })
+            .finally(() => {
                 deleteLoading = false;
-            }
-        }
+            });
     }
 
     let deleteLoading = $state(false);
