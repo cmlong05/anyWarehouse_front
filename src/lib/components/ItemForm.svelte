@@ -269,18 +269,6 @@
                     placeholder="商品名称"
                 />
             </div>
-
-            <div class="field-group">
-                <label for="description">描述</label>
-                <textarea 
-                    id="description" 
-                    name="description" 
-                    bind:value={formData.description}
-                    maxlength="1000"
-                    rows="3"
-                    placeholder="商品描述信息"
-                ></textarea>
-            </div>
         </div>
 
         <!-- SKU扩展信息 -->
@@ -503,6 +491,21 @@
                 {/each}
             </div>
         </div>
+
+        <!-- 商品描述 - 独立区块 -->
+        <div class="form-section description-section">
+            <h3>商品描述</h3>
+            <div class="field-group">
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    bind:value={formData.description}
+                    rows="8"
+                    placeholder="商品描述信息"
+                    class="description-textarea"
+                ></textarea>
+            </div>
+        </div>
     </div>
 
     <!-- 隐藏字段 -->
@@ -555,6 +558,17 @@
         font-weight: 600;
         border-bottom: 2px solid #dee2e6;
         padding-bottom: 0.5rem;
+    }
+
+    /* 描述区块独立样式 */
+    .description-section {
+        grid-column: 1 / -1; /* 占据整行 */
+    }
+
+    .description-textarea {
+        min-height: 200px;
+        font-family: inherit;
+        line-height: 1.5;
     }
 
     .field-group {
