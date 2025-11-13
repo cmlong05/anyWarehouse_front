@@ -1,32 +1,53 @@
-```
-1.安装bun环境
-# windows
-powershell -c "irm bun.sh/install.ps1 | iex"
-# Linux
+## 开发环境准备（Linux / macOS）
+
+```bash
 curl -fsSL https://bun.sh/install | bash
+```
 
-2.clone git 仓库 （无需新建项目）
+## 克隆代码
+```bash
 git clone git@gitee.com:cmlong/anyWarehouse_front.git
+cd anyWarehouse_front
+```
 
-3. 安装依赖
-# 网络问题会导致安装处于resolving状态
+## 安装依赖
+```bash
 bun install
+```
+如果卡在 resolving，可以检查网络或使用国内镜像（例如配置环境变量 `BUN_INSTALL` 或改用代理）。
 
-4. 复制配置文件
-.env.example -- .env # 做相应修改
+## 配置环境变量
+复制 `.env.example` 为 `.env` 并按需修改。
 
-4. 运行项目
+## 启动开发服务器
+```bash
 bun run dev
-
 ```
 
-## Building 
-# Note we switched to Bun
-To create a production version of your app:
-
-```bash 
-yarn run build
+## 构建生产版本
+```bash
+bun run build
 ```
-You can preview the production build with `yarn run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## 预览生产构建
+```bash
+bun run preview
+```
+
+## 运行已构建版本（Node 兼容 / Bun 原生）
+```bash
+bun run start
+```
+
+> 需要部署到不同平台时，可能要选择或配置合适的 SvelteKit adapter: https://svelte.dev/docs/kit/adapters
+
+### 常用检查命令
+```bash
+bun run check        # 类型与 Svelte 校验
+bun run check:watch  # 持续监控
+```
+
+### 说明
+- 已统一使用 Bun 包管理与运行时（`packageManager` 字段已指向 Bun）。
+- 不再提交 `yarn.lock` / `package-lock.json`，只保留 `bun.lock` 以保证可重复安装。
+- 脚本使用 `bun x` 前缀保证调用本地依赖的可执行文件。
