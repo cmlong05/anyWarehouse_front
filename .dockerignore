@@ -1,0 +1,16 @@
+# Ignore node modules and local env files
+node_modules
+.env
+.vscode
+.DS_Store
+
+# Git and misc
+.git
+.gitignore
+
+# Build artifacts
+dist
+build
+*.local
+npm-debug.log
+bun.lockb
