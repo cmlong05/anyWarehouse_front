@@ -10,6 +10,10 @@ WORKDIR /app
 # Ensure we have a predictable production env during build steps
 ENV NODE_ENV=production
 
+# Build-time environment variables (provide defaults so build won't fail if no build-arg is passed)
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 # Copy package files first to leverage Docker cache
 COPY package.json bun.lock /app/
 
@@ -21,6 +25,7 @@ COPY . /app
 
 # Run svelte-kit sync (prepare) and build (uses the project's build script)
 # Allow svelte-kit sync to fail silently if it's not necessary for some environments
+# Vite/SvelteKit reads VITE_* variables at build time, so we ensure VITE_API_BASE_URL is set via ARG/ENV above.
 RUN bun x svelte-kit sync || true && bun run build
 
 # Reinstall only production dependencies to keep final node_modules small
