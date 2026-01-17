@@ -42,10 +42,14 @@ COPY --from=builder /app/build /app/build
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/package.json /app/package.json
 
-# Create a non-root user and give ownership of /app
-RUN addgroup --system app && adduser --system --ingroup app app && \
-    chown -R app:app /app
-USER app
+# Create a non-root user 'app' if it doesn't exist (works on minimal base images)
+RUN mkdir -p /app && \
+    # create group entry if missing
+    if ! grep -q '^app:' /etc/group 2>/dev/null; then echo 'app:x:1000:' >> /etc/group; fi && \
+    # create passwd entry if missing (no dependency on adduser/groupadd)
+    if ! grep -q '^app:' /etc/passwd 2>/dev/null; then echo 'app:x:1000:1000:app user:/home/app:/usr/sbin/nologin' >> /etc/passwd; fi && \
+    chown -R 1000:1000 /app
+USER 1000
 
 # Expose a port commonly used by SvelteKit node adapter (adjust if needed)
 EXPOSE 3000
