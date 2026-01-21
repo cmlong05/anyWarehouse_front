@@ -18,7 +18,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 COPY package.json bun.lock /app/
 
 # Install all dependencies (including dev deps needed for build)
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --verbose
 
 # Copy the rest of the source
 COPY . /app
@@ -29,7 +29,7 @@ COPY . /app
 RUN bun x svelte-kit sync || true && bun run build
 
 # Reinstall only production dependencies to keep final node_modules small
-RUN bun install --production --frozen-lockfile
+RUN bun install --production --frozen-lockfile --verbose
 
 
 # ---- Runner ----
