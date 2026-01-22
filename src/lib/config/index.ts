@@ -14,12 +14,27 @@ const configSchema = z.object({
 
 export type Config = z.infer<typeof configSchema>;
 
+// 获取服务端环境变量（仅在 SSR 时可用）
+function getServerEnv(key: string, fallback: string): string {
+  if (typeof window === 'undefined') {
+    // @ts-ignore - process 在服务端运行时是存在的
+    return globalThis.process?.env?.[key] || fallback;
+  }
+  return fallback;
+}
+
 // 从环境变量读取配置
 function getConfig(): Config {
   const env = import.meta.env;
   
+  // 关键修改：区分服务端(SSR)和客户端(浏览器)
+  const isServer = typeof window === 'undefined';
+  
   const rawConfig = {
-    API_BASE_URL: env.VITE_API_BASE_URL,
+    // SSR 时使用内部地址，浏览器时使用相对路径或外部URL
+    API_BASE_URL: isServer 
+      ? getServerEnv('INTERNAL_API_URL', 'http://nginx/api')  // 服务端：从环境变量读取或使用默认值
+      : (env.VITE_API_BASE_URL || '/api'),                     // 浏览器：相对路径
     IMAGE_BASE_URL: env.VITE_IMAGE_BASE_URL,
     APP_NAME: env.VITE_APP_NAME || 'AnyWarehouse',
     DEBUG: env.VITE_DEBUG === 'true',
