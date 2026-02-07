@@ -74,6 +74,7 @@ export interface WhereUsedItem {
     sku: string;
     name: string;
     quantity: number;
+    total_storage: number;
 }
 
 /** 逆向BOM响应 */

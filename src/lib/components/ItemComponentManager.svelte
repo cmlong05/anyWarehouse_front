@@ -446,6 +446,9 @@
                                     {item.sku} - {item.name}
                                 </a>
                                 <span class="usage-qty">每个产品使用 {item.quantity} 个</span>
+                                <span class="storage-qty" class:zero={item.total_storage === 0} class:low={item.total_storage > 0 && item.total_storage < 10}>
+                                    库存: {item.total_storage}
+                                </span>
                             </div>
                         {/each}
                     </div>
@@ -812,6 +815,25 @@
         padding: 0.25rem 0.5rem;
         border-radius: 4px;
         font-size: 0.875rem;
+    }
+
+    .storage-qty {
+        background: #e8f5e9;
+        color: #2e7d32;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .storage-qty.zero {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .storage-qty.low {
+        background: #fff3e0;
+        color: #ef6c00;
     }
 
     .btn {
