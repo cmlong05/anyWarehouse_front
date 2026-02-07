@@ -2,9 +2,6 @@ import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { Category } from '$lib/index';
 
-interface CategoryResponse {
-    categories: Category[];
-}
 
 export async function load({ fetch, url }) {
     try {
