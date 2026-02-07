@@ -154,24 +154,6 @@
         editNote = component.note;
     }
 
-    // 渲染BOM树（递归）
-    function renderBOMTree(nodes: BOMTreeNode[], level = 0): string {
-        if (!nodes || nodes.length === 0) return '';
-        let html = '<ul class="bom-tree-list">';
-        for (const node of nodes) {
-            const indent = '  '.repeat(level);
-            html += `<li class="bom-tree-item" style="margin-left: ${level * 20}px">
-                <span class="bom-tree-item-name">${node.item.SKU} - ${node.item.name}</span>
-                <span class="bom-tree-item-qty">× ${node.quantity}</span>
-            </li>`;
-            if (node.children && node.children.length > 0) {
-                html += renderBOMTree(node.children, level + 1);
-            }
-        }
-        html += '</ul>';
-        return html;
-    }
-
     // 监听 itemId 变化，自动重新加载数据
     $effect(() => {
         if (itemId) {
@@ -179,6 +161,23 @@
         }
     });
 </script>
+
+<!-- 递归 BOM 树节点组件 -->
+{#snippet TreeNode(node: BOMTreeNode, level: number)}
+    <div class="tree-level" style="margin-left: {level * 20}px">
+        <div class="tree-node">
+            <span class="node-name">{node.item.SKU} - {node.item.name}</span>
+            <span class="node-qty">× {node.quantity}</span>
+        </div>
+        {#if node.children && node.children.length > 0}
+            <div class="tree-children">
+                {#each node.children as child}
+                    {@render TreeNode(child, level + 1)}
+                {/each}
+            </div>
+        {/if}
+    </div>
+{/snippet}
 
 <div class="component-manager">
     <div class="manager-header">
@@ -396,48 +395,7 @@
                 {:else}
                     <div class="bom-tree">
                         {#each bomTree as node}
-                            <div class="tree-level-0">
-                                <div class="tree-node">
-                                    <span class="node-name">{node.item.SKU} - {node.item.name}</span>
-                                    <span class="node-qty">× {node.quantity}</span>
-                                </div>
-                                {#if node.children && node.children.length > 0}
-                                    <div class="tree-children">
-                                        {#each node.children as child}
-                                            <div class="tree-level-1">
-                                                <div class="tree-node">
-                                                    <span class="node-name">{child.item.SKU} - {child.item.name}</span>
-                                                    <span class="node-qty">× {child.quantity}</span>
-                                                </div>
-                                                {#if child.children && child.children.length > 0}
-                                                    <div class="tree-children">
-                                                        {#each child.children as grandchild}
-                                                            <div class="tree-level-2">
-                                                                <div class="tree-node">
-                                                                    <span class="node-name">{grandchild.item.SKU} - {grandchild.item.name}</span>
-                                                                    <span class="node-qty">× {grandchild.quantity}</span>
-                                                                </div>
-                                                                {#if grandchild.children && grandchild.children.length > 0}
-                                                                    <div class="tree-children">
-                                                                        {#each grandchild.children as greatgrandchild}
-                                                                            <div class="tree-level-3">
-                                                                                <div class="tree-node">
-                                                                                    <span class="node-name">{greatgrandchild.item.SKU} - {greatgrandchild.item.name}</span>
-                                                                                    <span class="node-qty">× {greatgrandchild.quantity}</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        {/each}
-                                                                    </div>
-                                                                {/if}
-                                                            </div>
-                                                        {/each}
-                                                    </div>
-                                                {/if}
-                                            </div>
-                                        {/each}
-                                    </div>
-                                {/if}
-                            </div>
+                            {@render TreeNode(node, 0)}
                         {/each}
                     </div>
                 {/if}
@@ -740,6 +698,10 @@
         padding: 1rem;
         border-radius: 6px;
         border: 1px solid #dee2e6;
+    }
+
+    .tree-level {
+        margin-bottom: 0.25rem;
     }
 
     .tree-node {
