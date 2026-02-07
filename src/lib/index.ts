@@ -29,6 +29,7 @@ export interface ComponentDetail {
     note: string;
     child_item_detail: BaseItem & { weight?: string };
     parent_item_detail: BaseItem & { weight?: string };
+    child_item_storage: number;
 }
 
 /** 创建/更新组件关系请求 */

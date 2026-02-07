@@ -371,7 +371,7 @@
                                             <div class="component-note">备注: {component.note}</div>
                                         {/if}
                                         <div class="component-meta">
-                                            <span>排序: {component.order}</span>
+                                            <span>库存: {component.child_item_storage}</span>
                                             {#if component.child_item_detail.weight}
                                                 <span>重量: {component.child_item_detail.weight}</span>
                                             {/if}
