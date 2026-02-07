@@ -73,7 +73,6 @@ export interface WhereUsedItem {
     item_id: number;
     sku: string;
     name: string;
-    quantity: number;
     total_storage: number;
 }
 

@@ -445,7 +445,6 @@
                                 <a href="/item/{item.item_id}" class="item-link">
                                     {item.sku} - {item.name}
                                 </a>
-                                <span class="usage-qty">每个产品使用 {item.quantity} 个</span>
                                 <span class="storage-qty" class:zero={item.total_storage === 0} class:low={item.total_storage > 0 && item.total_storage < 10}>
                                     库存: {item.total_storage}
                                 </span>
@@ -807,14 +806,6 @@
 
     .item-link:hover {
         text-decoration: underline;
-    }
-
-    .usage-qty {
-        background: #f3e5f5;
-        color: #7b1fa2;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.875rem;
     }
 
     .storage-qty {
