@@ -167,7 +167,7 @@
     <div class="tree-level" style="margin-left: {level * 20}px">
         <div class="tree-node">
             <span class="node-name">{node.item.SKU} - {node.item.name}</span>
-            <span class="node-qty">× {node.quantity}</span>
+            <span class="node-qty">{node.total_storage}</span>
         </div>
         {#if node.children && node.children.length > 0}
             <div class="tree-children">
@@ -446,7 +446,7 @@
                                     {item.sku} - {item.name}
                                 </a>
                                 <span class="storage-qty" class:zero={item.total_storage === 0} class:low={item.total_storage > 0 && item.total_storage < 10}>
-                                    库存: {item.total_storage}
+                                    {item.total_storage}
                                 </span>
                             </div>
                         {/each}

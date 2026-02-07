@@ -43,7 +43,7 @@ export interface ComponentCreateRequest {
 /** BOM树节点 */
 export interface BOMTreeNode {
     item: BaseItem & { weight?: string };
-    quantity: number;
+    total_storage: number;
     level: number;
     children: BOMTreeNode[];
 }
