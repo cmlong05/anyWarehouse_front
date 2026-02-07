@@ -40,6 +40,13 @@
     let editOrder = $state(0);
     let editNote = $state('');
 
+    // 可组装计算
+    let maxProducibleResult = $state<{
+        max_producible: number;
+        limiting_factor: { item_id: number; sku: string; name: string; available: number; required: number } | null;
+    } | null>(null);
+    let calculatingMax = $state(false);
+
     // 加载数据
     async function loadData() {
         loading = true;
@@ -154,6 +161,139 @@
         editNote = component.note;
     }
 
+    // 计算可组装数量（递归）
+    // 逻辑：
+    // 1. 先检查库存，库存能提供多少个
+    // 2. 库存不够时，看能否从子组件组装补充
+    // 3. 返回：总共能提供多少个父节点
+    function calculateMaxProducible() {
+        calculatingMax = true;
+        
+        setTimeout(() => {
+            try {
+                // 计算节点能支持多少个父节点
+                function calcNode(node: BOMTreeNode): {
+                    canSupport: number;
+                    limiter: { item_id: number; sku: string; name: string; available: number; required: number } | null;
+                } {
+                    const stock = node.total_storage;
+                    const needPerParent = node.quantity;
+                    
+                    // 叶子节点：只能用库存
+                    if (!node.children || node.children.length === 0) {
+                        const canSupport = Math.floor(stock / needPerParent);
+                        return {
+                            canSupport,
+                            limiter: canSupport > 0 ? null : {
+                                item_id: node.item.id,
+                                sku: node.item.SKU,
+                                name: node.item.name,
+                                available: stock,
+                                required: needPerParent
+                            }
+                        };
+                    }
+                    
+                    // 半成品：库存 + 子组件组装
+                    const fromStock = Math.floor(stock / needPerParent);
+                    
+                    // 递归计算子组件能组装出多少个当前节点
+                    // 先算能从子组件组装出多少个当前节点
+                    let minChildAssemblable = Infinity;
+                    let childLimiter: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
+                    
+                    for (const child of node.children) {
+                        const childResult = calcNode(child);
+                        // 子组件能组装出多少个当前节点
+                        const assemblable = Math.floor(childResult.canSupport / child.quantity);
+                        if (assemblable < minChildAssemblable) {
+                            minChildAssemblable = assemblable;
+                            childLimiter = childResult.limiter;
+                        }
+                    }
+                    
+                    // 总共能支持 = 库存支持 + 组装支持
+                    const fromAssembly = minChildAssemblable === Infinity ? 0 : minChildAssemblable;
+                    const totalCanSupport = fromStock + fromAssembly;
+                    
+                    // 确定限制因素：
+                    // 1. 如果子组件是限制因素（fromAssembly <= fromStock），使用子组件的限制因素
+                    // 2. 如果当前节点库存是限制因素（fromStock < fromAssembly 或没有子组件），使用当前节点
+                    let limiter: { item_id: number; sku: string; name: string; available: number; required: number } | null;
+                    
+                    if (childLimiter && fromAssembly <= fromStock) {
+                        // 子组件是瓶颈
+                        limiter = childLimiter;
+                    } else if (fromStock <= fromAssembly) {
+                        // 当前节点库存是瓶颈（或两者相等）
+                        limiter = {
+                            item_id: node.item.id,
+                            sku: node.item.SKU,
+                            name: node.item.name,
+                            available: stock,
+                            required: needPerParent
+                        };
+                    } else {
+                        limiter = null; // 无限制
+                    }
+                    
+                    return {
+                        canSupport: totalCanSupport,
+                        limiter
+                    };
+                }
+                
+                // 过滤掉当前物品本身（如果数据有问题，把自己设为组件）
+                const childNodes = bomTree.filter(node => node.item.SKU !== itemSKU);
+                
+                // 调试：打印每个根节点的计算结果
+                console.log('=== 可组装数量计算 ===');
+                console.log('当前物品:', itemSKU);
+                console.log('子组件数量:', childNodes.length);
+                for (const node of childNodes) {
+                    const result = calcNode(node);
+                    console.log(`${node.item.SKU}: 库存=${node.total_storage}, 需求=${node.quantity}, 可支持=${result.canSupport}, 限制因素=${JSON.stringify(result.limiter)}`);
+                }
+                
+                // 计算每个子组件能支持多少个成品
+                let minProducible = Infinity;
+                let finalLimiter: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
+                let minNodeInfo: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
+                
+                for (const node of childNodes) {
+                    const result = calcNode(node);
+                    if (result.canSupport < minProducible) {
+                        minProducible = result.canSupport;
+                        finalLimiter = result.limiter;
+                        // 记录当前最少节点的信息（备用瓶颈）
+                        minNodeInfo = {
+                            item_id: node.item.id,
+                            sku: node.item.SKU,
+                            name: node.item.name,
+                            available: node.total_storage,
+                            required: node.quantity
+                        };
+                    }
+                }
+                
+                // 如果没有明确的限制因素，使用可用数量最少的那个作为"相对瓶颈"
+                if (!finalLimiter && minNodeInfo) {
+                    finalLimiter = minNodeInfo;
+                }
+                
+                console.log('最终可组装:', minProducible);
+                console.log('限制因素:', finalLimiter ? `${finalLimiter.sku} (库存${finalLimiter.available}/需要${finalLimiter.required})` : '无');
+                
+                maxProducibleResult = {
+                    max_producible: minProducible === Infinity ? 0 : minProducible,
+                    limiting_factor: finalLimiter
+                };
+            } finally {
+                calculatingMax = false;
+            }
+        }, 0);
+    }
+
     // 监听 itemId 变化，自动重新加载数据
     $effect(() => {
         if (itemId) {
@@ -167,7 +307,7 @@
     <div class="tree-level" style="margin-left: {level * 20}px">
         <div class="tree-node">
             <span class="node-name">{node.item.SKU} - {node.item.name}</span>
-            <span class="node-qty">{node.total_storage}</span>
+            <span class="node-qty">× {node.quantity} <span class="stock">(库存: {node.total_storage})</span></span>
         </div>
         {#if node.children && node.children.length > 0}
             <div class="tree-children">
@@ -393,10 +533,36 @@
                 {#if bomTree.length === 0}
                     <div class="empty-state">暂无BOM树结构</div>
                 {:else}
-                    <div class="bom-tree">
-                        {#each bomTree as node}
-                            {@render TreeNode(node, 0)}
-                        {/each}
+                    <div class="bom-tree-calc">
+                        <div class="calc-section">
+                            <button 
+                                class="btn btn-primary btn-sm" 
+                                onclick={calculateMaxProducible}
+                                disabled={calculatingMax}
+                            >
+                                {calculatingMax ? '计算中...' : '计算可组装数量'}
+                            </button>
+                            
+                            {#if maxProducibleResult}
+                                <div class="calc-result-inline">
+                                    <span class="max-producible">
+                                        可组装: <span class="highlight">{maxProducibleResult.max_producible}</span> 个
+                                    </span>
+                                    {#if maxProducibleResult.limiting_factor}
+                                        <span class="limiting-factor">
+                                            (受限: <a href="/item/{maxProducibleResult.limiting_factor.item_id}" class="limiter-link">{maxProducibleResult.limiting_factor.sku}</a>
+                                            - 库存{maxProducibleResult.limiting_factor.available} / 需要{maxProducibleResult.limiting_factor.required})
+                                        </span>
+                                    {/if}
+                                </div>
+                            {/if}
+                        </div>
+                        
+                        <div class="bom-tree">
+                            {#each bomTree as node}
+                                {@render TreeNode(node, 0)}
+                            {/each}
+                        </div>
                     </div>
                 {/if}
             {/if}
@@ -695,6 +861,56 @@
         margin-top: 0.5rem;
     }
 
+    .bom-tree-calc {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .calc-section {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .calc-result-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: 1rem;
+    }
+
+    .max-producible {
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .max-producible .highlight {
+        color: #4caf50;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .limiting-factor {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: #666;
+    }
+
+    .limiter-link {
+        color: #1976d2;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .limiter-link:hover {
+        text-decoration: underline;
+    }
+
     .bom-tree {
         background: white;
         padding: 1rem;
@@ -734,6 +950,14 @@
         padding: 0.125rem 0.5rem;
         border-radius: 4px;
         font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .node-qty .stock {
+        color: #666;
+        font-size: 0.75rem;
+        font-weight: normal;
+        margin-left: 0.25rem;
     }
 
     .data-table {
