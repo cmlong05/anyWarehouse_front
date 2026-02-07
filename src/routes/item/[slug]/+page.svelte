@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ItemSet } from '$lib';
     import { config } from '$lib/config';
+    import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
 
     let { data } = $props<{ data: { itemDetail: ItemSet } }>();
     let inputRefs: (HTMLInputElement | null)[] = [];
@@ -72,13 +73,8 @@
     </nav>
 {/each}
 
-<!-- 页面操作 -->
-<div class="page-actions">
-    <h1>{data.itemDetail.item.name}</h1>
-</div>
-
-
 <!-- 主内容 -->
+<div class="content-wrapper">
 <div class="div-left-70">
     <div class="image-container">
         <img 
@@ -89,6 +85,7 @@
         />
     </div>
     <div class="div-right">
+        <h2>{data.itemDetail.item.name}</h2>
         <p><strong>SKU:</strong> {data.itemDetail.item.SKU}
             <a href="/item/{data.itemDetail.item.id}/edit" class="edit-link">编辑</a>
         </p>
@@ -132,6 +129,15 @@
         <p><strong>详情:</strong></p>
         <p class = "text-p">{data.itemDetail.item.description || ''}</p>
     </div>
+
+    <!-- BOM 组件管理 -->
+    <div class="div-full">
+        <ItemComponentManager 
+            itemId={data.itemDetail.item.id}
+            itemSKU={data.itemDetail.item.SKU}
+            itemName={data.itemDetail.item.name}
+        />
+    </div>
 </div>
 
 <div class="div-right-25">
@@ -150,32 +156,20 @@
         </ul>
     {/each}
 </div>
+</div>
 
 <style>
-    .page-actions {
+    /* 让 sidebar 顶部与左侧内容对齐 */
+    .div-right-25 {
+        margin-top: 0;
+    }
+    .content-wrapper {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 1rem 0 2rem 0;
-        padding: 1rem 0;
-        border-bottom: 1px solid #eee;
+        align-items: flex-start;
+        gap: 2rem;
     }
 
-    .page-actions h1 {
-        margin: 0;
-        color: #333;
-        font-size: 1.8rem;
-    }
-
-    @media (max-width: 768px) {
-        .page-actions {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .page-actions h1 {
-            font-size: 1.5rem;
-        }
+    .div-right h2 {
+        font-weight: bold;
     }
 </style>

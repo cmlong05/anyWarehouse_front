@@ -7,7 +7,89 @@ export interface BaseItem {
     name: string;
 }
 
-// 组件接口
+// ========== Component (BOM) 组件相关接口 ==========
+
+/** 组件关系基础接口 */
+export interface Component {
+    id: number;
+    parent_item: number;
+    child_item: number;
+    quantity: number;
+    order: number;
+    note: string;
+}
+
+/** 组件关系详情接口（包含物品详情） */
+export interface ComponentDetail {
+    id: number;
+    parent_item: number;
+    child_item: number;
+    quantity: number;
+    order: number;
+    note: string;
+    child_item_detail: BaseItem & { weight?: string };
+    parent_item_detail: BaseItem & { weight?: string };
+}
+
+/** 创建/更新组件关系请求 */
+export interface ComponentCreateRequest {
+    parent_item: number;
+    child_item: number;
+    quantity: number;
+    order?: number;
+    note?: string;
+}
+
+/** BOM树节点 */
+export interface BOMTreeNode {
+    item: BaseItem & { weight?: string };
+    quantity: number;
+    level: number;
+    children: BOMTreeNode[];
+}
+
+/** BOM详情响应 */
+export interface BOMDetailResponse {
+    item: Item;
+    components: ComponentDetail[];
+    used_in_items: ComponentDetail[];
+}
+
+/** BOM树响应 */
+export interface BOMTreeResponse {
+    item: BaseItem & { weight?: string };
+    bom_tree: BOMTreeNode[];
+}
+
+/** 物料汇总项 */
+export interface TotalComponentItem {
+    item_id: number;
+    sku: string;
+    name: string;
+    quantity: number;
+}
+
+/** 物料汇总响应 */
+export interface TotalComponentsResponse {
+    item: BaseItem & { weight?: string };
+    total_components: TotalComponentItem[];
+}
+
+/** 逆向BOM使用位置 */
+export interface WhereUsedItem {
+    item_id: number;
+    sku: string;
+    name: string;
+    quantity: number;
+}
+
+/** 逆向BOM响应 */
+export interface WhereUsedResponse {
+    item: BaseItem & { weight?: string };
+    used_in: WhereUsedItem[];
+}
+
+// 旧的组件接口 (兼容使用，建议迁移到新接口)
 export interface ItemComponent {
     id: number;
     name: string;

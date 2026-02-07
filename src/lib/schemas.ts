@@ -64,9 +64,32 @@ export const itemSchema = z.object({
     category: z.array(z.number()).optional().default([])
 });
 
+// ========== Component (BOM) Schemas ==========
+
+export const componentSchema = z.object({
+    parent_item: z.number()
+        .gt(0, '请选择有效的父物品'),
+    child_item: z.number()
+        .gt(0, '请选择有效的子物品'),
+    quantity: z.number()
+        .gte(1, '数量至少为1')
+        .lte(999999, '数量不能超过999999'),
+    order: z.number()
+        .gte(0, '排序不能为负数')
+        .lte(9999, '排序不能超过9999')
+        .default(0),
+    note: z.string()
+        .max(500, '备注不能超过500个字符')
+        .default('')
+}).refine((data) => data.parent_item !== data.child_item, {
+    message: '父物品和子物品不能相同（不能自引用）',
+    path: ['child_item']
+});
+
 export type ContainerFormData = z.infer<typeof containerSchema>;
 export type CategoryFormData = z.infer<typeof categorySchema>;
 export type ItemFormData = z.infer<typeof itemSchema>;
+export type ComponentFormData = z.infer<typeof componentSchema>;
 
 // API 响应类型定义
 export interface Item {
