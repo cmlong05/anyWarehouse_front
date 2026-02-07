@@ -3,7 +3,7 @@ import type {
     Component, 
     ComponentDetail, 
     ComponentCreateRequest,
-    BOMDetailResponse,
+
     BOMTreeResponse,
     TotalComponentsResponse,
     WhereUsedResponse
@@ -202,11 +202,6 @@ export class ItemBOMAPI {
 
     constructor(client: ApiClient = apiClient) {
         this.client = client;
-    }
-
-    /** 获取物品的完整BOM信息 */
-    async getBOMDetail(itemId: number): Promise<BOMDetailResponse> {
-        return this.client.get<BOMDetailResponse>(`/product/item/${itemId}/bom_detail/`);
     }
 
     /** 获取BOM树结构 */

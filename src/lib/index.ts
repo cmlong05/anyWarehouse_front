@@ -48,13 +48,6 @@ export interface BOMTreeNode {
     children: BOMTreeNode[];
 }
 
-/** BOM详情响应 */
-export interface BOMDetailResponse {
-    item: Item;
-    components: ComponentDetail[];
-    used_in_items: ComponentDetail[];
-}
-
 /** BOM树响应 */
 export interface BOMTreeResponse {
     item: BaseItem & { weight?: string };
@@ -111,7 +104,6 @@ export interface Item extends BaseItem  {
     date_added: string;
     barcode: string | null;
     category: number[];
-    components: ItemComponent[];
 }
 
 export interface ItemSet{

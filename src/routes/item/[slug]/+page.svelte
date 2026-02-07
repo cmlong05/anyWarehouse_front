@@ -92,7 +92,6 @@
         <p><strong>重量:</strong> {data.itemDetail.item.weight} 克</p>
         <p><strong>体积 (S):</strong> {data.itemDetail.item.s_volume} 立方厘米</p>
         <p><strong>价格:</strong> {data.itemDetail.item.b_Price} {data.itemDetail.item.currency || '货币单位未知'}</p>
-        <p><strong>组件:</strong> {data.itemDetail.item.components.length > 0 ? data.itemDetail.item.components.join(', ') : '无组件'}</p>
         <div class="div-full">
             <p><strong>存储:</strong>
                 <a href="/storage/add/{data.itemDetail.item.id}">添加</a>
