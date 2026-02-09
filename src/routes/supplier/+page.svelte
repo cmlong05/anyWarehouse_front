@@ -36,13 +36,9 @@
         loadSuppliers();
     });
     
-    // 防抖搜索
-    let searchTimeout: ReturnType<typeof setTimeout>;
+    // 输入时实时搜索（供应商数据量小，无需防抖）
     function handleSearch() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            loadSuppliers();
-        }, 300);
+        loadSuppliers();
     }
 </script>
 

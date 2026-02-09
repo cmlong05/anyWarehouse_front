@@ -2,6 +2,7 @@
     import { componentAPI, itemBOMAPI } from '$lib/api';
     import type { ComponentDetail, BOMTreeNode, TotalComponentItem, WhereUsedItem, BaseItem } from '$lib';
     import { config } from '$lib/config';
+    import Svelecte from 'svelecte';
 
     interface Props {
         itemId: number;
@@ -25,20 +26,29 @@
 
     // 添加组件表单
     let showAddForm = $state(false);
-    let searchQuery = $state('');
-    let searchResults = $state<(BaseItem & { id: number; weight?: string })[]>([]);
-    let selectedChildItem = $state<BaseItem & { id: number; weight?: string } | null>(null);
+    let selectedChildItemId = $state<number | null>(null);
     let newComponentQuantity = $state(1);
     let newComponentOrder = $state(0);
     let newComponentNote = $state('');
     let addingComponent = $state(false);
-    let searchLoading = $state(false);
 
     // 编辑组件
     let editingComponent = $state<ComponentDetail | null>(null);
     let editQuantity = $state(1);
     let editOrder = $state(0);
     let editNote = $state('');
+    
+    // 构建物品搜索 URL
+    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/search?q=[query]`);
+    
+    // 处理 fetch 返回的数据 - 过滤掉当前物品自身
+    function handleItemFetch(json: { results?: (BaseItem & { id: number })[] }) {
+        const results = (json?.results || []).filter((item) => item.id !== itemId);
+        return results.map((item) => ({
+            value: item.id,
+            label: `${item.SKU} - ${item.name}`
+        }));
+    }
 
     // 可组装计算
     let maxProducibleResult = $state<{
@@ -70,43 +80,20 @@
         }
     }
 
-    // 搜索物品
-    async function searchItems() {
-        if (!searchQuery.trim()) {
-            searchResults = [];
-            return;
-        }
-        searchLoading = true;
-        try {
-            const response = await fetch(`${config.API_BASE_URL}/product/item/search?q=${encodeURIComponent(searchQuery)}`);
-            if (response.ok) {
-                const data = await response.json();
-                // 过滤掉当前物品自身（不能自引用）
-                searchResults = data.results.filter((item: BaseItem & { id: number }) => item.id !== itemId);
-            }
-        } catch (err) {
-            console.error('搜索失败:', err);
-        } finally {
-            searchLoading = false;
-        }
-    }
-
     // 添加组件
     async function addComponent() {
-        if (!selectedChildItem) return;
+        if (!selectedChildItemId) return;
         addingComponent = true;
         try {
             await componentAPI.create({
                 parent_item: itemId,
-                child_item: selectedChildItem.id,
+                child_item: selectedChildItemId,
                 quantity: newComponentQuantity,
                 order: newComponentOrder,
                 note: newComponentNote
             });
             // 重置表单
-            selectedChildItem = null;
-            searchQuery = '';
-            searchResults = [];
+            selectedChildItemId = null;
             newComponentQuantity = 1;
             newComponentOrder = 0;
             newComponentNote = '';
@@ -335,43 +322,25 @@
         <div class="add-form">
             <h4>添加组件到 {itemSKU}</h4>
             <div class="form-row">
-                <div class="form-group">
-                    <label for="search-child-item">搜索子物品:</label>
-                    <div class="search-box">
-                        <input
-                            type="text"
-                            id="search-child-item"
-                            bind:value={searchQuery}
-                            placeholder="输入SKU或名称搜索..."
-                            onkeydown={(e) => e.key === 'Enter' && searchItems()}
-                        />
-                        <button class="btn btn-secondary btn-sm" onclick={searchItems} disabled={searchLoading}>
-                            {searchLoading ? '搜索中...' : '搜索'}
-                        </button>
-                    </div>
-                    {#if searchResults.length > 0}
-                        <div class="search-results">
-                            {#each searchResults as item}
-                                <button
-                                    type="button"
-                                    class="search-result-item"
-                                    class:selected={selectedChildItem?.id === item.id}
-                                    onclick={() => selectedChildItem = item}
-                                >
-                                    <span class="item-sku">{item.SKU}</span>
-                                    <span class="item-name">{item.name}</span>
-                                </button>
-                            {/each}
-                        </div>
-                    {/if}
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="child-item">搜索子物品:</label>
+                    <Svelecte
+                        inputId="child-item"
+                        bind:value={selectedChildItemId}
+                        valueAsObject={false}
+                        placeholder="输入SKU或名称搜索..."
+                        searchable={true}
+                        clearable={true}
+                        minQuery={1}
+                        fetch={itemSearchUrl}
+                        fetchCallback={handleItemFetch}
+                        valueField="value"
+                        labelField="label"
+                        closeAfterSelect={true}
+                        resetOnSelect={true}
+                    />
                 </div>
             </div>
-
-            {#if selectedChildItem}
-                <div class="selected-item">
-                    <p>已选择: <strong>{selectedChildItem.SKU}</strong> - {selectedChildItem.name}</p>
-                </div>
-            {/if}
 
             <div class="form-row">
                 <div class="form-group">
@@ -411,7 +380,7 @@
                 <button
                     class="btn btn-primary"
                     onclick={addComponent}
-                    disabled={!selectedChildItem || addingComponent}
+                    disabled={!selectedChildItemId || addingComponent}
                 >
                     {addingComponent ? '添加中...' : '确认添加'}
                 </button>
@@ -685,57 +654,6 @@
         padding: 0.5rem;
         border: 1px solid #ced4da;
         border-radius: 4px;
-    }
-
-    .search-box {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .search-box input {
-        flex: 1;
-    }
-
-    .search-results {
-        max-height: 200px;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        margin-top: 0.5rem;
-    }
-
-    .search-result-item {
-        width: 100%;
-        padding: 0.5rem;
-        cursor: pointer;
-        border: none;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        gap: 0.5rem;
-        background: none;
-        text-align: left;
-        font: inherit;
-    }
-
-    .search-result-item:hover,
-    .search-result-item.selected {
-        background: #e3f2fd;
-    }
-
-    .item-sku {
-        font-weight: bold;
-        color: #1976d2;
-    }
-
-    .item-name {
-        color: #666;
-    }
-
-    .selected-item {
-        background: #e8f5e9;
-        padding: 0.5rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
     }
 
     .form-actions {

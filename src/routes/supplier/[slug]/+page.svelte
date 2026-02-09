@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { supplierAPI } from '$lib/api';
@@ -13,7 +13,7 @@
     let loading = $state(true);
     let error = $state('');
     
-    const id = $derived(parseInt($page.params.slug));
+    const id = $derived(parseInt(page.params.slug));
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },

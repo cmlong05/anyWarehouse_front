@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI } from '$lib/api';
     import type { Quotation } from '$lib';
@@ -11,7 +11,7 @@
     let loading = $state(true);
     let error = $state('');
     
-    const id = $derived(parseInt($page.params.id));
+    const id = $derived(parseInt(page.params.id));
     
     async function loadQuotation() {
         loading = true;
@@ -103,31 +103,31 @@
                 <h2>基本信息</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <label>供应商</label>
+                        <span class="info-label">供应商</span>
                         <a href="/supplier/{quotation.supplier}">
                             {quotation.supplier_detail?.name || '-'}
                         </a>
                     </div>
                     <div class="info-item">
-                        <label>SKU</label>
+                        <span class="info-label">SKU</span>
                         <span>{quotation.sku || quotation.item_detail?.SKU || '-'}</span>
                     </div>
                     <div class="info-item">
-                        <label>物品名称</label>
+                        <span class="info-label">物品名称</span>
                         <a href="/item/{quotation.item}">
                             {quotation.item_detail?.name || '-'}
                         </a>
                     </div>
                     <div class="info-item">
-                        <label>单价</label>
+                        <span class="info-label">单价</span>
                         <span class="price">{formatPrice(quotation.price)} {quotation.currency}</span>
                     </div>
                     <div class="info-item">
-                        <label>最小订购量 (MOQ)</label>
+                        <span class="info-label">最小订购量 (MOQ)</span>
                         <span>{quotation.min_quantity}</span>
                     </div>
                     <div class="info-item">
-                        <label>总成本 (含运费)</label>
+                        <span class="info-label">总成本 (含运费)</span>
                         <span>{quotation.total_cost ? formatPrice(quotation.total_cost) : '-'} {quotation.currency}</span>
                     </div>
                 </div>
@@ -137,19 +137,19 @@
                 <h2>附加信息</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <label>邮费/运费</label>
+                        <span class="info-label">邮费/运费</span>
                         <span>{quotation.postage ? formatPrice(quotation.postage) : '-'} {quotation.currency}</span>
                     </div>
                     <div class="info-item">
-                        <label>交货周期</label>
+                        <span class="info-label">交货周期</span>
                         <span>{quotation.lead_time_days ? quotation.lead_time_days + ' 天' : '-'}</span>
                     </div>
                     <div class="info-item">
-                        <label>有效期开始</label>
+                        <span class="info-label">有效期开始</span>
                         <span>{formatDate(quotation.valid_from)}</span>
                     </div>
                     <div class="info-item">
-                        <label>有效期结束</label>
+                        <span class="info-label">有效期结束</span>
                         <span>{formatDate(quotation.valid_until)}</span>
                     </div>
                 </div>
@@ -166,11 +166,11 @@
                 <h2>时间戳</h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <label>创建时间</label>
+                        <span class="info-label">创建时间</span>
                         <span>{formatDate(quotation.created_at)}</span>
                     </div>
                     <div class="info-item">
-                        <label>更新时间</label>
+                        <span class="info-label">更新时间</span>
                         <span>{formatDate(quotation.updated_at)}</span>
                     </div>
                 </div>
@@ -253,7 +253,7 @@
         gap: 0.25rem;
     }
     
-    .info-item label {
+    .info-item .info-label {
         font-size: 0.85rem;
         color: var(--color-text-secondary, #666);
     }

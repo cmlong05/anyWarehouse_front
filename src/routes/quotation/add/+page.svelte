@@ -1,15 +1,17 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI, supplierAPI, itemAPI } from '$lib/api';
     import type { SupplierBrief, Item, QuotationCreateRequest } from '$lib';
+    import { config } from '$lib/config';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
+    import Svelecte from 'svelecte';
     
     // 从URL获取预设的供应商ID和物品ID
     const presetIds = $derived(() => {
-        const urlParams = new URLSearchParams($page.url.search);
+        const urlParams = new URLSearchParams(page.url.search);
         const supplierId = urlParams.get('supplier_id');
         const itemId = urlParams.get('item_id');
         return {
@@ -19,7 +21,6 @@
     });
     
     let suppliers = $state<SupplierBrief[]>([]);
-    let items = $state<Item[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
@@ -40,48 +41,28 @@
         note: ''
     });
     
-    // 搜索物品
-    let itemSearch = $state('');
-    let showItemDropdown = $state(false);
-    let searchingItems = $state(false);
-    let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+    // 供应商选项
+    const supplierOptions = $derived(suppliers.map(s => ({
+        value: s.id,
+        label: s.name
+    })));
     
-    function searchItems() {
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
-        }
-        
-        if (!itemSearch.trim()) {
-            items = [];
-            showItemDropdown = false;
-            return;
-        }
-        
-        searchingItems = true;
-        searchTimeout = setTimeout(async () => {
-            try {
-                const res = await itemAPI.list({ search: itemSearch });
-                // 兼容分页和直接数组两种格式
-                if (Array.isArray(res)) {
-                    items = res;
-                } else {
-                    items = res.results || [];
-                }
-                showItemDropdown = true;
-            } catch (err) {
-                console.error('搜索物品失败:', err);
-            } finally {
-                searchingItems = false;
-            }
-        }, 300);
+    // 构建物品搜索 URL
+    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
+    
+    // 处理 fetch 返回的数据
+    function handleItemFetch(json: unknown) {
+        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
+        return items.map((item: Item) => ({
+            value: item.id,
+            label: `${item.SKU} - ${item.name}`
+        }));
     }
     
     async function loadInitialData() {
         try {
-            // 并行加载供应商列表
             suppliers = await supplierAPI.listBrief();
             
-            // 处理预设的供应商ID和物品ID
             const { supplierId, itemId } = presetIds();
             
             if (supplierId) {
@@ -92,7 +73,6 @@
                 try {
                     const item = await itemAPI.get(itemId);
                     formData.item = item.id;
-                    itemSearch = `${item.SKU} - ${item.name}`;
                 } catch (err) {
                     console.error('加载预设物品失败:', err);
                 }
@@ -102,18 +82,11 @@
         }
     }
     
-    function selectItem(item: Item) {
-        formData.item = item.id;
-        itemSearch = `${item.SKU} - ${item.name}`;
-        showItemDropdown = false;
-    }
-    
     async function handleSubmit(e: Event) {
         e.preventDefault();
         error = '';
         success = '';
         
-        // 验证
         if (!formData.supplier) {
             error = '请选择供应商';
             return;
@@ -162,42 +135,31 @@
             <div class="form-row">
                 <div class="form-group required">
                     <label for="supplier">供应商</label>
-                    <select id="supplier" bind:value={formData.supplier} required>
-                        <option value={0}>请选择...</option>
-                        {#each suppliers as s}
-                            <option value={s.id}>{s.name}</option>
-                        {/each}
-                    </select>
+                    <Svelecte
+                        inputId="supplier"
+                        options={supplierOptions}
+                        bind:value={formData.supplier}
+                        placeholder="选择供应商..."
+                        searchable={true}
+                        required
+                    />
                 </div>
                 
                 <div class="form-group">
                     <label for="item">物品</label>
-                    <div class="item-search">
-                        <input 
-                            type="text" 
-                            id="item"
-                            placeholder="搜索SKU或名称..."
-                            bind:value={itemSearch}
-                            oninput={searchItems}
-                        />
-                        {#if searchingItems}
-                            <div class="dropdown-hint">搜索中...</div>
-                        {:else if showItemDropdown}
-                            {#if items.length > 0}
-                                <ul class="dropdown">
-                                    {#each items as item}
-                                        <li>
-                                            <button type="button" onclick={() => selectItem(item)}>
-                                                {item.SKU} - {item.name}
-                                            </button>
-                                        </li>
-                                    {/each}
-                                </ul>
-                            {:else}
-                                <div class="dropdown-hint">无匹配物品</div>
-                            {/if}
-                        {/if}
-                    </div>
+                    <Svelecte
+                        inputId="item"
+                        bind:value={formData.item}
+                        valueAsObject={false}
+                        placeholder="搜索SKU或名称..."
+                        searchable={true}
+                        minQuery={1}
+                        fetch={itemSearchUrl}
+                        fetchCallback={handleItemFetch}
+                        valueField="value"
+                        labelField="label"
+                    />
+
                 </div>
             </div>
             
@@ -367,52 +329,6 @@
     
     .checkbox-group input {
         width: auto;
-    }
-    
-    .item-search {
-        position: relative;
-    }
-    
-    .dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        border: 1px solid var(--color-border, #ddd);
-        border-radius: 4px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 10;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    
-    .dropdown li {
-        padding: 0;
-    }
-    
-    .dropdown li button {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: none;
-        background: none;
-        text-align: left;
-        cursor: pointer;
-        font-size: inherit;
-    }
-    
-    .dropdown-hint {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        border: 1px solid var(--color-border, #ddd);
-        border-radius: 4px;
-        padding: 0.5rem 0.75rem;
-        z-index: 10;
-        color: var(--color-text-secondary, #666);
-        font-size: 0.9rem;
     }
     
     .form-actions {
