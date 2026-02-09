@@ -1,9 +1,19 @@
 <script lang="ts">
-    import type { ItemSet } from '$lib';
+    import type { ItemSet, QuotationBrief } from '$lib';
     import { config } from '$lib/config';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
 
-    let { data } = $props<{ data: { itemDetail: ItemSet } }>();
+    let { data } = $props<{ 
+        data: { 
+            itemDetail: ItemSet;
+            quotations: QuotationBrief[];
+            bestPrice: { price: string; supplier: string; quotation_id: number } | null;
+        } 
+    }>();
+    
+    function formatPrice(price: string): string {
+        return parseFloat(price).toFixed(2);
+    }
     let inputRefs: (HTMLInputElement | null)[] = [];
 
     const handleStorage = async (event: Event, storage: any, inputElement: HTMLInputElement) => {
@@ -137,6 +147,53 @@
             itemName={data.itemDetail.item.name}
         />
     </div>
+    
+    <!-- 供应商报价 -->
+    <div class="div-full quotations-section">
+        <h3>供应商报价</h3>
+        {#if data.quotations.length === 0}
+            <p class="empty">暂无报价</p>
+            <a href="/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary">添加报价</a>
+        {:else}
+            {#if data.bestPrice}
+                <p class="best-price">
+                    最优价格: <strong>{formatPrice(data.bestPrice.price)}</strong> 
+                    来自 {data.bestPrice.supplier}
+                </p>
+            {/if}
+            <table class="quotations-table">
+                <thead>
+                    <tr>
+                        <th>供应商</th>
+                        <th>单价</th>
+                        <th>货币</th>
+                        <th>MOQ</th>
+                        <th>首选</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each data.quotations as quotation}
+                        <tr>
+                            <td>
+                                <a href="/supplier/{quotation.supplier}">{quotation.supplier_name}</a>
+                            </td>
+                            <td class="numeric">{formatPrice(quotation.price)}</td>
+                            <td>{quotation.currency}</td>
+                            <td>{quotation.min_quantity}</td>
+                            <td>
+                                {#if quotation.is_preferred}
+                                    <span class="preferred-badge">★ 首选</span>
+                                {:else}
+                                    <span class="muted">-</span>
+                                {/if}
+                            </td>
+                        </tr>
+                    {/each}
+                </tbody>
+            </table>
+            <a href="/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary btn-sm">添加报价</a>
+        {/if}
+    </div>
 </div>
 
 <div class="div-right-25">
@@ -170,5 +227,92 @@
 
     .div-right h2 {
         font-weight: bold;
+    }
+    
+    .quotations-section {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background: #f9fafb;
+        border-radius: 0.5rem;
+    }
+    
+    .quotations-section h3 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        color: #374151;
+    }
+    
+    .best-price {
+        color: #059669;
+        margin-bottom: 1rem;
+    }
+    
+    .quotations-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+    
+    .quotations-table th,
+    .quotations-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .quotations-table th {
+        font-weight: 600;
+        color: #374151;
+        background: #f3f4f6;
+    }
+    
+    .numeric {
+        text-align: right;
+        font-family: monospace;
+    }
+    
+    .preferred-badge {
+        background: #fef3c7;
+        color: #d97706;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .muted {
+        color: #9ca3af;
+    }
+    
+    .empty {
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.85rem;
     }
 </style>

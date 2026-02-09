@@ -171,14 +171,14 @@
                         </thead>
                         <tbody>
                             {#each quotations as quotation}
-                                <tr>
+                                <tr class="clickable" onclick={() => goto(`/quotation/${quotation.id}`)}>
                                     <td>{quotation.sku || '-'}</td>
                                     <td>{quotation.item_name || '-'}</td>
                                     <td class="numeric">{quotation.price}</td>
                                     <td>{quotation.currency}</td>
                                     <td>
                                         {#if quotation.is_preferred}
-                                            <span class="preferred-badge">✓ 首选</span>
+                                            <span class="preferred-badge">★ 首选</span>
                                         {:else}
                                             <span class="muted">-</span>
                                         {/if}
@@ -356,10 +356,8 @@
     }
     
     .quotations-section {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
+        padding: 1.5rem 0;
+        border-top: 1px solid #e5e7eb;
     }
     
     .section-header {
@@ -404,7 +402,6 @@
     th {
         font-weight: 600;
         color: #374151;
-        background-color: #f9fafb;
     }
     
     td {
@@ -417,16 +414,18 @@
     }
     
     .preferred-badge {
-        background-color: #dcfce7;
         color: #166534;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
         font-size: 0.8rem;
         font-weight: 500;
     }
     
     .muted {
         color: #9ca3af;
+    }
+    
+    .clickable {
+        cursor: pointer;
     }
     
     .actions {

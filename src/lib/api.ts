@@ -15,6 +15,7 @@ import type {
     QuotationBrief,
     QuotationCreateRequest,
     QuotationComparisonItem,
+    Item,
 } from './index';
 
 export interface ApiError {
@@ -371,6 +372,47 @@ export class QuotationAPI {
     }
 }
 
+// ========== Item API 物品接口 ==========
+
+export class ItemAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取物品列表 */
+    async list(params?: { search?: string; category?: number; page?: number; page_size?: number }): Promise<PaginatedResponse<Item>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.search) queryParams.search = params.search;
+        if (params?.category) queryParams.category = params.category.toString();
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<Item>>('/product/item/', queryParams);
+    }
+
+    /** 获取单个物品详情 */
+    async get(id: number): Promise<Item> {
+        return this.client.get<Item>(`/product/item/${id}/`);
+    }
+
+    /** 创建物品 */
+    async create(data: Partial<Item>): Promise<Item> {
+        return this.client.post<Item>('/product/item/', data);
+    }
+
+    /** 更新物品 */
+    async update(id: number, data: Partial<Item>): Promise<Item> {
+        return this.client.put<Item>(`/product/item/${id}/`, data);
+    }
+
+    /** 删除物品 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/product/item/${id}/`);
+    }
+}
+
 // API 实例导出
 export const supplierAPI = new SupplierAPI();
 export const quotationAPI = new QuotationAPI();
+export const itemAPI = new ItemAPI();
