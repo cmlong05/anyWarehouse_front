@@ -7,7 +7,8 @@
 		{ href: '/', label: 'Home' },
 		{ href: '/container/A', label: 'Container' },
 		{ href: '/item', label: 'Items' },
-		{ href: '/category/4', label: 'Categories' }
+		{ href: '/category/4', label: 'Categories' },
+		{ href: '/supplier', label: '供应商' }
 	];
 </script>
 

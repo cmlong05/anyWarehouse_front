@@ -1,5 +1,15 @@
 // place files you want to import through the `$lib` alias in this folder.
 
+// ========== 分页响应接口 ==========
+
+/** DRF 分页响应 */
+export interface PaginatedResponse<T> {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    results: T[];
+}
+
 // 物品
 export interface BaseItem {
     id: number;
@@ -205,5 +215,115 @@ export interface ContainerResponse {
     descendants: ContainerVerbose[];
     siblings: ContainerBriefMark[];
     storages: StorageItem[];
+}
+
+// ========== Supplier 供应商相关接口 ==========
+
+/** 供应商 */
+export interface Supplier {
+    id: number;
+    name: string;
+    contact: string;
+    e_mail: string;
+    telephone: string;
+    address: string;
+    remark: string;
+    is_active: boolean;
+    date_added: string;
+    created_at: string;
+    updated_at: string;
+    quotation_count?: number;
+}
+
+/** 供应商简要信息 */
+export interface SupplierBrief {
+    id: number;
+    name: string;
+    contact: string;
+    telephone: string;
+}
+
+/** 创建/更新供应商请求 */
+export interface SupplierCreateRequest {
+    name: string;
+    contact?: string;
+    e_mail?: string;
+    telephone?: string;
+    address?: string;
+    remark?: string;
+    is_active?: boolean;
+}
+
+/** 报价 */
+export interface Quotation {
+    id: number;
+    item: number | null;
+    sku: string;
+    supplier: number;
+    supplier_detail?: SupplierBrief;
+    item_detail?: BaseItem & { image?: string; weight?: string };
+    price: string;
+    currency: string;
+    min_quantity: number;
+    postage: string | null;
+    lead_time_days: number | null;
+    valid_from: string | null;
+    valid_until: string | null;
+    is_preferred: boolean;
+    note: string;
+    created_at: string;
+    updated_at: string;
+    total_cost?: string;
+}
+
+/** 报价简要信息 */
+export interface QuotationBrief {
+    id: number;
+    supplier: number;
+    supplier_name: string;
+    item: number | null;
+    item_sku: string;
+    item_name: string;
+    sku: string;
+    price: string;
+    currency: string;
+    is_preferred: boolean;
+}
+
+/** 创建/更新报价请求 */
+export interface QuotationCreateRequest {
+    item?: number | null;
+    supplier: number;
+    price: string | number;
+    currency?: string;
+    min_quantity?: number;
+    postage?: string | number | null;
+    lead_time_days?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    is_preferred?: boolean;
+    note?: string;
+}
+
+/** 供应商及其报价 */
+export interface SupplierWithQuotations {
+    id: number;
+    name: string;
+    contact: string;
+    e_mail: string;
+    telephone: string;
+    address: string;
+    remark: string;
+    quotations: QuotationBrief[];
+}
+
+/** 报价对比项 */
+export interface QuotationComparisonItem {
+    item_id: number;
+    sku: string;
+    name: string;
+    quotations: QuotationBrief[];
+    best_price: string | null;
+    best_price_supplier: string | null;
 }
 

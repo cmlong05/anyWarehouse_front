@@ -3,10 +3,18 @@ import type {
     Component, 
     ComponentDetail, 
     ComponentCreateRequest,
-
     BOMTreeResponse,
     TotalComponentsResponse,
-    WhereUsedResponse
+    WhereUsedResponse,
+    PaginatedResponse,
+    Supplier,
+    SupplierBrief,
+    SupplierCreateRequest,
+    SupplierWithQuotations,
+    Quotation,
+    QuotationBrief,
+    QuotationCreateRequest,
+    QuotationComparisonItem,
 } from './index';
 
 export interface ApiError {
@@ -226,3 +234,143 @@ export const apiClient = new ApiClient();
 // 组件API实例
 export const componentAPI = new ComponentAPI();
 export const itemBOMAPI = new ItemBOMAPI();
+
+// ========== Supplier API 供应商接口 ==========
+
+export class SupplierAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取所有供应商列表 */
+    async list(params?: { search?: string; is_active?: boolean }): Promise<PaginatedResponse<Supplier>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.search) queryParams.search = params.search;
+        if (params?.is_active !== undefined) queryParams.is_active = String(params.is_active);
+        return this.client.get<PaginatedResponse<Supplier>>('/supplier/suppliers/', queryParams);
+    }
+
+    /** 获取供应商简要列表（下拉选择用） */
+    async listBrief(): Promise<SupplierBrief[]> {
+        return this.client.get<SupplierBrief[]>('/supplier/suppliers/brief/');
+    }
+
+    /** 获取单个供应商详情 */
+    async get(id: number): Promise<Supplier> {
+        return this.client.get<Supplier>(`/supplier/suppliers/${id}/`);
+    }
+
+    /** 获取供应商及其报价 */
+    async getWithQuotations(id: number): Promise<SupplierWithQuotations> {
+        return this.client.get<SupplierWithQuotations>(`/supplier/suppliers/${id}/?with_quotations=true`);
+    }
+
+    /** 创建供应商 */
+    async create(data: SupplierCreateRequest): Promise<Supplier> {
+        return this.client.post<Supplier>('/supplier/suppliers/', data);
+    }
+
+    /** 更新供应商 */
+    async update(id: number, data: Partial<SupplierCreateRequest>): Promise<Supplier> {
+        return this.client.put<Supplier>(`/supplier/suppliers/${id}/`, data);
+    }
+
+    /** 部分更新供应商 */
+    async patch(id: number, data: Partial<SupplierCreateRequest>): Promise<Supplier> {
+        return this.client.patch<Supplier>(`/supplier/suppliers/${id}/`, data);
+    }
+
+    /** 删除供应商 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/supplier/suppliers/${id}/`);
+    }
+
+    /** 获取供应商的所有报价 */
+    async getQuotations(id: number, itemId?: number): Promise<{ supplier: SupplierBrief; quotations: QuotationBrief[]; count: number }> {
+        const params: Record<string, string> = {};
+        if (itemId) params.item_id = itemId.toString();
+        return this.client.get(`/supplier/suppliers/${id}/quotations/`, params);
+    }
+}
+
+// ========== Quotation API 报价接口 ==========
+
+export class QuotationAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取所有报价列表 */
+    async list(params?: {
+        item_id?: number;
+        supplier_id?: number;
+        sku?: string;
+        preferred_only?: boolean;
+        min_price?: number;
+        max_price?: number;
+        brief?: boolean;
+    }): Promise<PaginatedResponse<Quotation | QuotationBrief>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.item_id) queryParams.item_id = params.item_id.toString();
+        if (params?.supplier_id) queryParams.supplier_id = params.supplier_id.toString();
+        if (params?.sku) queryParams.sku = params.sku;
+        if (params?.preferred_only) queryParams.preferred_only = 'true';
+        if (params?.min_price) queryParams.min_price = params.min_price.toString();
+        if (params?.max_price) queryParams.max_price = params.max_price.toString();
+        if (params?.brief) queryParams.brief = 'true';
+        return this.client.get<PaginatedResponse<Quotation | QuotationBrief>>('/supplier/quotations/', queryParams);
+    }
+
+    /** 获取单个报价详情 */
+    async get(id: number): Promise<Quotation> {
+        return this.client.get<Quotation>(`/supplier/quotations/${id}/`);
+    }
+
+    /** 创建报价 */
+    async create(data: QuotationCreateRequest): Promise<Quotation> {
+        return this.client.post<Quotation>('/supplier/quotations/', data);
+    }
+
+    /** 更新报价 */
+    async update(id: number, data: Partial<QuotationCreateRequest>): Promise<Quotation> {
+        return this.client.put<Quotation>(`/supplier/quotations/${id}/`, data);
+    }
+
+    /** 部分更新报价 */
+    async patch(id: number, data: Partial<QuotationCreateRequest>): Promise<Quotation> {
+        return this.client.patch<Quotation>(`/supplier/quotations/${id}/`, data);
+    }
+
+    /** 删除报价 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/supplier/quotations/${id}/`);
+    }
+
+    /** 获取物品的所有报价 */
+    async getByItem(itemId: number): Promise<{
+        item_id: number;
+        quotations: QuotationBrief[];
+        count: number;
+        best_price: { price: string; supplier: string; quotation_id: number } | null;
+    }> {
+        return this.client.get('/supplier/quotations/by_item/', { item_id: itemId.toString() });
+    }
+
+    /** 多供应商报价对比 */
+    async compare(itemIds: number[]): Promise<{ comparisons: QuotationComparisonItem[]; total_items: number }> {
+        return this.client.get('/supplier/quotations/compare/', { item_ids: itemIds.join(',') });
+    }
+
+    /** 设置/取消首选报价 */
+    async setPreferred(id: number, isPreferred: boolean = true): Promise<Quotation> {
+        return this.client.post<Quotation>(`/supplier/quotations/${id}/set_preferred/`, { is_preferred: isPreferred });
+    }
+}
+
+// API 实例导出
+export const supplierAPI = new SupplierAPI();
+export const quotationAPI = new QuotationAPI();
