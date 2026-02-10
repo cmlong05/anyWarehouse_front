@@ -13,10 +13,10 @@
 		{ href: '/', label: 'Home' },
 		{ href: '/container/A', label: 'Container' },
 		{
-			href: '/category/4',
+			href: '/item/category/4',
 			label: 'Categories',
 			children: [
-				{ href: '/category/4', label: '分类列表' },
+				{ href: '/item/category/4', label: '分类列表' },
 				{ href: '/item', label: '物品列表' }
 			]
 		},
