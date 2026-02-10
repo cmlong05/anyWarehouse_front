@@ -327,3 +327,189 @@ export interface QuotationComparisonItem {
     best_price_supplier: string | null;
 }
 
+// ========== Purchase Order 采购订单相关接口 ==========
+
+/** 采购订单状态 */
+export type PurchaseOrderStatus = 'draft' | 'pending' | 'approved' | 'ordered' | 'partial' | 'received' | 'cancelled';
+
+/** 采购订单优先级 */
+export type PurchaseOrderPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+/** 采购订单明细 */
+export interface PurchaseOrderItem {
+    id: number;
+    line_number: number;
+    item: number | null;
+    item_detail?: BaseItem & { image?: string; weight?: string };
+    sku: string;
+    item_name: string;
+    quantity: number;
+    quantity_received: number;
+    quantity_pending: number;
+    unit_price: string;
+    line_total: string;
+    quotation: number | null;
+    quotation_detail?: {
+        id: number;
+        price: string;
+        currency: string;
+        min_quantity: number;
+        supplier_name: string;
+    };
+    expected_delivery: string | null;
+    notes: string;
+    is_fully_received: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 采购订单 */
+export interface PurchaseOrder {
+    id: number;
+    order_number: string;
+    supplier: number;
+    supplier_detail?: {
+        id: number;
+        name: string;
+        contact: string;
+        telephone: string;
+        e_mail: string;
+    };
+    status: PurchaseOrderStatus;
+    priority: PurchaseOrderPriority;
+    order_date: string;
+    expected_delivery: string | null;
+    actual_delivery: string | null;
+    subtotal: string;
+    tax_rate: string;
+    tax_amount: string;
+    shipping_cost: string;
+    discount: string;
+    total_amount: string;
+    shipping_address: string;
+    contact_person: string;
+    contact_phone: string;
+    payment_terms: string;
+    payment_status: string;
+    notes: string;
+    internal_notes: string;
+    items: PurchaseOrderItem[];
+    item_count?: number;
+    total_quantity?: number;
+    total_received?: number;
+    progress_percentage?: number;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 采购订单简要信息 */
+export interface PurchaseOrderBrief {
+    id: number;
+    order_number: string;
+    supplier: number;
+    supplier_name: string;
+    status: PurchaseOrderStatus;
+    priority: PurchaseOrderPriority;
+    order_date: string;
+    expected_delivery: string | null;
+    total_amount: string;
+    currency?: string;
+    item_count: number;
+    total_quantity: number;
+    created_at: string;
+}
+
+/** 创建采购订单请求 */
+export interface PurchaseOrderCreateRequest {
+    supplier: number;
+    priority?: PurchaseOrderPriority;
+    order_date: string;
+    expected_delivery?: string | null;
+    tax_rate?: string | number;
+    shipping_cost?: string | number;
+    discount?: string | number;
+    shipping_address?: string;
+    contact_person?: string;
+    contact_phone?: string;
+    payment_terms?: string;
+    notes?: string;
+    internal_notes?: string;
+    items: PurchaseOrderItemCreateRequest[];
+}
+
+/** 采购订单明细创建请求 */
+export interface PurchaseOrderItemCreateRequest {
+    item?: number | null;
+    sku?: string;
+    item_name?: string;
+    quantity: number;
+    unit_price: string | number;
+    quotation?: number | null;
+    expected_delivery?: string | null;
+    notes?: string;
+}
+
+/** 更新采购订单请求 */
+export interface PurchaseOrderUpdateRequest {
+    priority?: PurchaseOrderPriority;
+    order_date?: string;
+    expected_delivery?: string | null;
+    tax_rate?: string | number;
+    shipping_cost?: string | number;
+    discount?: string | number;
+    shipping_address?: string;
+    contact_person?: string;
+    contact_phone?: string;
+    payment_terms?: string;
+    notes?: string;
+    internal_notes?: string;
+    status?: PurchaseOrderStatus;
+}
+
+/** 收货请求 */
+export interface ReceiveItemRequest {
+    item_id: number;
+    quantity: number;
+    notes?: string;
+}
+
+export interface ReceiveOrderRequest {
+    items: ReceiveItemRequest[];
+    notes?: string;
+}
+
+/** 采购订单统计 */
+export interface PurchaseOrderStatistics {
+    total_items: number;
+    total_quantity: number;
+    total_received: number;
+    total_pending: number;
+    fully_received_items: number;
+    partially_received_items: number;
+    pending_items: number;
+    order_amount: {
+        subtotal: string;
+        tax: string;
+        shipping: string;
+        discount: string;
+        total: string;
+    };
+}
+
+/** 采购订单汇总 */
+export interface PurchaseOrderSummary {
+    order_count: number;
+    status_summary: Record<PurchaseOrderStatus, {
+        name: string;
+        count: number;
+    }>;
+    amount_summary: {
+        total_subtotal: string;
+        total_tax: string;
+        total_shipping: string;
+        total_discount: string;
+        total_amount: string;
+    };
+}
+

@@ -3,20 +3,28 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI, supplierAPI, itemAPI } from '$lib/api';
-    import type { SupplierBrief, Item, Quotation, QuotationCreateRequest } from '$lib';
+    import type { SupplierBrief, Item, QuotationCreateRequest } from '$lib';
     import { config } from '$lib/config';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
     
-    let quotation = $state<Quotation | null>(null);
+    // 从URL获取预设的供应商ID和物品ID
+    const presetIds = $derived(() => {
+        const urlParams = new URLSearchParams(page.url.search);
+        const supplierId = urlParams.get('supplier_id');
+        const itemId = urlParams.get('item_id');
+        return {
+            supplierId: supplierId ? parseInt(supplierId) : null,
+            itemId: itemId ? parseInt(itemId) : null
+        };
+    });
+    
     let suppliers = $state<SupplierBrief[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
     let success = $state('');
-    
-    const id = $derived(parseInt(page.params.id));
     
     // 表单数据
     let formData = $state<QuotationCreateRequest>({
@@ -39,9 +47,6 @@
         label: s.name
     })));
     
-    // 当前选中物品的显示标签
-    let selectedItemLabel = $state('');
-    
     // 构建物品搜索 URL
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
     
@@ -54,40 +59,26 @@
         }));
     }
     
-    async function loadData() {
-        loading = true;
-        error = '';
+    async function loadInitialData() {
         try {
-            const [quotationData, supplierData] = await Promise.all([
-                quotationAPI.get(id),
-                supplierAPI.listBrief()
-            ]);
-            quotation = quotationData;
-            suppliers = supplierData;
+            suppliers = await supplierAPI.listBrief();
             
-            // 填充表单
-            formData = {
-                supplier: quotationData.supplier,
-                item: quotationData.item,
-                price: quotationData.price,
-                currency: quotationData.currency,
-                min_quantity: quotationData.min_quantity,
-                postage: quotationData.postage,
-                lead_time_days: quotationData.lead_time_days,
-                valid_from: quotationData.valid_from,
-                valid_until: quotationData.valid_until,
-                is_preferred: quotationData.is_preferred,
-                note: quotationData.note || ''
-            };
+            const { supplierId, itemId } = presetIds();
             
-            // 设置当前物品显示标签
-            if (quotationData.item_detail) {
-                selectedItemLabel = `${quotationData.item_detail.SKU} - ${quotationData.item_detail.name}`;
+            if (supplierId) {
+                formData.supplier = supplierId;
+            }
+            
+            if (itemId) {
+                try {
+                    const item = await itemAPI.get(itemId);
+                    formData.item = item.id;
+                } catch (err) {
+                    console.error('加载预设物品失败:', err);
+                }
             }
         } catch (err) {
-            error = err instanceof Error ? err.message : '加载失败';
-        } finally {
-            loading = false;
+            error = '加载数据失败';
         }
     }
     
@@ -107,33 +98,36 @@
         
         submitting = true;
         try {
-            await quotationAPI.update(id, formData);
-            success = '报价更新成功';
-            setTimeout(() => goto(`/quotation/${id}`), 1000);
+            await quotationAPI.create(formData);
+            success = '报价创建成功';
+            setTimeout(() => goto(`/supplier/${formData.supplier}`), 1000);
         } catch (err) {
-            error = err instanceof Error ? err.message : '更新失败';
+            error = err instanceof Error ? err.message : '创建失败';
         } finally {
             submitting = false;
         }
     }
     
     function goBack() {
-        goto(`/quotation/${id}`);
+        const { supplierId } = presetIds();
+        if (supplierId) {
+            goto(`/supplier/${supplierId}`);
+        } else {
+            goto('/supplier');
+        }
     }
     
-    onMount(loadData);
+    onMount(async () => {
+        await loadInitialData();
+        loading = false;
+    });
 </script>
 
 <div class="content-container">
-    <h1>编辑报价</h1>
+    <h1>添加报价</h1>
     
     {#if loading}
         <Loading text="加载中..." />
-    {:else if error && !quotation}
-        <Alert {error} />
-        <button class="btn btn-secondary" onclick={() => goto('/quotation')}>
-            返回列表
-        </button>
     {:else}
         <form onsubmit={handleSubmit} class="form">
             {#if error}
@@ -355,5 +349,4 @@
         opacity: 0.6;
         cursor: not-allowed;
     }
-    
 </style>

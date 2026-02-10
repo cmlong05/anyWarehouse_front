@@ -153,7 +153,7 @@
         <h3>供应商报价</h3>
         {#if data.quotations.length === 0}
             <p class="empty">暂无报价</p>
-            <a href="/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary">添加报价</a>
+            <a href="/supplier/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary">添加报价</a>
         {:else}
             {#if data.bestPrice}
                 <p class="best-price">
@@ -191,7 +191,7 @@
                     {/each}
                 </tbody>
             </table>
-            <a href="/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary btn-sm">添加报价</a>
+            <a href="/supplier/quotation/add?item_id={data.itemDetail.item.id}" class="btn btn-primary btn-sm">添加报价</a>
         {/if}
     </div>
 </div>

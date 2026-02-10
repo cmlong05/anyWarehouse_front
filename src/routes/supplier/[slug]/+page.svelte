@@ -13,6 +13,9 @@
     let loading = $state(true);
     let error = $state('');
     
+    // 存储每个报价的数量（key: quotationId, value: quantity）
+    let quotationQuantities = $state<Record<number, number | null>>({});
+    
     const id = $derived(parseInt(page.params.slug));
     
     const breadcrumbs = $derived([
@@ -57,6 +60,38 @@
     onMount(() => {
         loadSupplier();
     });
+    
+    // 跳转到采购订单创建页面，携带选中的报价数据
+    function goToCreatePurchaseOrder() {
+        // 筛选出有数量的报价
+        const selectedItems = quotations
+            .filter(q => {
+                const qty = quotationQuantities[q.id];
+                return qty !== undefined && qty !== null && qty > 0;
+            })
+            .map(q => ({
+                quotation_id: q.id,
+                item: q.item,
+                sku: q.sku,
+                item_name: q.item_name,
+                quantity: quotationQuantities[q.id],
+                unit_price: parseFloat(q.price)
+            }));
+        
+        if (selectedItems.length === 0) {
+            // 没有输入数量，直接跳转
+            goto(`/supplier/purchase-order/add?supplier_id=${id}`);
+            return;
+        }
+        
+        // 将选中的项目数据存储到 sessionStorage，供采购订单页面读取
+        sessionStorage.setItem('purchase_order_preload_items', JSON.stringify({
+            supplier_id: id,
+            items: selectedItems
+        }));
+        
+        goto(`/supplier/purchase-order/add?supplier_id=${id}`);
+    }
 </script>
 
 <svelte:head>
@@ -87,8 +122,8 @@
                 </span>
             </div>
             <div class="header-actions">
-                <a href="/supplier/{id}/edit" class="btn btn-primary">编辑</a>
-                <button class="btn btn-danger" onclick={deleteSupplier}>删除</button>
+                <a href="/supplier/{id}/edit" class="btn btn-primary btn-sm">编辑</a>
+                <button class="btn btn-danger btn-sm" onclick={deleteSupplier}>删除</button>
             </div>
         </div>
         
@@ -149,13 +184,16 @@
         <div class="quotations-section">
             <div class="section-header">
                 <h2>报价记录</h2>
-                <a href="/quotation/add?supplier_id={id}" class="btn btn-primary btn-sm">添加报价</a>
+                <div class="section-actions">
+                    <button class="btn btn-success btn-sm" onclick={goToCreatePurchaseOrder}>新建采购订单</button>
+                    <a href="/supplier/quotation/add?supplier_id={id}" class="btn btn-primary btn-sm">添加报价</a>
+                </div>
             </div>
             
             {#if quotations.length === 0}
                 <div class="empty-state">
                     <p>暂无报价记录</p>
-                    <a href="/quotation/add?supplier_id={id}" class="btn btn-primary">添加第一个报价</a>
+                    <a href="/supplier/quotation/add?supplier_id={id}" class="btn btn-primary">添加第一个报价</a>
                 </div>
             {:else}
                 <div class="quotations-table">
@@ -166,17 +204,29 @@
                                 <th>物品名称</th>
                                 <th>单价</th>
                                 <th>货币</th>
+                                <th class="numeric">数量</th>
                                 <th>首选</th>
                             </tr>
                         </thead>
                         <tbody>
                             {#each quotations as quotation}
-                                <tr class="clickable" onclick={() => goto(`/quotation/${quotation.id}`)}>
-                                    <td>{quotation.sku || '-'}</td>
-                                    <td>{quotation.item_name || '-'}</td>
-                                    <td class="numeric">{quotation.price}</td>
-                                    <td>{quotation.currency}</td>
-                                    <td>
+                                <tr>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.item_name || '-'}</td>
+                                    <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
+                                    <td class="numeric">
+                                        <input
+                                            type="number"
+                                            class="quantity-input"
+                                            bind:value={quotationQuantities[quotation.id]}
+                                            min="0.001"
+                                            step="0.001"
+                                            placeholder="-"
+                                            onclick={(e: Event) => e.stopPropagation()}
+                                        />
+                                    </td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>
                                         {#if quotation.is_preferred}
                                             <span class="preferred-badge">★ 首选</span>
                                         {:else}
@@ -187,6 +237,9 @@
                             {/each}
                         </tbody>
                     </table>
+                </div>
+                <div class="section-footer">
+                    <button class="btn btn-success btn-sm" onclick={goToCreatePurchaseOrder}>新建采购订单</button>
                 </div>
             {/if}
         </div>
@@ -285,6 +338,24 @@
         font-size: 0.875rem;
     }
     
+    .btn-success {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background-color: #059669;
+    }
+    
+    .link {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+    
+    .link:hover {
+        text-decoration: underline;
+    }
+    
     .info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -373,6 +444,17 @@
         color: #1f2937;
     }
     
+    .section-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .section-footer {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+    
     .empty-state {
         text-align: center;
         padding: 3rem 0;
@@ -426,6 +508,33 @@
     
     .clickable {
         cursor: pointer;
+    }
+    
+    .quantity-input {
+        width: 80px;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        text-align: right;
+        background: white;
+    }
+    
+    .quantity-input:focus {
+        outline: none;
+        border-color: #10b981;
+    }
+    
+    /* 隐藏数字输入框的上下调整按钮 */
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    .quantity-input {
+        -moz-appearance: textfield;
+        appearance: textfield;
     }
     
     .actions {

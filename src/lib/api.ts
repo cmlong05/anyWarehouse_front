@@ -16,6 +16,16 @@ import type {
     QuotationCreateRequest,
     QuotationComparisonItem,
     Item,
+    PurchaseOrder,
+    PurchaseOrderBrief,
+    PurchaseOrderCreateRequest,
+    PurchaseOrderUpdateRequest,
+    PurchaseOrderItem,
+    ReceiveOrderRequest,
+    PurchaseOrderStatistics,
+    PurchaseOrderSummary,
+    PurchaseOrderStatus,
+    PurchaseOrderPriority,
 } from './index';
 
 export interface ApiError {
@@ -416,3 +426,171 @@ export class ItemAPI {
 export const supplierAPI = new SupplierAPI();
 export const quotationAPI = new QuotationAPI();
 export const itemAPI = new ItemAPI();
+
+// ========== Purchase Order API 采购订单接口 ==========
+
+export class PurchaseOrderAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取采购订单列表 */
+    async list(params?: {
+        supplier_id?: number;
+        status?: string;
+        priority?: PurchaseOrderPriority;
+        order_number?: string;
+        date_from?: string;
+        date_to?: string;
+        delivery_from?: string;
+        delivery_to?: string;
+        min_amount?: number;
+        max_amount?: number;
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<PurchaseOrderBrief>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.supplier_id) queryParams.supplier_id = params.supplier_id.toString();
+        if (params?.status) queryParams.status = params.status;
+        if (params?.priority) queryParams.priority = params.priority;
+        if (params?.order_number) queryParams.order_number = params.order_number;
+        if (params?.date_from) queryParams.date_from = params.date_from;
+        if (params?.date_to) queryParams.date_to = params.date_to;
+        if (params?.delivery_from) queryParams.delivery_from = params.delivery_from;
+        if (params?.delivery_to) queryParams.delivery_to = params.delivery_to;
+        if (params?.min_amount) queryParams.min_amount = params.min_amount.toString();
+        if (params?.max_amount) queryParams.max_amount = params.max_amount.toString();
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<PurchaseOrderBrief>>('/supplier/purchase-orders/', queryParams);
+    }
+
+    /** 获取单个采购订单详情 */
+    async get(id: number): Promise<PurchaseOrder> {
+        return this.client.get<PurchaseOrder>(`/supplier/purchase-orders/${id}/`);
+    }
+
+    /** 创建采购订单 */
+    async create(data: PurchaseOrderCreateRequest): Promise<PurchaseOrder> {
+        return this.client.post<PurchaseOrder>('/supplier/purchase-orders/', data);
+    }
+
+    /** 更新采购订单 */
+    async update(id: number, data: PurchaseOrderUpdateRequest): Promise<PurchaseOrder> {
+        return this.client.put<PurchaseOrder>(`/supplier/purchase-orders/${id}/`, data);
+    }
+
+    /** 部分更新采购订单 */
+    async patch(id: number, data: Partial<PurchaseOrderUpdateRequest>): Promise<PurchaseOrder> {
+        return this.client.patch<PurchaseOrder>(`/supplier/purchase-orders/${id}/`, data);
+    }
+
+    /** 删除采购订单 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/supplier/purchase-orders/${id}/`);
+    }
+
+    /** 添加订单明细 */
+    async addItem(orderId: number, data: {
+        item?: number | null;
+        sku?: string;
+        item_name?: string;
+        quantity: number;
+        unit_price: number | string;
+        quotation?: number | null;
+        expected_delivery?: string | null;
+        notes?: string;
+    }): Promise<PurchaseOrderItem> {
+        return this.client.post<PurchaseOrderItem>(`/supplier/purchase-orders/${orderId}/add_item/`, data);
+    }
+
+    /** 更新订单明细 */
+    async updateItem(orderId: number, itemId: number, data: Partial<PurchaseOrderItem>): Promise<PurchaseOrderItem> {
+        return this.client.patch<PurchaseOrderItem>(`/supplier/purchase-orders/${orderId}/update_item/`, {
+            item_id: itemId,
+            ...data
+        });
+    }
+
+    /** 删除订单明细 */
+    async removeItem(orderId: number, itemId: number): Promise<void> {
+        return this.client.post<void>(`/supplier/purchase-orders/${orderId}/remove_item/`, { item_id: itemId });
+    }
+
+    /** 变更订单状态 */
+    async changeStatus(orderId: number, status: PurchaseOrderStatus, notes?: string): Promise<PurchaseOrder> {
+        return this.client.post<PurchaseOrder>(`/supplier/purchase-orders/${orderId}/change_status/`, {
+            status,
+            notes
+        });
+    }
+
+    /** 订单收货 */
+    async receive(orderId: number, data: ReceiveOrderRequest): Promise<PurchaseOrder> {
+        return this.client.post<PurchaseOrder>(`/supplier/purchase-orders/${orderId}/receive/`, data);
+    }
+
+    /** 获取订单统计信息 */
+    async getStatistics(orderId: number): Promise<PurchaseOrderStatistics> {
+        return this.client.get<PurchaseOrderStatistics>(`/supplier/purchase-orders/${orderId}/statistics/`);
+    }
+
+    /** 获取采购订单汇总统计 */
+    async getSummary(): Promise<PurchaseOrderSummary> {
+        return this.client.get<PurchaseOrderSummary>('/supplier/purchase-orders/summary/');
+    }
+
+    /** 按供应商统计 */
+    async getBySupplier(supplierId: number): Promise<{
+        total_orders: number;
+        orders_by_status: Record<string, { name: string; count: number; total_amount: string }>;
+        total_amount: string;
+    }> {
+        return this.client.get('/supplier/purchase-orders/by_supplier/', { supplier_id: supplierId.toString() });
+    }
+}
+
+// ========== Purchase Order Item API 采购订单明细接口 ==========
+
+export class PurchaseOrderItemAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取订单明细列表 */
+    async list(params?: {
+        order_id?: number;
+        item_id?: number;
+        sku?: string;
+        received_status?: 'pending' | 'partial' | 'complete';
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<PurchaseOrderItem>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.order_id) queryParams.order_id = params.order_id.toString();
+        if (params?.item_id) queryParams.item_id = params.item_id.toString();
+        if (params?.sku) queryParams.sku = params.sku;
+        if (params?.received_status) queryParams.received_status = params.received_status;
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<PurchaseOrderItem>>('/supplier/purchase-order-items/', queryParams);
+    }
+
+    /** 获取单个明细详情 */
+    async get(id: number): Promise<PurchaseOrderItem> {
+        return this.client.get<PurchaseOrderItem>(`/supplier/purchase-order-items/${id}/`);
+    }
+
+    /** 获取待收货明细 */
+    async getPending(): Promise<PaginatedResponse<PurchaseOrderItem>> {
+        return this.client.get<PaginatedResponse<PurchaseOrderItem>>('/supplier/purchase-order-items/pending/');
+    }
+}
+
+// API 实例导出
+export const purchaseOrderAPI = new PurchaseOrderAPI();
+export const purchaseOrderItemAPI = new PurchaseOrderItemAPI();
