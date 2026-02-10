@@ -12,8 +12,14 @@
 	const navItems: NavItem[] = [
 		{ href: '/', label: 'Home' },
 		{ href: '/container/A', label: 'Container' },
-		{ href: '/item', label: 'Items' },
-		{ href: '/category/4', label: 'Categories' },
+		{
+			href: '/category/4',
+			label: 'Categories',
+			children: [
+				{ href: '/category/4', label: '分类列表' },
+				{ href: '/item', label: '物品列表' }
+			]
+		},
 		{
 			href: '/supplier',
 			label: '供应商',
@@ -31,10 +37,10 @@
 	{#each navItems as item}
 		{#if item.children}
 			<div class="nav-item has-dropdown">
-				<button class="nav-link dropdown-toggle">
+				<a href={item.href} class="nav-link dropdown-toggle">
 					{item.label}
 					<span class="arrow">▼</span>
-				</button>
+				</a>
 				<div class="dropdown-menu">
 					{#each item.children as child}
 						<a href={child.href} class="dropdown-link">{child.label}</a>
