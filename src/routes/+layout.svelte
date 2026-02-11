@@ -27,6 +27,13 @@
 				{ href: '/supplier', label: '供应商列表' },
 				{ href: '/supplier/purchase-order', label: '采购订单' }
 			]
+		},
+		{
+			href: '/customer',
+			label: '客户管理',
+			children: [
+				{ href: '/customer', label: '客户列表' }
+			]
 		}
 	];
 	

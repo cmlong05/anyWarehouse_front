@@ -26,6 +26,11 @@ import type {
     PurchaseOrderSummary,
     PurchaseOrderStatus,
     PurchaseOrderPriority,
+    Customer,
+    CustomerBrief,
+    CustomerAddress,
+    CustomerFormData,
+    CustomerAddressFormData,
 } from './index';
 
 export interface ApiError {
@@ -594,3 +599,119 @@ export class PurchaseOrderItemAPI {
 // API 实例导出
 export const purchaseOrderAPI = new PurchaseOrderAPI();
 export const purchaseOrderItemAPI = new PurchaseOrderItemAPI();
+
+// ========== Customer API 客户接口 ==========
+
+export class CustomerAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取客户列表 */
+    async list(params?: {
+        search?: string;
+        level?: string;
+        status?: string;
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<Customer>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.search) queryParams.search = params.search;
+        if (params?.level) queryParams.level = params.level;
+        if (params?.status) queryParams.status = params.status;
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<Customer>>('/customer/customer/', queryParams);
+    }
+
+    /** 获取客户简要列表（下拉选择用） */
+    async listBrief(): Promise<CustomerBrief[]> {
+        return this.client.get<CustomerBrief[]>('/customer/customer/brief/');
+    }
+
+    /** 获取单个客户详情 */
+    async get(id: number): Promise<Customer> {
+        return this.client.get<Customer>(`/customer/customer/${id}/`);
+    }
+
+    /** 创建客户 */
+    async create(data: CustomerFormData): Promise<Customer> {
+        return this.client.post<Customer>('/customer/customer/', data);
+    }
+
+    /** 更新客户 */
+    async update(id: number, data: Partial<CustomerFormData>): Promise<Customer> {
+        return this.client.put<Customer>(`/customer/customer/${id}/`, data);
+    }
+
+    /** 部分更新客户 */
+    async patch(id: number, data: Partial<CustomerFormData>): Promise<Customer> {
+        return this.client.patch<Customer>(`/customer/customer/${id}/`, data);
+    }
+
+    /** 删除客户 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/customer/customer/${id}/`);
+    }
+
+    /** 获取客户地址列表 */
+    async getAddresses(id: number, status?: string): Promise<CustomerAddress[]> {
+        const params: Record<string, string> = {};
+        if (status) params.status = status;
+        const result = await this.client.get<{ supplier?: unknown; quotations?: unknown; count: number } | CustomerAddress[]>(`/customer/customer/${id}/addresses/`, params);
+        // 处理可能的嵌套响应格式
+        if (Array.isArray(result)) {
+            return result;
+        }
+        return [];
+    }
+}
+
+// ========== Customer Address API 客户地址接口 ==========
+
+export class CustomerAddressAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取地址列表 */
+    async list(params?: {
+        customer_id?: number;
+        status?: string;
+        is_default?: boolean;
+    }): Promise<CustomerAddress[]> {
+        const queryParams: Record<string, string> = {};
+        if (params?.customer_id) queryParams.customer_id = params.customer_id.toString();
+        if (params?.status) queryParams.status = params.status;
+        if (params?.is_default !== undefined) queryParams.is_default = String(params.is_default);
+        return this.client.get<CustomerAddress[]>('/customer/customer-address/', queryParams);
+    }
+
+    /** 获取单个地址详情 */
+    async get(id: number): Promise<CustomerAddress> {
+        return this.client.get<CustomerAddress>(`/customer/customer-address/${id}/`);
+    }
+
+    /** 创建地址 */
+    async create(data: CustomerAddressFormData & { customer: number }): Promise<CustomerAddress> {
+        return this.client.post<CustomerAddress>('/customer/customer-address/', data);
+    }
+
+    /** 更新地址 */
+    async update(id: number, data: Partial<CustomerAddressFormData>): Promise<CustomerAddress> {
+        return this.client.put<CustomerAddress>(`/customer/customer-address/${id}/`, data);
+    }
+
+    /** 删除地址 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/customer/customer-address/${id}/`);
+    }
+}
+
+// API 实例导出
+export const customerAPI = new CustomerAPI();
+export const customerAddressAPI = new CustomerAddressAPI();

@@ -513,3 +513,77 @@ export interface PurchaseOrderSummary {
     };
 }
 
+// ========== Customer 客户相关接口 ==========
+
+/** 客户 */
+export interface Customer {
+    id: number;
+    code: string;
+    name: string;
+    contact_name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    level: 'VIP' | 'NORMAL' | 'TEMP';
+    status: 'ACTIVE' | 'INACTIVE';
+    remark?: string;
+    addresses?: CustomerAddress[];
+    address_count?: number;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 客户简要信息 */
+export interface CustomerBrief {
+    id: number;
+    code: string;
+    name: string;
+    level: 'VIP' | 'NORMAL' | 'TEMP';
+    status: 'ACTIVE' | 'INACTIVE';
+}
+
+/** 客户表单数据 */
+export interface CustomerFormData {
+    code: string;
+    name: string;
+    contact_name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    level: 'VIP' | 'NORMAL' | 'TEMP';
+    status: 'ACTIVE' | 'INACTIVE';
+    remark?: string;
+}
+
+/** 客户地址 */
+export interface CustomerAddress {
+    id: number;
+    customer: number;
+    name: string;
+    contact_name?: string;
+    phone?: string;
+    province?: string;
+    city?: string;
+    district?: string;
+    detail_address: string;
+    is_default: boolean;
+    status: 'ACTIVE' | 'INACTIVE';
+    remark?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 客户地址表单数据 */
+export interface CustomerAddressFormData {
+    name: string;
+    contact_name?: string;
+    phone?: string;
+    province?: string;
+    city?: string;
+    district?: string;
+    detail_address: string;
+    is_default: boolean;
+    status: 'ACTIVE' | 'INACTIVE';
+    remark?: string;
+}
+
