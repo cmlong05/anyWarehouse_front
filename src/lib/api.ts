@@ -31,7 +31,10 @@ import type {
     CustomerAddress,
     CustomerFormData,
     CustomerAddressFormData,
-} from './index';
+    CustomerQuotation,
+    CustomerQuotationBrief,
+    CustomerQuotationCreateRequest,
+    } from './index';
 
 export interface ApiError {
     message: string;
@@ -667,6 +670,23 @@ export class CustomerAPI {
         }
         return [];
     }
+
+    /** 获取客户报价列表 */
+    async getQuotations(id: number, params?: {
+        item_id?: number;
+        is_preferred?: boolean;
+        ordering?: string;
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<CustomerQuotationBrief>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.item_id) queryParams.item_id = params.item_id.toString();
+        if (params?.is_preferred !== undefined) queryParams.is_preferred = String(params.is_preferred);
+        if (params?.ordering) queryParams.ordering = params.ordering;
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<CustomerQuotationBrief>>(`/customer/customer/${id}/quotations/`, queryParams);
+    }
 }
 
 // ========== Customer Address API 客户地址接口 ==========
@@ -712,6 +732,91 @@ export class CustomerAddressAPI {
     }
 }
 
+// ========== Customer Quotation API 客户报价接口 ==========
+
+export class CustomerQuotationAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取客户报价列表 */
+    async list(params?: {
+        customer_id?: number;
+        item_id?: number;
+        sku?: string;
+        is_preferred?: boolean;
+        min_price?: number;
+        max_price?: number;
+        valid_date?: string;
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<CustomerQuotation>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.customer_id) queryParams.customer_id = params.customer_id.toString();
+        if (params?.item_id) queryParams.item_id = params.item_id.toString();
+        if (params?.sku) queryParams.sku = params.sku;
+        if (params?.is_preferred !== undefined) queryParams.is_preferred = String(params.is_preferred);
+        if (params?.min_price) queryParams.min_price = params.min_price.toString();
+        if (params?.max_price) queryParams.max_price = params.max_price.toString();
+        if (params?.valid_date) queryParams.valid_date = params.valid_date;
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<CustomerQuotation>>('/customer/customer-quotation/', queryParams);
+    }
+
+    /** 获取单个报价详情 */
+    async get(id: number): Promise<CustomerQuotation> {
+        return this.client.get<CustomerQuotation>(`/customer/customer-quotation/${id}/`);
+    }
+
+    /** 创建报价 */
+    async create(data: CustomerQuotationCreateRequest): Promise<CustomerQuotation> {
+        return this.client.post<CustomerQuotation>('/customer/customer-quotation/', data);
+    }
+
+    /** 更新报价 */
+    async update(id: number, data: Partial<CustomerQuotationCreateRequest>): Promise<CustomerQuotation> {
+        return this.client.put<CustomerQuotation>(`/customer/customer-quotation/${id}/`, data);
+    }
+
+    /** 部分更新报价 */
+    async patch(id: number, data: Partial<CustomerQuotationCreateRequest>): Promise<CustomerQuotation> {
+        return this.client.patch<CustomerQuotation>(`/customer/customer-quotation/${id}/`, data);
+    }
+
+    /** 删除报价 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/customer/customer-quotation/${id}/`);
+    }
+
+    /** 获取物品的所有客户报价 */
+    async getByItem(itemId: number): Promise<{
+        item_id: number;
+        sku: string;
+        name: string;
+        quotations: CustomerQuotationBrief[];
+        best_price: string | null;
+        best_price_customer: string | null;
+    }> {
+        return this.client.get('/customer/customer-quotation/by_item/', { item_id: itemId.toString() });
+    }
+
+    /** 多客户报价对比 */
+    async compare(itemId: number): Promise<{
+        item_id: number;
+        sku: string;
+        name: string;
+        quotations: CustomerQuotationBrief[];
+        best_price: string | null;
+        best_price_customer: string | null;
+    }> {
+        return this.client.get('/customer/customer-quotation/comparison/', { item_id: itemId.toString() });
+    }
+}
+
 // API 实例导出
 export const customerAPI = new CustomerAPI();
 export const customerAddressAPI = new CustomerAddressAPI();
+export const customerQuotationAPI = new CustomerQuotationAPI();

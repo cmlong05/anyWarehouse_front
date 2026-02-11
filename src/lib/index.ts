@@ -591,3 +591,82 @@ export interface CustomerAddressFormData {
     remark?: string;
 }
 
+/** 客户报价 */
+export interface CustomerQuotation {
+    id: number;
+    item: number | null;
+    sku: string;
+    customer: number;
+    customer_detail?: CustomerBrief;
+    item_detail?: BaseItem & { image?: string; weight?: string };
+    price: string;
+    currency: string;
+    min_quantity: number;
+    postage: string | null;
+    lead_time_days: number | null;
+    valid_from: string | null;
+    valid_until: string | null;
+    is_preferred: boolean;
+    note: string;
+    created_at: string;
+    updated_at: string;
+    total_price?: string;
+}
+
+/** 客户报价简要信息 */
+export interface CustomerQuotationBrief {
+    id: number;
+    customer: number;
+    customer_name: string;
+    customer_code: string;
+    item: number | null;
+    item_sku: string;
+    item_name: string;
+    sku: string;
+    price: string;
+    currency: string;
+    is_preferred: boolean;
+}
+
+/** 创建/更新客户报价请求 */
+export interface CustomerQuotationCreateRequest {
+    item?: number | null;
+    customer: number;
+    price: string | number;
+    currency?: string;
+    min_quantity?: number;
+    postage?: string | number | null;
+    lead_time_days?: number | null;
+    valid_from?: string | null;
+    valid_until?: string | null;
+    is_preferred?: boolean;
+    note?: string;
+}
+
+/** 客户及其报价 */
+export interface CustomerWithQuotations {
+    id: number;
+    code: string;
+    name: string;
+    contact_name?: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    level: 'VIP' | 'NORMAL' | 'TEMP';
+    status: 'ACTIVE' | 'INACTIVE';
+    remark?: string;
+    quotations: CustomerQuotationBrief[];
+    created_at: string;
+    updated_at: string;
+}
+
+/** 客户报价对比项 */
+export interface CustomerQuotationComparisonItem {
+    item_id: number;
+    sku: string;
+    name: string;
+    quotations: CustomerQuotationBrief[];
+    best_price: string | null;
+    best_price_customer: string | null;
+}
+

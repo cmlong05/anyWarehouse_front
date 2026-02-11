@@ -1,11 +1,12 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { customerAPI } from '$lib/api';
-    import type { Customer, CustomerFormData } from '$lib/schemas';
+    import { customerAPI, customerQuotationAPI } from '$lib/api';
+    import type { Customer, CustomerFormData, CustomerQuotationBrief } from '$lib';
     import CustomerForm from '$lib/components/CustomerForm.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import Loading from '$lib/components/Loading.svelte';
     
     interface Props {
         data: { customer: Customer };
@@ -14,8 +15,10 @@
     let { data }: Props = $props();
     
     let customer = $state<Customer>(data.customer);
+    let quotations = $state<CustomerQuotationBrief[]>([]);
     let isEditing = $state(false);
     let loading = $state(false);
+    let quotationsLoading = $state(true);
     let error = $state('');
     let showDeleteModal = $state(false);
     let deleteLoading = $state(false);
@@ -31,6 +34,18 @@
         'NORMAL': '普通客户',
         'TEMP': '临时客户'
     };
+    
+    async function loadQuotations() {
+        quotationsLoading = true;
+        try {
+            const result = await customerAPI.getQuotations(customer.id);
+            quotations = result.results || result || [];
+        } catch (err) {
+            console.error('加载报价失败:', err);
+        } finally {
+            quotationsLoading = false;
+        }
+    }
     
     async function handleUpdate(data: CustomerFormData) {
         loading = true;
@@ -69,6 +84,11 @@
     function formatDate(dateStr: string) {
         return new Date(dateStr).toLocaleString('zh-CN');
     }
+    
+    // 组件挂载时加载报价
+    $effect(() => {
+        loadQuotations();
+    });
 </script>
 
 <svelte:head>
@@ -185,6 +205,54 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 报价列表 -->
+        <div class="quotations-section">
+            <div class="section-header">
+                <h2>销售报价记录</h2>
+                <a href="/customer/quotation/add?customer_id={customer.id}" class="btn btn-primary btn-sm">添加报价</a>
+            </div>
+            
+            {#if quotationsLoading}
+                <Loading text="加载报价..." />
+            {:else if quotations.length === 0}
+                <div class="empty-state">
+                    <p>暂无报价记录</p>
+                    <a href="/customer/quotation/add?customer_id={customer.id}" class="btn btn-primary">添加第一个报价</a>
+                </div>
+            {:else}
+                <div class="quotations-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>物品名称</th>
+                                <th>单价</th>
+                                <th>货币</th>
+                                <th>首选</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each quotations as quotation}
+                                <tr class="clickable-row" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>
+                                    <td>{quotation.sku || '-'}</td>
+                                    <td>{quotation.item_name || '-'}</td>
+                                    <td class="numeric">{quotation.price}</td>
+                                    <td>{quotation.currency}</td>
+                                    <td>
+                                        {#if quotation.is_preferred}
+                                            <span class="preferred-badge">★ 首选</span>
+                                        {:else}
+                                            <span class="muted">-</span>
+                                        {/if}
+                                    </td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
+            {/if}
+        </div>
     {/if}
 </div>
 
@@ -281,6 +349,15 @@
         justify-content: center;
     }
     
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+    
     .btn-secondary {
         background-color: #6b7280;
         color: white;
@@ -309,6 +386,11 @@
         background-color: #eff6ff;
     }
     
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
     .form-container {
         background: white;
         padding: 2rem;
@@ -320,6 +402,7 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 1.5rem;
+        margin-bottom: 2rem;
     }
     
     .info-card {
@@ -377,6 +460,86 @@
         border-top: 1px solid #e5e7eb;
     }
     
+    /* 报价列表样式 */
+    .quotations-section {
+        padding: 1.5rem 0;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #1f2937;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 0;
+        color: #6b7280;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1rem;
+    }
+    
+    .quotations-table {
+        overflow-x: auto;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    th {
+        font-weight: 600;
+        color: #374151;
+        background-color: #f9fafb;
+    }
+    
+    td {
+        color: #4b5563;
+    }
+    
+    .numeric {
+        font-family: monospace;
+        text-align: right;
+    }
+    
+    .preferred-badge {
+        color: #166534;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .muted {
+        color: #9ca3af;
+    }
+    
+    .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+    
+    .clickable-row:hover {
+        background-color: #f3f4f6;
+    }
+    
     @media (max-width: 768px) {
         .content-container {
             padding: 0 1rem;
@@ -402,6 +565,14 @@
         
         .form-container {
             padding: 1.5rem 1rem;
+        }
+        
+        .quotations-table {
+            font-size: 0.85rem;
+        }
+        
+        th, td {
+            padding: 0.5rem;
         }
     }
 </style>
