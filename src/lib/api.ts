@@ -324,6 +324,11 @@ export class SupplierAPI {
         if (itemId) params.item_id = itemId.toString();
         return this.client.get(`/supplier/suppliers/${id}/quotations/`, params);
     }
+
+    /** 获取供应商最近的5个采购订单 */
+    async getRecentOrders(id: number): Promise<{ count: number; orders: PurchaseOrderBrief[] }> {
+        return this.client.get<{ count: number; orders: PurchaseOrderBrief[] }>(`/supplier/suppliers/${id}/recent_orders/`);
+    }
 }
 
 // ========== Quotation API 报价接口 ==========
@@ -698,6 +703,11 @@ export class CustomerAPI {
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.page_size) queryParams.page_size = params.page_size.toString();
         return this.client.get<PaginatedResponse<CustomerQuotationBrief>>(`/customer/customer/${id}/quotations/`, queryParams);
+    }
+
+    /** 获取客户最近的5个销售订单 */
+    async getRecentOrders(id: number): Promise<{ count: number; orders: SalesOrderBrief[] }> {
+        return this.client.get<{ count: number; orders: SalesOrderBrief[] }>(`/customer/customer/${id}/recent_orders/`);
     }
 }
 

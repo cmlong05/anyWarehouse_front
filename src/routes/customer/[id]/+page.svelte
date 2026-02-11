@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { customerAPI, customerQuotationAPI } from '$lib/api';
-    import type { Customer, CustomerFormData, CustomerQuotationBrief } from '$lib';
+    import { customerAPI, customerQuotationAPI, salesOrderAPI } from '$lib/api';
+    import type { Customer, CustomerFormData, CustomerQuotationBrief, SalesOrderBrief } from '$lib';
     import CustomerForm from '$lib/components/CustomerForm.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
@@ -16,9 +16,11 @@
     
     let customer = $state<Customer>(data.customer);
     let quotations = $state<CustomerQuotationBrief[]>([]);
+    let recentOrders = $state<SalesOrderBrief[]>([]);
     let isEditing = $state(false);
     let loading = $state(false);
     let quotationsLoading = $state(true);
+    let ordersLoading = $state(true);
     let error = $state('');
     let showDeleteModal = $state(false);
     let deleteLoading = $state(false);
@@ -38,6 +40,21 @@
         'TEMP': '临时客户'
     };
     
+    const statusLabels: Record<string, string> = {
+        'draft': '草稿',
+        'pending': '待审批',
+        'approved': '已批准',
+        'confirmed': '已确认',
+        'partial': '部分发货',
+        'shipped': '已发货',
+        'delivered': '已交付',
+        'cancelled': '已取消'
+    };
+    
+    function getStatusLabel(status: string): string {
+        return statusLabels[status] || status;
+    }
+    
     async function loadQuotations() {
         quotationsLoading = true;
         try {
@@ -47,6 +64,18 @@
             console.error('加载报价失败:', err);
         } finally {
             quotationsLoading = false;
+        }
+    }
+    
+    async function loadRecentOrders() {
+        ordersLoading = true;
+        try {
+            const result = await customerAPI.getRecentOrders(customer.id);
+            recentOrders = result.orders || [];
+        } catch (err) {
+            console.error('加载最近订单失败:', err);
+        } finally {
+            ordersLoading = false;
         }
     }
     
@@ -120,10 +149,11 @@
         goto(`/customer/sales-order/add?customer_id=${customer.id}`);
     }
     
-    // 组件挂载时加载报价
+    // 组件挂载时加载报价和最近订单
     $effect(() => {
         loadQuotations();
-    });
+        loadRecentOrders();
+    })
 </script>
 
 <svelte:head>
@@ -233,6 +263,49 @@
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <!-- 最近销售订单 -->
+        <div class="orders-section">
+            <div class="section-header">
+                <h2>最近销售订单</h2>
+                <a href="/customer/sales-order?customer_id={customer.id}" class="btn btn-primary btn-sm">查看全部</a>
+            </div>
+            
+            {#if ordersLoading}
+                <Loading text="加载订单..." />
+            {:else if recentOrders.length === 0}
+                <div class="empty-state-small">
+                    <p>暂无销售订单</p>
+                </div>
+            {:else}
+                <div class="orders-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>下单日期</th>
+                                <th>状态</th>
+                                <th>金额</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each recentOrders as order}
+                                <tr class="clickable" onclick={() => goto(`/customer/sales-order/${order.id}`)}>
+                                    <td class="code">{order.order_number}</td>
+                                    <td>{order.order_date}</td>
+                                    <td>
+                                        <span class="status-tag {order.status}">
+                                            {getStatusLabel(order.status)}
+                                        </span>
+                                    </td>
+                                    <td class="numeric">¥{Number(order.total_amount).toFixed(2)}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
+            {/if}
         </div>
         
         <!-- 销售订单和报价列表 -->
@@ -490,6 +563,71 @@
     .info-item .value.code {
         font-family: monospace;
         color: #6b7280;
+    }
+    
+    /* 订单列表样式 */
+    .orders-section {
+        padding: 1.5rem 0;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .orders-table {
+        overflow-x: auto;
+    }
+    
+    .empty-state-small {
+        text-align: center;
+        padding: 1.5rem 0;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .status-tag {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-tag.draft {
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+    
+    .status-tag.pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-tag.approved {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-tag.confirmed {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-tag.partial {
+        background-color: #fef3c7;
+        color: #b45309;
+    }
+    
+    .status-tag.shipped {
+        background-color: #e0e7ff;
+        color: #3730a3;
+    }
+    
+    .status-tag.delivered {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-tag.cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
     }
     
     /* 报价列表样式 */

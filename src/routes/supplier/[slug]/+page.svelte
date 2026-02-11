@@ -3,18 +3,34 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { supplierAPI } from '$lib/api';
-    import type { Supplier, QuotationBrief } from '$lib';
+    import type { Supplier, QuotationBrief, PurchaseOrderBrief } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     
     let supplier = $state<Supplier | null>(null);
     let quotations = $state<QuotationBrief[]>([]);
+    let recentOrders = $state<PurchaseOrderBrief[]>([]);
     let loading = $state(true);
+    let ordersLoading = $state(true);
     let error = $state('');
     
     // 存储每个报价的数量（key: quotationId, value: quantity）
     let quotationQuantities = $state<Record<number, number | null>>({});
+    
+    const statusLabels: Record<string, string> = {
+        'draft': '草稿',
+        'pending': '待审批',
+        'approved': '已批准',
+        'ordered': '已下单',
+        'partial': '部分到货',
+        'received': '已到货',
+        'cancelled': '已取消'
+    };
+    
+    function getStatusLabel(status: string): string {
+        return statusLabels[status] || status;
+    }
     
     const id = $derived(parseInt(page.params.slug));
     
@@ -42,6 +58,18 @@
         }
     }
     
+    async function loadRecentOrders() {
+        ordersLoading = true;
+        try {
+            const result = await supplierAPI.getRecentOrders(id);
+            recentOrders = result.orders || [];
+        } catch (err) {
+            console.error('加载最近订单失败:', err);
+        } finally {
+            ordersLoading = false;
+        }
+    }
+    
     async function deleteSupplier() {
         if (!supplier) return;
         
@@ -59,6 +87,7 @@
     
     onMount(() => {
         loadSupplier();
+        loadRecentOrders();
     });
     
     // 跳转到采购订单创建页面，携带选中的报价数据
@@ -183,6 +212,49 @@
                 <p>{supplier.remark}</p>
             </div>
         {/if}
+        
+        <!-- 最近采购订单 -->
+        <div class="orders-section">
+            <div class="section-header">
+                <h2>最近采购订单</h2>
+                <a href="/supplier/purchase-order?supplier_id={id}" class="btn btn-primary btn-sm">查看全部</a>
+            </div>
+            
+            {#if ordersLoading}
+                <Loading text="加载订单..." />
+            {:else if recentOrders.length === 0}
+                <div class="empty-state-small">
+                    <p>暂无采购订单</p>
+                </div>
+            {:else}
+                <div class="orders-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>订单号</th>
+                                <th>下单日期</th>
+                                <th>状态</th>
+                                <th>金额</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {#each recentOrders as order}
+                                <tr class="clickable" onclick={() => goto(`/supplier/purchase-order/${order.id}`)}>
+                                    <td class="code">{order.order_number}</td>
+                                    <td>{order.order_date}</td>
+                                    <td>
+                                        <span class="status-tag {order.status}">
+                                            {getStatusLabel(order.status)}
+                                        </span>
+                                    </td>
+                                    <td class="numeric">¥{Number(order.total_amount).toFixed(2)}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
+                    </table>
+                </div>
+            {/if}
+        </div>
         
         <!-- 报价列表 -->
         <div class="quotations-section">
@@ -436,6 +508,65 @@
         color: #4b5563;
         line-height: 1.6;
         white-space: pre-wrap;
+    }
+    
+    .orders-section {
+        padding: 1.5rem 0;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .orders-table {
+        overflow-x: auto;
+    }
+    
+    .empty-state-small {
+        text-align: center;
+        padding: 1.5rem 0;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .status-tag {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-tag.draft {
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+    
+    .status-tag.pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-tag.approved {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-tag.ordered {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-tag.partial {
+        background-color: #fef3c7;
+        color: #b45309;
+    }
+    
+    .status-tag.received {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .status-tag.cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
     }
     
     .quotations-section {
