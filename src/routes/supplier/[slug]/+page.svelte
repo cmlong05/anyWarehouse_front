@@ -132,6 +132,10 @@
                 <h3>基本信息</h3>
                 <div class="info-list">
                     <div class="info-item">
+                        <span class="label">供应商编号</span>
+                        <span class="value code">{supplier.code}</span>
+                    </div>
+                    <div class="info-item">
                         <span class="label">联系人</span>
                         <span class="value">{supplier.contact || '-'}</span>
                     </div>
@@ -398,6 +402,14 @@
     .info-item .value {
         color: #1f2937;
         font-weight: 500;
+    }
+    
+    .info-item .value.code {
+        font-family: monospace;
+        background-color: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.9rem;
     }
     
     .info-item .value.highlight {

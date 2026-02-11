@@ -87,7 +87,8 @@
             {#each suppliers as supplier}
                 <li>
                     <a href="/supplier/{supplier.id}" class="supplier-link">
-                        {supplier.name}
+                        <span class="supplier-code">{supplier.code}</span>
+                        <span class="supplier-name">{supplier.name}</span>
                     </a>
                 </li>
             {/each}
@@ -211,7 +212,9 @@
     }
     
     .supplier-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         padding: 0.875rem 1rem;
         color: #1f2937;
         text-decoration: none;
@@ -220,6 +223,21 @@
     
     .supplier-link:hover {
         background-color: #f3f4f6;
+    }
+    
+    .supplier-code {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #6b7280;
+        background-color: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        min-width: 80px;
+        text-align: center;
+    }
+    
+    .supplier-name {
+        font-weight: 500;
     }
     
     .summary {

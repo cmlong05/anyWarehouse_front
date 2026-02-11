@@ -222,6 +222,7 @@ export interface ContainerResponse {
 /** 供应商 */
 export interface Supplier {
     id: number;
+    code: string;
     name: string;
     contact: string;
     e_mail: string;
@@ -238,6 +239,7 @@ export interface Supplier {
 /** 供应商简要信息 */
 export interface SupplierBrief {
     id: number;
+    code: string;
     name: string;
     contact: string;
     telephone: string;
@@ -245,6 +247,7 @@ export interface SupplierBrief {
 
 /** 创建/更新供应商请求 */
 export interface SupplierCreateRequest {
+    code: string;
     name: string;
     contact?: string;
     e_mail?: string;
@@ -308,6 +311,7 @@ export interface QuotationCreateRequest {
 /** 供应商及其报价 */
 export interface SupplierWithQuotations {
     id: number;
+    code: string;
     name: string;
     contact: string;
     e_mail: string;

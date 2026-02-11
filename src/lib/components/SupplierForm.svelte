@@ -19,6 +19,7 @@
     
     // 表单数据
     let formData: SupplierCreateRequest = $state({
+        code: supplier?.code ?? '',
         name: supplier?.name ?? '',
         contact: supplier?.contact ?? '',
         e_mail: supplier?.e_mail ?? '',
@@ -33,6 +34,10 @@
     
     function validate(): boolean {
         errors = {};
+        
+        if (!formData.code?.trim()) {
+            errors.code = '供应商编号不能为空';
+        }
         
         if (!formData.name?.trim()) {
             errors.name = '供应商名称不能为空';
@@ -55,6 +60,20 @@
 
 <form class="supplier-form" onsubmit={handleSubmit}>
     <div class="form-grid">
+        <div class="form-group">
+            <label for="code">供应商编号 <span class="required">*</span></label>
+            <input
+                type="text"
+                id="code"
+                bind:value={formData.code}
+                placeholder="请输入供应商编号"
+                disabled={loading}
+            />
+            {#if errors.code}
+                <span class="error-message">{errors.code}</span>
+            {/if}
+        </div>
+        
         <div class="form-group">
             <label for="name">供应商名称 <span class="required">*</span></label>
             <input
