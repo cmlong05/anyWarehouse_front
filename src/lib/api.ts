@@ -680,12 +680,8 @@ export class CustomerAPI {
     async getAddresses(id: number, status?: string): Promise<CustomerAddress[]> {
         const params: Record<string, string> = {};
         if (status) params.status = status;
-        const result = await this.client.get<{ supplier?: unknown; quotations?: unknown; count: number } | CustomerAddress[]>(`/customer/customer/${id}/addresses/`, params);
-        // 处理可能的嵌套响应格式
-        if (Array.isArray(result)) {
-            return result;
-        }
-        return [];
+        const result = await this.client.get<CustomerAddress[]>(`/customer/customer/${id}/addresses/`, params);
+        return Array.isArray(result) ? result : [];
     }
 
     /** 获取客户报价列表 */

@@ -646,7 +646,7 @@
         background: #e7f3ff;
     }
 
-    .amount-item.total value {
+    .amount-item.total .value {
         color: #007bff;
         font-size: 1.25rem;
     }
