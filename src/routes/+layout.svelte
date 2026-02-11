@@ -32,7 +32,8 @@
 			href: '/customer',
 			label: '客户管理',
 			children: [
-				{ href: '/customer', label: '客户列表' }
+				{ href: '/customer', label: '客户列表' },
+				{ href: '/customer/sales-order', label: '销售订单' }
 			]
 		}
 	];

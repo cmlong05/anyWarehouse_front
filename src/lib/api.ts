@@ -34,7 +34,19 @@ import type {
     CustomerQuotation,
     CustomerQuotationBrief,
     CustomerQuotationCreateRequest,
-    } from './index';
+    CustomerQuotationComparisonItem,
+    SalesOrder,
+    SalesOrderBrief,
+    SalesOrderItem,
+    SalesOrderItemCreateRequest,
+    SalesOrderCreateRequest,
+    SalesOrderUpdateRequest,
+    SalesOrderStatistics,
+    SalesOrderSummary,
+    ShipOrderRequest,
+    SalesOrderStatus,
+    SalesOrderPriority,
+} from './index';
 
 export interface ApiError {
     message: string;
@@ -816,7 +828,113 @@ export class CustomerQuotationAPI {
     }
 }
 
+// ========== Sales Order API 销售订单接口 ==========
+
+export class SalesOrderAPI {
+    private client: ApiClient;
+
+    constructor(client: ApiClient = apiClient) {
+        this.client = client;
+    }
+
+    /** 获取销售订单列表 */
+    async list(params?: {
+        customer_id?: number;
+        status?: string;
+        priority?: SalesOrderPriority;
+        order_number?: string;
+        date_from?: string;
+        date_to?: string;
+        delivery_from?: string;
+        delivery_to?: string;
+        min_amount?: number;
+        max_amount?: number;
+        page?: number;
+        page_size?: number;
+    }): Promise<PaginatedResponse<SalesOrderBrief>> {
+        const queryParams: Record<string, string> = {};
+        if (params?.customer_id) queryParams.customer_id = params.customer_id.toString();
+        if (params?.status) queryParams.status = params.status;
+        if (params?.priority) queryParams.priority = params.priority;
+        if (params?.order_number) queryParams.order_number = params.order_number;
+        if (params?.date_from) queryParams.date_from = params.date_from;
+        if (params?.date_to) queryParams.date_to = params.date_to;
+        if (params?.delivery_from) queryParams.delivery_from = params.delivery_from;
+        if (params?.delivery_to) queryParams.delivery_to = params.delivery_to;
+        if (params?.min_amount) queryParams.min_amount = params.min_amount.toString();
+        if (params?.max_amount) queryParams.max_amount = params.max_amount.toString();
+        if (params?.page) queryParams.page = params.page.toString();
+        if (params?.page_size) queryParams.page_size = params.page_size.toString();
+        return this.client.get<PaginatedResponse<SalesOrderBrief>>('/customer/sales-orders/', queryParams);
+    }
+
+    /** 获取单个销售订单详情 */
+    async get(id: number): Promise<SalesOrder> {
+        return this.client.get<SalesOrder>(`/customer/sales-orders/${id}/`);
+    }
+
+    /** 创建销售订单 */
+    async create(data: SalesOrderCreateRequest): Promise<SalesOrder> {
+        return this.client.post<SalesOrder>('/customer/sales-orders/', data);
+    }
+
+    /** 更新销售订单 */
+    async update(id: number, data: SalesOrderUpdateRequest): Promise<SalesOrder> {
+        return this.client.put<SalesOrder>(`/customer/sales-orders/${id}/`, data);
+    }
+
+    /** 删除销售订单 */
+    async delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`/customer/sales-orders/${id}/`);
+    }
+
+    /** 变更订单状态 */
+    async changeStatus(id: number, status: SalesOrderStatus, notes?: string): Promise<SalesOrder> {
+        return this.client.post<SalesOrder>(`/customer/sales-orders/${id}/change_status/`, { status, notes });
+    }
+
+    /** 订单发货 */
+    async ship(id: number, data: ShipOrderRequest): Promise<SalesOrder> {
+        return this.client.post<SalesOrder>(`/customer/sales-orders/${id}/ship/`, data);
+    }
+
+    /** 添加订单明细 */
+    async addItem(id: number, data: SalesOrderItemCreateRequest): Promise<SalesOrderItem> {
+        return this.client.post<SalesOrderItem>(`/customer/sales-orders/${id}/add_item/`, data);
+    }
+
+    /** 更新订单明细 */
+    async updateItem(id: number, itemId: number, data: Partial<SalesOrderItemCreateRequest>): Promise<SalesOrderItem> {
+        return this.client.put<SalesOrderItem>(`/customer/sales-orders/${id}/update_item/`, { item_id: itemId, ...data });
+    }
+
+    /** 删除订单明细 */
+    async removeItem(id: number, itemId: number): Promise<void> {
+        return this.client.post<void>(`/customer/sales-orders/${id}/remove_item/`, { item_id: itemId });
+    }
+
+    /** 获取订单统计 */
+    async getStatistics(id: number): Promise<SalesOrderStatistics> {
+        return this.client.get<SalesOrderStatistics>(`/customer/sales-orders/${id}/statistics/`);
+    }
+
+    /** 获取销售订单汇总 */
+    async getSummary(): Promise<SalesOrderSummary> {
+        return this.client.get<SalesOrderSummary>('/customer/sales-orders/summary/');
+    }
+
+    /** 按客户统计 */
+    async getByCustomer(customerId: number): Promise<{
+        total_orders: number;
+        orders_by_status: Record<string, { name: string; count: number; total_amount: string }>;
+        total_amount: string;
+    }> {
+        return this.client.get('/customer/sales-orders/by_customer/', { customer_id: customerId.toString() });
+    }
+}
+
 // API 实例导出
 export const customerAPI = new CustomerAPI();
 export const customerAddressAPI = new CustomerAddressAPI();
 export const customerQuotationAPI = new CustomerQuotationAPI();
+export const salesOrderAPI = new SalesOrderAPI();

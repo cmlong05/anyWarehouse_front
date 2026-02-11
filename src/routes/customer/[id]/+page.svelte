@@ -23,6 +23,9 @@
     let showDeleteModal = $state(false);
     let deleteLoading = $state(false);
     
+    // 存储每个报价的数量（key: quotationId, value: quantity）
+    let quotationQuantities = $state<Record<number, number | null>>({});
+    
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },
         { label: '客户管理', href: '/customer' },
@@ -83,6 +86,38 @@
     
     function formatDate(dateStr: string) {
         return new Date(dateStr).toLocaleString('zh-CN');
+    }
+    
+    // 跳转到销售订单创建页面，携带选中的报价数据
+    function goToCreateSalesOrder() {
+        // 筛选出有数量的报价
+        const selectedItems = quotations
+            .filter(q => {
+                const qty = quotationQuantities[q.id];
+                return qty !== undefined && qty !== null && qty > 0;
+            })
+            .map(q => ({
+                quotation_id: q.id,
+                item: q.item,
+                sku: q.sku,
+                item_name: q.item_name,
+                quantity: quotationQuantities[q.id],
+                unit_price: parseFloat(q.price)
+            }));
+        
+        if (selectedItems.length === 0) {
+            // 没有输入数量，直接跳转
+            goto(`/customer/sales-order/add?customer_id=${customer.id}`);
+            return;
+        }
+        
+        // 将选中的项目数据存储到 sessionStorage，供销售订单页面读取
+        sessionStorage.setItem('sales_order_preload_items', JSON.stringify({
+            customer_id: customer.id,
+            items: selectedItems
+        }));
+        
+        goto(`/customer/sales-order/add?customer_id=${customer.id}`);
     }
     
     // 组件挂载时加载报价
@@ -179,12 +214,6 @@
                         <span class="value">{customer.address_count || 0} 个</span>
                     </div>
                 </div>
-                
-                <div class="card-actions">
-                    <a href="/customer/{customer.id}/address" class="btn btn-outline">
-                        管理地址簿
-                    </a>
-                </div>
             </div>
             
             <div class="info-card full-width">
@@ -206,11 +235,14 @@
             </div>
         </div>
         
-        <!-- 报价列表 -->
+        <!-- 销售订单和报价列表 -->
         <div class="quotations-section">
             <div class="section-header">
                 <h2>销售报价记录</h2>
-                <a href="/customer/quotation/add?customer_id={customer.id}" class="btn btn-primary btn-sm">添加报价</a>
+                <div class="section-actions">
+                    <button class="btn btn-success btn-sm" onclick={goToCreateSalesOrder}>新建销售订单</button>
+                    <a href="/customer/quotation/add?customer_id={customer.id}" class="btn btn-primary btn-sm">添加报价</a>
+                </div>
             </div>
             
             {#if quotationsLoading}
@@ -229,27 +261,34 @@
                                 <th>物品名称</th>
                                 <th>单价</th>
                                 <th>货币</th>
-                                <th>首选</th>
+                                <th class="numeric">数量</th>
                             </tr>
                         </thead>
                         <tbody>
                             {#each quotations as quotation}
-                                <tr class="clickable-row" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>
-                                    <td>{quotation.sku || '-'}</td>
-                                    <td>{quotation.item_name || '-'}</td>
-                                    <td class="numeric">{quotation.price}</td>
-                                    <td>{quotation.currency}</td>
-                                    <td>
-                                        {#if quotation.is_preferred}
-                                            <span class="preferred-badge">★ 首选</span>
-                                        {:else}
-                                            <span class="muted">-</span>
-                                        {/if}
+                                <tr>
+                                    <td class="clickable" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
+                                    <td class="clickable" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>{quotation.item_name || '-'}</td>
+                                    <td class="numeric clickable" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>{quotation.price}</td>
+                                    <td class="clickable" onclick={() => goto(`/customer/quotation/${quotation.id}`)}>{quotation.currency}</td>
+                                    <td class="numeric">
+                                        <input
+                                            type="number"
+                                            class="quantity-input"
+                                            bind:value={quotationQuantities[quotation.id]}
+                                            min="0.001"
+                                            step="0.001"
+                                            placeholder="-"
+                                            onclick={(e: Event) => e.stopPropagation()}
+                                        />
                                     </td>
                                 </tr>
                             {/each}
                         </tbody>
                     </table>
+                </div>
+                <div class="section-footer">
+                    <button class="btn btn-success btn-sm" onclick={goToCreateSalesOrder}>新建销售订单</button>
                 </div>
             {/if}
         </div>
@@ -375,15 +414,14 @@
     .btn-danger:hover {
         background-color: #b91c1c;
     }
-    
-    .btn-outline {
-        background-color: transparent;
-        color: #3b82f6;
-        border: 1px solid #3b82f6;
+
+    .btn-success {
+        background-color: #10b981;
+        color: white;
     }
-    
-    .btn-outline:hover {
-        background-color: #eff6ff;
+
+    .btn-success:hover {
+        background-color: #059669;
     }
     
     .btn-sm {
@@ -454,12 +492,6 @@
         color: #6b7280;
     }
     
-    .card-actions {
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e5e7eb;
-    }
-    
     /* 报价列表样式 */
     .quotations-section {
         padding: 1.5rem 0;
@@ -477,6 +509,17 @@
         margin: 0;
         font-size: 1.25rem;
         color: #1f2937;
+    }
+
+    .section-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .section-footer {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: flex-end;
     }
     
     .empty-state {
@@ -520,24 +563,40 @@
         text-align: right;
     }
     
-    .preferred-badge {
-        color: #166534;
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
     
-    .muted {
-        color: #9ca3af;
-    }
-    
-    .clickable-row {
+    .clickable {
         cursor: pointer;
-        transition: background-color 0.15s ease;
     }
-    
-    .clickable-row:hover {
+
+    .clickable:hover {
         background-color: #f3f4f6;
+    }
+
+    .quantity-input {
+        width: 80px;
+        padding: 0.35rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        text-align: right;
+        background: white;
+    }
+
+    .quantity-input:focus {
+        outline: none;
+        border-color: #10b981;
+    }
+
+    /* 隐藏数字输入框的上下调整按钮 */
+    .quantity-input::-webkit-outer-spin-button,
+    .quantity-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .quantity-input {
+        -moz-appearance: textfield;
+        appearance: textfield;
     }
     
     @media (max-width: 768px) {
