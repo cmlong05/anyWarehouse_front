@@ -1,7 +1,8 @@
 <!-- 编辑品项 -->
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import ItemForm from '$lib/components/ItemForm.svelte';
-    import DeleteNavigationModal from '$lib/components/DeleteNavigationModal.svelte';
+    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import type { Category, ItemSet } from '$lib';
     import { config } from '$lib/config';
 
@@ -13,35 +14,36 @@
     }>();
 
     let showDeleteModal = $state(false);
-    let deletedItemName = $state('');
-    let deletedItemCategories = $state<Category[]>([]);
+    let deleteLoading = $state(false);
+    let error = $state('');
 
-    async function handleDelete(itemId: number) {
-        console.log('删除函数被调用, itemId:', itemId);
+    async function handleDelete() {
+        if (!data.itemData.item.id) return;
+        
+        deleteLoading = true;
+        error = '';
+        
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/item/${itemId}/`, {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemData.item.id}/`, {
                 method: 'DELETE',
             });
-
-            console.log('删除请求响应:', response.status, response.ok);
 
             if (!response.ok) {
                 throw new Error('删除失败');
             }
 
-            // 删除成功后，收集信息并显示选择弹框
-            deletedItemName = data.itemData.item.name;
-            // 从itemData.categories中提取分类信息
-            deletedItemCategories = data.itemData.categories.map((cat: { category: Category }) => cat.category);
-            console.log('设置弹框状态:', {
-                deletedItemName,
-                deletedItemCategories,
-                showDeleteModal: true
-            });
-            showDeleteModal = true;
-        } catch (error) {
-            console.error('删除失败:', error);
-            alert('删除失败，请稍后重试');
+            // 删除成功后跳转到物品所在分类（取第一个分类），如果没有则跳转到物品列表
+            const firstCategory = data.itemData.categories?.[0]?.category;
+            if (firstCategory) {
+                goto(`/item/category/${firstCategory.id}`);
+            } else {
+                goto('/item');
+            }
+        } catch (err) {
+            console.error('删除失败:', err);
+            error = err instanceof Error ? err.message : '删除失败，请稍后重试';
+            deleteLoading = false;
+            showDeleteModal = false;
         }
     }
 </script>
@@ -54,6 +56,12 @@
     <h2>编辑品项</h2>
     <p>品项：<strong>{data.itemData.item.name}</strong> ({data.itemData.item.SKU})</p>
 </div>
+
+{#if error}
+    <div class="error-alert" role="alert">
+        {error}
+    </div>
+{/if}
 
 <ItemForm 
     mode="edit"
@@ -75,14 +83,20 @@
         category: data.itemData.item.category
     }}
     categories={data.categories}
-    onDelete={handleDelete}
+    onShowDeleteModal={() => showDeleteModal = true}
 />
 
-<!-- 删除后的导航选择弹框 -->
-<DeleteNavigationModal 
-    bind:isOpen={showDeleteModal}
-    itemName={deletedItemName}
-    itemCategories={deletedItemCategories}
+<!-- 删除确认弹框 -->
+<ConfirmModal 
+    isOpen={showDeleteModal}
+    title="删除商品"
+    message="确定要删除以下商品吗？此操作不可撤销。"
+    itemName={data.itemData.item.name}
+    confirmText="删除"
+    cancelText="取消"
+    loading={deleteLoading}
+    onConfirm={handleDelete}
+    onCancel={() => showDeleteModal = false}
 />
 
 <style>
@@ -100,5 +114,14 @@
     .page-header p {
         margin: 0;
         color: #666;
+    }
+    
+    .error-alert {
+        background-color: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
     }
 </style>

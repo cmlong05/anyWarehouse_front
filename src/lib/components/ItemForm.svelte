@@ -26,6 +26,7 @@
         categories?: Category[];
         onCancel?: () => void;
         onDelete?: (itemId: number) => Promise<void>;
+        onShowDeleteModal?: () => void;
     }
 
     let {
@@ -48,7 +49,8 @@
         },
         categories = [],
         onCancel,
-        onDelete
+        onDelete,
+        onShowDeleteModal
     }: Props = $props();
 
     // 转换为 Svelecte 需要的格式
@@ -84,27 +86,12 @@
         }
     }
 
-    // 删除操作：在 iOS Safari 上，必须在用户手势的同步回调内调用 confirm
-    // 避免在 async 函数中（或 confirm 之前有任何 await/微任务）调用导致弹窗被系统拦截
-    function handleDelete() {
-        if (!initialData?.id || !onDelete) return;
-        
-        const confirmed = confirm('确定要删除这个商品吗？此操作不可撤销。');
-        if (!confirmed) return;
-
-        // 将异步删除逻辑放到 confirm 之后执行，保持 confirm 在同步用户手势内触发
-        deleteLoading = true;
-        Promise.resolve(onDelete(initialData.id))
-            .catch((error) => {
-                console.error('删除操作失败:', error);
-                alert('删除失败，请稍后重试');
-            })
-            .finally(() => {
-                deleteLoading = false;
-            });
+    // 点击删除按钮 - 显示确认弹窗
+    function handleDeleteClick() {
+        if (!initialData?.id) return;
+        onShowDeleteModal?.();
     }
 
-    let deleteLoading = $state(false);
     let formLoading = $state(false);
     let imageError = $state(false);
 
@@ -523,14 +510,13 @@
             {formLoading ? '处理中...' : mode === 'add' ? '添加商品' : '更新'}
         </button>
         
-        {#if mode === 'edit' && onDelete && initialData?.id}
+        {#if mode === 'edit' && onShowDeleteModal && initialData?.id}
             <button 
                 type="button" 
                 class="btn btn-danger" 
-                onclick={handleDelete}
-                disabled={deleteLoading}
+                onclick={handleDeleteClick}
             >
-                {deleteLoading ? '删除中...' : '删除'}
+                删除
             </button>
         {/if}
     </div>
@@ -540,24 +526,24 @@
     .form-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-bottom: 2rem;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
     }
 
     .form-section {
         background: #f8f9fa;
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 8px;
         border: 1px solid #e9ecef;
     }
 
     .form-section h3 {
-        margin: 0 0 1rem 0;
+        margin: 0 0 0.5rem 0;
         color: #495057;
         font-size: 1.1rem;
         font-weight: 600;
         border-bottom: 2px solid #dee2e6;
-        padding-bottom: 0.5rem;
+        padding-bottom: 0.25rem;
     }
 
     /* 描述区块独立样式 */
@@ -566,13 +552,13 @@
     }
 
     .description-textarea {
-        min-height: 200px;
+        min-height: 80px;
         font-family: inherit;
         line-height: 1.5;
     }
 
     .field-group {
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
 
     .inline-field {
@@ -636,9 +622,10 @@
 
     .form-actions {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         justify-content: flex-end;
-        padding-top: 2rem;
+        padding-top: 0.75rem;
+        margin-top: 0.5rem;
         border-top: 1px solid #e9ecef;
     }
 
@@ -782,7 +769,7 @@
     @media (max-width: 768px) {
         .form-grid {
             grid-template-columns: 1fr;
-            gap: 1rem;
+            gap: 0.75rem;
         }
 
         .field-row {
