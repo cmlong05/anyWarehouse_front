@@ -624,7 +624,7 @@
     .form-group textarea:focus {
         outline: none;
         border-color: #3b82f6;
-        ring: 2px solid #bfdbfe;
+        box-shadow: 0 0 0 2px #bfdbfe;
     }
     
     .error-message {
