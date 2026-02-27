@@ -4,6 +4,7 @@
     import { goto } from '$app/navigation';
     import { salesOrderAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderStatus } from '$lib';
+    import { safeParseFloat } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
 
@@ -19,11 +20,11 @@
         cancelled: { label: '已取消', class: 'status-cancelled' },
     };
 
-    const priorityMap: Record<string, string> = {
-        low: '低',
-        normal: '普通',
-        high: '高',
-        urgent: '紧急',
+    const priorityMap: Record<string, { label: string; class: string }> = {
+        low: { label: '低', class: 'priority-low' },
+        normal: { label: '普通', class: 'priority-normal' },
+        high: { label: '高', class: 'priority-high' },
+        urgent: { label: '紧急', class: 'priority-urgent' },
     };
 
     // 状态流转配置
@@ -192,6 +193,44 @@
             console.error('Delete error:', err);
         }
     }
+
+    // 复制订单
+    function copyOrder() {
+        if (!order) return;
+        
+        // 存储到 sessionStorage
+        const copyData = {
+            customer_id: order.customer,
+            customer_name: order.customer_detail?.name,
+            copy_from_order_id: order.id,
+            copy_from_order_number: order.order_number,
+            order_data: {
+                priority: order.priority,
+                shipping_address: order.shipping_address,
+                contact_person: order.contact_person,
+                contact_phone: order.contact_phone,
+                payment_terms: order.payment_terms,
+                tax_rate: safeParseFloat(order.tax_rate),
+                shipping_cost: safeParseFloat(order.shipping_cost),
+                discount: safeParseFloat(order.discount),
+                notes: `复制自订单 ${order.order_number}`,
+                internal_notes: '',
+                items: order.items?.map(item => ({
+                    item: item.item,
+                    sku: item.sku,
+                    item_name: item.item_name,
+                    quantity: item.quantity,
+                    unit_price: safeParseFloat(item.unit_price),
+                    notes: item.notes
+                })) || []
+            }
+        };
+        
+        sessionStorage.setItem('sales_order_copy_data', JSON.stringify(copyData));
+        
+        // 跳转到新建订单页面
+        goto(`/customer/sales-order/add?customer_id=${order.customer}`);
+    }
 </script>
 
 <div class="sales-order-detail">
@@ -210,6 +249,7 @@
                 <h1>销售订单详情</h1>
             </div>
             <div class="header-actions">
+                <button class="btn btn-secondary" onclick={copyOrder}>📋 复制订单</button>
                 {#if order.status === 'draft'}
                     <button class="btn btn-secondary" onclick={editOrder}>编辑</button>
                 {/if}
@@ -240,15 +280,6 @@
                             </button>
                         {/each}
                     {/if}
-                    {#if ['confirmed', 'partial'].includes(order.status)}
-                        <button
-                            class="btn btn-small btn-success"
-                            onclick={openShipModal}
-                            disabled={updating}
-                        >
-                            发货
-                        </button>
-                    {/if}
                 </div>
             </div>
 
@@ -259,7 +290,9 @@
                 </div>
                 <div class="summary-item">
                     <span class="label">优先级</span>
-                    <span class="value">{priorityMap[order.priority] || order.priority}</span>
+                    <span class="priority-badge {priorityMap[order.priority]?.class || ''}">
+                        {priorityMap[order.priority]?.label || order.priority}
+                    </span>
                 </div>
                 <div class="summary-item">
                     <span class="label">下单日期</span>
@@ -288,7 +321,7 @@
             <div class="amount-grid">
                 <div class="amount-item">
                     <span class="label">商品小计</span>
-                    <span class="value">¥{parseFloat(order.subtotal).toFixed(2)}</span>
+                    <span class="value">¥{safeParseFloat(order.subtotal).toFixed(2)}</span>
                 </div>
                 <div class="amount-item">
                     <span class="label">税率</span>
@@ -296,19 +329,19 @@
                 </div>
                 <div class="amount-item">
                     <span class="label">税额</span>
-                    <span class="value">¥{parseFloat(order.tax_amount).toFixed(2)}</span>
+                    <span class="value">¥{safeParseFloat(order.tax_amount).toFixed(2)}</span>
                 </div>
                 <div class="amount-item">
                     <span class="label">运费</span>
-                    <span class="value">¥{parseFloat(order.shipping_cost).toFixed(2)}</span>
+                    <span class="value">¥{safeParseFloat(order.shipping_cost).toFixed(2)}</span>
                 </div>
                 <div class="amount-item">
                     <span class="label">折扣</span>
-                    <span class="value">-¥{parseFloat(order.discount).toFixed(2)}</span>
+                    <span class="value">-¥{safeParseFloat(order.discount).toFixed(2)}</span>
                 </div>
                 <div class="amount-item total">
                     <span class="label">订单总计</span>
-                    <span class="value">¥{parseFloat(order.total_amount).toFixed(2)}</span>
+                    <span class="value">¥{safeParseFloat(order.total_amount).toFixed(2)}</span>
                 </div>
             </div>
         </div>
@@ -336,69 +369,114 @@
             </div>
         </div>
 
-        <!-- 订单明细 -->
-        <div class="info-section">
-            <h2>订单明细 ({order.items?.length || 0}项)</h2>
-            {#if order.items && order.items.length > 0}
-                <div class="items-table-container">
-                    <table class="items-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>SKU</th>
-                                <th>物品名称</th>
-                                <th class="numeric">订购数量</th>
-                                <th class="numeric">已发货</th>
-                                <th class="numeric">待发货</th>
-                                <th class="numeric">单价</th>
-                                <th class="numeric">小计</th>
-                                <th>状态</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {#each order.items as item}
-                                <tr class={item.is_fully_shipped ? 'completed' : ''}>
-                                    <td>{item.line_number}</td>
-                                    <td class="mono">{item.sku}</td>
-                                    <td>{item.item_name}</td>
-                                    <td class="numeric">{item.quantity}</td>
-                                    <td class="numeric">{item.quantity_shipped}</td>
-                                    <td class="numeric">{item.quantity_pending}</td>
-                                    <td class="numeric">¥{parseFloat(item.unit_price).toFixed(2)}</td>
-                                    <td class="numeric">¥{parseFloat(item.line_total).toFixed(2)}</td>
-                                    <td>
-                                        {#if item.is_fully_shipped}
-                                            <span class="badge badge-success">已发货</span>
-                                        {:else if item.quantity_shipped > 0}
-                                            <span class="badge badge-warning">部分发货</span>
-                                        {:else}
-                                            <span class="badge badge-pending">待发货</span>
-                                        {/if}
-                                    </td>
+        <!-- 订单明细 + 关联发货单（左右布局）-->
+        <div class="items-section">
+            <div class="items-main">
+                <h2>订单明细 ({order.items?.length || 0}项)</h2>
+                {#if order.items && order.items.length > 0}
+                    <div class="items-table-container">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>SKU</th>
+                                    <th>物品名称</th>
+                                    <th class="numeric">订购数量</th>
+                                    <th class="numeric">已发货</th>
+                                    <th class="numeric">待发货</th>
+                                    <th class="numeric">单价</th>
+                                    <th class="numeric">小计</th>
+                                    <th>状态</th>
                                 </tr>
-                            {/each}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {#each order.items as item}
+                                    <tr class={item.is_fully_shipped ? 'completed' : ''}>
+                                        <td>{item.line_number}</td>
+                                        <td class="mono">{item.sku}</td>
+                                        <td>{item.item_name}</td>
+                                        <td class="numeric">{item.quantity}</td>
+                                        <td class="numeric">{item.quantity_shipped}</td>
+                                        <td class="numeric">{item.quantity_pending}</td>
+                                        <td class="numeric">¥{safeParseFloat(item.unit_price).toFixed(2)}</td>
+                                        <td class="numeric">¥{safeParseFloat(item.line_total).toFixed(2)}</td>
+                                        <td>
+                                            {#if item.is_fully_shipped}
+                                                <span class="badge badge-success">已发货</span>
+                                            {:else if item.quantity_shipped > 0}
+                                                <span class="badge badge-warning">部分发货</span>
+                                            {:else}
+                                                <span class="badge badge-pending">待发货</span>
+                                            {/if}
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
 
-                <!-- 发货进度 -->
-                {#if order.progress_percentage !== undefined}
-                    <div class="progress-section">
-                        <div class="progress-header">
-                            <span>发货进度</span>
-                            <span>{order.progress_percentage}%</span>
+                    <!-- 发货进度 -->
+                    {#if order.progress_percentage !== undefined}
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span>发货进度</span>
+                                <span>{order.progress_percentage}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: {order.progress_percentage}%"></div>
+                            </div>
+                            <div class="progress-stats">
+                                <span>已发: {order.total_shipped} / {order.total_quantity}</span>
+                            </div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: {order.progress_percentage}%"></div>
-                        </div>
-                        <div class="progress-stats">
-                            <span>已发: {order.total_shipped} / {order.total_quantity}</span>
+                    {/if}
+                {:else}
+                    <p class="empty-text">暂无明细</p>
+                {/if}
+            </div>
+
+            <!-- 右侧：生成发货单按钮 + 关联发货单 -->
+            <div class="sidebar">
+                {#if ['confirmed', 'partial'].includes(order.status)}
+                    <div class="sidebar-section">
+                        <a
+                            href="/customer/shipment/add?order_id={order.id}"
+                            class="btn btn-success btn-generate"
+                        >
+                            +生成发货单
+                        </a>
+                    </div>
+                {/if}
+                
+                {#if order.shipments && order.shipments.length > 0}
+                    <div class="sidebar-section">
+                        <h2>关联发货单 ({order.shipments.length})</h2>
+                        <div class="shipments-list">
+                        {#each order.shipments as shipment}
+                            <div class="shipment-card">
+                                <div class="shipment-header">
+                                    <a href="/customer/shipment/{shipment.id}" class="shipment-link">
+                                        {shipment.shipment_no}
+                                    </a>
+                                    <span class="status-badge {shipment.status}">
+                                        {shipment.status === 'draft' ? '草稿' : 
+                                         shipment.status === 'confirmed' ? '已确认' :
+                                         shipment.status === 'packed' ? '已打包' :
+                                         shipment.status === 'shipped' ? '已发货' :
+                                         shipment.status === 'delivered' ? '已签收' :
+                                         shipment.status === 'cancelled' ? '已取消' : shipment.status}
+                                    </span>
+                                </div>
+                                <div class="shipment-info">
+                                    <span>包裹数: {shipment.total_packages}</span>
+                                    <span>创建: {new Date(shipment.created_at).toLocaleString('zh-CN')}</span>
+                                </div>
+                            </div>
+                            {/each}
                         </div>
                     </div>
                 {/if}
-            {:else}
-                <p class="empty-text">暂无明细</p>
-            {/if}
+            </div>
         </div>
 
         <!-- 备注 -->
@@ -424,7 +502,8 @@
 
 <!-- 发货弹窗 -->
 {#if showShipModal && order}
-    <div class="modal-overlay" onclick={(e) => { if(e.target === e.currentTarget) showShipModal = false; }}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="modal-overlay" onclick={(e) => { if(e.target === e.currentTarget) showShipModal = false; }} onkeydown={(e) => { if (e.key === 'Escape') showShipModal = false; }} role="presentation" tabindex="-1">
         <div class="modal">
             <div class="modal-header">
                 <h2>订单发货</h2>
@@ -621,6 +700,110 @@
     .info-item .value {
         color: #333;
     }
+
+    /* 订单明细 + 右侧栏布局 */
+    .items-section {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .items-main {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .items-main h2 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .sidebar-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-section h2 {
+        margin: 0 0 1rem 0;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .btn-generate {
+        display: block;
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 1024px) {
+        .items-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            order: -1;
+        }
+    }
+
+    /* 发货单列表 */
+    .shipments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .shipment-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 1rem;
+        background: #fafafa;
+    }
+
+    .shipment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .shipment-link {
+        font-weight: 600;
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .shipment-link:hover {
+        text-decoration: underline;
+    }
+
+    .shipment-info {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .status-badge.draft { background: #f3f4f6; color: #6b7280; }
+    .status-badge.confirmed { background: #dbeafe; color: #1e40af; }
+    .status-badge.packed { background: #fef3c7; color: #92400e; }
+    .status-badge.shipped { background: #d1fae5; color: #065f46; }
+    .status-badge.delivered { background: #c7d2fe; color: #3730a3; }
+    .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
 
     /* 金额网格 */
     .amount-grid {
@@ -825,6 +1008,36 @@
     .status-cancelled {
         background: #f8d7da;
         color: #721c24;
+    }
+
+    /* 优先级标签 */
+    .priority-badge {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .priority-low {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .priority-normal {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .priority-high {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .priority-urgent {
+        background: #dc3545;
+        color: white;
+        font-weight: 600;
     }
 
     /* 按钮 */

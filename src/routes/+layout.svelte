@@ -33,7 +33,10 @@
 			label: '客户管理',
 			children: [
 				{ href: '/customer', label: '客户列表' },
-				{ href: '/customer/sales-order', label: '销售订单' }
+				{ href: '/customer/sales-order', label: '销售订单' },
+				{ href: '/customer/shipment', label: '发货管理' },
+				{ href: '/customer/package', label: '包裹管理' },
+				{ href: '/customer/shipment/tracking-number', label: '快递单号' }
 			]
 		}
 	];

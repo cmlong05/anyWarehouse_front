@@ -418,7 +418,8 @@
 
 <!-- 收货弹窗 -->
 {#if showReceiveModal && order}
-    <div class="modal-overlay" onclick={(e) => { if(e.target === e.currentTarget) showReceiveModal = false; }}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <div class="modal-overlay" onclick={(e) => { if(e.target === e.currentTarget) showReceiveModal = false; }} onkeydown={(e) => { if (e.key === 'Escape') showReceiveModal = false; }} role="presentation" tabindex="-1">
         <div class="modal">
             <div class="modal-header">
                 <h2>订单收货</h2>

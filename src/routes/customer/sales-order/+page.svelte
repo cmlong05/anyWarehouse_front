@@ -30,21 +30,21 @@
 
     // 状态映射
     const statusMap: Record<string, { label: string; class: string }> = {
-        draft: { label: '草稿', class: 'status-draft' },
-        pending: { label: '待审批', class: 'status-pending' },
-        approved: { label: '已批准', class: 'status-approved' },
-        confirmed: { label: '已确认', class: 'status-confirmed' },
-        partial: { label: '部分发货', class: 'status-partial' },
-        shipped: { label: '已发货', class: 'status-shipped' },
-        delivered: { label: '已完成', class: 'status-delivered' },
-        cancelled: { label: '已取消', class: 'status-cancelled' },
+        draft: { label: '草稿', class: 'badge-ghost' },
+        pending: { label: '待审批', class: 'badge-warning' },
+        approved: { label: '已批准', class: 'badge-info' },
+        confirmed: { label: '已确认', class: 'badge-primary' },
+        partial: { label: '部分发货', class: 'badge-success' },
+        shipped: { label: '已发货', class: 'badge-success' },
+        delivered: { label: '已完成', class: 'badge-primary' },
+        cancelled: { label: '已取消', class: 'badge-error' },
     };
 
-    const priorityMap: Record<string, string> = {
-        low: '低',
-        normal: '普通',
-        high: '高',
-        urgent: '紧急',
+    const priorityMap: Record<string, { label: string; class: string }> = {
+        low: { label: '低', class: 'badge-ghost' },
+        normal: { label: '普通', class: 'badge-info' },
+        high: { label: '高', class: 'badge-warning' },
+        urgent: { label: '紧急', class: 'badge-error' },
     };
 
     // 数据
@@ -113,6 +113,50 @@
         }
     }
 
+    // 复制订单
+    async function copyOrder(order: SalesOrderBrief) {
+        try {
+            // 获取完整订单详情
+            const fullOrder = await salesOrderAPI.get(order.id);
+            
+            // 存储到 sessionStorage
+            const copyData = {
+                customer_id: fullOrder.customer,
+                customer_name: fullOrder.customer_detail?.name,
+                copy_from_order_id: fullOrder.id,
+                copy_from_order_number: fullOrder.order_number,
+                order_data: {
+                    priority: fullOrder.priority,
+                    shipping_address: fullOrder.shipping_address,
+                    contact_person: fullOrder.contact_person,
+                    contact_phone: fullOrder.contact_phone,
+                    payment_terms: fullOrder.payment_terms,
+                    tax_rate: parseFloat(fullOrder.tax_rate),
+                    shipping_cost: parseFloat(fullOrder.shipping_cost),
+                    discount: parseFloat(fullOrder.discount),
+                    notes: `复制自订单 ${fullOrder.order_number}`,
+                    internal_notes: '',
+                    items: fullOrder.items?.map(item => ({
+                        item: item.item,
+                        sku: item.sku,
+                        item_name: item.item_name,
+                        quantity: item.quantity,
+                        unit_price: parseFloat(item.unit_price),
+                        notes: item.notes
+                    })) || []
+                }
+            };
+            
+            sessionStorage.setItem('sales_order_copy_data', JSON.stringify(copyData));
+            
+            // 跳转到新建订单页面
+            goto(`/customer/sales-order/add?customer_id=${fullOrder.customer}`);
+        } catch (err: any) {
+            error = err.message || '复制订单失败';
+            console.error('Copy error:', err);
+        }
+    }
+
     // 查看详情
     function viewDetail(id: number) {
         goto(`/customer/sales-order/${id}`);
@@ -165,8 +209,11 @@
 <div class="sales-order-page">
     <div class="page-header">
         <h1>销售订单管理</h1>
-        <a href="/customer" class="btn btn-primary">
-            + 从客户创建
+        <a href="/customer" class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>从客户创建</span>
         </a>
     </div>
 
@@ -229,7 +276,7 @@
             </div>
             
             <div class="filter-group actions">
-                <button class="btn btn-secondary" onclick={resetFilters}>
+                <button class="btn btn-secondary rounded-lg shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap" onclick={resetFilters}>
                     重置筛选
                 </button>
             </div>
@@ -248,44 +295,63 @@
             <p class="hint">销售订单需从具体客户页面创建</p>
         </div>
     {:else}
-        <div class="table-container">
-            <table class="data-table">
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="table table-zebra w-full">
                 <thead>
-                    <tr>
-                        <th>订单编号</th>
-                        <th>客户</th>
-                        <th>状态</th>
-                        <th>优先级</th>
-                        <th>下单日期</th>
-                        <th>预计交货</th>
-                        <th class="numeric">金额</th>
-                        <th class="numeric">明细数</th>
-                        <th>操作</th>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-3 text-left">订单编号</th>
+                        <th class="px-4 py-3 text-left">客户</th>
+                        <th class="px-4 py-3 text-left">状态</th>
+                        <th class="px-4 py-3 text-left">优先级</th>
+                        <th class="px-4 py-3 text-left">下单日期</th>
+                        <th class="px-4 py-3 text-left">预计交货</th>
+                        <th class="px-4 py-3 text-right">金额</th>
+                        <th class="px-4 py-3 text-right">明细数</th>
+                        <th class="px-4 py-3 text-center">操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each orders as order}
-                        <tr class="clickable" onclick={() => viewDetail(order.id)}>
-                            <td class="order-number">{order.order_number}</td>
-                            <td>{order.customer_name}</td>
-                            <td>
-                                <span class="status-badge {statusMap[order.status]?.class || ''}">
+                        <tr class="hover:bg-blue-50 cursor-pointer" onclick={() => viewDetail(order.id)}>
+                            <td class="px-4 py-3 font-medium">{order.order_number}</td>
+                            <td class="px-4 py-3">{order.customer_name}</td>
+                            <td class="px-4 py-3">
+                                <span class="badge {statusMap[order.status]?.class || ''} badge-sm">
                                     {statusMap[order.status]?.label || order.status}
                                 </span>
                             </td>
-                            <td>{priorityMap[order.priority] || order.priority}</td>
-                            <td>{order.order_date}</td>
-                            <td>{order.expected_delivery || '-'}</td>
-                            <td class="numeric">¥{parseFloat(order.total_amount).toFixed(2)}</td>
-                            <td class="numeric">{order.item_count}</td>
-                            <td>
-                                <button
-                                    class="btn-icon"
-                                    onclick={(e) => { e.stopPropagation(); handleDelete(order.id); }}
-                                    title="删除"
-                                >
-                                    🗑️
-                                </button>
+                            <td class="px-4 py-3">
+                                <span class="badge {priorityMap[order.priority]?.class || ''} badge-sm">
+                                    {priorityMap[order.priority]?.label || order.priority}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">{order.order_date}</td>
+                            <td class="px-4 py-3">{order.expected_delivery || '-'}</td>
+                            <td class="px-4 py-3 text-right">¥{parseFloat(order.total_amount).toFixed(2)}</td>
+                            <td class="px-4 py-3 text-right">{order.item_count}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button
+                                        class="btn btn-ghost btn-sm p-1"
+                                        onclick={(e) => { e.stopPropagation(); copyOrder(order); }}
+                                        title="复制订单"
+                                        aria-label="复制订单"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        class="btn btn-ghost btn-sm p-1 text-error"
+                                        onclick={(e) => { e.stopPropagation(); handleDelete(order.id); }}
+                                        title="删除"
+                                        aria-label="删除"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     {/each}
@@ -297,7 +363,7 @@
         {#if totalPages > 1}
             <div class="pagination">
                 <button
-                    class="btn btn-small"
+                    class="btn btn-sm rounded-lg"
                     onclick={() => goToPage(page - 1)}
                     disabled={page === 1}
                 >
@@ -305,7 +371,7 @@
                 </button>
                 <span class="page-info">第 {page} / {totalPages} 页 (共 {totalCount} 条)</span>
                 <button
-                    class="btn btn-small"
+                    class="btn btn-sm rounded-lg"
                     onclick={() => goToPage(page + 1)}
                     disabled={page === totalPages}
                 >
@@ -378,100 +444,6 @@
         justify-content: flex-end;
     }
 
-    /* 表格 */
-    .table-container {
-        overflow-x: auto;
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 0.875rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-    }
-
-    .data-table th {
-        background: #f8f9fa;
-        font-weight: 600;
-        color: #333;
-    }
-
-    .data-table tbody tr {
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-
-    .data-table tbody tr:hover {
-        background: #f5f5f5;
-    }
-
-    .data-table .numeric {
-        text-align: right;
-    }
-
-    .order-number {
-        font-family: monospace;
-        font-weight: 500;
-    }
-
-    /* 状态标签 */
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-
-    .status-draft {
-        background: #e9ecef;
-        color: #495057;
-    }
-
-    .status-pending {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .status-approved {
-        background: #d1ecf1;
-        color: #0c5460;
-    }
-
-    .status-confirmed {
-        background: #cce5ff;
-        color: #004085;
-    }
-
-    .status-partial {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .status-shipped {
-        background: #28a745;
-        color: white;
-    }
-
-    .status-delivered {
-        background: #17a2b8;
-        color: white;
-    }
-
-    .status-cancelled {
-        background: #f8d7da;
-        color: #721c24;
-    }
-
     /* 空状态 */
     .empty-state {
         text-align: center;
@@ -498,58 +470,6 @@
     .page-info {
         color: #666;
         font-size: 0.9rem;
-    }
-
-    /* 按钮 */
-    .btn {
-        padding: 0.625rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background-color: #0056b3;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-        background-color: #545b62;
-    }
-
-    .btn-small {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.85rem;
-    }
-
-    .btn-icon {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0.25rem;
-        opacity: 0.6;
-        transition: opacity 0.15s;
-    }
-
-    .btn-icon:hover {
-        opacity: 1;
     }
 
     /* 空状态提示 */

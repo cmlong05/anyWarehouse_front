@@ -855,6 +855,7 @@ export class SalesOrderAPI {
         delivery_to?: string;
         min_amount?: number;
         max_amount?: number;
+        ordering?: string;
         page?: number;
         page_size?: number;
     }): Promise<PaginatedResponse<SalesOrderBrief>> {
@@ -869,6 +870,7 @@ export class SalesOrderAPI {
         if (params?.delivery_to) queryParams.delivery_to = params.delivery_to;
         if (params?.min_amount) queryParams.min_amount = params.min_amount.toString();
         if (params?.max_amount) queryParams.max_amount = params.max_amount.toString();
+        if (params?.ordering) queryParams.ordering = params.ordering;
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.page_size) queryParams.page_size = params.page_size.toString();
         return this.client.get<PaginatedResponse<SalesOrderBrief>>('/customer/sales-orders/', queryParams);

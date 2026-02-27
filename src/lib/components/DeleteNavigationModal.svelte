@@ -1,9 +1,20 @@
-<script>
+<script lang="ts">
     import { goto } from '$app/navigation';
 
-    export let isOpen = false;
-    export let itemName = '';
-    export let itemCategories = [];
+    interface Category {
+        id: number | string;
+        name: string;
+    }
+
+    interface $$Props {
+        isOpen?: boolean;
+        itemName?: string;
+        itemCategories?: Category[];
+    }
+
+    export let isOpen: boolean = false;
+    export let itemName: string = '';
+    export let itemCategories: Category[] = [];
 
     // 添加调试信息
     $: console.log('DeleteNavigationModal 状态:', { isOpen, itemName, itemCategories });
@@ -13,13 +24,13 @@
         isOpen = false;
     }
 
-    function navigateTo(path) {
+    function navigateTo(path: string) {
         console.log('导航到:', path);
         closeModal();
         goto(path);
     }
 
-    function handleBackdropClick(event) {
+    function handleBackdropClick(event: MouseEvent) {
         if (event.target === event.currentTarget) {
             closeModal();
         }
@@ -27,9 +38,8 @@
 </script>
 
 {#if isOpen}
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="modal-backdrop" onclick={handleBackdropClick}>
+    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+    <div class="modal-backdrop" onclick={handleBackdropClick} onkeydown={(e) => { if (e.key === 'Escape') closeModal(); }} role="presentation" tabindex="-1">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>删除成功</h3>

@@ -396,8 +396,9 @@
         <div class="add-item-form">
             <div class="form-row">
                 <div class="form-group item-select">
-                    <label>选择报价/SKU</label>
+                    <label for="quotation-select">选择报价/SKU</label>
                     <Svelecte
+                        inputId="quotation-select"
                         options={quotationOptions}
                         bind:value={currentItem.quotation}
                         placeholder="搜索SKU或选择报价..."
@@ -410,8 +411,9 @@
                 </div>
                 
                 <div class="form-group quantity">
-                    <label>数量</label>
+                    <label for="item-quantity">数量</label>
                     <input
+                        id="item-quantity"
                         type="number"
                         bind:value={currentItem.quantity}
                         min="0.001"
@@ -424,8 +426,9 @@
                 </div>
                 
                 <div class="form-group price">
-                    <label>单价</label>
+                    <label for="item-price">单价</label>
                     <input
+                        id="item-price"
                         type="number"
                         bind:value={currentItem.unit_price}
                         min="0"
@@ -438,7 +441,7 @@
                 </div>
                 
                 <div class="form-group actions">
-                    <label>&nbsp;</label>
+                    <span class="label-placeholder">&nbsp;</span>
                     <button
                         type="button"
                         class="btn btn-secondary"

@@ -57,68 +57,68 @@
         loadCustomers();
     }
     
-    function getLevelLabel(level: string) {
-        return levelOptions.find(o => o.value === level)?.label || level;
-    }
-    
-    function getLevelClass(level: string) {
+    function getLevelBadgeClass(level: string) {
         switch (level) {
-            case 'VIP': return 'level-vip';
-            case 'NORMAL': return 'level-normal';
-            case 'TEMP': return 'level-temp';
-            default: return '';
+            case 'VIP': return 'badge-warning';
+            case 'NORMAL': return 'badge-info';
+            case 'TEMP': return 'badge-ghost';
+            default: return 'badge-ghost';
         }
     }
 </script>
 
 <svelte:head>
-    <title>客户管理</title>
+    <title>客户管理 - AnyWarehouse</title>
 </svelte:head>
 
-<div class="content-container">
-    <div class="section-header">
-        <h1>客户管理</h1>
-        <a href="/customer/add" class="btn btn-primary">添加客户</a>
+<div class="container mx-auto px-4 py-6">
+    <!-- 页面标题 -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold">客户管理</h1>
+        <a href="/customer/add" class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>添加客户</span>
+        </a>
     </div>
     
     <!-- 搜索和过滤 -->
-    <div class="filter-bar">
-        <div class="search-box">
-            <input
-                type="text"
-                placeholder="搜索客户编号、名称、联系人..."
-                bind:value={searchQuery}
-                oninput={handleSearch}
-            />
-            {#if searchQuery}
-                <button class="clear-btn" onclick={() => { searchQuery = ''; loadCustomers(); }}>
-                    ✕
-                </button>
-            {/if}
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex gap-4 flex-wrap">
+            <div class="flex-1 min-w-[200px]">
+                <input
+                    type="text"
+                    placeholder="搜索客户编号、名称、联系人..."
+                    class="input input-bordered w-full"
+                    bind:value={searchQuery}
+                    oninput={handleSearch}
+                />
+            </div>
+            <select bind:value={levelFilter} onchange={handleSearch} class="select select-bordered min-w-[140px]">
+                {#each levelOptions as option}
+                    <option value={option.value}>{option.label}</option>
+                {/each}
+            </select>
+            <select bind:value={statusFilter} onchange={handleSearch} class="select select-bordered min-w-[120px]">
+                {#each statusOptions as option}
+                    <option value={option.value}>{option.label}</option>
+                {/each}
+            </select>
         </div>
-        <select bind:value={levelFilter} onchange={handleSearch} class="filter-select">
-            {#each levelOptions as option}
-                <option value={option.value}>{option.label}</option>
-            {/each}
-        </select>
-        <select bind:value={statusFilter} onchange={handleSearch} class="filter-select">
-            {#each statusOptions as option}
-                <option value={option.value}>{option.label}</option>
-            {/each}
-        </select>
     </div>
     
     {#if loading}
-        <Loading text="加载客户列表..." />
+        <Loading />
     {:else if error}
         <Alert error={error} onDismiss={() => error = ''} />
     {:else if customers.length === 0}
-        <div class="empty-state">
-            <p>{searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}</p>
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <p class="text-gray-400">{searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}</p>
             {#if !searchQuery && !levelFilter && !statusFilter}
-                <a href="/customer/add" class="btn btn-primary">添加第一个客户</a>
+                <a href="/customer/add" class="btn btn-primary mt-4">添加第一个客户</a>
             {:else}
-                <button class="btn btn-secondary" onclick={() => { 
+                <button class="btn btn-ghost btn-sm mt-4" onclick={() => { 
                     searchQuery = ''; 
                     levelFilter = ''; 
                     statusFilter = ''; 
@@ -129,34 +129,37 @@
             {/if}
         </div>
     {:else}
-        <div class="customer-table">
-            <table>
+        <!-- 客户列表 -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <table class="table table-zebra w-full">
                 <thead>
-                    <tr>
-                        <th>客户编号</th>
-                        <th>客户名称</th>
-                        <th>联系人</th>
-                        <th>电话</th>
-                        <th>等级</th>
-                        <th>状态</th>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-3 text-left">客户编号</th>
+                        <th class="px-4 py-3 text-left">客户名称</th>
+                        <th class="px-4 py-3 text-left">联系人</th>
+                        <th class="px-4 py-3 text-left">电话</th>
+                        <th class="px-4 py-3 text-left">等级</th>
+                        <th class="px-4 py-3 text-left">状态</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each customers as customer}
-                        <tr onclick={() => window.location.href = `/customer/${customer.id}`} class="clickable-row">
-                            <td class="code">{customer.code}</td>
-                            <td class="name">{customer.name}</td>
-                            <td>{customer.contact_name || '-'}</td>
-                            <td>{customer.phone || '-'}</td>
-                            <td>
-                                <span class="level-badge {getLevelClass(customer.level)}">
-                                    {getLevelLabel(customer.level)}
+                        <tr class="hover:bg-blue-50 cursor-pointer" onclick={() => window.location.href = `/customer/${customer.id}`}>
+                            <td class="px-4 py-3 font-mono text-sm text-gray-600">{customer.code}</td>
+                            <td class="px-4 py-3 font-medium">{customer.name}</td>
+                            <td class="px-4 py-3">{customer.contact_name || '-'}</td>
+                            <td class="px-4 py-3">{customer.phone || '-'}</td>
+                            <td class="px-4 py-3">
+                                <span class="badge {getLevelBadgeClass(customer.level)} badge-sm">
+                                    {levelOptions.find(o => o.value === customer.level)?.label || customer.level}
                                 </span>
                             </td>
-                            <td>
-                                <span class="status-badge {customer.status === 'ACTIVE' ? 'status-active' : 'status-inactive'}">
-                                    {customer.status === 'ACTIVE' ? '活跃' : '停用'}
-                                </span>
+                            <td class="px-4 py-3">
+                                {#if customer.status === 'ACTIVE'}
+                                    <span class="badge badge-success badge-sm">活跃</span>
+                                {:else}
+                                    <span class="badge badge-error badge-sm">停用</span>
+                                {/if}
                             </td>
                         </tr>
                     {/each}
@@ -164,237 +167,8 @@
             </table>
         </div>
         
-        <div class="summary">
+        <div class="mt-4 text-gray-500 text-sm">
             共 {customers.length} 个客户
         </div>
     {/if}
 </div>
-
-<style>
-    .content-container {
-        max-width: 1000px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .section-header h1 {
-        margin: 0;
-        font-size: 1.5rem;
-        color: #1f2937;
-    }
-    
-    .filter-bar {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-    }
-    
-    .search-box {
-        position: relative;
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    .search-box input {
-        width: 100%;
-        padding: 0.625rem 2.5rem 0.625rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-    }
-    
-    .search-box input:focus {
-        outline: none;
-        border-color: #3b82f6;
-    }
-    
-    .clear-btn {
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #6b7280;
-        cursor: pointer;
-        padding: 0.25rem;
-    }
-    
-    .filter-select {
-        padding: 0.625rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        background-color: white;
-        min-width: 120px;
-    }
-    
-    .filter-select:focus {
-        outline: none;
-        border-color: #3b82f6;
-    }
-    
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-        text-decoration: none;
-        cursor: pointer;
-        transition: background-color 0.15s ease;
-    }
-    
-    .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2563eb;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #4b5563;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 0;
-        color: #6b7280;
-    }
-    
-    .empty-state p {
-        margin-bottom: 1rem;
-    }
-    
-    .customer-table {
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    th, td {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    th {
-        background-color: #f9fafb;
-        font-weight: 600;
-        color: #374151;
-        font-size: 0.875rem;
-    }
-    
-    .clickable-row {
-        cursor: pointer;
-        transition: background-color 0.15s ease;
-    }
-    
-    .clickable-row:hover {
-        background-color: #f3f4f6;
-    }
-    
-    .clickable-row:last-child td {
-        border-bottom: none;
-    }
-    
-    .code {
-        font-family: monospace;
-        color: #6b7280;
-        font-size: 0.875rem;
-    }
-    
-    .name {
-        font-weight: 500;
-        color: #1f2937;
-    }
-    
-    .level-badge, .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .level-vip {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    
-    .level-normal {
-        background-color: #dbeafe;
-        color: #1e40af;
-    }
-    
-    .level-temp {
-        background-color: #f3f4f6;
-        color: #4b5563;
-    }
-    
-    .status-active {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-    
-    .status-inactive {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-    
-    .summary {
-        margin-top: 1rem;
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-    
-    @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-        
-        .filter-bar {
-            flex-direction: column;
-        }
-        
-        .search-box {
-            width: 100%;
-        }
-        
-        th, td {
-            padding: 0.5rem;
-            font-size: 0.875rem;
-        }
-    }
-</style>

@@ -688,7 +688,9 @@ export interface SalesOrderItem {
     item_name: string;
     quantity: number;
     quantity_shipped: number;
-    quantity_pending?: number;
+    quantity_prepared?: number;  // 已预备（已添加到confirmed/packed发货单但尚未发货）
+    quantity_pending?: number;   // 原待发（= 订购 - 已发）
+    quantity_pending_real?: number;  // 真实待发（= 订购 - 已发 - 已预备）
     unit_price: string;
     line_total: string;
     quotation: number | null;
@@ -715,6 +717,15 @@ export interface SalesOrderItemCreateRequest {
     quotation?: number | null;
     expected_delivery?: string | null;
     notes?: string;
+}
+
+/** 关联发货单简要信息 */
+export interface ShipmentBrief {
+    id: number;
+    shipment_no: string;
+    status: string;
+    total_packages: number;
+    created_at: string;
 }
 
 /** 销售订单 */
@@ -749,6 +760,7 @@ export interface SalesOrder {
     notes: string;
     internal_notes: string;
     items: SalesOrderItem[];
+    shipments?: ShipmentBrief[];
     item_count?: number;
     total_quantity?: number;
     total_shipped?: number;
