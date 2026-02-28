@@ -2,12 +2,20 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import type { BaseItem } from '$lib';
+    import { DataTable, FormInput } from '$lib/components/ui';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let { data } = $props<{ items: BaseItem[]; searchQuery: string }>();
     
     // 安全获取 items 数组
     let items = $derived(data?.items ?? []);
     let searchQuery = $state(data?.searchQuery ?? '');
+    
+    // 表格列定义
+    const columns = [
+        { key: 'SKU', title: 'SKU', width: '120px' },
+        { key: 'name', title: '品项名称' },
+    ];
     
     // 实时搜索（URL 参数方式，刷新保留状态）
     function handleSearch() {
@@ -24,25 +32,31 @@
         searchQuery = '';
         goto('?', { keepFocus: true });
     }
+    
+    function viewDetail(item: BaseItem) {
+        goto(`/item/${item.id}`);
+    }
 </script>
 
 <svelte:head>
     <title>所有品项</title>
 </svelte:head>
 
-<div class="content-container">
-    <div class="section-header">
-        <h3>所有品项</h3>
-        <a href="/item/add" class="edit-link">添加品项</a>
-    </div>
+<PageContainer>
+    <PageHeader title="所有品项">
+        {#snippet actions()}
+            <a href="/item/add" class="btn btn-primary">添加品项</a>
+        {/snippet}
+    </PageHeader>
     
     <!-- 搜索框 -->
     <div class="search-box">
-        <input
-            type="text"
+        <FormInput
+            label=""
+            name="search"
+            value={searchQuery}
             placeholder="搜索 SKU 或品项名称..."
-            bind:value={searchQuery}
-            oninput={handleSearch}
+            onchange={(v) => { searchQuery = v; handleSearch(); }}
         />
         {#if searchQuery}
             <button class="clear-btn" onclick={clearSearch}>
@@ -59,69 +73,35 @@
         {/if}
     </div>
 
-    <ul class="item-list">
-        {#each items as { id, SKU, name }}
-            <li>
-                <a href={`/item/${id}`} class="item-link">
-                    <span class="sku">{SKU}</span>
-                    <span class="name">{name}</span>
-                </a>
-            </li>
-        {:else}
-            <li class="empty-item">
-                {data?.searchQuery ? '没有找到匹配的品项' : '暂无品项'}
-            </li>
-        {/each}
-    </ul>
-</div>
+    <DataTable
+        data={items}
+        {columns}
+        clickable={true}
+        onRowClick={viewDetail}
+        emptyText={data?.searchQuery ? '没有找到匹配的品项' : '暂无品项'}
+    >
+        {#snippet cellRender({ column, value })}
+            {#if column.key === 'SKU'}
+                <span class="sku-badge">{value}</span>
+            {:else}
+                {value}
+            {/if}
+        {/snippet}
+    </DataTable>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 2rem;
-    }
-
-    .section-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .section-header h3 {
-        margin: 0;
-        color: #333;
-    }
-    
-    .edit-link {
-        color: #3b82f6;
-        text-decoration: none;
-        font-size: 0.9rem;
-    }
-    
-    .edit-link:hover {
-        text-decoration: underline;
-    }
-    
     .search-box {
         position: relative;
-        margin-bottom: 0.75rem;
+        margin-bottom: 1rem;
     }
     
-    .search-box input {
-        width: 100%;
-        padding: 0.625rem 2.5rem 0.625rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        box-sizing: border-box;
+    .search-box :global(.form-field) {
+        margin: 0;
     }
     
-    .search-box input:focus {
-        outline: none;
-        border-color: #3b82f6;
+    .search-box :global(label) {
+        display: none;
     }
     
     .clear-btn {
@@ -151,73 +131,13 @@
     .search-term {
         color: #3b82f6;
     }
-
-    .item-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.5rem;
-        overflow: hidden;
-    }
     
-    .item-list li {
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .item-list li:last-child {
-        border-bottom: none;
-    }
-    
-    .item-link {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.875rem 1rem;
-        color: #1f2937;
-        text-decoration: none;
-        transition: background-color 0.15s ease;
-    }
-    
-    .item-link:hover {
-        background-color: #f3f4f6;
-    }
-    
-    .sku {
+    .sku-badge {
+        font-family: monospace;
         font-weight: 600;
         color: #3b82f6;
-        min-width: 100px;
-    }
-    
-    .name {
-        color: #4b5563;
-    }
-    
-    .empty-item {
-        padding: 2rem;
-        text-align: center;
-        color: #6b7280;
-    }
-
-    @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-
-        .section-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-        
-        .item-link {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.25rem;
-        }
-        
-        .sku {
-            min-width: auto;
-        }
+        background-color: #eff6ff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
     }
 </style>

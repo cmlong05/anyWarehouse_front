@@ -1,8 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib/schemas';
-    import Loading from '$lib/components/Loading.svelte';
+    import { DataTable, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import Alert from '$lib/components/Alert.svelte';
     
     let customers = $state<Customer[]>([]);
@@ -25,6 +26,16 @@
         { value: 'INACTIVE', label: '停用' }
     ];
     
+    // 表格列定义
+    const columns = [
+        { key: 'code', title: '客户编号', width: '120px' },
+        { key: 'name', title: '客户名称' },
+        { key: 'contact_name', title: '联系人' },
+        { key: 'phone', title: '电话' },
+        { key: 'level', title: '等级', width: '100px' },
+        { key: 'status', title: '状态', width: '100px' },
+    ];
+    
     async function loadCustomers() {
         loading = true;
         error = '';
@@ -36,7 +47,7 @@
             
             const result = await customerAPI.list(params);
             if (result && typeof result === 'object' && 'results' in result) {
-                customers = (result as any).results;
+                customers = (result as { results: Customer[] }).results;
             } else if (Array.isArray(result)) {
                 customers = result;
             } else {
@@ -49,15 +60,18 @@
         }
     }
     
-    onMount(() => {
-        loadCustomers();
-    });
+    function viewDetail(customer: Customer) {
+        goto(`/customer/${customer.id}`);
+    }
     
-    function handleSearch() {
+    function resetFilters() {
+        searchQuery = '';
+        levelFilter = '';
+        statusFilter = '';
         loadCustomers();
     }
     
-    function getLevelBadgeClass(level: string) {
+    function getLevelBadgeClass(level: string): string {
         switch (level) {
             case 'VIP': return 'badge-warning';
             case 'NORMAL': return 'badge-info';
@@ -65,110 +79,233 @@
             default: return 'badge-ghost';
         }
     }
+    
+    onMount(() => {
+        loadCustomers();
+    });
 </script>
 
 <svelte:head>
     <title>客户管理 - AnyWarehouse</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-6">
+<div class="page-container">
     <!-- 页面标题 -->
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold">客户管理</h1>
-        <a href="/customer/add" class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="page-header">
+        <h1>客户管理</h1>
+        <a href="/customer/add" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             <span>添加客户</span>
         </a>
     </div>
     
-    <!-- 搜索和过滤 -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="flex gap-4 flex-wrap">
-            <div class="flex-1 min-w-[200px]">
-                <input
-                    type="text"
-                    placeholder="搜索客户编号、名称、联系人..."
-                    class="input input-bordered w-full"
-                    bind:value={searchQuery}
-                    oninput={handleSearch}
-                />
-            </div>
-            <select bind:value={levelFilter} onchange={handleSearch} class="select select-bordered min-w-[140px]">
-                {#each levelOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-            <select bind:value={statusFilter} onchange={handleSearch} class="select select-bordered min-w-[120px]">
-                {#each statusOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-        </div>
-    </div>
+    {#if error}
+        <Alert {error} onDismiss={() => error = ''} />
+    {/if}
     
-    {#if loading}
-        <Loading />
-    {:else if error}
-        <Alert error={error} onDismiss={() => error = ''} />
-    {:else if customers.length === 0}
-        <div class="bg-white rounded-lg shadow p-8 text-center">
-            <p class="text-gray-400">{searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}</p>
+    <!-- 筛选区域 -->
+    <FilterPanel onReset={resetFilters} showActions={false}>
+        <div class="filter-row">
+            <FormInput
+                label="搜索"
+                name="search"
+                value={searchQuery}
+                placeholder="搜索客户编号、名称、联系人..."
+                onchange={(v) => { searchQuery = v; loadCustomers(); }}
+            />
+            
+            <FormSelect
+                label="等级"
+                name="level"
+                options={levelOptions}
+                value={levelFilter}
+                onchange={(v) => { levelFilter = v; loadCustomers(); }}
+            />
+            
+            <FormSelect
+                label="状态"
+                name="status"
+                options={statusOptions}
+                value={statusFilter}
+                onchange={(v) => { statusFilter = v; loadCustomers(); }}
+            />
+        </div>
+    </FilterPanel>
+    
+    {#if !loading && customers.length === 0}
+        <div class="empty-state">
+            <p>{searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}</p>
             {#if !searchQuery && !levelFilter && !statusFilter}
-                <a href="/customer/add" class="btn btn-primary mt-4">添加第一个客户</a>
+                <a href="/customer/add" class="btn btn-primary">添加第一个客户</a>
             {:else}
-                <button class="btn btn-ghost btn-sm mt-4" onclick={() => { 
-                    searchQuery = ''; 
-                    levelFilter = ''; 
-                    statusFilter = ''; 
-                    loadCustomers(); 
-                }}>
+                <button class="btn btn-secondary" onclick={resetFilters}>
                     清除筛选
                 </button>
             {/if}
         </div>
     {:else}
-        <!-- 客户列表 -->
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="table table-zebra w-full">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-4 py-3 text-left">客户编号</th>
-                        <th class="px-4 py-3 text-left">客户名称</th>
-                        <th class="px-4 py-3 text-left">联系人</th>
-                        <th class="px-4 py-3 text-left">电话</th>
-                        <th class="px-4 py-3 text-left">等级</th>
-                        <th class="px-4 py-3 text-left">状态</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each customers as customer}
-                        <tr class="hover:bg-blue-50 cursor-pointer" onclick={() => window.location.href = `/customer/${customer.id}`}>
-                            <td class="px-4 py-3 font-mono text-sm text-gray-600">{customer.code}</td>
-                            <td class="px-4 py-3 font-medium">{customer.name}</td>
-                            <td class="px-4 py-3">{customer.contact_name || '-'}</td>
-                            <td class="px-4 py-3">{customer.phone || '-'}</td>
-                            <td class="px-4 py-3">
-                                <span class="badge {getLevelBadgeClass(customer.level)} badge-sm">
-                                    {levelOptions.find(o => o.value === customer.level)?.label || customer.level}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                {#if customer.status === 'ACTIVE'}
-                                    <span class="badge badge-success badge-sm">活跃</span>
-                                {:else}
-                                    <span class="badge badge-error badge-sm">停用</span>
-                                {/if}
-                            </td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        </div>
+        <DataTable
+            data={customers}
+            {columns}
+            {loading}
+            clickable={true}
+            onRowClick={viewDetail}
+            emptyText={searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}
+        >
+            {#snippet cellRender({ item, column, value }: { item: Customer; column: { key: string }; value: unknown })}
+                {#if column.key === 'code'}
+                    <span class="code-badge">{value}</span>
+                {:else if column.key === 'level'}
+                    <span class="badge {getLevelBadgeClass(value as string)}">
+                        {levelOptions.find(o => o.value === value)?.label || value}
+                    </span>
+                {:else if column.key === 'status'}
+                    {#if value === 'ACTIVE'}
+                        <span class="badge badge-success">活跃</span>
+                    {:else}
+                        <span class="badge badge-error">停用</span>
+                    {/if}
+                {:else if column.key === 'contact_name' || column.key === 'phone'}
+                    {value || '-'}
+                {:else}
+                    {value}
+                {/if}
+            {/snippet}
+        </DataTable>
         
-        <div class="mt-4 text-gray-500 text-sm">
+        <div class="summary">
             共 {customers.length} 个客户
         </div>
     {/if}
 </div>
+
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+    }
+    
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        width: 100%;
+    }
+    
+    .filter-row :global(.form-field) {
+        flex: 1;
+        min-width: 150px;
+    }
+    
+    .filter-row :global(.form-field:first-child) {
+        flex: 2;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .empty-state p {
+        color: #9ca3af;
+        margin-bottom: 1rem;
+    }
+    
+    .code-badge {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #6b7280;
+        background-color: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .badge-ghost { background: #f3f4f6; color: #6b7280; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-error { background: #fee2e2; color: #991b1b; }
+    
+    .summary {
+        margin-top: 1rem;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    
+    .btn-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2563eb;
+    }
+    
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #4b5563;
+    }
+    
+    @media (max-width: 768px) {
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .filter-row {
+            flex-direction: column;
+        }
+        
+        .filter-row :global(.form-field),
+        .filter-row :global(.form-field:first-child) {
+            width: 100%;
+            flex: none;
+        }
+    }
+</style>

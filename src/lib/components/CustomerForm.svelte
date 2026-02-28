@@ -1,5 +1,6 @@
 <script lang="ts">
     import { customerSchema, type CustomerFormData } from '$lib/schemas';
+    import { FormInput, FormSelect } from '$lib/components/ui';
     
     interface Props {
         onSubmit: (data: CustomerFormData) => void;
@@ -17,7 +18,6 @@
         loading = false 
     }: Props = $props();
     
-    // 表单数据
     let formData: CustomerFormData = $state({
         code: initialData.code || '',
         name: initialData.name || '',
@@ -30,7 +30,6 @@
         remark: initialData.remark || ''
     });
     
-    // 错误信息
     let errors: Record<string, string> = $state({});
     
     const levelOptions = [
@@ -65,143 +64,106 @@
         }
     }
     
-    function handleInput(field: keyof CustomerFormData) {
-        return (e: Event) => {
-            const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-            formData = { ...formData, [field]: target.value };
-            // 清除该字段的错误
-            if (errors[field]) {
-                errors = { ...errors, [field]: '' };
-            }
-        };
+    function clearError(field: string) {
+        if (errors[field]) {
+            errors = { ...errors, [field]: '' };
+        }
     }
 </script>
 
 <form onsubmit={handleSubmit} class="customer-form">
     <div class="form-row">
-        <div class="form-group required">
-            <label for="code">客户编号</label>
-            <input
-                type="text"
-                id="code"
-                value={formData.code}
-                oninput={handleInput('code')}
-                placeholder="如：C000001"
-                disabled={loading}
-            />
-            {#if errors.code}
-                <span class="error">{errors.code}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="客户编号"
+            name="code"
+            required
+            value={formData.code}
+            placeholder="如：C000001"
+            error={errors.code}
+            disabled={loading}
+            oninput={(v) => { formData.code = v; clearError('code'); }}
+        />
         
-        <div class="form-group required">
-            <label for="name">客户名称</label>
-            <input
-                type="text"
-                id="name"
-                value={formData.name}
-                oninput={handleInput('name')}
-                placeholder="输入客户名称"
-                disabled={loading}
-            />
-            {#if errors.name}
-                <span class="error">{errors.name}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="客户名称"
+            name="name"
+            required
+            value={formData.name}
+            placeholder="输入客户名称"
+            error={errors.name}
+            disabled={loading}
+            oninput={(v) => { formData.name = v; clearError('name'); }}
+        />
     </div>
     
     <div class="form-row">
-        <div class="form-group">
-            <label for="contact_name">联系人</label>
-            <input
-                type="text"
-                id="contact_name"
-                value={formData.contact_name}
-                oninput={handleInput('contact_name')}
-                placeholder="输入联系人姓名"
-                disabled={loading}
-            />
-        </div>
+        <FormInput
+            label="联系人"
+            name="contact_name"
+            value={formData.contact_name || ''}
+            placeholder="输入联系人姓名"
+            disabled={loading}
+            oninput={(v) => formData.contact_name = v}
+        />
         
-        <div class="form-group">
-            <label for="phone">联系电话</label>
-            <input
-                type="text"
-                id="phone"
-                value={formData.phone}
-                oninput={handleInput('phone')}
-                placeholder="输入联系电话"
-                disabled={loading}
-            />
-        </div>
+        <FormInput
+            label="联系电话"
+            name="phone"
+            value={formData.phone || ''}
+            placeholder="输入联系电话"
+            disabled={loading}
+            oninput={(v) => formData.phone = v}
+        />
     </div>
     
     <div class="form-row">
-        <div class="form-group">
-            <label for="email">电子邮箱</label>
-            <input
-                type="email"
-                id="email"
-                value={formData.email}
-                oninput={handleInput('email')}
-                placeholder="输入邮箱地址"
-                disabled={loading}
-            />
-            {#if errors.email}
-                <span class="error">{errors.email}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="电子邮箱"
+            name="email"
+            type="email"
+            value={formData.email || ''}
+            placeholder="输入邮箱地址"
+            error={errors.email}
+            disabled={loading}
+            oninput={(v) => { formData.email = v; clearError('email'); }}
+        />
         
-        <div class="form-group">
-            <label for="address">主地址</label>
-            <input
-                type="text"
-                id="address"
-                value={formData.address}
-                oninput={handleInput('address')}
-                placeholder="输入主地址"
-                disabled={loading}
-            />
-        </div>
+        <FormInput
+            label="主地址"
+            name="address"
+            value={formData.address || ''}
+            placeholder="输入主地址"
+            disabled={loading}
+            oninput={(v) => formData.address = v}
+        />
     </div>
     
     <div class="form-row">
-        <div class="form-group">
-            <label for="level">客户等级</label>
-            <select
-                id="level"
-                value={formData.level}
-                onchange={handleInput('level')}
-                disabled={loading}
-            >
-                {#each levelOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-        </div>
+        <FormSelect
+            label="客户等级"
+            name="level"
+            options={levelOptions}
+            value={formData.level}
+            disabled={loading}
+            onchange={(v) => formData.level = v as 'VIP' | 'NORMAL' | 'TEMP'}
+        />
         
-        <div class="form-group">
-            <label for="status">状态</label>
-            <select
-                id="status"
-                value={formData.status}
-                onchange={handleInput('status')}
-                disabled={loading}
-            >
-                {#each statusOptions as option}
-                    <option value={option.value}>{option.label}</option>
-                {/each}
-            </select>
-        </div>
+        <FormSelect
+            label="状态"
+            name="status"
+            options={statusOptions}
+            value={formData.status}
+            disabled={loading}
+            onchange={(v) => formData.status = v as 'ACTIVE' | 'INACTIVE'}
+        />
     </div>
     
-    <div class="form-group">
+    <div class="form-field">
         <label for="remark">备注</label>
         <textarea
             id="remark"
             rows="3"
-            value={formData.remark}
-            oninput={handleInput('remark')}
+            bind:value={formData.remark}
             placeholder="输入备注信息（可选）"
             disabled={loading}
         ></textarea>
@@ -239,45 +201,40 @@
         }
     }
     
-    .form-group {
+    .form-row :global(.form-field) {
+        margin: 0;
+    }
+    
+    .form-field {
         display: flex;
         flex-direction: column;
         gap: 0.375rem;
     }
     
-    .form-group.required label::after {
-        content: ' *';
-        color: #dc2626;
-    }
-    
-    label {
+    .form-field label {
         font-size: 0.875rem;
         font-weight: 500;
         color: #374151;
     }
     
-    input, select, textarea {
+    textarea {
         padding: 0.625rem 0.75rem;
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
         font-size: 0.95rem;
-        background-color: white;
+        resize: vertical;
+        min-height: 80px;
     }
     
-    input:focus, select:focus, textarea:focus {
+    textarea:focus {
         outline: none;
         border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
     
-    input:disabled, select:disabled, textarea:disabled {
+    textarea:disabled {
         background-color: #f3f4f6;
         cursor: not-allowed;
-    }
-    
-    textarea {
-        resize: vertical;
-        min-height: 80px;
     }
     
     .error {

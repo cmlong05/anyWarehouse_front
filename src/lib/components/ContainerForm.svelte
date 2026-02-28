@@ -3,6 +3,7 @@
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';
     import { goto } from '$app/navigation';
+    import { FormInput } from '$lib/components/ui';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -41,20 +42,18 @@
         onDelete
     }: Props = $props();
 
-    // 转换为 Svelecte 需要的格式 - 使用 fastCode 作为 value
+    // 转换为 Svelecte 需要的格式
     const selectItems = containers.map((item: ContainerBriefID) => ({
         value: item.fastCode,
         label: item.fastCode
     }));
 
-    // 从 ID 转换为 fastCode (用于初始化表单)
     const getParentFastCode = (parentId: number | null | undefined): string | null => {
         if (!parentId) return null;
         const parentContainer = containers.find((c: ContainerBriefID) => c.id === parentId);
         return parentContainer ? parentContainer.fastCode : null;
     };
 
-    // 表单数据
     let formData = $state({
         fastCode: initialData.fastCode || '',
         barcode: initialData.barcode || '',
@@ -67,14 +66,12 @@
         parent: getParentFastCode(initialData.parent)
     });
 
-    // 从 fastCode 转换为 ID (用于提交到后端)
     const getParentId = (parentFastCode: string | null): number | null => {
         if (!parentFastCode) return null;
         const parentContainer = containers.find((c: ContainerBriefID) => c.fastCode === parentFastCode);
         return parentContainer ? parentContainer.id : null;
     };
 
-    // 提交表单
     async function handleSubmit(event: Event) {
         event.preventDefault();
         
@@ -87,34 +84,27 @@
             zz_weight: Number(formData.zz_weight),
             a_volume: Number(formData.a_volume),
             total_weight: Number(formData.total_weight),
-            parent: getParentId(formData.parent)  // 将 fastCode 转换为 id
+            parent: getParentId(formData.parent)
         };
 
         try {
             let response;
             if (mode === 'add') {
-                // 添加新容器
                 response = await fetch(`${config.API_BASE_URL}/warehouse/container/`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(submitData),
                 });
             } else {
-                // 更新现有容器
                 response = await fetch(`${config.API_BASE_URL}/warehouse/container/${initialData?.fastCode}/`, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(submitData),
                 });
             }
 
             if (response.ok) {
                 const result = await response.json();
-                // 成功后跳转到容器页面
                 await goto(`/container/${result.fastCode || submitData.fastCode}`);
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -126,7 +116,6 @@
         }
     }
 
-    // 取消操作
     function handleCancel() {
         if (onCancel) {
             onCancel();
@@ -135,15 +124,12 @@
         }
     }
 
-    // 删除操作：在 iOS Safari 上，必须在用户手势的同步回调内调用 confirm
-    // 避免在 async 函数中（或 confirm 之前有任何 await/微任务）调用导致弹窗被系统拦截
     function handleDelete() {
         if (!initialData.id || !onDelete) return;
         
         const confirmed = confirm('确定要删除这个容器吗？这个操作将同时删除所有子容器和存储记录，且不可撤销。');
         if (!confirmed) return;
 
-        // 将异步删除逻辑放到 confirm 之后执行，保持 confirm 在同步用户手势内触发
         Promise.resolve(onDelete(initialData.id)).catch((error) => {
             alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
         });
@@ -156,19 +142,18 @@
             容器ID: {initialData.id}
         </div>
     {/if}
+    
     {#if containers.length > 0}
-        <label>
-            父容器
+        <div class="form-field">
+            <label>父容器</label>
             {#if mode === 'add' && formData.parent}
-                <!-- 添加模式下如果有默认父容器，显示为只读 -->
                 <input 
                     type="text" 
                     value={formData.parent}
                     disabled
-                    style="background-color: #f8f9fa; color: #6c757d;"
+                    class="readonly-input"
                 />
             {:else}
-                <!-- 编辑模式或无默认父容器时，显示选择器 -->
                 <Svelecte
                     options={selectItems}
                     bind:value={formData.parent}
@@ -177,78 +162,76 @@
                     clearable
                 />
             {/if}
-        </label>
+        </div>
     {/if}
-    <label>
-        快速代码
-        <input 
-            type="text" 
-            bind:value={formData.fastCode} 
-            required 
-            placeholder="例如: A1-01"
-        />
-    </label>
+    
+    <FormInput
+        label="快速代码"
+        name="fastCode"
+        value={formData.fastCode}
+        placeholder="例如: A1-01"
+        required
+        oninput={(v) => formData.fastCode = v}
+    />
 
-    <label>
-        条形码
-        <input 
-            type="text" 
-            bind:value={formData.barcode}
-            placeholder="扫描或输入条形码"
-        />
-    </label>
+    <FormInput
+        label="条形码"
+        name="barcode"
+        value={formData.barcode}
+        placeholder="扫描或输入条形码"
+        oninput={(v) => formData.barcode = v}
+    />
 
-    <label>
-        标记/备注
-        <input 
-            type="text" 
-            bind:value={formData.mark}
-            placeholder="容器描述或标记"
-        />
-    </label>
+    <FormInput
+        label="标记/备注"
+        name="mark"
+        value={formData.mark}
+        placeholder="容器描述或标记"
+        oninput={(v) => formData.mark = v}
+    />
 
-    <label>
-        总容量
-        <input 
-            type="number" 
-            bind:value={formData.volume} 
-            required 
-            min="1" 
-            placeholder="容器总容量"
-        />
-    </label>
+    <FormInput
+        label="总容量"
+        name="volume"
+        type="number"
+        value={formData.volume}
+        required
+        min={1}
+        placeholder="容器总容量"
+        oninput={(v) => formData.volume = Number(v)}
+    />
 
-    <label>
-        自占体积
-        <input 
-            type="number" 
-            bind:value={formData.zz_volume}
-            min="0"
-            step="0.01"
-            placeholder="容器自身占用的体积"
-        />
-    </label>
+    <FormInput
+        label="自占体积"
+        name="zz_volume"
+        type="number"
+        value={formData.zz_volume}
+        min={0}
+        step={0.01}
+        placeholder="容器自身占用的体积"
+        oninput={(v) => formData.zz_volume = Number(v)}
+    />
 
-    <label>
-        箱体自重
-        <input 
-            type="number" 
-            bind:value={formData.zz_weight}
-            min="0"
-            step="0.01"
-            placeholder="容器自身重量"
-        />
-    </label>
+    <FormInput
+        label="箱体自重"
+        name="zz_weight"
+        type="number"
+        value={formData.zz_weight}
+        min={0}
+        step={0.01}
+        placeholder="容器自身重量"
+        oninput={(v) => formData.zz_weight = Number(v)}
+    />
 
     <div class="form-actions">
-        <button type="submit">
+        <button type="submit" class="btn btn-primary">
             {mode === 'add' ? '添加容器' : '保存修改'}
         </button>
-        <button type="button" onclick={handleCancel}>
+        <button type="button" class="btn btn-secondary" onclick={handleCancel}>
             取消
         </button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="danger" onclick={handleDelete}>
+            <button type="button" class="btn btn-danger" onclick={handleDelete}>
                 删除容器
             </button>
         {/if}
@@ -261,19 +244,24 @@
         margin: 0 auto;
     }
 
-    label {
-        display: block;
+    form :global(.form-field) {
         margin-bottom: 1rem;
-        font-weight: bold;
     }
 
-    input {
+    .form-field label {
         display: block;
+        margin-bottom: 0.25rem;
+        font-weight: bold;
+        color: #374151;
+    }
+
+    .readonly-input {
         width: 100%;
         padding: 0.5rem;
-        margin-top: 0.25rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        background-color: #f3f4f6;
+        color: #6b7280;
         box-sizing: border-box;
     }
 
@@ -281,40 +269,54 @@
         display: flex;
         gap: 1rem;
         margin-top: 2rem;
+        flex-wrap: wrap;
     }
 
-    button {
+    .btn {
         padding: 0.75rem 1.5rem;
         border: none;
-        border-radius: 4px;
+        border-radius: 0.375rem;
         cursor: pointer;
         font-size: 1rem;
+        font-weight: 500;
+        transition: opacity 0.15s ease;
     }
 
-    button[type="submit"] {
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    .btn-primary {
         background-color: #007bff;
         color: white;
     }
 
-    button[type="button"] {
+    .btn-secondary {
         background-color: #6c757d;
         color: white;
     }
 
-    button.danger {
-        background-color: #dc3545 !important;
-    }
-
-    button:hover {
-        opacity: 0.9;
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
     }
 
     .container-id {
         background-color: #f8f9fa;
         padding: 0.5rem;
-        border-radius: 4px;
+        border-radius: 0.375rem;
         margin-bottom: 1rem;
         font-weight: bold;
         color: #6c757d;
+    }
+
+    @media (max-width: 768px) {
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
     }
 </style>

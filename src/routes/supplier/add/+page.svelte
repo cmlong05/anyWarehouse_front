@@ -5,6 +5,7 @@
     import SupplierForm from '$lib/components/SupplierForm.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let loading = $state(false);
     let error = $state('');
@@ -37,13 +38,10 @@
     <title>添加供应商</title>
 </svelte:head>
 
-<div class="content-container">
+<PageContainer maxWidth="md">
     <Breadcrumb items={breadcrumbs} />
     
-    <div class="page-header">
-        <h1>添加供应商</h1>
-        <p class="subtitle">填写供应商基本信息</p>
-    </div>
+    <PageHeader title="添加供应商" subtitle="填写供应商基本信息" />
     
     {#if error}
         <Alert error={error} onDismiss={() => error = ''} />
@@ -57,31 +55,9 @@
             {loading}
         />
     </div>
-</div>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .page-header {
-        margin-bottom: 2rem;
-    }
-    
-    .page-header h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.75rem;
-        color: #1f2937;
-    }
-    
-    .subtitle {
-        margin: 0;
-        color: #6b7280;
-        font-size: 1rem;
-    }
-    
     .form-container {
         background: white;
         padding: 2rem;
@@ -90,10 +66,6 @@
     }
     
     @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
         .form-container {
             padding: 1.5rem 1rem;
         }

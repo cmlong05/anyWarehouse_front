@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { componentAPI, itemBOMAPI } from '$lib/api';
-    import type { ComponentDetail, BOMTreeNode, TotalComponentItem, WhereUsedItem, BaseItem } from '$lib';
-    import { config } from '$lib/config';
-    import Svelecte from 'svelecte';
+    import { useBOMManager, type ComponentFormData } from '$lib/composables/useBOMManager.svelte';
+    import { BOMTabs, ComponentList, BOMTreeView, TotalComponents, WhereUsed, AddComponentForm } from '$lib/components/bom';
+    import type { BaseItem } from '$lib';
 
     interface Props {
         itemId: number;
@@ -12,581 +11,110 @@
 
     let { itemId, itemSKU, itemName }: Props = $props();
 
-    // 状态管理
-    let components = $state<ComponentDetail[]>([]);
-    let whereUsed = $state<WhereUsedItem[]>([]);
-    let bomTree = $state<BOMTreeNode[]>([]);
-    let totalComponents = $state<TotalComponentItem[]>([]);
-    let loading = $state(false);
-    let error = $state<string | null>(null);
+    // 使用BOM管理逻辑
+    const bom = useBOMManager(itemId, itemSKU);
+
+    // 本地状态
     let activeTab = $state<'components' | 'tree' | 'total' | 'whereUsed'>('components');
-
-    // 排序后的组件列表（避免在模板中直接修改 state）
-    let sortedComponents = $derived([...components].sort((a, b) => a.order - b.order));
-
-    // 添加组件表单
     let showAddForm = $state(false);
-    let selectedChildItemId = $state<number | null>(null);
-    let newComponentQuantity = $state(1);
-    let newComponentOrder = $state(0);
-    let newComponentNote = $state('');
-    let addingComponent = $state(false);
 
-    // 编辑组件
-    let editingComponent = $state<ComponentDetail | null>(null);
-    let editQuantity = $state(1);
-    let editOrder = $state(0);
-    let editNote = $state('');
-    
-    // 构建物品搜索 URL
-    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/search?q=[query]`);
-    
-    // 处理 fetch 返回的数据 - 过滤掉当前物品自身
-    function handleItemFetch(json: { results?: (BaseItem & { id: number })[] }) {
-        const results = (json?.results || []).filter((item) => item.id !== itemId);
-        return results.map((item) => ({
-            value: item.id,
-            label: `${item.SKU} - ${item.name}`
-        }));
-    }
-
-    // 可组装计算
-    let maxProducibleResult = $state<{
-        max_producible: number;
-        limiting_factor: { item_id: number; sku: string; name: string; available: number; required: number } | null;
-    } | null>(null);
-    let calculatingMax = $state(false);
-
-    // 加载数据
-    async function loadData() {
-        loading = true;
-        error = null;
+    // 处理添加组件
+    async function handleAdd(childItemId: number, data: ComponentFormData) {
         try {
-            const [comps, whereUsedRes, treeRes, totalRes] = await Promise.all([
-                componentAPI.getByParent(itemId),
-                itemBOMAPI.getWhereUsed(itemId),
-                itemBOMAPI.getBOMTree(itemId, 10),
-                itemBOMAPI.getTotalComponents(itemId)
-            ]);
-            components = comps;
-            whereUsed = whereUsedRes.used_in;
-            bomTree = treeRes.bom_tree;
-            totalComponents = totalRes.total_components;
-        } catch (err) {
-            error = err instanceof Error ? err.message : '加载数据失败';
-            console.error('加载BOM数据失败:', err);
-        } finally {
-            loading = false;
-        }
-    }
-
-    // 添加组件
-    async function addComponent() {
-        if (!selectedChildItemId) return;
-        addingComponent = true;
-        try {
-            await componentAPI.create({
-                parent_item: itemId,
-                child_item: selectedChildItemId,
-                quantity: newComponentQuantity,
-                order: newComponentOrder,
-                note: newComponentNote
-            });
-            // 重置表单
-            selectedChildItemId = null;
-            newComponentQuantity = 1;
-            newComponentOrder = 0;
-            newComponentNote = '';
+            await bom.addComponent(childItemId, data);
             showAddForm = false;
-            // 重新加载数据
-            await loadData();
         } catch (err: any) {
-            const message = err?.message || '添加失败';
-            if (message.includes('circular')) {
-                alert('添加失败：不能创建循环依赖（子物品不能是父物品的父级）');
-            } else {
-                alert(`添加失败: ${message}`);
-            }
-        } finally {
-            addingComponent = false;
+            alert(err.message);
         }
     }
 
-    // 更新组件
-    async function updateComponent() {
-        if (!editingComponent) return;
+    // 处理更新组件
+    async function handleUpdate(id: number, data: ComponentFormData) {
         try {
-            await componentAPI.patch(editingComponent.id, {
-                quantity: editQuantity,
-                order: editOrder,
-                note: editNote
-            });
-            editingComponent = null;
-            await loadData();
-        } catch (err) {
-            alert('更新失败，请重试');
+            await bom.updateComponent(id, data);
+        } catch (err: any) {
+            alert(err.message);
         }
     }
 
-    // 删除组件
-    async function deleteComponent(componentId: number) {
+    // 处理删除组件
+    async function handleDelete(id: number) {
         if (!confirm('确定要删除这个组件关系吗？')) return;
         try {
-            await componentAPI.delete(componentId);
-            await loadData();
+            await bom.deleteComponent(id);
         } catch (err: any) {
-            console.error('删除组件失败:', err);
-            alert(`删除失败: ${err?.message || '请检查网络连接'}`);
+            alert(err.message);
         }
     }
 
-    // 开始编辑
-    function startEdit(component: ComponentDetail) {
-        editingComponent = component;
-        editQuantity = component.quantity;
-        editOrder = component.order;
-        editNote = component.note;
-    }
-
-    // 计算可组装数量（递归）
-    // 逻辑：
-    // 1. 先检查库存，库存能提供多少个
-    // 2. 库存不够时，看能否从子组件组装补充
-    // 3. 返回：总共能提供多少个父节点
-    function calculateMaxProducible() {
-        calculatingMax = true;
-        
-        setTimeout(() => {
-            try {
-                // 计算节点能支持多少个父节点
-                function calcNode(node: BOMTreeNode): {
-                    canSupport: number;
-                    limiter: { item_id: number; sku: string; name: string; available: number; required: number } | null;
-                } {
-                    const stock = node.total_storage;
-                    const needPerParent = node.quantity;
-                    
-                    // 叶子节点：只能用库存
-                    if (!node.children || node.children.length === 0) {
-                        const canSupport = Math.floor(stock / needPerParent);
-                        return {
-                            canSupport,
-                            limiter: canSupport > 0 ? null : {
-                                item_id: node.item.id,
-                                sku: node.item.SKU,
-                                name: node.item.name,
-                                available: stock,
-                                required: needPerParent
-                            }
-                        };
-                    }
-                    
-                    // 半成品：库存 + 子组件组装
-                    const fromStock = Math.floor(stock / needPerParent);
-                    
-                    // 递归计算子组件能组装出多少个当前节点
-                    // 先算能从子组件组装出多少个当前节点
-                    let minChildAssemblable = Infinity;
-                    let childLimiter: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
-                    
-                    for (const child of node.children) {
-                        const childResult = calcNode(child);
-                        // 子组件能组装出多少个当前节点
-                        const assemblable = Math.floor(childResult.canSupport / child.quantity);
-                        if (assemblable < minChildAssemblable) {
-                            minChildAssemblable = assemblable;
-                            childLimiter = childResult.limiter;
-                        }
-                    }
-                    
-                    // 总共能支持 = 库存支持 + 组装支持
-                    const fromAssembly = minChildAssemblable === Infinity ? 0 : minChildAssemblable;
-                    const totalCanSupport = fromStock + fromAssembly;
-                    
-                    // 确定限制因素：
-                    // 1. 如果子组件是限制因素（fromAssembly <= fromStock），使用子组件的限制因素
-                    // 2. 如果当前节点库存是限制因素（fromStock < fromAssembly 或没有子组件），使用当前节点
-                    let limiter: { item_id: number; sku: string; name: string; available: number; required: number } | null;
-                    
-                    if (childLimiter && fromAssembly <= fromStock) {
-                        // 子组件是瓶颈
-                        limiter = childLimiter;
-                    } else if (fromStock <= fromAssembly) {
-                        // 当前节点库存是瓶颈（或两者相等）
-                        limiter = {
-                            item_id: node.item.id,
-                            sku: node.item.SKU,
-                            name: node.item.name,
-                            available: stock,
-                            required: needPerParent
-                        };
-                    } else {
-                        limiter = null; // 无限制
-                    }
-                    
-                    return {
-                        canSupport: totalCanSupport,
-                        limiter
-                    };
-                }
-                
-                // 过滤掉当前物品本身（如果数据有问题，把自己设为组件）
-                const childNodes = bomTree.filter(node => node.item.SKU !== itemSKU);
-                
-                // 调试：打印每个根节点的计算结果
-                console.log('=== 可组装数量计算 ===');
-                console.log('当前物品:', itemSKU);
-                console.log('子组件数量:', childNodes.length);
-                for (const node of childNodes) {
-                    const result = calcNode(node);
-                    console.log(`${node.item.SKU}: 库存=${node.total_storage}, 需求=${node.quantity}, 可支持=${result.canSupport}, 限制因素=${JSON.stringify(result.limiter)}`);
-                }
-                
-                // 计算每个子组件能支持多少个成品
-                let minProducible = Infinity;
-                let finalLimiter: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
-                let minNodeInfo: { item_id: number; sku: string; name: string; available: number; required: number } | null = null;
-                
-                for (const node of childNodes) {
-                    const result = calcNode(node);
-                    if (result.canSupport < minProducible) {
-                        minProducible = result.canSupport;
-                        finalLimiter = result.limiter;
-                        // 记录当前最少节点的信息（备用瓶颈）
-                        minNodeInfo = {
-                            item_id: node.item.id,
-                            sku: node.item.SKU,
-                            name: node.item.name,
-                            available: node.total_storage,
-                            required: node.quantity
-                        };
-                    }
-                }
-                
-                // 如果没有明确的限制因素，使用可用数量最少的那个作为"相对瓶颈"
-                if (!finalLimiter && minNodeInfo) {
-                    finalLimiter = minNodeInfo;
-                }
-                
-                console.log('最终可组装:', minProducible);
-                console.log('限制因素:', finalLimiter ? `${finalLimiter.sku} (库存${finalLimiter.available}/需要${finalLimiter.required})` : '无');
-                
-                maxProducibleResult = {
-                    max_producible: minProducible === Infinity ? 0 : minProducible,
-                    limiting_factor: finalLimiter
-                };
-            } finally {
-                calculatingMax = false;
-            }
-        }, 0);
+    // 处理搜索结果过滤
+    function handleFilter(results: (BaseItem & { id: number })[]) {
+        return bom.filterSearchResults(results);
     }
 
     // 监听 itemId 变化，自动重新加载数据
     $effect(() => {
         if (itemId) {
-            loadData();
+            bom.loadData();
         }
     });
 </script>
 
-<!-- 递归 BOM 树节点组件 -->
-{#snippet TreeNode(node: BOMTreeNode, level: number)}
-    <div class="tree-level" style="margin-left: {level * 20}px">
-        <div class="tree-node">
-            <span class="node-name">{node.item.SKU} - {node.item.name}</span>
-            <span class="node-qty">× {node.quantity} <span class="stock">(库存: {node.total_storage})</span></span>
-        </div>
-        {#if node.children && node.children.length > 0}
-            <div class="tree-children">
-                {#each node.children as child}
-                    {@render TreeNode(child, level + 1)}
-                {/each}
-            </div>
-        {/if}
-    </div>
-{/snippet}
-
 <div class="component-manager">
     <div class="manager-header">
         <h3>BOM 物料清单管理</h3>
-        <button class="btn btn-primary btn-sm" onclick={() => showAddForm = !showAddForm}>
-            {showAddForm ? '取消' : '添加组件'}
-        </button>
+        <AddComponentForm
+            {itemId}
+            {itemSKU}
+            show={showAddForm}
+            loading={false}
+            onAdd={handleAdd}
+            onToggle={() => showAddForm = !showAddForm}
+            onFilter={handleFilter}
+        />
     </div>
 
-    {#if error}
-        <div class="error-message">{error}</div>
-    {/if}
-
-    {#if showAddForm}
-        <div class="add-form">
-            <h4>添加组件到 {itemSKU}</h4>
-            <div class="form-row">
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label for="child-item">搜索子物品:</label>
-                    <Svelecte
-                        inputId="child-item"
-                        bind:value={selectedChildItemId}
-                        valueAsObject={false}
-                        placeholder="输入SKU或名称搜索..."
-                        searchable={true}
-                        clearable={true}
-                        minQuery={1}
-                        fetch={itemSearchUrl}
-                        fetchCallback={handleItemFetch}
-                        valueField="value"
-                        labelField="label"
-                        closeAfterSelect={true}
-                        resetOnSelect={true}
-                    />
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="comp-quantity">数量:</label>
-                    <input
-                        type="number"
-                        id="comp-quantity"
-                        bind:value={newComponentQuantity}
-                        min="1"
-                        max="999999"
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="comp-order">排序:</label>
-                    <input
-                        type="number"
-                        id="comp-order"
-                        bind:value={newComponentOrder}
-                        min="0"
-                        max="9999"
-                    />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="comp-note">备注:</label>
-                <input
-                    type="text"
-                    id="comp-note"
-                    bind:value={newComponentNote}
-                    maxlength="500"
-                    placeholder="可选：添加备注信息"
-                />
-            </div>
-
-            <div class="form-actions">
-                <button
-                    class="btn btn-primary"
-                    onclick={addComponent}
-                    disabled={!selectedChildItemId || addingComponent}
-                >
-                    {addingComponent ? '添加中...' : '确认添加'}
-                </button>
-            </div>
-        </div>
+    {#if bom.error}
+        <div class="error-message">{bom.error}</div>
     {/if}
 
     <!-- 标签页 -->
-    <div class="tabs">
-        <button
-            class="tab-btn"
-            class:active={activeTab === 'components'}
-            onclick={() => activeTab = 'components'}
-        >
-            组件列表 ({components.length})
-        </button>
-        <button
-            class="tab-btn"
-            class:active={activeTab === 'tree'}
-            onclick={() => activeTab = 'tree'}
-        >
-            BOM树
-        </button>
-        <button
-            class="tab-btn"
-            class:active={activeTab === 'total'}
-            onclick={() => activeTab = 'total'}
-        >
-            物料汇总
-        </button>
-        <button
-            class="tab-btn"
-            class:active={activeTab === 'whereUsed'}
-            onclick={() => activeTab = 'whereUsed'}
-        >
-            被用于 ({whereUsed.length})
-        </button>
-    </div>
+    <BOMTabs
+        {activeTab}
+        componentsCount={bom.components.length}
+        whereUsedCount={bom.whereUsed.length}
+        onChange={(tab) => activeTab = tab}
+    />
 
     <!-- 标签页内容 -->
     <div class="tab-content">
-        {#if loading}
+        {#if bom.loading}
             <div class="loading">加载中...</div>
         {:else}
-            <!-- 组件列表 -->
             {#if activeTab === 'components'}
-                {#if components.length === 0}
-                    <div class="empty-state">暂无组件，请点击"添加组件"按钮添加</div>
-                {:else}
-                    <div class="components-list">
-                        {#each sortedComponents as component}
-                            {#if editingComponent?.id === component.id}
-                                <div class="component-item editing">
-                                    <div class="edit-form">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label for="edit-quantity-{component.id}">数量:</label>
-                                                <input
-                                                    type="number"
-                                                    id="edit-quantity-{component.id}"
-                                                    bind:value={editQuantity}
-                                                    min="1"
-                                                    max="999999"
-                                                />
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="edit-order-{component.id}">排序:</label>
-                                                <input
-                                                    type="number"
-                                                    id="edit-order-{component.id}"
-                                                    bind:value={editOrder}
-                                                    min="0"
-                                                    max="9999"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="edit-note-{component.id}">备注:</label>
-                                            <input type="text" id="edit-note-{component.id}" bind:value={editNote} maxlength="500" />
-                                        </div>
-                                        <div class="edit-actions">
-                                            <button class="btn btn-primary btn-sm" onclick={updateComponent}>保存</button>
-                                            <button class="btn btn-secondary btn-sm" onclick={() => editingComponent = null}>取消</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            {:else}
-                                <div class="component-item">
-                                    <div class="component-info">
-                                        <div class="component-header">
-                                            <a href="/item/{component.child_item}" class="component-name">
-                                                {component.child_item_detail.SKU} - {component.child_item_detail.name}
-                                            </a>
-                                            <span class="component-quantity">× {component.quantity}</span>
-                                        </div>
-                                        {#if component.note}
-                                            <div class="component-note">备注: {component.note}</div>
-                                        {/if}
-                                        <div class="component-meta">
-                                            <span>库存: {component.child_item_storage}</span>
-                                            {#if component.child_item_detail.weight}
-                                                <span>重量: {component.child_item_detail.weight}</span>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <div class="component-actions">
-                                        <button class="btn btn-secondary btn-sm" onclick={() => startEdit(component)}>编辑</button>
-                                        <button class="btn btn-danger btn-sm" onclick={() => deleteComponent(component.id)}>删除</button>
-                                    </div>
-                                </div>
-                            {/if}
-                        {/each}
-                    </div>
-                {/if}
+                <ComponentList
+                    components={bom.sortedComponents}
+                    onUpdate={handleUpdate}
+                    onDelete={handleDelete}
+                />
             {/if}
 
-            <!-- BOM树 -->
             {#if activeTab === 'tree'}
-                {#if bomTree.length === 0}
-                    <div class="empty-state">暂无BOM树结构</div>
-                {:else}
-                    <div class="bom-tree-calc">
-                        <div class="calc-section">
-                            <button 
-                                class="btn btn-primary btn-sm" 
-                                onclick={calculateMaxProducible}
-                                disabled={calculatingMax}
-                            >
-                                {calculatingMax ? '计算中...' : '计算可组装数量'}
-                            </button>
-                            
-                            {#if maxProducibleResult}
-                                <div class="calc-result-inline">
-                                    <span class="max-producible">
-                                        可组装: <span class="highlight">{maxProducibleResult.max_producible}</span> 个
-                                    </span>
-                                    {#if maxProducibleResult.limiting_factor}
-                                        <span class="limiting-factor">
-                                            (受限: <a href="/item/{maxProducibleResult.limiting_factor.item_id}" class="limiter-link">{maxProducibleResult.limiting_factor.sku}</a>
-                                            - 库存{maxProducibleResult.limiting_factor.available} / 需要{maxProducibleResult.limiting_factor.required})
-                                        </span>
-                                    {/if}
-                                </div>
-                            {/if}
-                        </div>
-                        
-                        <div class="bom-tree">
-                            {#each bomTree as node}
-                                {@render TreeNode(node, 0)}
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
+                <BOMTreeView
+                    nodes={bom.bomTree}
+                    {itemSKU}
+                    calculating={bom.calculatingMax}
+                    result={bom.maxProducibleResult}
+                    onCalculate={bom.calculateMaxProducible}
+                />
             {/if}
 
-            <!-- 物料汇总 -->
             {#if activeTab === 'total'}
-                {#if totalComponents.length === 0}
-                    <div class="empty-state">暂无物料汇总数据</div>
-                {:else}
-                    <div class="total-components">
-                        <p class="hint">生产 1 个 {itemSKU} 需要的所有底层物料:</p>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>名称</th>
-                                    <th>数量</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#each totalComponents as item}
-                                    <tr>
-                                        <td><a href="/item/{item.item_id}">{item.sku}</a></td>
-                                        <td>{item.name}</td>
-                                        <td>{item.quantity}</td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                        <div class="calc-hint">
-                            <p>💡 提示: 如需计算生产 N 个 {itemSKU} 的物料需求，将上表数量乘以 N 即可</p>
-                        </div>
-                    </div>
-                {/if}
+                <TotalComponents items={bom.totalComponents} parentSKU={itemSKU} />
             {/if}
 
-            <!-- 被用于 -->
             {#if activeTab === 'whereUsed'}
-                {#if whereUsed.length === 0}
-                    <div class="empty-state">该物品暂未被其他产品使用</div>
-                {:else}
-                    <div class="where-used-list">
-                        <p class="hint">该物品被以下产品用作组件:</p>
-                        {#each whereUsed as item}
-                            <div class="where-used-item">
-                                <a href="/item/{item.item_id}" class="item-link">
-                                    {item.sku} - {item.name}
-                                </a>
-                                <span class="storage-qty" class:zero={item.total_storage === 0} class:low={item.total_storage > 0 && item.total_storage < 10}>
-                                    {item.total_storage}
-                                </span>
-                            </div>
-                        {/each}
-                    </div>
-                {/if}
+                <WhereUsed items={bom.whereUsed} />
             {/if}
         {/if}
     </div>
@@ -619,432 +147,21 @@
         margin-bottom: 1rem;
     }
 
-    .add-form {
-        background: white;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        border: 1px solid #dee2e6;
-    }
-
-    .add-form h4 {
-        margin: 0 0 1rem 0;
-        color: #495057;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .form-group {
-        margin-bottom: 1rem;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #495057;
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-
-    .tabs {
-        display: flex;
-        gap: 0.5rem;
-        border-bottom: 2px solid #dee2e6;
-        margin-bottom: 1rem;
-    }
-
-    .tab-btn {
-        padding: 0.75rem 1rem;
-        border: none;
-        background: none;
-        cursor: pointer;
-        color: #6c757d;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: all 0.2s;
-    }
-
-    .tab-btn:hover {
-        color: #495057;
-    }
-
-    .tab-btn.active {
-        color: #1976d2;
-        border-bottom-color: #1976d2;
-        font-weight: 500;
-    }
-
     .tab-content {
         min-height: 200px;
     }
 
-    .loading,
-    .empty-state {
+    .loading {
         text-align: center;
         padding: 2rem;
         color: #6c757d;
     }
 
-    .components-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .component-item {
-        background: white;
-        padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #dee2e6;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-    }
-
-    .component-item.editing {
-        background: #fff3e0;
-    }
-
-    .component-info {
-        flex: 1;
-    }
-
-    .component-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.25rem;
-    }
-
-    .component-name {
-        font-weight: 500;
-        color: #1976d2;
-        text-decoration: none;
-    }
-
-    .component-name:hover {
-        text-decoration: underline;
-    }
-
-    .component-quantity {
-        background: #e3f2fd;
-        color: #1976d2;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-weight: bold;
-    }
-
-    .component-note {
-        color: #666;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    .component-meta {
-        color: #999;
-        font-size: 0.75rem;
-        margin-top: 0.25rem;
-        display: flex;
-        gap: 1rem;
-    }
-
-    .component-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .edit-form {
-        width: 100%;
-    }
-
-    .edit-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    .bom-tree-calc {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .calc-section {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #dee2e6;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .calc-result-inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-left: 1rem;
-    }
-
-    .max-producible {
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    .max-producible .highlight {
-        color: #4caf50;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-
-    .limiting-factor {
-        margin-top: 0.5rem;
-        font-size: 0.875rem;
-        color: #666;
-    }
-
-    .limiter-link {
-        color: #1976d2;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .limiter-link:hover {
-        text-decoration: underline;
-    }
-
-    .bom-tree {
-        background: white;
-        padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #dee2e6;
-    }
-
-    .tree-level {
-        margin-bottom: 0.25rem;
-    }
-
-    .tree-node {
-        padding: 0.5rem;
-        border-radius: 4px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .tree-node:hover {
-        background: #f5f5f5;
-    }
-
-    .tree-children {
-        margin-left: 1.5rem;
-        border-left: 2px solid #e0e0e0;
-        padding-left: 0.5rem;
-    }
-
-    .node-name {
-        font-weight: 500;
-    }
-
-    .node-qty {
-        background: #e3f2fd;
-        color: #1976d2;
-        padding: 0.125rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .node-qty .stock {
-        color: #666;
-        font-size: 0.75rem;
-        font-weight: normal;
-        margin-left: 0.25rem;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 6px;
-        overflow: hidden;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .data-table th {
-        background: #f8f9fa;
-        font-weight: 600;
-    }
-
-    .data-table a {
-        color: #1976d2;
-        text-decoration: none;
-    }
-
-    .data-table a:hover {
-        text-decoration: underline;
-    }
-
-    .hint {
-        color: #666;
-        margin-bottom: 1rem;
-    }
-
-    .calc-hint {
-        background: #e3f2fd;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-top: 1rem;
-    }
-
-    .calc-hint p {
-        margin: 0;
-        color: #1976d2;
-    }
-
-    .where-used-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .where-used-item {
-        background: white;
-        padding: 1rem;
-        border-radius: 6px;
-        border: 1px solid #dee2e6;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .item-link {
-        color: #1976d2;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .item-link:hover {
-        text-decoration: underline;
-    }
-
-    .storage-qty {
-        background: #e8f5e9;
-        color: #2e7d32;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .storage-qty.zero {
-        background: #ffebee;
-        color: #c62828;
-    }
-
-    .storage-qty.low {
-        background: #fff3e0;
-        color: #ef6c00;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-primary {
-        background: #1976d2;
-        color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background: #1565c0;
-    }
-
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-        background: #545b62;
-    }
-
-    .btn-danger {
-        background: #dc3545;
-        color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-        background: #c82333;
-    }
-
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-
     @media (max-width: 768px) {
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-
-        .component-item {
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .component-actions {
-            width: 100%;
-            justify-content: flex-end;
-        }
-
-        .tabs {
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .where-used-item {
+        .manager-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
     }
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
     import StorageForm from '$lib/components/StorageForm.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     import type { ContainerBriefID } from '$lib';
 
     let { data } = $props<{ 
@@ -15,14 +16,16 @@
     <title>添加存储 - 物品: {data.itemSKU}</title>
 </svelte:head>
 
-<div class="page-header">
-    <h2>添加存储</h2>
-    <p>为物品 <strong>{data.itemSKU}</strong> 创建新的存储记录</p>
-</div>
-
-<StorageForm 
-    mode="add"
-    itemId={data.item}
-    itemSKU={data.itemSKU}
-    containers={data.containers}
-/>
+<PageContainer maxWidth="md">
+    <PageHeader 
+        title="添加存储"
+        subtitle="为物品 {data.itemSKU} 创建新的存储记录"
+    />
+    
+    <StorageForm 
+        mode="add"
+        itemId={data.item}
+        itemSKU={data.itemSKU}
+        containers={data.containers}
+    />
+</PageContainer>

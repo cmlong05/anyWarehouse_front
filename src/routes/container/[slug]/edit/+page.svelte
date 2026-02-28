@@ -1,5 +1,6 @@
 <!-- 编辑容器 -->
 <script lang="ts">
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     import ContainerForm from '$lib/components/ContainerForm.svelte';
     import type { Container, ContainerBriefID } from '$lib';
     import { goto } from '$app/navigation';
@@ -40,24 +41,24 @@
     <title>编辑容器 - {data.container.fastCode}</title>
 </svelte:head>
 
-<div class="page-header">
-    <h2>编辑容器</h2>
-</div>
+<PageContainer>
+    <PageHeader title="编辑容器" />
 
-<ContainerForm 
-    mode="edit"
-    initialData={{
-        id: data.container.id,
-        fastCode: data.container.fastCode,
-        barcode: data.container.barcode,
-        mark: data.container.mark,
-        volume: data.container.volume,
-        zz_volume: data.container.zz_volume,
-        zz_weight: data.container.zz_weight,
-        a_volume: data.container.a_volume,
-        total_weight: data.container.total_weight,
-        parent: data.container.parent
-    }}
-    containers={data.containers}
-    onDelete={handleDelete}
-/>
+    <ContainerForm 
+        mode="edit"
+        initialData={{
+            id: data.container.id,
+            fastCode: data.container.fastCode,
+            barcode: data.container.barcode,
+            mark: data.container.mark,
+            volume: data.container.volume,
+            zz_volume: data.container.zz_volume,
+            zz_weight: data.container.zz_weight,
+            a_volume: data.container.a_volume,
+            total_weight: data.container.total_weight,
+            parent: data.container.parent
+        }}
+        containers={data.containers}
+        onDelete={handleDelete}
+    />
+</PageContainer>

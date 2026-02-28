@@ -8,6 +8,7 @@
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import PurchaseOrderForm from '$lib/components/PurchaseOrderForm.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     // 从URL获取供应商ID
     const supplierId = $derived(() => {
@@ -96,17 +97,18 @@
     <title>新建采购订单</title>
 </svelte:head>
 
-<div class="content-container">
+<PageContainer maxWidth="xl">
     <Breadcrumb items={breadcrumbs} />
     
-    <div class="page-header">
-        <h1>新建采购订单</h1>
-        {#if supplier}
-            <span class="supplier-badge">
-                供应商: {supplier.name}
-            </span>
-        {/if}
-    </div>
+    <PageHeader title="新建采购订单" mb="md">
+        {#snippet actions()}
+            {#if supplier}
+                <span class="supplier-badge">
+                    供应商: {supplier.name}
+                </span>
+            {/if}
+        {/snippet}
+    </PageHeader>
     
     {#if loading}
         <Loading text="加载中..." />
@@ -134,32 +136,9 @@
             />
         </div>
     {/if}
-</div>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    
-    .page-header h1 {
-        margin: 0;
-        font-size: 1.75rem;
-        color: #1f2937;
-    }
-    
     .supplier-badge {
         background: #e0f2fe;
         color: #0369a1;
@@ -182,39 +161,7 @@
         margin-top: 1rem;
     }
     
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #545b62;
-    }
-    
     @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
         .form-container {
             padding: 1rem;
         }

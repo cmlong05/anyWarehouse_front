@@ -870,3 +870,49 @@ export interface SalesOrderSummary {
     };
 }
 
+
+// ========== 通用类型定义（新） ==========
+
+export type {
+    BaseEntity,
+    PartnerBase,
+    PartnerBrief as PartnerBriefBase,
+    OrderBase,
+    OrderBrief as OrderBriefBase,
+    OrderItemBase,
+    OrderCreateRequestBase,
+    OrderItemCreateRequestBase,
+    OrderUpdateRequestBase,
+    OrderStatistics as OrderStatisticsBase,
+    OrderSummary as OrderSummaryBase,
+    QuotationBase,
+    Priority,
+    QueryParams,
+} from './types/common';
+
+export {
+    PRIORITY_OPTIONS,
+} from './types/common';
+
+// ========== Composables 导出（新） ==========
+
+export {
+    useOrderForm,
+    useOrderItemSelector,
+    type OrderFormItem,
+    type OrderFormData,
+    type OrderFormErrors,
+    type OrderItemErrors,
+} from './composables/useOrderForm.svelte';
+
+// ========== 工具函数导出（新） ==========
+
+export * from './utils/index';
+
+// ========== API 导出（新） ==========
+
+export * from './api/index';
+
+// ========== UI 组件导出（新） ==========
+
+export * from './components/ui/index';

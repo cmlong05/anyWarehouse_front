@@ -7,6 +7,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<CustomerQuotation | null>(null);
     let loading = $state(true);
@@ -58,7 +59,7 @@
     <title>{quotation ? `报价详情 - ${quotation.item_detail?.SKU || quotation.sku}` : '报价详情'}</title>
 </svelte:head>
 
-<div class="content-container">
+<PageContainer maxWidth="xl">
     <Breadcrumb items={breadcrumbs} />
     
     {#if loading}
@@ -74,18 +75,17 @@
             </button>
         </div>
     {:else if quotation}
-        <div class="page-header">
-            <div class="header-left">
-                <h1>报价详情</h1>
-                {#if quotation.is_preferred}
+        <PageHeader title="报价详情" mb="md">
+            {#snippet left()}
+                {#if quotation?.is_preferred}
                     <span class="preferred-badge">★ 首选报价</span>
                 {/if}
-            </div>
-            <div class="header-actions">
+            {/snippet}
+            {#snippet actions()}
                 <a href="/customer/quotation/{id}/edit" class="btn btn-primary btn-sm">编辑</a>
-                <button class="btn btn-danger btn-sm" onclick={deleteQuotation}>删除</button>
-            </div>
-        </div>
+                <button class="btn btn-error btn-sm" onclick={deleteQuotation}>删除</button>
+            {/snippet}
+        </PageHeader>
         
         <div class="info-grid">
             <div class="info-card">
@@ -179,36 +179,9 @@
             <p>更新时间: {new Date(quotation.updated_at).toLocaleString()}</p>
         </div>
     {/if}
-</div>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-    
-    .page-header h1 {
-        margin: 0;
-        font-size: 1.75rem;
-        color: #1f2937;
-    }
-    
     .preferred-badge {
         background-color: #dcfce7;
         color: #166534;
@@ -216,53 +189,6 @@
         padding: 0.375rem 0.75rem;
         border-radius: 9999px;
         font-weight: 500;
-    }
-    
-    .header-actions {
-        display: flex;
-        gap: 0.75rem;
-    }
-    
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2563eb;
-    }
-    
-    .btn-danger {
-        background-color: #ef4444;
-        color: white;
-    }
-    
-    .btn-danger:hover {
-        background-color: #dc2626;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
-    
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.875rem;
     }
     
     .info-grid {
@@ -370,24 +296,6 @@
     }
     
     @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-        
-        .header-actions {
-            width: 100%;
-        }
-        
-        .header-actions .btn {
-            flex: 1;
-        }
-        
         .info-grid {
             grid-template-columns: 1fr;
         }

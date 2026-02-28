@@ -3,6 +3,7 @@
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';
     import { goto } from '$app/navigation';
+    import { FormInput } from '$lib/components/ui';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -19,32 +20,22 @@
 
     let {
         mode,
-        initialData = {
-            name: '',
-            parent: null,
-            top_category: false
-        },
+        initialData = { name: '', parent: null, top_category: false },
         categories = [],
         onCancel,
         onDelete
     }: Props = $props();
 
-    // 转换为 Svelecte 需要的格式，在编辑模式下过滤掉当前分类
     const selectItems = categories
         .filter((item: Category) => mode === 'add' || item.id !== initialData.id)
-        .map((item: Category) => ({
-            value: item.id,
-            label: item.name
-        }));
+        .map((item: Category) => ({ value: item.id, label: item.name }));
 
-    // 表单数据
     let formData = $state({
         name: initialData?.name || '',
         parent: initialData?.parent || null,
         top_category: initialData?.top_category || false
     });
 
-    // 提交表单
     async function handleSubmit(event: Event) {
         event.preventDefault();
 
@@ -56,197 +47,101 @@
 
         try {
             let response;
+            const url = `${config.API_BASE_URL}/product/category/`;
             if (mode === 'add') {
-                // 添加新分类
-                response = await fetch(`${config.API_BASE_URL}/product/category/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(submitData),
-                });
+                response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
             } else {
-                // 更新现有分类
-                response = await fetch(`${config.API_BASE_URL}/product/category/${initialData?.id}/`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(submitData),
-                });
+                response = await fetch(`${url}${initialData?.id}/`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
             }
 
             if (response.ok) {
                 const result = await response.json();
-                // 成功后跳转到分类页面
                 await goto(`/category/${result.id || initialData?.id}`);
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${JSON.stringify(errorData)}`);
             }
         } catch (error) {
-            console.error('Submit error:', error);
             alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
         }
     }
 
-    // 取消操作
     function handleCancel() {
-        if (onCancel) {
-            onCancel();
-        } else {
-            window.history.back();
-        }
+        onCancel ? onCancel() : window.history.back();
     }
 
-    // 删除操作：在 iOS Safari 上，必须在用户手势的同步回调内调用 confirm
-    // 避免在 async 函数中（或 confirm 之前有任何 await/微任务）调用导致弹窗被系统拦截
     function handleDelete() {
         if (!initialData.id || !onDelete) return;
-        
-        const confirmed = confirm('确定要删除这个分类吗？这个操作将同时删除所有子分类，且不可撤销。');
-        if (!confirmed) return;
-
-        // 将异步删除逻辑放到 confirm 之后执行，保持 confirm 在同步用户手势内触发
-        Promise.resolve(onDelete(initialData.id)).catch((error) => {
-            alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
-        });
+        if (!confirm('确定要删除这个分类吗？')) return;
+        Promise.resolve(onDelete(initialData.id)).catch(e => alert('删除失败：' + (e instanceof Error ? e.message : '未知错误')));
     }
 </script>
 
 <form onsubmit={handleSubmit}>
     {#if mode === 'edit' && initialData.id}
-        <div class="category-id">
-            分类ID: {initialData.id}
-        </div>
+        <div class="category-id">分类ID: {initialData.id}</div>
     {/if}
     
-    <label>
-        分类名称
-        <input 
-            type="text" 
-            name="name" 
-            bind:value={formData.name} 
-            required 
-            placeholder="输入分类名称"
-        />
-    </label>
+    <FormInput
+        label="分类名称"
+        name="name"
+        value={formData.name}
+        placeholder="输入分类名称"
+        required
+        oninput={(v) => formData.name = v}
+    />
 
     {#if categories.length > 0}
-        <label>
-            父分类
-            {#if mode === 'add' && initialData?.parent}
-                <!-- 添加模式下如果有默认父分类，显示为只读 -->
-                {@const parentCategory = categories.find(c => c.id === initialData.parent)}
-                <input 
-                    type="text" 
-                    value={parentCategory ? parentCategory.name : '未知分类'} 
-                    disabled
-                    style="background-color: #f8f9fa; color: #6c757d;"
-                />
-                <input type="hidden" name="parent" value={formData.parent} />
-            {:else}
-                <!-- 编辑模式或无默认父分类时，显示选择器 -->
-                <Svelecte
-                    name="parent"
-                    options={selectItems}
-                    bind:value={formData.parent}
-                    searchProps={{ fields: ['label'] }}
-                    placeholder="选择父分类（可选，留空为顶级分类）"
-                    clearable
-                />
-            {/if}
-        </label>
+        <div class="form-field">
+            <label>父分类</label>
+            <Svelecte
+                options={selectItems}
+                bind:value={formData.parent}
+                placeholder="选择父分类（可选）"
+                clearable
+            />
+        </div>
     {/if}
 
-    <label>
-        <input 
-            type="checkbox" 
-            name="top_category" 
-            bind:checked={formData.top_category}
-        />
-        顶级分类
-    </label>
+    <div class="form-field checkbox-field">
+        <label class="checkbox-label">
+            <input type="checkbox" bind:checked={formData.top_category} />
+            <span>顶级分类</span>
+        </label>
+    </div>
 
     <div class="form-actions">
-        <button type="submit">
-            {mode === 'add' ? '添加分类' : '保存修改'}
-        </button>
-        <button type="button" onclick={handleCancel}>
-            取消
-        </button>
+        <button type="submit" class="btn btn-primary">{mode === 'add' ? '添加分类' : '保存修改'}</button>
+        <button type="button" class="btn btn-secondary" onclick={handleCancel}>取消</button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="danger" onclick={handleDelete}>
-                删除分类
-            </button>
+            <button type="button" class="btn btn-danger" onclick={handleDelete}>删除分类</button>
         {/if}
     </div>
 </form>
 
 <style>
-    form {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 1rem;
-        font-weight: bold;
-    }
-
-    input[type="text"] {
-        display: block;
-        width: 100%;
-        padding: 0.5rem;
-        margin-top: 0.25rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-    }
-
-    input[type="checkbox"] {
-        margin-right: 0.5rem;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-    }
-
-    button {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-    }
-
-    button[type="submit"] {
-        background-color: #007bff;
-        color: white;
-    }
-
-    button[type="button"] {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    button.danger {
-        background-color: #dc3545 !important;
-    }
-
-    button:hover {
-        opacity: 0.9;
-    }
-
-    .category-id {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        font-weight: bold;
-        color: #6c757d;
+    form { max-width: 500px; margin: 0 auto; }
+    form :global(.form-field) { margin-bottom: 1rem; }
+    
+    .form-field label { display: block; margin-bottom: 0.25rem; font-weight: bold; color: #374151; }
+    
+    .checkbox-field { display: flex; align-items: center; gap: 0.5rem; }
+    
+    .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal; }
+    .checkbox-label input { width: 1.2rem; height: 1.2rem; }
+    
+    .form-actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+    
+    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 1rem; font-weight: 500; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.9; }
+    .btn-primary { background-color: #007bff; color: white; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    
+    .category-id { background-color: #f8f9fa; padding: 0.5rem; border-radius: 0.375rem; margin-bottom: 1rem; font-weight: bold; color: #6c757d; }
+    
+    @media (max-width: 768px) {
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; }
     }
 </style>

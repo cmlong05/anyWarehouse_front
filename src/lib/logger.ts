@@ -17,14 +17,6 @@ class Logger {
     if (!this.shouldLog(level)) return;
 
     const timestamp = new Date().toISOString();
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      ...(context && { context }),
-      ...(config.NODE_ENV === 'development' && { env: 'dev' })
-    };
-
     const method = level === 'debug' ? 'log' : level;
     console[method](`[${timestamp}] ${level.toUpperCase()}: ${message}`, context || '');
   }

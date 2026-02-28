@@ -1,5 +1,4 @@
 import { config } from '$lib/config';
-import { error } from '@sveltejs/kit';
 import type { ContainerBriefID } from '$lib';
 
 export async function load({ fetch }) {

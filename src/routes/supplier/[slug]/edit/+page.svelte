@@ -8,6 +8,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let supplier = $state<Supplier | null>(null);
     let loading = $state(true);
@@ -62,7 +63,7 @@
     <title>{supplier ? `编辑 ${supplier.name}` : '编辑供应商'}</title>
 </svelte:head>
 
-<div class="content-container">
+<PageContainer maxWidth="md">
     <Breadcrumb items={breadcrumbs} />
     
     {#if loading}
@@ -78,10 +79,7 @@
             </button>
         </div>
     {:else if supplier}
-        <div class="page-header">
-            <h1>编辑供应商</h1>
-            <p class="subtitle">{supplier.name}</p>
-        </div>
+        <PageHeader title="编辑供应商" subtitle={supplier.name} mb="md" />
         
         {#if error}
             <Alert error={error} onDismiss={() => error = ''} />
@@ -97,31 +95,9 @@
             />
         </div>
     {/if}
-</div>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .page-header {
-        margin-bottom: 2rem;
-    }
-    
-    .page-header h1 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.75rem;
-        color: #1f2937;
-    }
-    
-    .subtitle {
-        margin: 0;
-        color: #6b7280;
-        font-size: 1rem;
-    }
-    
     .form-container {
         background: white;
         padding: 2rem;
@@ -135,42 +111,7 @@
         margin-top: 1rem;
     }
     
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2563eb;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #4b5563;
-    }
-    
     @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
         .form-container {
             padding: 1.5rem 1rem;
         }

@@ -7,6 +7,8 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import SalesOrderForm from '$lib/components/SalesOrderForm.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     
     // 从URL获取客户ID
     const customerId = $derived(() => {
@@ -111,22 +113,6 @@
                 sessionStorage.removeItem('sales_order_copy_data');
             }
         }
-        
-        // 检查是否有预加载的报价数据（从客户报价创建）
-        const preloadData = sessionStorage.getItem('sales_order_preload_items');
-        if (preloadData && !copyFromOrder) {
-            try {
-                const parsed = JSON.parse(preloadData);
-                const currentCustomerId = customerId();
-                if (parsed.customer_id === currentCustomerId && parsed.items?.length > 0) {
-                    preloadItems = parsed.items;
-                }
-                // 清除 sessionStorage 中的数据
-                sessionStorage.removeItem('sales_order_preload_items');
-            } catch {
-                // 解析失败，忽略
-            }
-        }
     });
 </script>
 
@@ -134,24 +120,28 @@
     <title>{copyFromOrder ? '复制销售订单' : '新建销售订单'}</title>
 </svelte:head>
 
-<div class="content-container">
+<PageContainer maxWidth="xl">
     <Breadcrumb items={breadcrumbs} />
     
-    <div class="page-header">
-        <div class="header-left">
-            <h1>{copyFromOrder ? '复制销售订单' : '新建销售订单'}</h1>
+    <PageHeader 
+        title={copyFromOrder ? '复制销售订单' : '新建销售订单'} 
+        mb="md"
+    >
+        {#snippet left()}
             {#if copyFromOrder}
                 <span class="copy-badge">
                     复制自: {copyFromOrder.order_number}
                 </span>
             {/if}
-        </div>
-        {#if customer}
-            <span class="customer-badge">
-                客户: {customer.name}
-            </span>
-        {/if}
-    </div>
+        {/snippet}
+        {#snippet actions()}
+            {#if customer}
+                <span class="customer-badge">
+                    客户: {customer.name}
+                </span>
+            {/if}
+        {/snippet}
+    </PageHeader>
     
     {#if loading}
         <Loading text="加载中..." />
@@ -180,39 +170,9 @@
             />
         </div>
     {/if}
-</div>
+</PageContainer>
 
 <style>
-    .content-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .page-header h1 {
-        margin: 0;
-        font-size: 1.75rem;
-        color: #1f2937;
-    }
-    
     .customer-badge {
         background: #e0f2fe;
         color: #0369a1;
@@ -243,28 +203,4 @@
         gap: 1rem;
         margin-top: 1rem;
     }
-    
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        text-decoration: none;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
 </style>
-
-<!-- 导入 SalesOrderForm 组件 -->
-<script lang="ts" module>
-    import SalesOrderForm from '$lib/components/SalesOrderForm.svelte';
-</script>

@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-    import { packageAPI } from '$lib/shipmentApi';
+    import { packageAPI } from '$lib/api';
     import { formatDate } from '$lib/utils';
     import type { Package, PackageItem } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';

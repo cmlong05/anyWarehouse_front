@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { trackingNumberAPI } from '$lib/shipmentApi';
+    import { trackingNumberAPI } from '$lib/api';
     import type { TrackingNumber } from '$lib/shipmentTypes';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';

@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Supplier, SupplierCreateRequest } from '$lib';
+    import { FormInput } from '$lib/components/ui';
     
     interface Props {
         supplier?: Supplier;
@@ -60,71 +61,59 @@
 
 <form class="supplier-form" onsubmit={handleSubmit}>
     <div class="form-grid">
-        <div class="form-group">
-            <label for="code">供应商编号 <span class="required">*</span></label>
-            <input
-                type="text"
-                id="code"
-                bind:value={formData.code}
-                placeholder="请输入供应商编号"
-                disabled={loading}
-            />
-            {#if errors.code}
-                <span class="error-message">{errors.code}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="供应商编号"
+            name="code"
+            required
+            error={errors.code}
+            value={formData.code}
+            placeholder="请输入供应商编号"
+            disabled={loading}
+            oninput={(v) => formData.code = v}
+        />
         
-        <div class="form-group">
-            <label for="name">供应商名称 <span class="required">*</span></label>
-            <input
-                type="text"
-                id="name"
-                bind:value={formData.name}
-                placeholder="请输入供应商名称"
-                disabled={loading}
-            />
-            {#if errors.name}
-                <span class="error-message">{errors.name}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="供应商名称"
+            name="name"
+            required
+            error={errors.name}
+            value={formData.name}
+            placeholder="请输入供应商名称"
+            disabled={loading}
+            oninput={(v) => formData.name = v}
+        />
         
-        <div class="form-group">
-            <label for="contact">联系人</label>
-            <input
-                type="text"
-                id="contact"
-                bind:value={formData.contact}
-                placeholder="请输入联系人姓名"
-                disabled={loading}
-            />
-        </div>
+        <FormInput
+            label="联系人"
+            name="contact"
+            value={formData.contact || ''}
+            placeholder="请输入联系人姓名"
+            disabled={loading}
+            oninput={(v) => formData.contact = v}
+        />
         
-        <div class="form-group">
-            <label for="telephone">联系电话</label>
-            <input
-                type="tel"
-                id="telephone"
-                bind:value={formData.telephone}
-                placeholder="请输入联系电话"
-                disabled={loading}
-            />
-        </div>
+        <FormInput
+            label="联系电话"
+            name="telephone"
+            type="tel"
+            value={formData.telephone || ''}
+            placeholder="请输入联系电话"
+            disabled={loading}
+            oninput={(v) => formData.telephone = v}
+        />
         
-        <div class="form-group">
-            <label for="e_mail">电子邮箱</label>
-            <input
-                type="email"
-                id="e_mail"
-                bind:value={formData.e_mail}
-                placeholder="请输入电子邮箱"
-                disabled={loading}
-            />
-            {#if errors.e_mail}
-                <span class="error-message">{errors.e_mail}</span>
-            {/if}
-        </div>
+        <FormInput
+            label="电子邮箱"
+            name="e_mail"
+            type="email"
+            error={errors.e_mail}
+            value={formData.e_mail || ''}
+            placeholder="请输入电子邮箱"
+            disabled={loading}
+            oninput={(v) => formData.e_mail = v}
+        />
         
-        <div class="form-group full-width">
+        <div class="form-field full-width">
             <label for="address">地址</label>
             <input
                 type="text"
@@ -135,7 +124,7 @@
             />
         </div>
         
-        <div class="form-group full-width">
+        <div class="form-field full-width">
             <label for="remark">备注</label>
             <textarea
                 id="remark"
@@ -146,7 +135,7 @@
             ></textarea>
         </div>
         
-        <div class="form-group checkbox-group">
+        <div class="form-field checkbox-group">
             <label class="checkbox-label">
                 <input
                     type="checkbox"
@@ -190,50 +179,51 @@
         margin-bottom: 2rem;
     }
     
-    .form-group {
+    .form-grid :global(.form-field) {
+        margin: 0;
+    }
+    
+    .form-grid :global(.form-field.full-width) {
+        grid-column: 1 / -1;
+    }
+    
+    .form-field {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
     }
     
-    .form-group.full-width {
+    .form-field.full-width {
         grid-column: 1 / -1;
     }
     
-    .form-group label {
+    .form-field label {
         font-weight: 500;
         color: #333;
         font-size: 0.9rem;
     }
     
-    .required {
-        color: #dc3545;
-    }
-    
-    .form-group input,
-    .form-group textarea {
+    .form-field input,
+    .form-field textarea {
         padding: 0.625rem 0.75rem;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 1rem;
         transition: border-color 0.15s ease;
+        width: 100%;
+        box-sizing: border-box;
     }
     
-    .form-group input:focus,
-    .form-group textarea:focus {
+    .form-field input:focus,
+    .form-field textarea:focus {
         outline: none;
         border-color: #007bff;
     }
     
-    .form-group input:disabled,
-    .form-group textarea:disabled {
+    .form-field input:disabled,
+    .form-field textarea:disabled {
         background-color: #f5f5f5;
         cursor: not-allowed;
-    }
-    
-    .error-message {
-        color: #dc3545;
-        font-size: 0.85rem;
     }
     
     .checkbox-group {

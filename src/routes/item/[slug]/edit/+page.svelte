@@ -1,6 +1,7 @@
 <!-- 编辑品项 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
     import ItemForm from '$lib/components/ItemForm.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import type { Category, ItemSet } from '$lib';
@@ -52,39 +53,41 @@
     <title>编辑品项 - {data.itemData.item.name}</title>
 </svelte:head>
 
-<div class="page-header">
-    <h2>编辑品项</h2>
-    <p>品项：<strong>{data.itemData.item.name}</strong> ({data.itemData.item.SKU})</p>
-</div>
+<PageContainer>
+    <PageHeader 
+        title="编辑品项"
+        subtitle={`品项：${data.itemData.item.name} (${data.itemData.item.SKU})`}
+    />
 
-{#if error}
-    <div class="error-alert" role="alert">
-        {error}
-    </div>
-{/if}
+    {#if error}
+        <div class="error-alert" role="alert">
+            {error}
+        </div>
+    {/if}
 
-<ItemForm 
-    mode="edit"
-    initialData={{
-        id: data.itemData.item.id,
-        SKU: data.itemData.item.SKU,
-        name: data.itemData.item.name,
-        SKU_zite: data.itemData.item.SKU_zite,
-        SKU_A: data.itemData.item.SKU_A,
-        description: data.itemData.item.description,
-        image: data.itemData.item.image,
-        weight: data.itemData.item.weight,
-        p_volume: data.itemData.item.p_volume,
-        s_volume: data.itemData.item.s_volume,
-        b_Price: data.itemData.item.b_Price,
-        currency: data.itemData.item.currency,
-        in_fee: data.itemData.item.in_fee,
-        barcode: data.itemData.item.barcode,
-        category: data.itemData.item.category
-    }}
-    categories={data.categories}
-    onShowDeleteModal={() => showDeleteModal = true}
-/>
+    <ItemForm 
+        mode="edit"
+        initialData={{
+            id: data.itemData.item.id,
+            SKU: data.itemData.item.SKU,
+            name: data.itemData.item.name,
+            SKU_zite: data.itemData.item.SKU_zite,
+            SKU_A: data.itemData.item.SKU_A,
+            description: data.itemData.item.description,
+            image: data.itemData.item.image,
+            weight: data.itemData.item.weight,
+            p_volume: data.itemData.item.p_volume,
+            s_volume: data.itemData.item.s_volume,
+            b_Price: data.itemData.item.b_Price,
+            currency: data.itemData.item.currency,
+            in_fee: data.itemData.item.in_fee,
+            barcode: data.itemData.item.barcode,
+            category: data.itemData.item.category
+        }}
+        categories={data.categories}
+        onShowDeleteModal={() => showDeleteModal = true}
+    />
+</PageContainer>
 
 <!-- 删除确认弹框 -->
 <ConfirmModal 
@@ -100,22 +103,6 @@
 />
 
 <style>
-    .page-header {
-        margin-bottom: 2rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .page-header h2 {
-        margin: 0 0 0.5rem 0;
-        color: #333;
-    }
-    
-    .page-header p {
-        margin: 0;
-        color: #666;
-    }
-    
     .error-alert {
         background-color: #fee2e2;
         border: 1px solid #fecaca;
