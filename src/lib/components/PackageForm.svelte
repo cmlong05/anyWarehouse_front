@@ -2,7 +2,8 @@
     import { packageAPI, trackingNumberAPI, shipmentAPI } from '$lib/api';
     import type { TrackingNumberBrief, ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem } from '$lib/shipmentTypes';
     import { safeParseFloat } from '$lib/utils';
-    import { FormInput, FormSelect } from '$lib/components/ui';
+    import { FormInput, FormSelect, NumberStepper } from '$lib/components/ui';
+    import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
 
@@ -50,8 +51,34 @@
     let error = $state('');
     let success = $state('');
 
-    // 快递单号选项
+    // 计算属性
     const trackingOptions = $derived([{ value: '', label: '请选择快递单号' }, ...availableTrackingNumbers.map(t => ({ value: t.id.toString(), label: `${t.carrier_name} - ${t.tracking_no}` }))]);
+    
+    // 所有可选的商品（过滤掉已添加的）
+    const availableItems = $derived(() => {
+        const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem; maxQty: number}> = [];
+        for (const [shipmentId, shipment] of selectedShipmentsDetail) {
+            if (!shipment.items) continue;
+            for (const item of shipment.items) {
+                const maxQty = safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed, 0);
+                // 过滤掉已添加的商品
+                const isAdded = packagePreviewItems.some(p => p.shipmentItemId === item.id);
+                if (maxQty > 0 && !isAdded) {
+                    items.push({ shipmentId, shipmentNo: shipment.shipment_no, item, maxQty });
+                }
+            }
+        }
+        return items;
+    });
+    
+    // 统计
+    const totalPending = $derived(() => {
+        return availableItems().reduce((sum, { maxQty }) => sum + maxQty, 0);
+    });
+    
+    const totalAdded = $derived(() => {
+        return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0);
+    });
 
     $effect(() => { init(); });
 
@@ -87,22 +114,70 @@
         } catch (err: any) { error = err.message || '加载包裹失败'; }
     }
 
-    async function loadShipmentDetail(shipmentId: number) { try { selectedShipmentsDetail.set(shipmentId, await shipmentAPI.get(shipmentId)); selectedShipmentsDetail = new Map(selectedShipmentsDetail); } catch {} }
-    function removeShipmentDetail(shipmentId: number) { selectedShipmentsDetail.delete(shipmentId); selectedShipmentsDetail = new Map(selectedShipmentsDetail); packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId); }
+    async function loadShipmentDetail(shipmentId: number) { 
+        try { 
+            selectedShipmentsDetail.set(shipmentId, await shipmentAPI.get(shipmentId)); 
+            selectedShipmentsDetail = new Map(selectedShipmentsDetail); 
+        } catch {} 
+    }
+    
+    function removeShipmentDetail(shipmentId: number) { 
+        selectedShipmentsDetail.delete(shipmentId); 
+        selectedShipmentsDetail = new Map(selectedShipmentsDetail); 
+        packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId); 
+    }
 
     async function onShipmentToggle(shipmentId: number, checked: boolean) {
         if (checked) { selectedShipmentIds = [...selectedShipmentIds, shipmentId]; await loadShipmentDetail(shipmentId); }
         else { selectedShipmentIds = selectedShipmentIds.filter(id => id !== shipmentId); removeShipmentDetail(shipmentId); }
     }
 
-    function addItemToPreview(shipmentId: number, item: ShipmentItem) {
-        const shipment = selectedShipmentsDetail.get(shipmentId); if (!shipment) return;
-        const maxQty = safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed, 0); if (maxQty <= 0) return;
-        if (packagePreviewItems.find(p => p.shipmentItemId === item.id)) { error = '该商品已在包裹明细中'; setTimeout(() => error = '', 2000); return; }
-        packagePreviewItems = [...packagePreviewItems, { id: `${shipmentId}-${item.id}-${Date.now()}`, shipmentItemId: item.id, shipmentId, shipmentNo: shipment.shipment_no, sku: item.sku, productName: item.product_name, quantity: maxQty, maxQuantity: maxQty }];
+    function addItemToPreview(shipmentId: number, item: ShipmentItem, maxQty: number) {
+        const shipment = selectedShipmentsDetail.get(shipmentId); 
+        if (!shipment) return;
+        if (packagePreviewItems.find(p => p.shipmentItemId === item.id)) { 
+            error = '该商品已在包裹明细中'; 
+            setTimeout(() => error = '', 2000); 
+            return; 
+        }
+        packagePreviewItems = [...packagePreviewItems, { 
+            id: `${shipmentId}-${item.id}-${Date.now()}`, 
+            shipmentItemId: item.id, 
+            shipmentId, 
+            shipmentNo: shipment.shipment_no, 
+            sku: item.sku, 
+            productName: item.product_name, 
+            quantity: maxQty, 
+            maxQuantity: maxQty 
+        }];
     }
 
-    function removePreviewItem(id: string) { packagePreviewItems = packagePreviewItems.filter(item => item.id !== id); }
+    function removePreviewItem(id: string) { 
+        packagePreviewItems = packagePreviewItems.filter(item => item.id !== id); 
+    }
+    
+    function clearAllItems() {
+        packagePreviewItems = [];
+    }
+    
+    function fillAllPending() {
+        const items = availableItems();
+        for (const { shipmentId, shipmentNo, item, maxQty } of items) {
+            if (!packagePreviewItems.find(p => p.shipmentItemId === item.id)) {
+                packagePreviewItems = [...packagePreviewItems, {
+                    id: `${shipmentId}-${item.id}-${Date.now()}`,
+                    shipmentItemId: item.id,
+                    shipmentId,
+                    shipmentNo,
+                    sku: item.sku,
+                    productName: item.product_name,
+                    quantity: maxQty,
+                    maxQuantity: maxQty
+                }];
+            }
+        }
+    }
+
     function getTotalQuantity(): number { return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0); }
     function getTotalItems(): number { return packagePreviewItems.length; }
     function generatePackageNo(): string { const date = new Date(); return `PKG${date.toISOString().slice(0,10).replace(/-/g,'')}${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}${String(date.getSeconds()).padStart(2,'0')}`; }
@@ -114,17 +189,31 @@
 
         saving = true; error = ''; success = '';
         try {
+            // 使用第一个选中的发货单作为主关联
+            const primaryShipmentId = selectedShipmentIds[0];
             const submitData = {
                 package_no: packageNo, 
-                sequence_no: 1, // 默认序列号
+                sequence_no: 1,
                 weight: weight ?? undefined, length: length ?? undefined, 
                 width: width ?? undefined, height: height ?? undefined,
                 tracking_number: trackingNumberId || undefined, 
                 notes: notes || undefined,
-                items: packagePreviewItems.map(item => ({ shipment_item: item.shipmentItemId, quantity: item.quantity }))
+                items: packagePreviewItems.map(item => ({ shipment_item: item.shipmentItemId, quantity: item.quantity })),
+                shipment_id: primaryShipmentId
             };
             let result: Package;
-            if (mode === 'create') { result = await packageAPI.create(submitData); success = '包裹创建成功！'; }
+            if (mode === 'create') { 
+                result = await packageAPI.create(submitData); 
+                
+                // 如果有多个发货单，逐个关联其他发货单
+                if (selectedShipmentIds.length > 1) {
+                    for (let i = 1; i < selectedShipmentIds.length; i++) {
+                        await packageAPI.addToShipment(result.id, selectedShipmentIds[i]);
+                    }
+                }
+                
+                success = '包裹创建成功！'; 
+            }
             else { result = await packageAPI.update(packageId!, submitData); success = '包裹更新成功！'; }
             onSuccess?.(result);
         } catch (err: any) { error = err.message || '保存失败'; }
@@ -170,52 +259,99 @@
             </div>
         </div>
 
-        <!-- 商品明细 -->
+        <!-- 双栏布局：使用通用组件 -->
         {#if selectedShipmentIds.length > 0}
             <div class="form-section">
                 <h3>商品明细 <small>(总计: {getTotalItems()} 项, {getTotalQuantity()} 件)</small></h3>
                 
-                <!-- 可选商品列表 -->
-                <div class="available-items">
-                    <h4>可选商品</h4>
-                    {#each Array.from(selectedShipmentsDetail.values()) as shipment}
-                        <div class="shipment-group">
-                            <div class="shipment-title">{shipment.shipment_no}</div>
-                            {#if shipment.items}
-                                <div class="item-list">
-                                    {#each shipment.items as item}
-                                        {@const maxQty = safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed, 0)}
-                                        {#if maxQty > 0}
-                                            <button type="button" class="item-chip" onclick={() => addItemToPreview(shipment.id, item)}>
-                                                {item.sku} - {item.product_name} (可添加: {maxQty})
-                                            </button>
-                                        {/if}
-                                    {/each}
-                                </div>
-                            {/if}
-                        </div>
-                    {/each}
-                </div>
-
-                <!-- 已选商品 -->
-                {#if packagePreviewItems.length > 0}
-                    <div class="selected-items">
-                        <h4>已选商品</h4>
-                        <table class="items-table">
-                            <thead><tr><th>SKU</th><th>商品名称</th><th>数量</th><th>操作</th></tr></thead>
-                            <tbody>
-                                {#each packagePreviewItems as item}
+                <DualSelectionPanel
+                    availableTitle="📋 发货单明细"
+                    availableSubtitle={`待添加: ${totalPending().toFixed(0)}`}
+                    selectedTitle="📦 包裹内容"
+                    selectedSubtitle={`已添加: ${totalAdded().toFixed(0)}`}
+                >
+                    {#snippet available()}
+                        {#if availableItems().length > 0}
+                            <table class="data-table">
+                                <thead>
                                     <tr>
-                                        <td>{item.sku}</td>
-                                        <td>{item.productName}</td>
-                                        <td><input type="number" bind:value={item.quantity} min={0.001} max={item.maxQuantity} step={0.001} class="qty-input" /></td>
-                                        <td><button type="button" class="btn-remove" onclick={() => removePreviewItem(item.id)}>删除</button></td>
+                                        <th class="text-left">发货单</th>
+                                        <th class="text-left">SKU</th>
+                                        <th class="text-left">商品名称</th>
+                                        <th class="text-right w-16">待打包</th>
+                                        <th class="text-center w-16">操作</th>
                                     </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                    </div>
-                {/if}
+                                </thead>
+                                <tbody>
+                                    {#each availableItems() as { shipmentId, shipmentNo, item, maxQty }}
+                                        <tr>
+                                            <td class="font-mono text-xs">{shipmentNo}</td>
+                                            <td class="font-mono text-xs">{item.sku}</td>
+                                            <td>{item.product_name}</td>
+                                            <td class="text-right text-error font-medium">{maxQty.toFixed(0)}</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-add" onclick={() => addItemToPreview(shipmentId, item, maxQty)}>
+                                                    添加
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        {:else}
+                            <div class="empty-state">
+                                <p>所有商品已添加到包裹</p>
+                            </div>
+                        {/if}
+                    {/snippet}
+                    
+                    {#snippet selected()}
+                        {#if packagePreviewItems.length > 0}
+                            <div class="table-actions">
+                                <button type="button" class="btn-text" onclick={clearAllItems}>清空</button>
+                                <button type="button" class="btn-text" onclick={fillAllPending}>全部填充</button>
+                            </div>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">发货单</th>
+                                        <th class="text-left">SKU</th>
+                                        <th class="text-left">商品</th>
+                                        <th class="text-right w-24">数量</th>
+                                        <th class="text-center w-16">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {#each packagePreviewItems as item}
+                                        <tr>
+                                            <td class="font-mono text-xs">{item.shipmentNo}</td>
+                                            <td class="font-mono text-xs">{item.sku}</td>
+                                            <td>{item.productName}</td>
+                                            <td class="text-right">
+                                                <NumberStepper
+                                                    bind:value={item.quantity}
+                                                    min={1}
+                                                    max={item.maxQuantity}
+                                                    step={1}
+                                                    size="sm"
+                                                />
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn-remove" onclick={() => removePreviewItem(item.id)}>
+                                                    删除
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {/each}
+                                </tbody>
+                            </table>
+                        {:else}
+                            <div class="empty-state">
+                                <p>点击左侧"添加"按钮添加商品</p>
+                            </div>
+                        {/if}
+                    {/snippet}
+                </DualSelectionPanel>
             </div>
         {/if}
 
@@ -234,11 +370,11 @@
 {/if}
 
 <style>
-    .package-form { max-width: 900px; margin: 0 auto; padding: 1rem; }
+    .package-form { max-width: 1200px; margin: 0 auto; padding: 1rem; }
     .form-section { background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
     .form-section h3 { margin: 0 0 1rem 0; color: #495057; font-size: 1.1rem; font-weight: 600; }
     .form-section h3 small { font-weight: normal; color: #6c757d; }
-    .form-section h4 { margin: 1rem 0 0.5rem 0; font-size: 0.95rem; color: #495057; }
+    
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-row.four-cols { grid-template-columns: repeat(4, 1fr); }
     .form-row :global(.form-field) { margin: 0; }
@@ -247,28 +383,78 @@
         .form-row, .form-row.four-cols { grid-template-columns: 1fr; }
     }
     
-    .shipment-list { display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.5rem; background: white; }
-    .shipment-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
-    .shipment-item:hover { background: #e9ecef; border-color: #adb5bd; }
+    .shipment-list { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 0.5rem; 
+        max-height: 200px; 
+        overflow-y: auto; 
+        border: 1px solid #dee2e6; 
+        border-radius: 8px; 
+        padding: 0.5rem; 
+        background: white; 
+    }
     
-    .shipment-group { margin-bottom: 1rem; padding: 0.75rem; background: white; border-radius: 4px; border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .shipment-title { font-weight: 600; color: #495057; margin-bottom: 0.5rem; font-size: 1rem; }
-    .item-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-    .item-chip { padding: 0.375rem 0.75rem; background: #e7f3ff; border: 1px solid #b8daff; border-radius: 4px; font-size: 0.875rem; cursor: pointer; transition: all 0.15s; color: #004085; }
-    .item-chip:hover { background: #cce5ff; }
+    .shipment-item { 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
+        padding: 0.5rem; 
+        background: #f8f9fa; 
+        border-radius: 4px; 
+        cursor: pointer; 
+        border: 1px solid transparent; 
+        transition: all 0.15s; 
+    }
     
-    .items-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-    .items-table th, .items-table td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #dee2e6; }
-    .items-table th { background: #f1f3f5; font-weight: 600; }
-    .qty-input { width: 80px; padding: 0.25rem; border: 1px solid #ced4da; border-radius: 4px; }
-    .btn-remove { padding: 0.25rem 0.5rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .shipment-item:hover { 
+        background: #e9ecef; 
+        border-color: #adb5bd; 
+    }
     
-    textarea { width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; resize: vertical; min-height: 80px; }
+    textarea { 
+        width: 100%; 
+        padding: 0.75rem; 
+        border: 1px solid #ced4da; 
+        border-radius: 4px; 
+        resize: vertical; 
+        min-height: 80px; 
+    }
     
-    .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
-    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-primary { background: #007bff; color: white; }
-    .btn-secondary { background: #6c757d; color: white; }
-    .btn-primary:hover:not(:disabled), .btn-secondary:hover:not(:disabled) { opacity: 0.9; }
+    .form-actions { 
+        display: flex; 
+        justify-content: flex-end; 
+        gap: 1rem; 
+        margin-top: 1.5rem; 
+    }
+    
+    .btn { 
+        padding: 0.75rem 1.5rem; 
+        border: none; 
+        border-radius: 4px; 
+        font-size: 1rem; 
+        font-weight: 500; 
+        cursor: pointer; 
+        transition: opacity 0.15s; 
+    }
+    
+    .btn:disabled { 
+        opacity: 0.6; 
+        cursor: not-allowed; 
+    }
+    
+    .btn-primary { 
+        background: #007bff; 
+        color: white; 
+    }
+    
+    .btn-secondary { 
+        background: #6c757d; 
+        color: white; 
+    }
+    
+    .btn-primary:hover:not(:disabled), 
+    .btn-secondary:hover:not(:disabled) { 
+        opacity: 0.9; 
+    }
 </style>

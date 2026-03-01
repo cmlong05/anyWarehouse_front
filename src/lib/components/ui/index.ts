@@ -7,6 +7,8 @@
 export { default as FormField } from './FormField.svelte';
 export { default as FormInput } from './FormInput.svelte';
 export { default as FormSelect } from './FormSelect.svelte';
+export { default as NumberInput } from './NumberInput.svelte';
+export { default as NumberStepper } from './NumberStepper.svelte';
 
 export { default as DataTable } from './DataTable.svelte';
 export { default as Pagination } from './Pagination.svelte';

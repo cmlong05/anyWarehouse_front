@@ -254,7 +254,9 @@
 
 <!-- 删除确认模态框 -->
 {#if deleteId !== null}
-    <div class="modal-backdrop" onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }}>
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="modal-backdrop" onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }} role="button" tabindex="0" aria-label="关闭">
         <div class="modal-content">
             <h3 class="modal-title">确认删除</h3>
             <p class="modal-text">确定要删除发货单 "{deleteName}" 吗？此操作不可撤销。</p>

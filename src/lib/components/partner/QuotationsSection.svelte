@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { NumberStepper } from '$lib/components/ui';
     import Loading from '$lib/components/Loading.svelte';
 
     interface Quotation {
@@ -60,15 +61,11 @@
                             <td class="numeric clickable" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
                             <td class="clickable" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
                             <td class="numeric">
-                                <input
-                                    type="number"
-                                    class="quantity-input"
-                                    value={quotationQuantities[quotation.id] ?? ''}
-                                    oninput={(e) => onQuantityChange(quotation.id, e.currentTarget.value ? Number(e.currentTarget.value) : null)}
-                                    min="0.001"
-                                    step="0.001"
-                                    placeholder="-"
-                                    onclick={(e) => e.stopPropagation()}
+                                <NumberStepper
+                                    value={quotationQuantities[quotation.id] ?? undefined}
+                                    step={1}
+                                    size="sm"
+                                    onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
                                 />
                             </td>
                         </tr>
@@ -161,32 +158,7 @@
         background-color: #f3f4f6;
     }
     
-    .quantity-input {
-        width: 80px;
-        padding: 0.35rem 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        text-align: right;
-        background: white;
-    }
-    
-    .quantity-input:focus {
-        outline: none;
-        border-color: #10b981;
-    }
-    
-    .quantity-input::-webkit-outer-spin-button,
-    .quantity-input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    
-    .quantity-input {
-        -moz-appearance: textfield;
-        appearance: textfield;
-    }
-    
+
     .btn {
         padding: 0.375rem 0.75rem;
         border: none;

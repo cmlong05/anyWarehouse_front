@@ -52,7 +52,7 @@
             if (statusFilter) params.status = statusFilter;
             
             const response = await trackingNumberAPI.list(params);
-            trackingNumbers = response.results;
+            trackingNumbers = response.results || [];
         } catch (err: any) {
             error = err.message || '加载快递单号失败';
         } finally {
@@ -237,7 +237,7 @@
     <!-- 数据表格 -->
     {#if loading}
         <Loading />
-    {:else if trackingNumbers.length === 0}
+    {:else if trackingNumbers?.length === 0}
         <div class="bg-white rounded-lg shadow p-12 text-center">
             <div class="text-gray-400 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">

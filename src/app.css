@@ -65,3 +65,153 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* 数字输入框统一样式 */
+.input-number {
+  width: 80px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  text-align: right;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-number:focus {
+  outline: none;
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 2px rgb(5 150 105 / 0.1);
+}
+
+/* 隐藏数字输入框的上下箭头（可选） */
+.input-number::-webkit-outer-spin-button,
+.input-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.input-number[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* 数字输入框变体 */
+.input-number-sm {
+  width: 60px;
+  padding: 0.25rem 0.35rem;
+  font-size: var(--font-size-xs);
+}
+
+.input-number-lg {
+  width: 100px;
+  padding: 0.5rem 0.75rem;
+}
+
+/* 数字步进器 */
+.number-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.number-stepper:focus-within {
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 2px rgb(5 150 105 / 0.1);
+}
+
+.number-stepper.disabled {
+  opacity: 0.6;
+  background: var(--color-gray-100);
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  border: none;
+  background: var(--color-gray-50);
+  color: var(--color-gray-600);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--color-gray-200);
+  color: var(--color-gray-800);
+}
+
+.stepper-btn:active:not(:disabled) {
+  background: var(--color-gray-300);
+}
+
+.stepper-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.stepper-minus {
+  border-right: 1px solid var(--color-gray-200);
+}
+
+.stepper-plus {
+  border-left: 1px solid var(--color-gray-200);
+}
+
+.stepper-input {
+  width: 60px;
+  height: 32px;
+  border: none;
+  padding: 0 0.5rem;
+  font-size: var(--font-size-sm);
+  text-align: center;
+  background: transparent;
+  outline: none;
+}
+
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+.stepper-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* 步进器尺寸变体 */
+.stepper-sm .stepper-btn {
+  width: 24px;
+  height: 28px;
+  font-size: 0.875rem;
+}
+
+.stepper-sm .stepper-input {
+  width: 50px;
+  height: 28px;
+  font-size: var(--font-size-xs);
+}
+
+.stepper-lg .stepper-btn {
+  width: 36px;
+  height: 40px;
+  font-size: 1.125rem;
+}
+
+.stepper-lg .stepper-input {
+  width: 80px;
+  height: 40px;
+  font-size: var(--font-size-base);
+}

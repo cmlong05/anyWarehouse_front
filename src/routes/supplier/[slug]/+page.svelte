@@ -1,5 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
+    import { page } from '$app/state';
     import { supplierAPI } from '$lib/api';
     import type { Supplier, QuotationBrief } from '$lib';
     import Alert from '$lib/components/Alert.svelte';
@@ -7,14 +8,12 @@
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
+    import { NumberStepper } from '$lib/components/ui';
     
-    interface Props {
-        data: { supplier: Supplier };
-    }
+    let supplierId = $derived(parseInt(page.params.slug));
     
-    let { data }: Props = $props();
-    
-    let supplier = $state<Supplier>(data.supplier);
+    let supplier = $state<Supplier | null>(null);
+    let loading = $state(true);
     let quotations = $state<QuotationBrief[]>([]);
     let recentOrders = $state<any[]>([]);
     let quotationsLoading = $state(true);
@@ -22,7 +21,20 @@
     let error = $state('');
     let showDeleteModal = $state(false);
     let deleteLoading = $state(false);
-    let quotationQuantities = $state<Record<number, number | null>>({});
+    let quotationQuantities = $state<Record<number, number | undefined>>({});
+    
+    async function loadSupplier() {
+        loading = true;
+        error = '';
+        try {
+            supplier = await supplierAPI.get(supplierId);
+        } catch (err) {
+            error = err instanceof Error ? err.message : '加载供应商失败';
+            supplier = null;
+        } finally {
+            loading = false;
+        }
+    }
     
     const statusLabels: Record<string, string> = {
         'draft': '草稿', 'pending': '待审批', 'approved': '已批准',
@@ -34,9 +46,10 @@
     }
     
     async function loadQuotations() {
+        if (!supplier) return;
         quotationsLoading = true;
         try {
-            const result = await supplierAPI.getQuotations(supplier.id);
+            const result = await supplierAPI.getQuotations(supplier!.id);
             quotations = result.quotations || [];
         } catch (err) {
             console.error('加载报价失败:', err);
@@ -46,9 +59,10 @@
     }
     
     async function loadRecentOrders() {
+        if (!supplier) return;
         ordersLoading = true;
         try {
-            const result = await supplierAPI.getRecentOrders(supplier.id);
+            const result = await supplierAPI.getRecentOrders(supplier!.id);
             recentOrders = result.orders || [];
         } catch (err) {
             console.error('加载最近订单失败:', err);
@@ -58,10 +72,11 @@
     }
     
     async function handleDelete() {
+        if (!supplier) return;
         deleteLoading = true;
         error = '';
         try {
-            await supplierAPI.delete(supplier.id);
+            await supplierAPI.delete(supplier!.id);
             goto('/supplier');
         } catch (err) {
             error = err instanceof Error ? err.message : '删除供应商失败';
@@ -71,6 +86,7 @@
     }
     
     function goToCreatePurchaseOrder() {
+        if (!supplier) return;
         const selectedItems = quotations
             .filter(q => {
                 const qty = quotationQuantities[q.id];
@@ -87,12 +103,12 @@
         
         if (selectedItems.length > 0) {
             sessionStorage.setItem('purchase_order_preload_items', JSON.stringify({
-                supplier_id: supplier.id,
+                supplier_id: supplier!.id,
                 items: selectedItems
             }));
         }
         
-        goto(`/supplier/purchase-order/add?supplier_id=${supplier.id}`);
+        goto(`/supplier/purchase-order/add?supplier_id=${supplier!.id}`);
     }
     
     function formatDate(dateStr: string) {
@@ -108,34 +124,48 @@
     }
     
     $effect(() => {
-        loadQuotations();
-        loadRecentOrders();
+        loadSupplier();
+    });
+    
+    $effect(() => {
+        if (supplier) {
+            loadQuotations();
+            loadRecentOrders();
+        }
     });
 </script>
 
 <svelte:head>
-    <title>{supplier.name} - 供应商详情</title>
+    <title>{supplier?.name || '供应商详情'}</title>
 </svelte:head>
 
 <PageContainer maxWidth="lg">
+    {#if loading}
+        <Loading text="加载中..." />
+    {:else if !supplier}
+        <Alert error={error || "供应商不存在或已删除"} />
+        <div class="mt-4">
+            <a href="/supplier" class="btn btn-secondary">返回供应商列表</a>
+        </div>
+    {:else}
     <Breadcrumb items={[
         { label: '首页', href: '/' },
         { label: '供应商管理', href: '/supplier' },
-        { label: supplier.name, href: `/supplier/${supplier.id}` },
+        { label: supplier!.name, href: `/supplier/${supplier!.id}` },
     ]} />
     
     {#if error}
         <Alert error={error} onDismiss={() => error = ''} />
     {/if}
     
-    <PageHeader title={supplier.name} mb="md">
+    <PageHeader title={supplier!.name} mb="md">
         {#snippet left()}
-            <span class="status-badge {supplier.is_active ? 'active' : 'inactive'}">
-                {supplier.is_active ? '活跃' : '停用'}
+            <span class="status-badge {supplier!.is_active ? 'active' : 'inactive'}">
+                {supplier!.is_active ? '活跃' : '停用'}
             </span>
         {/snippet}
         {#snippet actions()}
-            <a href="/supplier/{supplier.id}/edit" class="btn btn-secondary">编辑</a>
+            <a href="/supplier/{supplier!.id}/edit" class="btn btn-secondary">编辑</a>
             <button class="btn btn-error" onclick={() => showDeleteModal = true}>删除</button>
         {/snippet}
     </PageHeader>
@@ -146,51 +176,28 @@
             <div class="info-list">
                 <div class="info-item">
                     <span class="label">供应商编号</span>
-                    <span class="value code">{supplier.code}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">供应商名称</span>
-                    <span class="value">{supplier.name}</span>
+                    <span class="value code">{supplier!.code}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">联系人</span>
-                    <span class="value">{supplier.contact || '-'}</span>
+                    <span class="value">{supplier!.contact || '-'}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">联系电话</span>
-                    <span class="value">{supplier.telephone || '-'}</span>
+                    <span class="value">{supplier!.telephone || '-'}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">电子邮箱</span>
-                    <span class="value">{supplier.e_mail || '-'}</span>
+                    <span class="value">{supplier!.e_mail || '-'}</span>
                 </div>
             </div>
         </div>
         
         <div class="info-card">
-            <h3>地址信息</h3>
+            <h3>备注</h3>
             <div class="info-list">
                 <div class="info-item">
-                    <span class="label">主地址</span>
-                    <span class="value">{supplier.address || '-'}</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="info-card full-width">
-            <h3>其他信息</h3>
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="label">备注</span>
-                    <span class="value">{supplier.remark || '-'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">创建时间</span>
-                    <span class="value">{formatDate(supplier.created_at)}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">更新时间</span>
-                    <span class="value">{formatDate(supplier.updated_at)}</span>
+                    <span class="value">{supplier!.remark || '-'}</span>
                 </div>
             </div>
         </div>
@@ -200,7 +207,7 @@
     <div class="orders-section">
         <div class="section-header">
             <h2>最近采购订单</h2>
-            <a href="/supplier/purchase-order?supplier_id={supplier.id}" class="btn btn-primary btn-sm">查看全部</a>
+            <a href="/supplier/purchase-order?supplier_id={supplier!.id}" class="btn btn-primary btn-sm">查看全部</a>
         </div>
         
         {#if ordersLoading}
@@ -243,7 +250,7 @@
             <h2>采购报价记录</h2>
             <div class="section-actions">
                 <button class="btn btn-success btn-sm" onclick={goToCreatePurchaseOrder}>新建采购订单</button>
-                <a href="/supplier/quotation/add?supplier_id={supplier.id}" class="btn btn-primary btn-sm">添加报价</a>
+                <a href="/supplier/quotation/add?supplier_id={supplier!.id}" class="btn btn-primary btn-sm">添加报价</a>
             </div>
         </div>
         
@@ -252,7 +259,7 @@
         {:else if quotations.length === 0}
             <div class="empty-state">
                 <p>暂无报价记录</p>
-                <a href="/supplier/quotation/add?supplier_id={supplier.id}" class="btn btn-primary">添加第一个报价</a>
+                <a href="/supplier/quotation/add?supplier_id={supplier!.id}" class="btn btn-primary">添加第一个报价</a>
             </div>
         {:else}
             <div class="quotations-table">
@@ -274,10 +281,12 @@
                                 <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
                                 <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
                                 <td class="numeric">
-                                    <input type="number" class="quantity-input"
-                                           bind:value={quotationQuantities[quotation.id]}
-                                           min="0.001" step="0.001" placeholder="-"
-                                           onclick={(e) => e.stopPropagation()} />
+                                    <NumberStepper
+                                        bind:value={quotationQuantities[quotation.id]}
+                                        min={1}
+                                        step={1}
+                                        size="sm"
+                                    />
                                 </td>
                             </tr>
                         {/each}
@@ -289,13 +298,41 @@
             </div>
         {/if}
     </div>
+    
+    <!-- 地址信息和其他信息 -->
+    <div class="detail-grid">
+        <div class="info-card">
+            <h3>地址信息</h3>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">主地址</span>
+                    <span class="value">{supplier!.address || '-'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <h3>其他信息</h3>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">创建时间</span>
+                    <span class="value">{formatDate(supplier!.created_at)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">更新时间</span>
+                    <span class="value">{formatDate(supplier!.updated_at)}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {/if}
 </PageContainer>
 
 <ConfirmModal
     isOpen={showDeleteModal}
     title="删除供应商"
     message="确定要删除以下供应商吗？此操作不可撤销。"
-    itemName={supplier.name}
+    itemName={supplier?.name}
     confirmText="删除"
     cancelText="取消"
     loading={deleteLoading}
@@ -418,18 +455,6 @@
     .status-tag.partial { background-color: #fef3c7; color: #b45309; }
     .status-tag.received { background-color: #e0e7ff; color: #3730a3; }
     .status-tag.cancelled { background-color: #fee2e2; color: #991b1b; }
-    
-    .quantity-input {
-        width: 80px;
-        padding: 0.35rem 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        text-align: right;
-        background: white;
-    }
-    
-    .quantity-input:focus { outline: none; border-color: #10b981; }
     
     @media (max-width: 768px) {
         .detail-grid { grid-template-columns: 1fr; }

@@ -2,6 +2,7 @@
     import type { ItemSet, QuotationBrief } from '$lib';
     import { config } from '$lib/config';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
+    import { NumberStepper } from '$lib/components/ui';
 
     let { data } = $props<{ 
         data: { 
@@ -14,12 +15,12 @@
     function formatPrice(price: string): string {
         return parseFloat(price).toFixed(2);
     }
-    let inputRefs: (HTMLInputElement | null)[] = [];
+    let quantityValues = $state<Record<number, number>>({});
 
-    const handleStorage = async (event: Event, storage: any, inputElement: HTMLInputElement) => {
+    const handleStorage = async (event: Event, storage: any) => {
         event.preventDefault();
         
-        const quantity = parseInt(inputElement.value);
+        const quantity = quantityValues[storage.id] ?? 1;
         if (isNaN(quantity) || quantity <= 0) {
             alert('请输入有效的出库数量');
             return;
@@ -53,7 +54,7 @@
                     };
                 }
                 // 重置输入框
-                inputElement.value = '1';
+                quantityValues[storage.id] = 1;
                 // 强制更新数据
                 data = { ...data };
             } else {
@@ -64,6 +65,17 @@
             alert('网络错误，请检查网络连接');
         }
     };
+    
+    // 初始化出库数量默认值
+    $effect(() => {
+        if (data.itemDetail?.storages) {
+            data.itemDetail.storages.forEach((storage: any) => {
+                if (quantityValues[storage.id] === undefined) {
+                    quantityValues[storage.id] = 1;
+                }
+            });
+        }
+    });
 </script>
 
 <svelte:head>
@@ -115,17 +127,15 @@
                                 </a> -- 
                                 <a title="{storage.mark}" href="/storage/{storage.id}" style="{storage.mark ? 'background-color: pink; padding-left: 8px; padding-right: 8px;' : 'background-color: beige; padding-left: 8px; padding-right: 8px;'}">{storage.quantity} </a>  
                                 --
-                                <input
-                                    type="number"
-                                    value="1"
-                                    style="width: 4em;"
-                                    bind:this={inputRefs[idx]}
+                                <NumberStepper
+                                    bind:value={quantityValues[storage.id]}
+                                    min={1}
+                                    max={storage.quantity}
+                                    step={1}
+                                    size="sm"
                                 />
                                 <button
-                                    onclick={(e) => {
-                                        const input = inputRefs[idx];
-                                        if (input) handleStorage(e, storage, input);
-                                    }}
+                                    onclick={(e) => handleStorage(e, storage)}
                                 >出库</button>
                             </li>
                         {/each}

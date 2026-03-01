@@ -95,14 +95,17 @@
         shipModal.openModal(orderDetail.order.items);
     }
 
+    // 初始化发货数量
     $effect(() => {
-        if (orderDetail.order?.items) {
-            shipModal.quantities = {};
-            orderDetail.order.items.forEach(item => {
+        const items = orderDetail.order?.items;
+        if (items) {
+            const newQuantities: Record<number, number> = {};
+            items.forEach(item => {
                 if ((item.quantity_pending || 0) > 0) {
-                    shipModal.quantities[item.id] = 0;
+                    newQuantities[item.id] = 0;
                 }
             });
+            shipModal.quantities = newQuantities;
         }
     });
 </script>
@@ -125,7 +128,7 @@
             orderNumber={order.order_number}
             status={order.status}
             statusMap={SALES_STATUS_MAP}
-            transitions={orderDetail.getAvailableTransitions()}
+            transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
             updating={orderDetail.updating}
             canEdit={order.status === 'draft'}
             canDelete={['draft', 'pending', 'approved'].includes(order.status)}

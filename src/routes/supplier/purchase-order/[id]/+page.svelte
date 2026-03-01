@@ -18,7 +18,7 @@
         useOrderDetail, 
         useShipModal, 
         PURCHASE_STATUS_MAP, 
-        PURCHASE_STATUS_TRANSITIONS,
+        PURCHASE_STATUS_TRANSITIONS
     } from '$lib/composables/useOrderDetail.svelte';
 
     // 获取订单ID
@@ -93,7 +93,7 @@
             orderNumber={order.order_number}
             status={order.status}
             statusMap={PURCHASE_STATUS_MAP}
-            transitions={orderDetail.getAvailableTransitions()}
+            transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
             updating={orderDetail.updating}
             canEdit={order.status === 'draft'}
             canDelete={['draft', 'pending', 'approved'].includes(order.status)}

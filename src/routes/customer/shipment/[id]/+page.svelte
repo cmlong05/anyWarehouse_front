@@ -42,7 +42,8 @@
         const status = shipmentDetail.shipment?.status;
         if (!status) return [];
         
-        const actions = SHIPMENT_ACTIONS[status] || [];
+        // 创建数组副本，避免修改原配置
+        const actions = [...(SHIPMENT_ACTIONS[status] || [])];
         
         // 添加取消按钮（除已完成和已取消外）
         if (status !== 'delivered' && status !== 'cancelled') {
@@ -230,15 +231,11 @@
                 {#if shipment.packages?.length}
                     <div class="space-y-4">
                         {#each shipment.packages as pkg}
-                            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                                 onclick={() => shipmentDetail.goToPackageDetail(pkg.id)}
-                                 role="link" tabindex="0">
+                            <a href="/customer/package/{pkg.id}" class="block border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
                                 <div class="flex justify-between items-start mb-3">
                                     <div class="flex items-center gap-2">
                                         <span class="font-medium">{pkg.package_no}</span>
                                         <span class="text-gray-400 text-sm">序号 #{pkg.sequence_no}</span>
-                                        <a href="/customer/package/{pkg.id}" class="btn btn-xs btn-ghost" 
-                                           onclick={(e) => e.stopPropagation()}>查看详情</a>
                                     </div>
                                     {#if pkg.tracking_number_detail}
                                         <div class="text-right">
@@ -258,7 +255,7 @@
                                         <span>{(pkg.items?.reduce((sum: number, i: PackageItem) => sum + safeParseFloat(i.quantity, 0), 0) || 0).toFixed(0)}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         {/each}
                     </div>
                 {:else}
@@ -295,16 +292,12 @@
 <!-- 新建包裹弹窗 -->
 <NewPackageModal
     show={shipmentDetail.showNewPackageModal}
-    form={shipmentDetail.newPackageForm}
-    trackingNumbers={shipmentDetail.availableTrackingNumbers}
-    shipmentItems={shipmentDetail.selectedShipmentItems}
-    generateFromItems={shipmentDetail.generateFromItems}
-    creating={shipmentDetail.creatingPackage}
+    shipmentId={shipmentDetail.shipment?.id || 0}
     onClose={() => shipmentDetail.showNewPackageModal = false}
-    onCreate={shipmentDetail.createPackage}
-    onToggleGenerate={() => shipmentDetail.generateFromItems = !shipmentDetail.generateFromItems}
-    onUpdateForm={(form) => { shipmentDetail.newPackageForm = form; }}
-    onUpdateItems={(items) => shipmentDetail.selectedShipmentItems = items}
+    onSuccess={() => {
+        shipmentDetail.showNewPackageModal = false;
+        shipmentDetail.loadShipment();
+    }}
 />
 
 <style>

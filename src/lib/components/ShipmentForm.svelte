@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { useShipmentForm } from '$lib/composables/useShipmentForm.svelte';
     import type { Shipment } from '$lib/shipmentTypes';
+    import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
     import { BasicInfo, OrderItemsList, PlanItemsList, ShippingInfo } from './shipment-form';
@@ -46,24 +47,30 @@
 
         {#if form.selectedOrderId}
             <!-- 双栏布局 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- 左侧：可选的订单明细 -->
-                <OrderItemsList
-                    items={form.displayableOrderItems}
-                    totalPending={form.totalPending}
-                    totalPrepared={form.totalPrepared}
-                    onAdd={form.addItemToPlan}
-                />
-
-                <!-- 右侧：已选的发货计划明细 -->
-                <PlanItemsList
-                    items={form.planItems}
-                    totalPlanned={form.totalPlanned}
-                    onRemove={form.removePlanItem}
-                    onClear={form.clearAllPlan}
-                    onFillAll={form.fillAllPending}
-                />
-            </div>
+            <DualSelectionPanel
+                availableTitle="📋 订单明细"
+                availableSubtitle={`待发: ${form.totalPending.toFixed(0)}${form.totalPrepared > 0 ? ` (已预备: ${form.totalPrepared.toFixed(0)})` : ''}`}
+                selectedTitle="📝 发货计划明细"
+                selectedSubtitle={`已计划: ${form.totalPlanned.toFixed(0)}`}
+            >
+                {#snippet available()}
+                    <OrderItemsList
+                        items={form.displayableOrderItems}
+                        totalPending={form.totalPending}
+                        totalPrepared={form.totalPrepared}
+                        onAdd={form.addItemToPlan}
+                    />
+                {/snippet}
+                {#snippet selected()}
+                    <PlanItemsList
+                        items={form.planItems}
+                        totalPlanned={form.totalPlanned}
+                        onRemove={form.removePlanItem}
+                        onClear={form.clearAllPlan}
+                        onFillAll={form.fillAllPending}
+                    />
+                {/snippet}
+            </DualSelectionPanel>
         {/if}
 
         <!-- 收货信息 -->
@@ -113,10 +120,6 @@
 
 <style>
     .space-y-6 > * + * { margin-top: 1.5rem; }
-    .grid { display: grid; gap: 1.5rem; }
-    @media (min-width: 1024px) {
-        .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-    }
     
     .form-control { margin-bottom: 0.5rem; }
     .label { display: block; margin-bottom: 0.25rem; }

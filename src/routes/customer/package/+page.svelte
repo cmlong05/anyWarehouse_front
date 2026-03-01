@@ -230,7 +230,7 @@
                             <td class="px-4 py-3 text-sm text-gray-500">{formatDate(pkg.created_at)}</td>
                             <td class="px-4 py-3 text-center">
                                 <button 
-                                    class="btn btn-ghost btn-sm p-1 text-error" 
+                                    class="btn btn-ghost btn-sm p-1 text-gray-500 hover:text-gray-700" 
                                     onclick={(e) => confirmDelete(pkg, e)}
                                     title="删除"
                                     aria-label="删除"

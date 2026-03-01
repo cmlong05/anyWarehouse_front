@@ -17,7 +17,6 @@
         { key: 'code', title: '编号', width: '100px' },
         { key: 'name', title: '供应商名称' },
         { key: 'contact', title: '联系人' },
-        { key: 'telephone', title: '电话' },
     ];
     
     async function loadSuppliers() {

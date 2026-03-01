@@ -110,7 +110,7 @@
     function handleSubmit(e: Event) {
         e.preventDefault();
         if (validate()) {
-            onSubmit(prepareSubmitData());
+            onSubmit(prepareSubmitData(type));
         }
     }
 </script>

@@ -49,7 +49,7 @@ export interface OrderItemErrors {
  * @returns 订单表单相关的状态和方法
  */
 export function useOrderForm(
-    _partnerId: number,
+    partnerId: number,
     initialData?: Partial<OrderFormData>
 ) {
 
@@ -238,9 +238,23 @@ export function useOrderForm(
     /**
      * 准备提交数据
      */
-    function prepareSubmitData(): Record<string, unknown> {
+    function prepareSubmitData(type: 'purchase' | 'sales'): Record<string, unknown> {
+        // 映射 items 为后端需要的格式
+        const items = formData.items.map(item => ({
+            item: item.item,
+            sku: item.sku,
+            item_name: item.item_name,
+            quantity: item.quantity,
+            unit_price: Number(item.unit_price),
+            quotation: item.quotation,
+            expected_delivery: item.expected_delivery || null,
+            notes: item.notes
+        }));
+        
         return {
-            ...formData,
+            [type === 'sales' ? 'customer' : 'supplier']: partnerId,
+            priority: formData.priority,
+            order_date: formData.order_date,
             expected_delivery: formData.expected_delivery || null,
             shipping_address: formData.shipping_address || undefined,
             contact_person: formData.contact_person || undefined,
@@ -251,6 +265,7 @@ export function useOrderForm(
             tax_rate: Number(formData.tax_rate) || 0,
             shipping_cost: Number(formData.shipping_cost) || 0,
             discount: Number(formData.discount) || 0,
+            items
         };
     }
 
