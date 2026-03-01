@@ -116,7 +116,7 @@
         <OrderInfoGrid
             title="基本信息"
             items={[
-                { label: '供应商', value: order.supplier_detail?.name },
+                { label: '供应商', value: order.supplier_detail?.name, href: `/supplier/${order.supplier}` },
                 { label: '优先级', value: order.priority, format: 'priority' },
                 { label: '下单日期', value: order.order_date },
                 { label: '预计交货', value: order.expected_delivery },

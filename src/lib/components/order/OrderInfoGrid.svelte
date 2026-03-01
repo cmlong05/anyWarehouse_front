@@ -5,6 +5,7 @@
         label: string;
         value: string | number | null | undefined;
         format?: 'date' | 'priority' | 'default';
+        href?: string;
     }
 
     interface Props {
@@ -23,76 +24,35 @@
     }
 
     function getPriorityClass(value: string | number | null | undefined): string {
-        return PRIORITY_MAP[String(value)]?.class || '';
+        const key = PRIORITY_MAP[String(value)]?.class || '';
+        switch (key) {
+            case 'priority-low': return 'bg-gray-100 text-gray-600';
+            case 'priority-normal': return 'bg-blue-100 text-blue-800';
+            case 'priority-high': return 'bg-yellow-100 text-yellow-800';
+            case 'priority-urgent': return 'bg-red-500 text-white font-semibold';
+            default: return 'bg-gray-100 text-gray-600';
+        }
     }
 </script>
 
-<div class="info-section">
-    <h2>{title}</h2>
-    <div class="info-grid">
+<div class="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
+    <h2 class="text-lg font-medium text-gray-800 mb-4">{title}</h2>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
         {#each items as item}
-            <div class="info-item">
-                <span class="label">{item.label}</span>
+            <div class="flex flex-col">
+                <span class="text-sm text-gray-500 mb-1">{item.label}</span>
                 {#if item.format === 'priority'}
-                    <span class="priority-badge {getPriorityClass(item.value)}">
+                    <span class="inline-block w-fit px-3 py-1 rounded text-sm font-medium {getPriorityClass(item.value)}">
                         {formatValue(item)}
                     </span>
+                {:else if item.href}
+                    <a href={item.href} class="font-medium text-gray-900 hover:text-blue-600 hover:underline">
+                        {formatValue(item)}
+                    </a>
                 {:else}
-                    <span class="value">{formatValue(item)}</span>
+                    <span class="font-medium text-gray-900">{formatValue(item)}</span>
                 {/if}
             </div>
         {/each}
     </div>
 </div>
-
-<style>
-    .info-section {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .info-section h2 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #333;
-    }
-
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-    }
-
-    .info-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info-item .label {
-        font-size: 0.8rem;
-        color: #666;
-        margin-bottom: 0.25rem;
-    }
-
-    .info-item .value {
-        font-weight: 500;
-        color: #333;
-    }
-
-    .priority-badge {
-        display: inline-block;
-        padding: 0.375rem 0.75rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        width: fit-content;
-    }
-
-    .priority-low { background: #e9ecef; color: #495057; }
-    .priority-normal { background: #d1ecf1; color: #0c5460; }
-    .priority-high { background: #fff3cd; color: #856404; }
-    .priority-urgent { background: #dc3545; color: white; font-weight: 600; }
-</style>

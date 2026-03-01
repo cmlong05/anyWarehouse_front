@@ -51,7 +51,7 @@
     <title>{partnerDetail.partner?.name} - 客户详情</title>
 </svelte:head>
 
-<div class="content-container">
+<div class="max-w-4xl mx-auto px-4 sm:px-6">
     <Breadcrumb items={[
         { label: '首页', href: '/' },
         { label: '客户管理', href: '/customer' },
@@ -75,7 +75,7 @@
             onDelete={() => {}}
         />
         
-        <div class="form-container">
+        <div class="bg-white p-8 rounded-lg border border-gray-200">
             <CustomerForm
                 onSubmit={partnerDetail.handleUpdate}
                 onCancel={partnerDetail.handleCancel}
@@ -97,7 +97,7 @@
             onDelete={() => partnerDetail.showDeleteModal = true}
         />
         
-        <div class="detail-grid">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <PartnerInfoCard
                 title="基本信息"
                 items={[
@@ -150,6 +150,16 @@
             onRowClick={(id) => goto(`/customer/quotation/${id}`)}
             onCreateOrder={partnerDetail.goToCreateOrder}
         />
+        
+        <!-- 底部操作区 -->
+        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-start">
+            <button 
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors"
+                onclick={() => partnerDetail.showDeleteModal = true}
+            >
+                删除客户
+            </button>
+        </div>
     {/if}
 </div>
 
@@ -164,39 +174,3 @@
     onConfirm={partnerDetail.handleDelete}
     onCancel={() => partnerDetail.showDeleteModal = false}
 />
-
-<style>
-    .content-container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    .form-container {
-        background: white;
-        padding: 2rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    @media (max-width: 768px) {
-        .content-container {
-            padding: 0 1rem;
-        }
-        
-        .detail-grid {
-            grid-template-columns: 1fr;
-        }
-        
-        .form-container {
-            padding: 1.5rem 1rem;
-        }
-    }
-</style>

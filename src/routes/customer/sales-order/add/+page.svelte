@@ -54,11 +54,11 @@
         error = '';
         
         try {
-            await salesOrderAPI.create(data);
+            const newOrder = await salesOrderAPI.create(data);
             // 清除复制的数据
             sessionStorage.removeItem('sales_order_copy_data');
-            // 创建成功后跳转到客户详情页
-            goto(`/customer/${customer?.id}`);
+            // 创建成功后跳转到新订单详情页
+            goto(`/customer/sales-order/${newOrder.id}`);
         } catch (err) {
             error = err instanceof Error ? err.message : '创建销售订单失败';
             submitting = false;
@@ -111,6 +111,32 @@
             } catch {
                 // 解析失败，清除数据
                 sessionStorage.removeItem('sales_order_copy_data');
+            }
+        }
+        
+        // 检查是否有从报价选择的预加载数据
+        const preloadDataStr = sessionStorage.getItem('sales_order_preload_items');
+        if (preloadDataStr) {
+            try {
+                const preloadData = JSON.parse(preloadDataStr);
+                const currentCustomerId = customerId();
+                
+                // 验证客户ID匹配
+                if (preloadData.partner_id === currentCustomerId && preloadData.items?.length > 0) {
+                    preloadItems = preloadData.items.map((item: any) => ({
+                        item: item.item,
+                        sku: item.sku,
+                        item_name: item.item_name,
+                        quantity: item.quantity,
+                        unit_price: item.unit_price,
+                        quotation_id: item.quotation_id
+                    }));
+                }
+                // 清除 sessionStorage 中的数据
+                sessionStorage.removeItem('sales_order_preload_items');
+            } catch {
+                // 解析失败，清除数据
+                sessionStorage.removeItem('sales_order_preload_items');
             }
         }
     });

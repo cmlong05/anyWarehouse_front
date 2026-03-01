@@ -7,7 +7,9 @@
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import Loading from '$lib/components/Loading.svelte';
-    import { PageContainer, PageHeader } from '$lib/components/layout';
+    import { PageContainer } from '$lib/components/layout';
+    import { PartnerDetailHeader } from '$lib/components/partner';
+    import { PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
     import { NumberStepper } from '$lib/components/ui';
     
     let supplierId = $derived(parseInt(page.params.slug));
@@ -158,17 +160,17 @@
         <Alert error={error} onDismiss={() => error = ''} />
     {/if}
     
-    <PageHeader title={supplier!.name} mb="md">
-        {#snippet left()}
-            <span class="status-badge {supplier!.is_active ? 'active' : 'inactive'}">
-                {supplier!.is_active ? '活跃' : '停用'}
-            </span>
-        {/snippet}
-        {#snippet actions()}
-            <a href="/supplier/{supplier!.id}/edit" class="btn btn-secondary">编辑</a>
-            <button class="btn btn-error" onclick={() => showDeleteModal = true}>删除</button>
-        {/snippet}
-    </PageHeader>
+    <PartnerDetailHeader
+        name={supplier!.name}
+        level=""
+        status={supplier!.is_active ? 'active' : 'inactive'}
+        isEditing={false}
+        levelLabel=""
+        statusLabel={supplier!.is_active ? '活跃' : '停用'}
+        onEdit={() => goto(`/supplier/${supplier!.id}/edit`)}
+        onCancel={() => {}}
+        onDelete={() => showDeleteModal = true}
+    />
     
     <div class="detail-grid">
         <div class="info-card">
@@ -285,6 +287,7 @@
                                         bind:value={quotationQuantities[quotation.id]}
                                         min={1}
                                         step={1}
+                                        decimalPlaces={0}
                                         size="sm"
                                     />
                                 </td>
@@ -325,6 +328,13 @@
             </div>
         </div>
     </div>
+    
+    <!-- 底部操作区 -->
+    {#if supplier}
+        <div class="bottom-actions">
+            <button class="btn btn-error" onclick={() => showDeleteModal = true}>删除供应商</button>
+        </div>
+    {/if}
     {/if}
 </PageContainer>
 
@@ -413,6 +423,14 @@
     
     .section-actions { display: flex; gap: 0.5rem; }
     .section-footer { margin-top: 1.5rem; display: flex; justify-content: flex-end; }
+    
+    .bottom-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: flex-start;
+    }
     
     .empty-state-small { text-align: center; padding: 1.5rem 0; color: #6b7280; font-size: 0.9rem; }
     .empty-state { text-align: center; padding: 3rem 0; color: #6b7280; }

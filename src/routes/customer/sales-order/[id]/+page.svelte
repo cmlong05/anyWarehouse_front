@@ -143,7 +143,7 @@
         <OrderInfoGrid
             title="基本信息"
             items={[
-                { label: '客户', value: order.customer_detail?.name },
+                { label: '客户', value: order.customer_detail?.name, href: `/customer/${order.customer}` },
                 { label: '优先级', value: order.priority, format: 'priority' },
                 { label: '下单日期', value: order.order_date },
                 { label: '预计交货', value: order.expected_delivery },

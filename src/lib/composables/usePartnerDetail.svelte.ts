@@ -116,6 +116,9 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
     }
 
     function goToCreateOrder() {
+        // 清除可能存在的复制订单数据，避免新建订单时显示"复制自订单"
+        sessionStorage.removeItem('sales_order_copy_data');
+        
         const selectedItems = quotations
             .filter(q => {
                 const qty = quotationQuantities[q.id];

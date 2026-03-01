@@ -35,8 +35,8 @@
         lg: 'stepper-lg',
     }[size];
     
-    // 格式化显示值
-    let displayValue = $derived(value === undefined ? '' : value.toFixed(decimalPlaces));
+    // 格式化显示值，处理字符串类型数据
+    let displayValue = $derived(value === undefined ? '' : Number(value).toFixed(decimalPlaces));
     
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;

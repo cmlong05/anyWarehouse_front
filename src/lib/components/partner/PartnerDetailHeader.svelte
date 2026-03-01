@@ -26,7 +26,6 @@
         </div>
         <div class="header-actions">
             <button class="btn btn-secondary" onclick={onEdit}>编辑</button>
-            <button class="btn btn-danger" onclick={onDelete}>删除</button>
         </div>
     {/if}
 </div>

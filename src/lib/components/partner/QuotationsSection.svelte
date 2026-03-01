@@ -25,45 +25,55 @@
     let { title, quotations, loading, emptyText, addHref, quotationQuantities, onQuantityChange, onRowClick, onCreateOrder }: Props = $props();
 </script>
 
-<div class="quotations-section">
-    <div class="section-header">
-        <h2>{title}</h2>
-        <div class="section-actions">
-            <button class="btn btn-success btn-sm" onclick={onCreateOrder}>新建订单</button>
-            <a href={addHref} class="btn btn-primary btn-sm">添加报价</a>
+<div class="py-6 border-t border-gray-200">
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-2">
+            <h2 class="text-xl font-medium text-gray-800">{title}</h2>
+            <a 
+                href={addHref} 
+                class="inline-flex items-center px-3 py-1.5 font-medium text-white bg-green-300 hover:bg-green-400 rounded-md transition-colors shadow-sm"
+            >
+                添加报价
+            </a>
         </div>
+        <button 
+            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors"
+            onclick={onCreateOrder}
+        >
+            新建订单
+        </button>
     </div>
     
     {#if loading}
         <Loading text="加载报价..." />
     {:else if quotations.length === 0}
-        <div class="empty-state">
+        <div class="text-center py-12 text-gray-500">
             <p>{emptyText}</p>
-            <a href={addHref} class="btn btn-primary">添加第一个报价</a>
         </div>
     {:else}
-        <div class="quotations-table">
-            <table>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm border-collapse">
                 <thead>
                     <tr>
-                        <th>SKU</th>
-                        <th>物品名称</th>
-                        <th>单价</th>
-                        <th>货币</th>
-                        <th class="numeric">数量</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">货币</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each quotations as quotation}
-                        <tr>
-                            <td class="clickable" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
-                            <td class="clickable" onclick={() => onRowClick(quotation.id)}>{quotation.item_name || '-'}</td>
-                            <td class="numeric clickable" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
-                            <td class="clickable" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
-                            <td class="numeric">
+                        <tr class="border-b border-gray-200">
+                            <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                            <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.item_name || '-'}</td>
+                            <td class="px-4 py-3 text-gray-600 text-right font-mono cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
+                            <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
+                            <td class="px-4 py-3 text-right">
                                 <NumberStepper
                                     value={quotationQuantities[quotation.id] ?? undefined}
                                     step={1}
+                                    decimalPlaces={0}
                                     size="sm"
                                     onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
                                 />
@@ -73,119 +83,13 @@
                 </tbody>
             </table>
         </div>
-        <div class="section-footer">
-            <button class="btn btn-success btn-sm" onclick={onCreateOrder}>新建订单</button>
+        <div class="mt-6 flex justify-end">
+            <button 
+                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors"
+                onclick={onCreateOrder}
+            >
+                新建订单
+            </button>
         </div>
     {/if}
 </div>
-
-<style>
-    .quotations-section {
-        padding: 1.5rem 0;
-        border-top: 1px solid #e5e7eb;
-    }
-    
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-header h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        color: #1f2937;
-    }
-    
-    .section-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .section-footer {
-        margin-top: 1.5rem;
-        display: flex;
-        justify-content: flex-end;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 0;
-        color: #6b7280;
-    }
-    
-    .empty-state p {
-        margin-bottom: 1rem;
-    }
-    
-    .quotations-table {
-        overflow-x: auto;
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-    }
-    
-    th, td {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    th {
-        font-weight: 600;
-        color: #374151;
-        background-color: #f9fafb;
-    }
-    
-    td {
-        color: #4b5563;
-    }
-    
-    .numeric {
-        font-family: monospace;
-        text-align: right;
-    }
-    
-    .clickable {
-        cursor: pointer;
-    }
-    
-    .clickable:hover {
-        background-color: #f3f4f6;
-    }
-    
-
-    .btn {
-        padding: 0.375rem 0.75rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-    }
-    
-    .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2563eb;
-    }
-    
-    .btn-success {
-        background-color: #10b981;
-        color: white;
-    }
-    
-    .btn-success:hover {
-        background-color: #059669;
-    }
-</style>
