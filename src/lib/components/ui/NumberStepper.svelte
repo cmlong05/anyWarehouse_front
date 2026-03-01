@@ -1,9 +1,12 @@
 <script lang="ts">
     interface Props {
+        id?: string;
+        name?: string;
         value?: number | undefined;
         min?: number;
         max?: number;
         step?: number;
+        decimalPlaces?: number;
         placeholder?: string;
         disabled?: boolean;
         size?: 'sm' | 'md' | 'lg';
@@ -12,10 +15,13 @@
     }
     
     let {
+        id,
+        name,
         value = $bindable(undefined),
         min = 0,
         max,
         step = 1,
+        decimalPlaces = 2,
         placeholder = '-',
         disabled = false,
         size = 'md',
@@ -28,6 +34,9 @@
         md: '',
         lg: 'stepper-lg',
     }[size];
+    
+    // 格式化显示值
+    let displayValue = $derived(value === undefined ? '' : value.toFixed(decimalPlaces));
     
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;
@@ -76,9 +85,11 @@
         −
     </button>
     <input
+        {id}
+        {name}
         type="number"
         class="stepper-input"
-        {value}
+        value={displayValue}
         {min}
         {max}
         {step}

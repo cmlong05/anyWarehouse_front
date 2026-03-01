@@ -1,0 +1,172 @@
+<script lang="ts">
+    import { page } from '$app/state';
+    import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
+    import { purchaseOrderAPI, supplierAPI } from '$lib/api';
+    import type { PurchaseOrder, PurchaseOrderUpdateRequest } from '$lib';
+    import Loading from '$lib/components/Loading.svelte';
+    import Alert from '$lib/components/Alert.svelte';
+    import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import PurchaseOrderForm from '$lib/components/PurchaseOrderForm.svelte';
+    import { PageContainer, PageHeader } from '$lib/components/layout';
+    
+    // 从URL获取订单ID
+    const orderId = $derived(() => {
+        const urlParams = new URLSearchParams(page.url.search);
+        const id = urlParams.get('id');
+        return id ? parseInt(id) : null;
+    });
+    
+    let order = $state<PurchaseOrder | null>(null);
+    let loading = $state(true);
+    let submitting = $state(false);
+    let error = $state('');
+    
+    const breadcrumbs = $derived([
+        { label: '首页', href: '/' },
+        { label: '供应商管理', href: '/supplier' },
+        order ? { label: order.supplier_detail?.name || '供应商', href: `/supplier/${order.supplier}` } : null,
+        { label: '采购订单详情', href: order ? `/supplier/purchase-order/${order.id}` : '' },
+        { label: '编辑订单', href: '' },
+    ].filter(Boolean) as { label: string; href: string }[]);
+    
+    async function loadOrder() {
+        const id = orderId();
+        if (!id) {
+            error = '未指定订单ID';
+            loading = false;
+            return;
+        }
+        
+        try {
+            const data = await purchaseOrderAPI.get(id);
+            // 只有草稿状态可以编辑
+            if (data.status !== 'draft') {
+                error = '只有草稿状态的订单可以编辑';
+                loading = false;
+                return;
+            }
+            order = data;
+        } catch (err) {
+            error = err instanceof Error ? err.message : '加载订单信息失败';
+        } finally {
+            loading = false;
+        }
+    }
+    
+    async function handleSubmit(data: PurchaseOrderUpdateRequest) {
+        if (!order) return;
+        
+        submitting = true;
+        error = '';
+        
+        try {
+            await purchaseOrderAPI.update(order.id, data);
+            // 更新成功后跳转到订单详情页
+            goto(`/supplier/purchase-order/${order.id}`);
+        } catch (err) {
+            error = err instanceof Error ? err.message : '更新采购订单失败';
+            submitting = false;
+        }
+    }
+    
+    function handleCancel() {
+        // 取消后返回订单详情页
+        const id = orderId();
+        if (id) {
+            goto(`/supplier/purchase-order/${id}`);
+        } else {
+            goto('/supplier/purchase-order');
+        }
+    }
+    
+    onMount(() => {
+        loadOrder();
+    });
+</script>
+
+<svelte:head>
+    <title>编辑采购订单</title>
+</svelte:head>
+
+<PageContainer maxWidth="xl">
+    <Breadcrumb items={breadcrumbs} />
+    
+    <PageHeader title="编辑采购订单" mb="md">
+        {#snippet actions()}
+            {#if order}
+                <span class="order-badge">
+                    订单: {order.order_number}
+                </span>
+            {/if}
+        {/snippet}
+    </PageHeader>
+    
+    {#if loading}
+        <Loading text="加载中..." />
+    {:else if error}
+        <Alert error={error} />
+        <div class="actions">
+            <button class="btn btn-secondary" onclick={() => goto('/supplier/purchase-order')}>
+                返回订单列表
+            </button>
+        </div>
+    {:else if order}
+        <div class="form-container">
+            <PurchaseOrderForm
+                purchaseOrder={order}
+                supplierId={order.supplier}
+                supplier={order.supplier_detail}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                submitLabel="保存修改"
+                loading={submitting}
+            />
+        </div>
+    {/if}
+</PageContainer>
+
+<style>
+    .order-badge {
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .form-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1rem;
+        }
+    }
+</style>

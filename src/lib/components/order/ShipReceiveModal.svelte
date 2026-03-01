@@ -88,7 +88,7 @@
                                             type="number"
                                             min="0"
                                             max={getPendingQty(item)}
-                                            step="0.001"
+                                            step="1"
                                             bind:value={quantities[item.id]}
                                             class="qty-input"
                                         />

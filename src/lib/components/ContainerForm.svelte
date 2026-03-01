@@ -3,7 +3,7 @@
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';
     import { goto } from '$app/navigation';
-    import { FormInput } from '$lib/components/ui';
+    import { FormInput, NumberStepper } from '$lib/components/ui';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -145,7 +145,7 @@
     
     {#if containers.length > 0}
         <div class="form-field">
-            <label>父容器</label>
+            <label for="parent">父容器</label>
             {#if mode === 'add' && formData.parent}
                 <input 
                     type="text" 
@@ -155,6 +155,7 @@
                 />
             {:else}
                 <Svelecte
+                    inputId="parent"
                     options={selectItems}
                     bind:value={formData.parent}
                     searchProps={{ fields: ['label'] }}
@@ -190,38 +191,44 @@
         oninput={(v) => formData.mark = v}
     />
 
-    <FormInput
-        label="总容量"
-        name="volume"
-        type="number"
-        value={formData.volume}
-        required
-        min={1}
-        placeholder="容器总容量"
-        oninput={(v) => formData.volume = Number(v)}
-    />
+    <div class="form-field">
+        <label for="volume">总容量</label>
+        <NumberStepper
+            id="volume"
+            name="volume"
+            value={formData.volume}
+            min={1}
+            step={1}
+            size="sm"
+            onchange={(v) => formData.volume = v ?? 0}
+        />
+    </div>
 
-    <FormInput
-        label="自占体积"
-        name="zz_volume"
-        type="number"
-        value={formData.zz_volume}
-        min={0}
-        step={0.01}
-        placeholder="容器自身占用的体积"
-        oninput={(v) => formData.zz_volume = Number(v)}
-    />
+    <div class="form-field">
+        <label for="zz_volume">自占体积</label>
+        <NumberStepper
+            id="zz_volume"
+            name="zz_volume"
+            value={formData.zz_volume}
+            min={0}
+            step={0.01}
+            size="sm"
+            onchange={(v) => formData.zz_volume = v ?? 0}
+        />
+    </div>
 
-    <FormInput
-        label="箱体自重"
-        name="zz_weight"
-        type="number"
-        value={formData.zz_weight}
-        min={0}
-        step={0.01}
-        placeholder="容器自身重量"
-        oninput={(v) => formData.zz_weight = Number(v)}
-    />
+    <div class="form-field">
+        <label for="zz_weight">箱体自重</label>
+        <NumberStepper
+            id="zz_weight"
+            name="zz_weight"
+            value={formData.zz_weight}
+            min={0}
+            step={0.01}
+            size="sm"
+            onchange={(v) => formData.zz_weight = v ?? 0}
+        />
+    </div>
 
     <div class="form-actions">
         <button type="submit" class="btn btn-primary">

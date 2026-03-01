@@ -182,11 +182,16 @@ export function useOrderForm(
      * 重置当前明细项
      */
     function resetCurrentItem() {
-        currentItem = {
+        // keep the same object reference to preserve bindings
+        Object.assign(currentItem, {
             quantity: 1,
             unit_price: 0,
-            notes: ''
-        };
+            notes: '',
+            quotation: undefined,
+            item: null,
+            sku: '',
+            item_name: ''
+        });
         itemErrors = {};
     }
 
@@ -216,23 +221,29 @@ export function useOrderForm(
         item_name?: string; 
         price: string;
     } | undefined) {
+        // mutate existing object rather than replace it so bindings using
+        // a previously destructured reference stay reactive.
         if (!quotation) {
-            currentItem = {
+            // reset fields on the currentItem object
+            Object.assign(currentItem, {
                 quantity: 1,
                 unit_price: 0,
-                notes: ''
-            };
+                notes: '',
+                quotation: undefined,
+                item: null,
+                sku: '',
+                item_name: ''
+            });
             return;
         }
         
-        currentItem = {
-            ...currentItem,
+        Object.assign(currentItem, {
             quotation: quotation.id,
             item: quotation.item,
             sku: quotation.sku || '',
             item_name: quotation.item_name || '',
             unit_price: parseFloat(quotation.price) || 0
-        };
+        });
     }
 
     /**

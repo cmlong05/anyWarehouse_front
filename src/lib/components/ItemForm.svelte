@@ -3,7 +3,7 @@
     import type { Category } from '$lib';
     import { config } from '$lib/config';
     import Svelecte from 'svelecte';
-    import { FormInput } from '$lib/components/ui';
+    import { FormInput, NumberStepper } from '$lib/components/ui';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -51,7 +51,7 @@
         p_volume: initialData?.p_volume || 0,
         s_volume: initialData?.s_volume || 0,
         b_Price: initialData?.b_Price || '',
-        currency: initialData?.currency || '',
+        currency: initialData?.currency || 'CNY',
         in_fee: initialData?.in_fee || null,
         barcode: initialData?.barcode || '',
         category: initialData?.category || []
@@ -143,130 +143,110 @@
 </script>
 
 <form method="POST" enctype="multipart/form-data" onsubmit={handleSubmit}>
-    <div class="form-grid">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
         <!-- 基本信息 -->
-        <div class="form-section">
-            <h3>基本信息</h3>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">基本信息</h3>
             <FormInput label="SKU" name="SKU" required value={formData.SKU} placeholder="商品唯一标识码" maxlength={50} oninput={(v) => formData.SKU = v} />
             <FormInput label="商品名称" name="name" required value={formData.name} placeholder="商品名称" maxlength={200} oninput={(v) => formData.name = v} />
         </div>
 
         <!-- SKU扩展信息 -->
-        <div class="form-section">
-            <h3>SKU扩展信息</h3>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">SKU扩展信息</h3>
             <FormInput label="SKU子码" name="SKU_zite" value={formData.SKU_zite || ''} placeholder="SKU子码" maxlength={50} oninput={(v) => formData.SKU_zite = v} />
             <FormInput label="SKU A码" name="SKU_A" value={formData.SKU_A || ''} placeholder="SKU A码" maxlength={50} oninput={(v) => formData.SKU_A = v} />
             <FormInput label="条形码" name="barcode" value={formData.barcode || ''} placeholder="商品条形码" maxlength={100} oninput={(v) => formData.barcode = v} />
         </div>
 
         <!-- 物理属性 -->
-        <div class="form-section">
-            <h3>物理属性</h3>
-            <FormInput label="重量" name="weight" value={formData.weight || ''} placeholder="重量（含单位）" maxlength={20} oninput={(v) => formData.weight = v} />
-            <div class="field-row">
-                <FormInput label="包装体积" name="p_volume" type="number" value={formData.p_volume} min={0} step={0.01} placeholder="0" oninput={(v) => formData.p_volume = Number(v)} />
-                <FormInput label="存储体积" name="s_volume" type="number" value={formData.s_volume} min={0} step={0.01} placeholder="0" oninput={(v) => formData.s_volume = Number(v)} />
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">物理属性</h3>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-gray-700">重量:</span>
+                <NumberStepper value={parseFloat(formData.weight) || 0} min={0} step={0.01} size="sm" onchange={(v) => formData.weight = (v ?? 0).toFixed(2)} />
+                <input type="hidden" name="weight" value={formData.weight} />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">包装体积:</span>
+                    <NumberStepper value={formData.p_volume} min={0} step={0.01} size="sm" onchange={(v) => formData.p_volume = v ?? 0} />
+                    <input type="hidden" name="p_volume" value={formData.p_volume} />
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">存储体积:</span>
+                    <NumberStepper value={formData.s_volume} min={0} step={0.01} size="sm" onchange={(v) => formData.s_volume = v ?? 0} />
+                    <input type="hidden" name="s_volume" value={formData.s_volume} />
+                </div>
             </div>
         </div>
 
         <!-- 价格信息 -->
-        <div class="form-section">
-            <h3>价格信息</h3>
-            <div class="field-row">
-                <FormInput label="价格" name="b_Price" value={formData.b_Price || ''} placeholder="商品价格" maxlength={20} oninput={(v) => formData.b_Price = v} />
-                <FormInput label="货币" name="currency" value={formData.currency || ''} placeholder="如：CNY, USD" maxlength={10} oninput={(v) => formData.currency = v} />
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">价格信息</h3>
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-medium text-gray-700">价格:</span>
+                <NumberStepper value={parseFloat(formData.b_Price) || 0} min={0} step={0.01} size="sm" onchange={(v) => formData.b_Price = (v ?? 0).toFixed(2)} />
+                <input type="hidden" name="b_Price" value={formData.b_Price} />
+                <div class="w-20"><Svelecte options={[{value:'CNY',label:'CNY'},{value:'USD',label:'USD'},{value:'EUR',label:'EUR'}]} bind:value={formData.currency} class="svelecte-control" /></div>
+                <input type="hidden" name="currency" value={formData.currency} />
             </div>
-            <FormInput label="入库费用" name="in_fee" type="number" value={formData.in_fee ?? ''} min={0} step={0.01} placeholder="入库费用" oninput={(v) => formData.in_fee = v ? Number(v) : null} />
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-700">入库费用:</span>
+                    <NumberStepper value={formData.in_fee ?? 0} min={0} step={0.01} size="sm" onchange={(v) => formData.in_fee = v ?? null} />
+                    <input type="hidden" name="in_fee" value={formData.in_fee ?? ''} />
+                </div>
+            </div>
         </div>
 
         <!-- 其他信息 -->
-        <div class="form-section">
-            <h3>其他信息</h3>
-            <div class="field-group">
-                <label>商品图片</label>
-                <div class="image-upload-section">
-                    <div class="image-preview-container">
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">其他信息</h3>
+            <div class="mb-3">
+                <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-1">商品图片</label>
+                <div class="flex gap-4 items-start">
+                    <div class="w-[120px] h-[120px] border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
                         {#if displayImageUrl()}
-                            <img src={displayImageUrl()} alt="商品图片预览" class="image-preview" onerror={handleImageError} />
-                            {#if imageError}<div class="image-placeholder"><span>图片加载失败</span></div>{/if}
+                            <img src={displayImageUrl()} alt="商品图片预览" class="w-full h-full object-cover" onerror={handleImageError} />
+                            {#if imageError}<div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>图片加载失败</span></div>{/if}
                         {:else}
-                            <div class="image-placeholder"><span>暂无图片</span></div>
+                            <div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>暂无图片</span></div>
                         {/if}
                     </div>
-                    <div class="image-controls">
-                        <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange={handleImageUpload} />
-                        <button type="button" class="btn btn-outline" onclick={() => document.getElementById('imageFile')?.click()}>选择图片</button>
-                        {#if displayImageUrl()}<button type="button" class="btn btn-danger-outline" onclick={clearImage}>清除图片</button>{/if}
+                    <div class="flex flex-col gap-2 flex-1">
+                        <input type="file" id="imageFile" accept="image/*" class="hidden" onchange={handleImageUpload} />
+                        <button type="button" class="px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors" onclick={() => document.getElementById('imageFile')?.click()}>选择图片</button>
+                        {#if displayImageUrl()}<button type="button" class="px-4 py-2 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors" onclick={clearImage}>清除图片</button>{/if}
                     </div>
                 </div>
-                <div class="url-input-full-width">
-                    <input type="text" id="imageUrl" bind:value={imageUrlInput} maxlength={500} placeholder="或输入图片URL" class="url-input-full" readonly={mode === 'edit'} />
+                <div class="mt-3">
+                    <input type="text" id="imageUrl" bind:value={imageUrlInput} maxlength={500} placeholder="或输入图片URL" class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none" readonly={mode === 'edit'} />
                 </div>
             </div>
-            <div class="field-group">
-                <label>分类</label>
-                <Svelecte options={selectItems} multiple={true} bind:value={formData.category} placeholder="选择商品分类..." class="svelecte-control" />
+            <div class="mb-2">
+                <label for="category-select" class="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                <Svelecte inputId="category-select" options={selectItems} multiple={true} bind:value={formData.category} placeholder="选择商品分类..." class="svelecte-control" />
                 {#each formData.category as categoryId}<input type="hidden" name="category" value={categoryId} />{/each}
             </div>
         </div>
 
         <!-- 商品描述 -->
-        <div class="form-section description-section">
-            <h3>商品描述</h3>
-            <div class="field-group">
-                <textarea id="description" name="description" bind:value={formData.description} rows={8} placeholder="商品描述信息" class="description-textarea"></textarea>
-            </div>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">商品描述</h3>
+            <textarea id="description" name="description" bind:value={formData.description} rows={8} placeholder="商品描述信息" class="w-full px-3 py-2 border border-gray-300 rounded resize-y min-h-[80px] focus:border-blue-400 focus:outline-none"></textarea>
         </div>
     </div>
 
     {#if mode === 'edit' && initialData?.id}<input type="hidden" name="id" value={initialData.id} />{/if}
 
-    <div class="form-actions">
-        <button type="button" class="btn btn-secondary" onclick={handleCancel}>取消</button>
-        <button type="submit" class="btn btn-primary" disabled={formLoading}>{formLoading ? '处理中...' : mode === 'add' ? '添加商品' : '更新'}</button>
-        {#if mode === 'edit' && onShowDeleteModal && initialData?.id}<button type="button" class="btn btn-danger" onclick={handleDeleteClick}>删除</button>{/if}
+    <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-200">
+        <button type="button" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={handleCancel}>取消</button>
+        <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors disabled:opacity-65" disabled={formLoading}>{formLoading ? '处理中...' : mode === 'add' ? '添加商品' : '更新'}</button>
+        {#if mode === 'edit' && onShowDeleteModal && initialData?.id}<button type="button" class="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" onclick={handleDeleteClick}>删除</button>{/if}
     </div>
 </form>
 
 <style>
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-bottom: 0.5rem; }
-    .form-section { background: #f8f9fa; padding: 1rem; border-radius: 8px; border: 1px solid #e9ecef; }
-    .form-section h3 { margin: 0 0 0.5rem 0; color: #495057; font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid #dee2e6; padding-bottom: 0.25rem; }
-    .description-section { grid-column: 1 / -1; }
-    .description-textarea { min-height: 80px; font-family: inherit; line-height: 1.5; width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; resize: vertical; }
-    .field-group { margin-bottom: 0.5rem; }
-    .field-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }
-    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .field-row :global(.form-field) { margin: 0; }
     :global(.svelecte-control) { border: 1px solid #ced4da !important; border-radius: 4px !important; }
-    .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 0.75rem; margin-top: 0.5rem; border-top: 1px solid #e9ecef; }
-    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.15s ease-in-out; }
-    .btn:disabled { opacity: 0.65; cursor: not-allowed; }
-    .btn-primary { background-color: #007bff; color: white; }
-    .btn-primary:hover:not(:disabled) { background-color: #0056b3; }
-    .btn-secondary { background-color: #6c757d; color: white; }
-    .btn-secondary:hover:not(:disabled) { background-color: #545b62; }
-    .btn-danger { background-color: #dc3545; color: white; }
-    .btn-danger:hover:not(:disabled) { background-color: #c82333; }
-    .btn-outline { background-color: transparent; color: #007bff; border: 1px solid #007bff; }
-    .btn-outline:hover:not(:disabled) { background-color: #007bff; color: white; }
-    .btn-danger-outline { background-color: transparent; color: #dc3545; border: 1px solid #dc3545; }
-    .btn-danger-outline:hover:not(:disabled) { background-color: #dc3545; color: white; }
-    .image-upload-section { display: flex; gap: 1rem; align-items: flex-start; }
-    .image-preview-container { flex-shrink: 0; width: 120px; height: 120px; border: 2px dashed #dee2e6; border-radius: 8px; overflow: hidden; background-color: #f8f9fa; }
-    .image-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .image-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #6c757d; font-size: 0.875rem; text-align: center; }
-    .image-controls { flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
-    .url-input-full-width { margin-top: 1rem; width: 100%; }
-    .url-input-full { width: 100%; padding: 0.75rem; border: 1px solid #ced4da; border-radius: 4px; font-size: 1rem; box-sizing: border-box; background-color: #f8f9fa; }
-    .url-input-full:focus { outline: none; border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); background-color: #ffffff; }
-    .url-input-full[readonly] { background-color: #e9ecef; cursor: not-allowed; }
-    @media (max-width: 768px) {
-        .form-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-        .field-row { grid-template-columns: 1fr; }
-        .form-actions { flex-direction: column; }
-        .btn { width: 100%; }
-        .image-upload-section { flex-direction: column; align-items: stretch; }
-        .image-preview-container { width: 100%; height: 200px; max-width: 300px; align-self: center; }
-    }
 </style>

@@ -6,6 +6,7 @@
     import type { OrderFormData, OrderFormItem } from '$lib/composables/useOrderForm.svelte';
     import { useOrderForm } from '$lib/composables/useOrderForm.svelte';
     import Svelecte from 'svelecte';
+    import { NumberStepper } from './ui';
     
     export type OrderType = 'purchase' | 'sales';
     
@@ -80,11 +81,14 @@
         setCurrentItemQuotation,
         prepareSubmitData,
     } = useOrderForm(partnerId, initialData);
+
+    // 数量配置：所有订单均为整数，不允许小数
+    const quantityStep = 1;
+    const quantityMin = 1;
+    const quantityDecimals = 0;
     
-    // 监听报价选择变化
-    $effect(() => {
-        const selectedId = currentItem.quotation;
-        const selected = quotationOptions.find(q => q.value === selectedId);
+    // 处理 Svelecte 选择变化
+    function handleItemSelect(selected: QuotationOption | undefined) {
         if (selected && 'quotation' in selected) {
             const q = selected.quotation as { 
                 id: number; 
@@ -97,7 +101,7 @@
         } else {
             setCurrentItemQuotation(undefined);
         }
-    });
+    }
     
     // 处理添加明细
     function handleAddItem() {
@@ -210,12 +214,12 @@
                     <Svelecte
                         inputId="item-select"
                         options={quotationOptions}
-                        bind:value={currentItem.quotation}
-                        valueAsObject={false}
+                        valueAsObject={true}
                         placeholder={loadingQuotations ? '加载中...' : '搜索SKU或物品名称...'}
                         searchable={true}
                         clearable={true}
                         disabled={loading || loadingQuotations}
+                        onChange={handleItemSelect}
                     />
                     {#if itemErrors.quotation}
                         <span class="error-message">{itemErrors.quotation}</span>
@@ -224,12 +228,12 @@
                 
                 <div class="form-group small">
                     <label for="item-quantity">数量</label>
-                    <input
-                        type="number"
-                        id="item-quantity"
+                    <NumberStepper
                         bind:value={currentItem.quantity}
-                        min="0.001"
-                        step="0.001"
+                        min={quantityMin}
+                        step={quantityStep}
+                        decimalPlaces={quantityDecimals}
+                        size="md"
                         disabled={loading}
                     />
                     {#if itemErrors.quantity}
@@ -239,12 +243,11 @@
                 
                 <div class="form-group small">
                     <label for="item-price">单价</label>
-                    <input
-                        type="number"
-                        id="item-price"
+                    <NumberStepper
                         bind:value={currentItem.unit_price}
-                        min="0"
-                        step="0.01"
+                        min={0}
+                        step={0.01}
+                        size="md"
                         disabled={loading}
                     />
                     {#if itemErrors.unit_price}
@@ -287,23 +290,24 @@
                             <td>{item.sku || '-'}</td>
                             <td>{item.item_name || '-'}</td>
                             <td class="numeric editable narrow">
-                                <input
-                                    type="number"
-                                    class="table-input"
-                                    bind:value={formData.items[index].quantity}
-                                    min="0.001"
-                                    step="0.001"
+                                <NumberStepper
+                                    value={item.quantity}
+                                    min={quantityMin}
+                                    step={quantityStep}
+                                    decimalPlaces={quantityDecimals}
+                                    size="sm"
                                     disabled={loading}
+                                    onchange={(v) => formData.items[index].quantity = v ?? 0}
                                 />
                             </td>
                             <td class="numeric editable narrow">
-                                <input
-                                    type="number"
-                                    class="table-input"
-                                    bind:value={formData.items[index].unit_price}
-                                    min="0"
-                                    step="0.01"
+                                <NumberStepper
+                                    value={item.unit_price}
+                                    min={0}
+                                    step={0.01}
+                                    size="sm"
                                     disabled={loading}
+                                    onchange={(v) => formData.items[index].unit_price = v ?? 0}
                                 />
                             </td>
                             <td class="numeric">¥{(item.quantity * Number(item.unit_price)).toFixed(2)}</td>
@@ -345,37 +349,34 @@
         <div class="form-grid fees-grid">
             <div class="form-group small">
                 <label for="tax_rate">税率 (%)</label>
-                <input
-                    type="number"
-                    id="tax_rate"
+                <NumberStepper
                     bind:value={formData.tax_rate}
-                    min="0"
-                    max="100"
-                    step="0.01"
+                    min={0}
+                    max={100}
+                    step={0.01}
+                    size="md"
                     disabled={loading}
                 />
             </div>
             
             <div class="form-group small">
                 <label for="shipping_cost">运费</label>
-                <input
-                    type="number"
-                    id="shipping_cost"
+                <NumberStepper
                     bind:value={formData.shipping_cost}
-                    min="0"
-                    step="0.01"
+                    min={0}
+                    step={0.01}
+                    size="md"
                     disabled={loading}
                 />
             </div>
             
             <div class="form-group small">
                 <label for="discount">折扣</label>
-                <input
-                    type="number"
-                    id="discount"
+                <NumberStepper
                     bind:value={formData.discount}
-                    min="0"
-                    step="0.01"
+                    min={0}
+                    step={0.01}
+                    size="md"
                     disabled={loading}
                 />
             </div>
@@ -583,26 +584,8 @@
         text-align: right;
     }
     
-    .items-table .editable input {
-        width: 100%;
-    }
-    
     .items-table .narrow {
         width: 100px;
-    }
-    
-    .table-input {
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        width: 80px;
-        text-align: right;
-    }
-    
-    .table-input:focus {
-        outline: none;
-        border-color: #007bff;
     }
     
     .text-right {

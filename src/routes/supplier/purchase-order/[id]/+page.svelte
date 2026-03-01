@@ -47,7 +47,7 @@
 
     // 编辑订单
     function editOrder() {
-        alert('编辑功能待实现');
+        goto(`/supplier/purchase-order/edit?id=${orderId}`);
     }
 
     // 打开收货弹窗
