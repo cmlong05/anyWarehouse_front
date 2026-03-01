@@ -12,14 +12,14 @@
 <nav class="navigation">
     <span>导航：</span>
     {#each data.category_details.ancestors as ancestor, i}
-        <a href="/category/{ancestor.id}">{ancestor.name}</a>
+        <a href="/item/category/{ancestor.id}">{ancestor.name}</a>
         {#if i < data.category_details.ancestors.length }
             <span> &gt;&thinsp; </span>
         {/if}
     {/each}
     <span>{data.category_details.category.name}</span>
     <span> • </span>
-    <a href="/category/{data.category_details.category.id}/edit" class="edit-link">编辑</a>
+    <a href="/item/category/{data.category_details.category.id}/edit" class="edit-link">编辑</a>
 </nav>
 
 <!-- 主内容 -->
@@ -39,10 +39,10 @@
         <ul>
             <div class="section-header">
                 <h3>子分类</h3>
-                <a href="/category/add?parent={data.category_details.category.id}" class="edit-link">添加</a>
+                <a href="/item/category/add?parent={data.category_details.category.id}" class="edit-link">添加</a>
             </div>
             {#each data.category_details.descendants as child} 
-                <li><a href={`/category/${child.id}`} >{child.name}</a></li>
+                <li><a href={`/item/category/${child.id}`} >{child.name}</a></li>
             {/each}
         </ul>
     </div>
@@ -57,7 +57,7 @@
                 {#if sibling.id == data.category_details.category.id}
                     <strong>{sibling.name}</strong>
                 {:else}
-                    <a href={`/category/${sibling.id}`} >
+                    <a href={`/item/category/${sibling.id}`} >
                         {sibling.name}
                     </a>
                 {/if}
