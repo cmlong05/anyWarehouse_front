@@ -51,8 +51,8 @@ export const SALES_STATUS_TRANSITIONS: Record<string, StatusTransition[]> = {
     draft: [{ value: 'pending', label: '提交审批' }, { value: 'cancelled', label: '取消订单' }],
     pending: [{ value: 'approved', label: '批准' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '拒绝' }],
     approved: [{ value: 'confirmed', label: '确认订单' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '取消' }],
-    confirmed: [{ value: 'partial', label: '部分发货' }, { value: 'shipped', label: '全部发货' }, { value: 'cancelled', label: '取消' }],
-    partial: [{ value: 'shipped', label: '全部发货' }, { value: 'delivered', label: '完成交付' }, { value: 'confirmed', label: '继续发货' }],
+    confirmed: [{ value: 'shipped', label: '完成发货' }, { value: 'cancelled', label: '取消' }],
+    partial: [{ value: 'shipped', label: '完成发货' }, { value: 'delivered', label: '完成交付' }, { value: 'confirmed', label: '继续发货' }],
     shipped: [{ value: 'delivered', label: '确认交付' }, { value: 'partial', label: '退回部分' }],
     delivered: [],
     cancelled: [{ value: 'draft', label: '重新激活' }],
@@ -134,7 +134,7 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
     }
 
     async function changeStatus(newStatus: S) {
-        const statusLabel = options.statusMap[order?.status || '']?.label || String(newStatus);
+        const statusLabel = options.statusMap[String(newStatus)]?.label || String(newStatus);
         if (!confirm(`确定要将订单状态变更为"${statusLabel}"吗？`)) return;
         
         updating = true;

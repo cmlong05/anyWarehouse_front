@@ -62,7 +62,7 @@
         loadQuotations();
     });
     
-    // 准备初始数据
+    // 准备初始数据 - 优先从 salesOrder 读取，否则从 preloadItems 读取
     const initialData = $derived({
         priority: salesOrder?.priority,
         order_date: salesOrder?.order_date,
@@ -76,7 +76,16 @@
         payment_terms: salesOrder?.payment_terms || undefined,
         notes: salesOrder?.notes || undefined,
         internal_notes: salesOrder?.internal_notes || undefined,
-        items: preloadItems?.map(item => ({
+        items: salesOrder?.items?.map(item => ({
+            item: item.item || null,
+            sku: item.sku || '',
+            item_name: item.item_name || '',
+            quantity: item.quantity || 1,
+            unit_price: item.unit_price ? parseFloat(item.unit_price) : 0,
+            quotation: item.quotation || null,
+            expected_delivery: item.expected_delivery || null,
+            notes: item.notes || ''
+        })) || preloadItems?.map(item => ({
             item: item.item || null,
             sku: item.sku || '',
             item_name: item.item_name || '',
@@ -85,7 +94,7 @@
             quotation: item.quotation_id || null,
             expected_delivery: null,
             notes: ''
-        })),
+        })) || [],
     });
     
     // 标签配置

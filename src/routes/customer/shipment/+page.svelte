@@ -144,14 +144,15 @@
     }
 
     function getStatusBadgeClass(status: string): string {
-        switch (status) {
-            case 'draft': return 'badge-ghost';
-            case 'ready': return 'badge-info';
-            case 'shipped': return 'badge-success';
-            case 'delivered': return 'badge-primary';
-            case 'cancelled': return 'badge-error';
-            default: return '';
-        }
+        const classes: Record<string, string> = {
+            draft: 'bg-gray-100 text-gray-600',
+            confirmed: 'bg-blue-100 text-blue-700',
+            packed: 'bg-yellow-100 text-yellow-700',
+            shipped: 'bg-green-100 text-green-700',
+            delivered: 'bg-indigo-100 text-indigo-700',
+            cancelled: 'bg-red-100 text-red-700',
+        };
+        return classes[status] || 'bg-gray-100 text-gray-600';
     }
 </script>
 
@@ -162,8 +163,11 @@
 <PageContainer>
     <PageHeader title="发货管理">
         {#snippet actions()}
-            <button class="btn btn-primary" onclick={goToAdd}>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button 
+                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+                onclick={goToAdd}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 <span>新建发货批次</span>
@@ -177,7 +181,7 @@
 
     <!-- 筛选器 -->
     <FilterPanel onReset={clearFilters} onApply={applyFilters}>
-        <div class="filter-row">
+        <div class="flex flex-wrap gap-4 w-full">
             <FormInput
                 label="搜索"
                 name="search"
@@ -212,7 +216,7 @@
     >
         {#snippet cellRender({ item, column }: { item: Shipment; column: { key: string } })}
             {#if column.key === 'status'}
-                <span class="badge {getStatusBadgeClass(item.status)}">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getStatusBadgeClass(item.status)}">
                     {SHIPMENT_STATUS_CHOICES.find(s => s.value === item.status)?.label || item.status}
                 </span>
             {:else if column.key === 'order'}
@@ -234,7 +238,9 @@
                     <span class="text-gray-400">-</span>
                 {/if}
             {:else if column.key === 'packages'}
-                <span class="badge badge-outline">{item.packages?.length || 0}</span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600">
+                    {item.packages?.length || 0}
+                </span>
             {:else if column.key === 'created_at'}
                 <span class="text-sm">{formatDate(item.created_at)}</span>
             {:else}
@@ -256,91 +262,31 @@
 {#if deleteId !== null}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="modal-backdrop" onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }} role="button" tabindex="0" aria-label="关闭">
-        <div class="modal-content">
-            <h3 class="modal-title">确认删除</h3>
-            <p class="modal-text">确定要删除发货单 "{deleteName}" 吗？此操作不可撤销。</p>
-            <div class="modal-actions">
-                <button class="btn btn-secondary" onclick={cancelDelete}>取消</button>
-                <button class="btn btn-error" onclick={executeDelete} disabled={deleting}>
+    <div 
+        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+        onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }} 
+        role="button" 
+        tabindex="0" 
+        aria-label="关闭"
+    >
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-[90%] p-6">
+            <h3 class="text-xl font-semibold mb-4">确认删除</h3>
+            <p class="text-gray-500 mb-6">确定要删除发货单 "{deleteName}" 吗？此操作不可撤销。</p>
+            <div class="flex justify-end gap-3">
+                <button 
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                    onclick={cancelDelete}
+                >
+                    取消
+                </button>
+                <button 
+                    class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    onclick={executeDelete} 
+                    disabled={deleting}
+                >
                     {deleting ? '删除中...' : '确认删除'}
                 </button>
             </div>
         </div>
     </div>
 {/if}
-
-<style>
-    .filter-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        width: 100%;
-    }
-
-    .filter-row :global(.form-field) {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .badge-ghost { background: #f3f4f6; color: #6b7280; }
-    .badge-info { background: #dbeafe; color: #1e40af; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-primary { background: #cce5ff; color: #004085; }
-    .badge-error { background: #fee2e2; color: #991b1b; }
-    .badge-outline { border: 1px solid #d1d5db; color: #6b7280; }
-
-    .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 50;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 0.5rem;
-        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-        max-width: 400px;
-        width: 90%;
-        padding: 1.5rem;
-    }
-
-    .modal-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 0 0 1rem 0;
-    }
-
-    .modal-text {
-        color: #6b7280;
-        margin-bottom: 1.5rem;
-    }
-
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.75rem;
-    }
-
-    @media (max-width: 768px) {
-        .filter-row {
-            flex-direction: column;
-        }
-
-        .filter-row :global(.form-field) {
-            width: 100%;
-        }
-    }
-</style>

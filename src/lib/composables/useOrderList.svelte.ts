@@ -265,30 +265,6 @@ export const PURCHASE_STATUS_MAP: Record<string, { label: string; class: string 
 };
 
 /**
- * 标准状态映射（销售订单）
- */
-export const SALES_STATUS_MAP: Record<string, { label: string; class: string }> = {
-    draft: { label: '草稿', class: 'badge-ghost' },
-    pending: { label: '待审批', class: 'badge-warning' },
-    approved: { label: '已批准', class: 'badge-info' },
-    confirmed: { label: '已确认', class: 'badge-primary' },
-    partial: { label: '部分发货', class: 'badge-success' },
-    shipped: { label: '已发货', class: 'badge-success' },
-    delivered: { label: '已完成', class: 'badge-primary' },
-    cancelled: { label: '已取消', class: 'badge-error' },
-};
-
-/**
- * 优先级映射
- */
-export const PRIORITY_MAP: Record<string, { label: string; class: string }> = {
-    low: { label: '低', class: 'badge-ghost' },
-    normal: { label: '普通', class: 'badge-info' },
-    high: { label: '高', class: 'badge-warning' },
-    urgent: { label: '紧急', class: 'badge-error' },
-};
-
-/**
  * 优先级标签映射（简单版）
  */
 export const PRIORITY_LABEL_MAP: Record<string, string> = {

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { salesOrderAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderItem } from '$lib';
@@ -23,7 +23,7 @@
     } from '$lib/composables/useOrderDetail.svelte';
 
     // 获取订单ID
-    let orderId = $derived(parseInt($page.params.id));
+    let orderId = $derived(parseInt(page.params.id));
 
     // 使用共享逻辑
     const orderDetail = useOrderDetail<SalesOrder, string>({
@@ -48,7 +48,7 @@
 
     // 编辑订单
     function editOrder() {
-        alert('编辑功能待实现');
+        goto(`/customer/sales-order/${orderId}/edit`);
     }
 
     // 复制订单
@@ -108,16 +108,39 @@
             shipModal.quantities = newQuantities;
         }
     });
+
+    // 发货单状态样式
+    function getShipmentStatusClass(status: string): string {
+        const classes: Record<string, string> = {
+            draft: 'bg-gray-100 text-gray-600',
+            confirmed: 'bg-blue-100 text-blue-700',
+            packed: 'bg-yellow-100 text-yellow-700',
+            shipped: 'bg-green-100 text-green-700',
+            delivered: 'bg-indigo-100 text-indigo-700',
+            cancelled: 'bg-red-100 text-red-700',
+        };
+        return classes[status] || 'bg-gray-100 text-gray-600';
+    }
 </script>
 
-<div class="sales-order-detail">
+<div class="p-6 max-w-6xl mx-auto">
     {#if orderDetail.loading}
         <Loading />
     {:else if orderDetail.error}
         <Alert error={orderDetail.error} onDismiss={() => orderDetail.error = null} />
-        <div class="error-actions">
-            <button class="btn btn-secondary" onclick={orderDetail.goBack}>返回列表</button>
-            <button class="btn btn-primary" onclick={orderDetail.loadOrder}>重试</button>
+        <div class="flex gap-4 mt-4">
+            <button 
+                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                onclick={orderDetail.goBack}
+            >
+                返回列表
+            </button>
+            <button 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onclick={orderDetail.loadOrder}
+            >
+                重试
+            </button>
         </div>
     {:else if orderDetail.order}
         {@const order = orderDetail.order}
@@ -130,8 +153,8 @@
             statusMap={SALES_STATUS_MAP}
             transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
             updating={orderDetail.updating}
-            canEdit={order.status === 'draft'}
-            canDelete={['draft', 'pending', 'approved'].includes(order.status)}
+            canEdit={['draft', 'confirmed', 'approved'].includes(order.status)}
+            canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
             onBack={orderDetail.goBack}
             onEdit={editOrder}
             onDelete={orderDetail.deleteOrder}
@@ -176,33 +199,40 @@
         />
 
         <!-- 订单明细 + 关联发货单 -->
-        <div class="items-section">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 mb-6">
             <OrderItemsTable items={order.items || []} type="sales" />
 
-            <div class="sidebar">
+            <div class="flex flex-col gap-4 lg:order-none order-first">
                 {#if ['confirmed', 'partial'].includes(order.status)}
-                    <div class="sidebar-section">
-                        <a href="/customer/shipment/add?order_id={order.id}" class="btn btn-success btn-generate">
+                    <div class="bg-white rounded-lg p-6 shadow">
+                        <button
+                            type="button"
+                            class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
+                        >
                             +生成发货单
-                        </a>
+                        </button>
                     </div>
                 {/if}
                 
                 {#if order.shipments && order.shipments.length > 0}
-                    <div class="sidebar-section">
-                        <h3>关联发货单 ({order.shipments.length})</h3>
-                        <div class="shipments-list">
+                    <div class="bg-white rounded-lg p-6 shadow">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">关联发货单 ({order.shipments.length})</h3>
+                        <div class="flex flex-col gap-3">
                             {#each order.shipments as shipment}
-                                <div class="shipment-card">
-                                    <div class="shipment-header">
-                                        <a href="/customer/shipment/{shipment.id}" class="shipment-link">
+                                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <a 
+                                            href="/customer/shipment/{shipment.id}" 
+                                            class="font-semibold text-blue-600 hover:underline"
+                                        >
                                             {shipment.shipment_no}
                                         </a>
-                                        <span class="status-badge-mini {shipment.status}">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
                                             {SHIPMENT_STATUS_MAP[shipment.status] || shipment.status}
                                         </span>
                                     </div>
-                                    <div class="shipment-info">
+                                    <div class="flex flex-col gap-1 text-sm text-gray-600">
                                         <span>包裹: {shipment.total_packages}</span>
                                         <span>{new Date(shipment.created_at).toLocaleString('zh-CN')}</span>
                                     </div>
@@ -216,18 +246,18 @@
 
         <!-- 备注 -->
         {#if order.notes || order.internal_notes}
-            <div class="info-section">
-                <h2>备注</h2>
+            <div class="bg-white rounded-lg p-6 shadow mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">备注</h2>
                 {#if order.notes}
-                    <div class="note-box">
-                        <span class="label">订单备注</span>
-                        <p>{order.notes}</p>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-3">
+                        <span class="text-sm text-gray-600 block mb-2">订单备注</span>
+                        <p class="text-gray-900">{order.notes}</p>
                     </div>
                 {/if}
                 {#if order.internal_notes}
-                    <div class="note-box internal">
-                        <span class="label">内部备注</span>
-                        <p>{order.internal_notes}</p>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <span class="text-sm text-gray-600 block mb-2">内部备注</span>
+                        <p class="text-gray-900">{order.internal_notes}</p>
                     </div>
                 {/if}
             </div>
@@ -249,191 +279,3 @@
     onConfirm={shipModal.confirmShip}
     onNotesChange={(v) => shipModal.notes = v}
 />
-
-<style>
-    .sales-order-detail {
-        padding: 1.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .error-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .items-section {
-        display: grid;
-        grid-template-columns: 1fr 280px;
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .sidebar-section {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .sidebar-section h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #333;
-    }
-
-    .btn-generate {
-        display: block;
-        width: 100%;
-        text-align: center;
-        padding: 0.75rem;
-        font-size: 1rem;
-        font-weight: 600;
-        background: #28a745;
-        color: white;
-        border-radius: 4px;
-        text-decoration: none;
-    }
-
-    .btn-generate:hover {
-        background: #218838;
-    }
-
-    .shipments-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .shipment-card {
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        padding: 1rem;
-        background: #fafafa;
-    }
-
-    .shipment-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-    }
-
-    .shipment-link {
-        font-weight: 600;
-        color: #2563eb;
-        text-decoration: none;
-    }
-
-    .shipment-link:hover {
-        text-decoration: underline;
-    }
-
-    .shipment-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        font-size: 0.85rem;
-        color: #666;
-    }
-
-    .status-badge-mini {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .status-badge-mini.draft { background: #f3f4f6; color: #6b7280; }
-    .status-badge-mini.confirmed { background: #dbeafe; color: #1e40af; }
-    .status-badge-mini.packed { background: #fef3c7; color: #92400e; }
-    .status-badge-mini.shipped { background: #d1fae5; color: #065f46; }
-    .status-badge-mini.delivered { background: #c7d2fe; color: #3730a3; }
-    .status-badge-mini.cancelled { background: #fee2e2; color: #991b1b; }
-
-    .info-section {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .info-section h2 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #333;
-    }
-
-    .note-box {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 0.75rem;
-    }
-
-    .note-box.internal {
-        background: #fff3cd;
-    }
-
-    .note-box .label {
-        font-size: 0.8rem;
-        color: #666;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-
-    .note-box p {
-        margin: 0;
-        color: #333;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    @media (max-width: 1024px) {
-        .items-section {
-            grid-template-columns: 1fr;
-        }
-        
-        .sidebar {
-            order: -1;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .sales-order-detail {
-            padding: 1rem;
-        }
-    }
-</style>

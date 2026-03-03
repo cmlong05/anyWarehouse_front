@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
     import { formatDate, safeParseFloat } from '$lib/utils';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
@@ -9,7 +9,7 @@
     import { DeleteConfirmModal, LinkPackageModal, NewPackageModal } from '$lib/components/shipment';
 
     // 获取发货单ID
-    let shipmentId = $derived(parseInt($page.params.id));
+    let shipmentId = $derived(parseInt(page.params.id));
 
     // 使用共享逻辑
     const shipmentDetail = useShipmentDetail(() => shipmentId);
@@ -25,15 +25,30 @@
         return SHIPMENT_STATUS_CHOICES.find(s => s.value === status)?.label || status;
     }
 
-    function getStatusBadgeClass(status: string) {
-        switch (status) {
-            case 'draft': return 'badge-ghost';
-            case 'confirmed': return 'badge-info';
-            case 'packed': return 'badge-warning';
-            case 'shipped': return 'badge-success';
-            case 'delivered': return 'badge-primary';
-            case 'cancelled': return 'badge-error';
-            default: return '';
+    function getStatusBadgeClass(status: string): string {
+        const classes: Record<string, string> = {
+            draft: 'bg-gray-100 text-gray-600',
+            confirmed: 'bg-blue-100 text-blue-700',
+            packed: 'bg-yellow-100 text-yellow-700',
+            shipped: 'bg-green-100 text-green-700',
+            delivered: 'bg-indigo-100 text-indigo-700',
+            cancelled: 'bg-red-100 text-red-700',
+        };
+        return classes[status] || 'bg-gray-100 text-gray-600';
+    }
+
+    // 按钮变体样式
+    function getButtonClass(variant: string): string {
+        const base = 'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed';
+        switch (variant) {
+            case 'primary':
+                return `${base} bg-blue-600 text-white hover:bg-blue-700`;
+            case 'outline':
+                return `${base} bg-white border border-gray-300 text-gray-700 hover:bg-gray-50`;
+            case 'error':
+                return `${base} bg-red-600 text-white hover:bg-red-700`;
+            default:
+                return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200`;
         }
     }
 
@@ -45,8 +60,8 @@
         // 创建数组副本，避免修改原配置
         const actions = [...(SHIPMENT_ACTIONS[status] || [])];
         
-        // 添加取消按钮（除已完成和已取消外）
-        if (status !== 'delivered' && status !== 'cancelled') {
+        // 非草稿状态添加取消按钮（除已完成和已取消外）
+        if (status !== 'draft' && status !== 'delivered' && status !== 'cancelled') {
             actions.push({ action: 'cancel', label: '取消', variant: 'error', confirmMessage: '确认要取消此发货单？' });
         }
         
@@ -64,34 +79,49 @@
     <title>发货详情 - {shipmentDetail.shipment?.shipment_no || '加载中...'} - AnyWarehouse</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-6">
+<div class="max-w-6xl mx-auto px-4 py-6">
     <!-- 头部 -->
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
-            <button class="btn btn-ghost btn-sm" aria-label="返回" onclick={shipmentDetail.goBack}>
+            <button 
+                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
+                aria-label="返回" 
+                onclick={shipmentDetail.goBack}
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
             </button>
-            <h1 class="text-2xl font-bold">发货详情</h1>
+            <h1 class="text-2xl font-bold text-gray-900">发货详情</h1>
         </div>
         
         {#if shipmentDetail.shipment}
             <div class="flex gap-2 flex-wrap">
                 {#each getAvailableActions() as { action, label, variant, confirmMessage }}
-                    <button class="btn btn-{variant}" 
-                            onclick={() => handleAction(action, confirmMessage)}
-                            disabled={shipmentDetail.actionLoading}>
+                    <button 
+                        class={getButtonClass(variant)}
+                        onclick={() => handleAction(action, confirmMessage)}
+                        disabled={shipmentDetail.actionLoading}
+                    >
                         {label}
                     </button>
                 {/each}
                 
                 {#if shipmentDetail.shipment.status === 'draft' || shipmentDetail.shipment.status === 'confirmed'}
-                    <button class="btn btn-outline" onclick={shipmentDetail.goToEdit}>编辑</button>
+                    <button 
+                        class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                        onclick={shipmentDetail.goToEdit}
+                    >
+                        编辑
+                    </button>
                 {/if}
-                {#if shipmentDetail.shipment.status !== 'delivered'}
-                    <button class="btn btn-error btn-outline" 
-                            onclick={() => shipmentDetail.showDeleteModal = true}>删除</button>
+                {#if ['draft', 'cancelled'].includes(shipmentDetail.shipment.status)}
+                    <button 
+                        class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-all duration-200"
+                        onclick={() => shipmentDetail.showDeleteModal = true}
+                    >
+                        删除
+                    </button>
                 {/if}
             </div>
         {/if}
@@ -109,51 +139,60 @@
         <div class="space-y-6">
             <!-- 基本信息 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4">基本信息</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">基本信息</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
-                        <span class="text-gray-500 text-sm">发货批次号</span>
-                        <p class="font-medium">{shipment.shipment_no}</p>
+                        <span class="text-gray-500 text-sm block">发货批次号</span>
+                        <p class="font-medium text-gray-900">{shipment.shipment_no}</p>
                     </div>
                     <div>
-                        <span class="text-gray-500 text-sm">状态</span>
-                        <p><span class="badge {getStatusBadgeClass(shipment.status)}">{getStatusText(shipment.status)}</span></p>
+                        <span class="text-gray-500 text-sm block">状态</span>
+                        <p class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusBadgeClass(shipment.status)}">
+                                {getStatusText(shipment.status)}
+                            </span>
+                        </p>
                     </div>
                     <div>
-                        <span class="text-gray-500 text-sm">创建时间</span>
-                        <p class="font-medium">{formatDate(shipment.created_at)}</p>
+                        <span class="text-gray-500 text-sm block">创建时间</span>
+                        <p class="font-medium text-gray-900">{formatDate(shipment.created_at)}</p>
                     </div>
                     <div>
-                        <span class="text-gray-500 text-sm">更新时间</span>
-                        <p class="font-medium">{formatDate(shipment.updated_at)}</p>
+                        <span class="text-gray-500 text-sm block">更新时间</span>
+                        <p class="font-medium text-gray-900">{formatDate(shipment.updated_at)}</p>
                     </div>
                 </div>
                 {#if shipment.notes}
-                    <div class="mt-4">
-                        <span class="text-gray-500 text-sm">备注</span>
-                        <p class="mt-1">{shipment.notes}</p>
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <span class="text-gray-500 text-sm block">备注</span>
+                        <p class="mt-1 text-gray-700">{shipment.notes}</p>
                     </div>
                 {/if}
             </div>
 
             <!-- 关联订单 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4">关联订单</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">关联订单</h2>
                 {#if shipment.order}
-                    <div class="border rounded-lg p-4">
+                    <div class="border border-gray-200 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="font-medium text-lg">{shipment.order_detail?.order_number}</span>
-                            <a href="/customer/sales-order/{shipment.order}" class="btn btn-sm btn-outline">查看订单</a>
+                            <span class="font-medium text-lg text-gray-900">{shipment.order_detail?.order_number}</span>
+                            <a 
+                                href="/customer/sales-order/{shipment.order}" 
+                                class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                查看订单
+                            </a>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div><span class="text-gray-500">客户：</span><span>{shipment.order_detail?.customer_name}</span></div>
-                            <div><span class="text-gray-500">总金额：</span><span>¥{shipment.order_detail?.total_amount}</span></div>
-                            <div><span class="text-gray-500">收货人：</span><span>{shipment.order_detail?.contact_person || '-'}</span></div>
-                            <div><span class="text-gray-500">电话：</span><span>{shipment.order_detail?.contact_phone || '-'}</span></div>
+                            <div><span class="text-gray-500">客户：</span><span class="text-gray-900">{shipment.order_detail?.customer_name}</span></div>
+                            <div><span class="text-gray-500">总金额：</span><span class="text-gray-900">¥{shipment.order_detail?.total_amount}</span></div>
+                            <div><span class="text-gray-500">收货人：</span><span class="text-gray-900">{shipment.order_detail?.contact_person || '-'}</span></div>
+                            <div><span class="text-gray-500">电话：</span><span class="text-gray-900">{shipment.order_detail?.contact_phone || '-'}</span></div>
                         </div>
                         {#if shipment.order_detail?.shipping_address}
                             <div class="mt-2 text-sm">
-                                <span class="text-gray-500">收货地址：</span><span>{shipment.order_detail.shipping_address}</span>
+                                <span class="text-gray-500">收货地址：</span><span class="text-gray-900">{shipment.order_detail.shipping_address}</span>
                             </div>
                         {/if}
                     </div>
@@ -164,40 +203,40 @@
 
             <!-- 发货计划明细 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4">发货计划明细</h2>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">发货计划明细</h2>
                 {#if shipment.items?.length}
                     <div class="overflow-x-auto">
-                        <table class="table w-full text-sm">
+                        <table class="w-full text-sm border-collapse">
                             <thead>
                                 <tr class="bg-gray-50">
-                                    <th class="text-left px-3 py-2">SKU</th>
-                                    <th class="text-left px-3 py-2">商品名称</th>
-                                    <th class="text-right px-3 py-2 w-24">计划数量</th>
-                                    <th class="text-right px-3 py-2 w-24">已打包</th>
-                                    <th class="text-right px-3 py-2 w-24">待打包</th>
-                                    <th class="text-center px-3 py-2 w-20">状态</th>
+                                    <th class="text-left px-3 py-2.5 font-medium text-gray-700">SKU</th>
+                                    <th class="text-left px-3 py-2.5 font-medium text-gray-700">商品名称</th>
+                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">计划数量</th>
+                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">已打包</th>
+                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">待打包</th>
+                                    <th class="text-center px-3 py-2.5 font-medium text-gray-700 w-20">状态</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-gray-100">
                                 {#each shipment.items as item}
                                     {@const qty = safeParseFloat(item.quantity)}
                                     {@const packed = safeParseFloat(item.quantity_packed, 0)}
                                     {@const pending = qty - packed}
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-3 py-2 font-mono text-xs">{item.sku}</td>
-                                        <td class="px-3 py-2">{item.product_name}</td>
-                                        <td class="px-3 py-2 text-right font-medium">{qty.toFixed(0)}</td>
-                                        <td class="px-3 py-2 text-right text-success">{packed.toFixed(0)}</td>
-                                        <td class="px-3 py-2 text-right" class:text-error={pending > 0} class:text-gray-400={pending === 0}>
+                                    <tr class="hover:bg-gray-50 transition-colors">
+                                        <td class="px-3 py-2.5 font-mono text-xs text-gray-600">{item.sku}</td>
+                                        <td class="px-3 py-2.5 text-gray-900">{item.product_name}</td>
+                                        <td class="px-3 py-2.5 text-right font-medium text-gray-900">{qty.toFixed(0)}</td>
+                                        <td class="px-3 py-2.5 text-right text-green-600">{packed.toFixed(0)}</td>
+                                        <td class="px-3 py-2.5 text-right {pending > 0 ? 'text-red-600' : 'text-gray-400'}">
                                             {pending.toFixed(0)}
                                         </td>
-                                        <td class="px-3 py-2 text-center">
+                                        <td class="px-3 py-2.5 text-center">
                                             {#if pending === 0}
-                                                <span class="badge badge-success badge-sm">已打包</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">已打包</span>
                                             {:else if packed > 0}
-                                                <span class="badge badge-warning badge-sm">部分打包</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">部分打包</span>
                                             {:else}
-                                                <span class="badge badge-ghost badge-sm">待打包</span>
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">待打包</span>
                                             {/if}
                                         </td>
                                     </tr>
@@ -206,8 +245,8 @@
                         </table>
                     </div>
                     <div class="mt-4 flex gap-4 text-sm text-gray-600">
-                        <span>总计: <strong>{shipment.items.length}</strong> 种商品</span>
-                        <span>总数量: <strong>{shipment.items.reduce((sum, i) => sum + parseFloat(i.quantity), 0).toFixed(0)}</strong></span>
+                        <span>总计: <strong class="text-gray-900">{shipment.items.length}</strong> 种商品</span>
+                        <span>总数量: <strong class="text-gray-900">{shipment.items.reduce((sum, i) => sum + parseFloat(i.quantity), 0).toFixed(0)}</strong></span>
                     </div>
                 {:else}
                     <p class="text-gray-400">暂无发货计划明细</p>
@@ -217,12 +256,18 @@
             <!-- 包裹列表 -->
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold">包裹列表</h2>
+                    <h2 class="text-lg font-bold text-gray-900">包裹列表</h2>
                     <div class="flex gap-2">
-                        <button class="btn btn-outline btn-sm" onclick={() => shipmentDetail.openLinkPackageModal()}>
+                        <button 
+                            class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                            onclick={() => shipmentDetail.openLinkPackageModal()}
+                        >
                             关联已有包裹
                         </button>
-                        <button class="btn btn-primary btn-sm" onclick={() => shipmentDetail.openNewPackageModal()}>
+                        <button 
+                            class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            onclick={() => shipmentDetail.openNewPackageModal()}
+                        >
                             新建包裹
                         </button>
                     </div>
@@ -231,28 +276,31 @@
                 {#if shipment.packages?.length}
                     <div class="space-y-4">
                         {#each shipment.packages as pkg}
-                            <a href="/customer/package/{pkg.id}" class="block border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                            <a 
+                                href="/customer/package/{pkg.id}" 
+                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                            >
                                 <div class="flex justify-between items-start mb-3">
                                     <div class="flex items-center gap-2">
-                                        <span class="font-medium">{pkg.package_no}</span>
+                                        <span class="font-medium text-gray-900">{pkg.package_no}</span>
                                         <span class="text-gray-400 text-sm">序号 #{pkg.sequence_no}</span>
                                     </div>
                                     {#if pkg.tracking_number_detail}
                                         <div class="text-right">
                                             <span class="text-sm text-gray-500">{pkg.tracking_number_detail.carrier_name}</span>
-                                            <p class="font-mono">{pkg.tracking_number_detail.tracking_no}</p>
+                                            <p class="font-mono text-sm text-gray-900">{pkg.tracking_number_detail.tracking_no}</p>
                                         </div>
                                     {/if}
                                 </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                                    <div><span class="text-gray-500">重量：</span><span>{pkg.weight ? parseFloat(pkg.weight).toFixed(3) : '-'} kg</span></div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div><span class="text-gray-500">重量：</span><span class="text-gray-900">{pkg.weight ? parseFloat(pkg.weight).toFixed(3) : '-'} kg</span></div>
                                     <div><span class="text-gray-500">体积：</span>
-                                        <span>{pkg.length !== null && pkg.width !== null && pkg.height !== null 
+                                        <span class="text-gray-900">{pkg.length !== null && pkg.width !== null && pkg.height !== null 
                                             ? `${pkg.length}×${pkg.width}×${pkg.height} cm` : '-'}</span>
                                     </div>
-                                    <div><span class="text-gray-500">商品种类：</span><span>{pkg.items?.length || 0}</span></div>
+                                    <div><span class="text-gray-500">商品种类：</span><span class="text-gray-900">{pkg.items?.length || 0}</span></div>
                                     <div><span class="text-gray-500">总数量：</span>
-                                        <span>{(pkg.items?.reduce((sum: number, i: PackageItem) => sum + safeParseFloat(i.quantity, 0), 0) || 0).toFixed(0)}</span>
+                                        <span class="text-gray-900">{(pkg.items?.reduce((sum: number, i: PackageItem) => sum + safeParseFloat(i.quantity, 0), 0) || 0).toFixed(0)}</span>
                                     </div>
                                 </div>
                             </a>
@@ -299,61 +347,3 @@
         shipmentDetail.loadShipment();
     }}
 />
-
-<style>
-    .container { max-width: 1200px; margin: 0 auto; }
-    .space-y-6 > * + * { margin-top: 1.5rem; }
-    
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-ghost { background: transparent; color: #6b7280; }
-    .btn-ghost:hover:not(:disabled) { background: #f3f4f6; }
-    .btn-outline { background: white; border: 1px solid #d1d5db; color: #374151; }
-    .btn-outline:hover:not(:disabled) { background: #f9fafb; }
-    .btn-primary { background: #1976d2; color: white; }
-    .btn-primary:hover:not(:disabled) { background: #1565c0; }
-    .btn-error { background: #dc3545; color: white; }
-    .btn-error:hover:not(:disabled) { background: #c82333; }
-    
-    .badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .badge-ghost { background: #f3f4f6; color: #6b7280; }
-    .badge-info { background: #dbeafe; color: #1e40af; }
-    .badge-warning { background: #fef3c7; color: #92400e; }
-    .badge-success { background: #d1fae5; color: #065f46; }
-    .badge-primary { background: #c7d2fe; color: #3730a3; }
-    .badge-error { background: #fee2e2; color: #991b1b; }
-    
-    .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 0.5rem; text-align: left; }
-    .bg-gray-50 { background: #f9fafb; }
-    .hover\:bg-gray-50:hover { background: #f9fafb; }
-    
-    .text-success { color: #16a34a; }
-    .text-error { color: #dc2626; }
-    .text-gray-400 { color: #9ca3af; }
-    .text-gray-500 { color: #6b7280; }
-    .text-gray-600 { color: #4b5563; }
-    
-    @media (max-width: 768px) {
-        .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
-    }
-</style>
