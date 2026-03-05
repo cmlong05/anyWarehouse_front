@@ -283,25 +283,25 @@
                                     <p class="text-sm text-gray-400 mt-1">点击上方按钮添加库存</p>
                                 </div>
                             {:else}
-                                <div class="overflow-hidden rounded-lg border border-gray-200">
-                                    <table class="w-full text-sm">
+                                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                                    <table class="w-full text-sm min-w-[500px]">
                                         <thead class="bg-gray-50">
                                             <tr>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">位置</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">标记</th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700">数量</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-700">出库</th>
+                                                <th class="px-2 sm:px-4 py-3 text-left font-medium text-gray-700">位置</th>
+                                                <th class="px-2 sm:px-4 py-3 text-left font-medium text-gray-700">标记</th>
+                                                <th class="px-2 sm:px-4 py-3 text-right font-medium text-gray-700">数量</th>
+                                                <th class="px-2 sm:px-4 py-3 text-center font-medium text-gray-700 whitespace-nowrap">出库</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200">
                                             {#each data.itemDetail.storages as storage}
                                                 <tr class="hover:bg-gray-50">
-                                                    <td class="px-4 py-3">
+                                                    <td class="px-2 sm:px-4 py-3">
                                                         <a href="/container/{storage.container_fastCode}" class="font-medium text-blue-600 hover:underline">
                                                             {storage.container_fastCode}
                                                         </a>
                                                     </td>
-                                                    <td class="px-4 py-3">
+                                                    <td class="px-2 sm:px-4 py-3">
                                                         {#if storage.mark}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
                                                                 {storage.mark}
@@ -310,13 +310,13 @@
                                                             <span class="text-gray-400">-</span>
                                                         {/if}
                                                     </td>
-                                                    <td class="px-4 py-3 text-right">
+                                                    <td class="px-2 sm:px-4 py-3 text-right">
                                                         <a href="/storage/{storage.id}" class="font-medium text-gray-900 hover:text-blue-600">
                                                             {storage.quantity}
                                                         </a>
                                                     </td>
-                                                    <td class="px-4 py-3">
-                                                        <div class="flex items-center justify-center gap-2">
+                                                    <td class="px-2 sm:px-4 py-3">
+                                                        <div class="flex items-center justify-center gap-1 sm:gap-2">
                                                             <NumberStepper
                                                                 bind:value={quantityValues[storage.id]}
                                                                 min={1}
@@ -327,7 +327,7 @@
                                                             />
                                                             <button
                                                                 onclick={(e) => handleStorage(e, storage)}
-                                                                class="px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors"
+                                                                class="px-2 sm:px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors whitespace-nowrap shrink-0"
                                                             >
                                                                 出库
                                                             </button>
