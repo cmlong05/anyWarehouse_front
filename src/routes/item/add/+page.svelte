@@ -8,6 +8,7 @@
         data: {
             categories: Category[];
             defaultCategoryId?: number | null;
+            copyFromItem?: any;
         }
     }>();
 
@@ -23,15 +24,17 @@
 
 <PageContainer maxWidth="md">
     <PageHeader 
-        title="添加商品"
-        subtitle={defaultCategory 
-            ? `默认分类：${defaultCategory.name}`
-            : '创建新的商品信息'}
+        title={data.copyFromItem ? '复制商品' : '添加商品'}
+        subtitle={data.copyFromItem 
+            ? `基于 ${data.copyFromItem.name?.replace(' (复制)', '') || '原商品'} 创建副本`
+            : defaultCategory 
+                ? `默认分类：${defaultCategory.name}`
+                : '创建新的商品信息'}
     />
     
     <ItemForm 
         mode="add"
-        initialData={data.defaultCategoryId ? {
+        initialData={data.copyFromItem || (data.defaultCategoryId ? {
             SKU: '',
             name: '',
             SKU_zite: '',
@@ -46,7 +49,7 @@
             in_fee: null,
             barcode: '',
             category: [data.defaultCategoryId]
-        } : undefined}
+        } : undefined)}
         categories={data.categories}
     />
 </PageContainer>

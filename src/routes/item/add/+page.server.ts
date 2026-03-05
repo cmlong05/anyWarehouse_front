@@ -15,9 +15,43 @@ export async function load({ fetch, url }) {
         const categoryParam = url.searchParams.get('category');
         const defaultCategoryId = categoryParam ? parseInt(categoryParam) : null;
         
+        // 获取复制来源的商品ID
+        const copyFromParam = url.searchParams.get('copy_from');
+        let copyFromItem = null;
+        
+        if (copyFromParam) {
+            try {
+                const itemRes = await fetch(`${config.API_BASE_URL}/product/item/${copyFromParam}/`);
+                if (itemRes.ok) {
+                    const responseData = await itemRes.json();
+                    // API 返回的是嵌套结构 { item: {...} }
+                    const itemData = responseData.item || responseData;
+                    copyFromItem = {
+                        SKU: `${itemData.SKU}_COPY`, // SKU 加后缀避免冲突
+                        name: `${itemData.name} (复制)`,
+                        SKU_zite: itemData.SKU_zite || '',
+                        SKU_A: itemData.SKU_A || '',
+                        description: itemData.description || '',
+                        image: itemData.image || '',
+                        weight: itemData.weight || '',
+                        p_volume: itemData.p_volume || 0,
+                        s_volume: itemData.s_volume || 0,
+                        b_Price: itemData.b_Price || '',
+                        currency: itemData.currency || '',
+                        in_fee: itemData.in_fee || null,
+                        barcode: '', // 条形码不复制
+                        category: itemData.category || []
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to fetch copy item:', e);
+            }
+        }
+        
         return { 
             categories,
-            defaultCategoryId
+            defaultCategoryId,
+            copyFromItem
         };
     } catch (err) {
         throw error(500, 'Failed to load data');

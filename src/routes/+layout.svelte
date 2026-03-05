@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import { browser } from '$app/environment';
 	
 	let { children } = $props();
 	
@@ -41,124 +42,173 @@
 		}
 	];
 	
-
+	// 移动端菜单状态
+	let mobileMenuOpen = $state(false);
+	// 移动端展开的子菜单索引
+	let expandedMobileItems = $state<Set<number>>(new Set());
+	// 桌面端展开的下拉菜单索引
+	let openDropdownIndex = $state<number | null>(null);
+	
+	function toggleMobileMenu() {
+		mobileMenuOpen = !mobileMenuOpen;
+	}
+	
+	function toggleMobileSubmenu(index: number) {
+		const newSet = new Set(expandedMobileItems);
+		if (newSet.has(index)) {
+			newSet.delete(index);
+		} else {
+			newSet.add(index);
+		}
+		expandedMobileItems = newSet;
+	}
+	
+	function closeMobileMenu() {
+		mobileMenuOpen = false;
+	}
+	
+	function openDropdown(index: number) {
+		openDropdownIndex = index;
+	}
+	
+	function closeDropdown() {
+		// 延迟关闭，允许鼠标移动到菜单上
+		setTimeout(() => {
+			openDropdownIndex = null;
+		}, 150);
+	}
+	
+	
 </script>
 
-<nav class="main-nav">
-	{#each navItems as item}
-		{#if item.children}
-			<div class="nav-item has-dropdown">
-				<a href={item.href} class="nav-link dropdown-toggle">
-					{item.label}
-					<span class="arrow">▼</span>
-				</a>
-				<div class="dropdown-menu">
-					{#each item.children as child}
-						<a href={child.href} class="dropdown-link">{child.label}</a>
+<div class="relative">
+	<nav class="sticky top-0 z-[1000] bg-white border-b border-gray-200 shadow-sm">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+			<div class="flex justify-between h-14">
+				<!-- Logo / Brand -->
+				<div class="flex items-center">
+					<a href="/" class="flex items-center text-blue-600 hover:text-blue-700 transition-colors" aria-label="首页">
+						<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+						</svg>
+					</a>
+				</div>
+				
+				<!-- Desktop Navigation -->
+				<div class="hidden md:flex items-center space-x-1">
+					{#each navItems as item, index}
+						{#if item.children}
+							<!-- Desktop Dropdown -->
+							<div class="relative">
+								<a 
+									href={item.href}
+									class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
+									onmouseenter={() => openDropdown(index)}
+									aria-expanded={openDropdownIndex === index}
+								>
+									{item.label}
+									<svg class="w-4 h-4 transition-transform {openDropdownIndex === index ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+									</svg>
+								</a>
+								{#if openDropdownIndex === index}
+									<!-- Dropdown Menu -->
+									<div 
+										class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
+										style="z-index: 9999;"
+										role="menu"
+										tabindex="-1"
+										onmouseleave={closeDropdown}
+									>
+										{#each item.children as child}
+											<a href={child.href} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+												{child.label}
+											</a>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<!-- Desktop Simple Link -->
+							<a href={item.href} class="px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors">
+								{item.label}
+							</a>
+						{/if}
+					{/each}
+				</div>
+				
+				<!-- Mobile Menu Button -->
+				<div class="flex items-center md:hidden">
+					<button 
+						onclick={toggleMobileMenu}
+						class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+						aria-expanded={mobileMenuOpen}
+					>
+						<span class="sr-only">打开菜单</span>
+						{#if mobileMenuOpen}
+							<!-- X Icon -->
+							<svg class="block h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						{:else}
+							<!-- Menu Icon -->
+							<svg class="block h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+							</svg>
+						{/if}
+					</button>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Mobile Menu -->
+		{#if mobileMenuOpen}
+			<div class="md:hidden bg-white border-t border-gray-200">
+				<div class="px-2 pt-2 pb-3 space-y-1">
+					{#each navItems as item, index}
+						{#if item.children}
+							<!-- Mobile Dropdown -->
+							<div class="space-y-1">
+								<button 
+									onclick={() => toggleMobileSubmenu(index)}
+									class="w-full flex items-center justify-between px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
+								>
+									<span>{item.label}</span>
+									<svg class="w-5 h-5 transition-transform duration-200 {expandedMobileItems.has(index) ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+									</svg>
+								</button>
+								{#if expandedMobileItems.has(index)}
+									<div class="pl-4 space-y-1">
+										{#each item.children as child}
+											<a 
+												href={child.href} 
+												onclick={closeMobileMenu}
+												class="block px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
+											>
+												{child.label}
+											</a>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<!-- Mobile Simple Link -->
+							<a 
+								href={item.href} 
+								onclick={closeMobileMenu}
+								class="block px-3 py-2 text-base font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
+							>
+								{item.label}
+							</a>
+						{/if}
 					{/each}
 				</div>
 			</div>
-		{:else}
-			<a href={item.href} class="nav-link">{item.label}</a>
 		{/if}
-	{/each}
-</nav> 
-
-{@render children()}
-
-<style>
-	.main-nav {
-		display: flex;
-		gap: 1rem;
-		padding: 1rem;
-		background-color: #f8f9fa;
-		border-bottom: 1px solid #dee2e6;
-		position: relative;
-		z-index: 1000;
-	}
+	</nav>
 	
-	.nav-link {
-		color: #007bff;
-		text-decoration: none;
-		padding: 0.5rem 1rem;
-		border-radius: 0.25rem;
-		transition: background-color 0.2s ease;
-		background: none;
-		border: none;
-		font-size: inherit;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-	}
-	
-	.nav-link:hover {
-		background-color: #e9ecef;
-		text-decoration: none;
-	}
-	
-	.nav-item {
-		position: relative;
-	}
-	
-	.dropdown-toggle .arrow {
-		font-size: 0.7em;
-		transition: transform 0.2s ease;
-	}
-	
-	.nav-item:hover .arrow {
-		transform: rotate(180deg);
-	}
-	
-	/* 悬停时按钮去掉底部圆角，与菜单连接 */
-	.nav-item:hover .dropdown-toggle {
-		border-radius: 0.25rem 0.25rem 0 0;
-		background-color: #e9ecef;
-	}
-	
-	.dropdown-menu {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		background-color: white;
-		border: 1px solid #dee2e6;
-		border-top: none;
-		border-radius: 0 0 0.25rem 0.25rem;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		min-width: 140px;
-		z-index: 1001;
-		pointer-events: none;
-		visibility: hidden;
-		opacity: 0;
-		transition: opacity 0.15s ease, visibility 0.15s ease;
-	}
-	
-	/* 纯 CSS hover 显示菜单并启用交互 */
-	.nav-item:hover .dropdown-menu {
-		pointer-events: auto;
-		visibility: visible;
-		opacity: 1;
-	}
-	
-	.dropdown-link {
-		display: block;
-		padding: 0.5rem 1rem;
-		color: #333;
-		text-decoration: none;
-		white-space: nowrap;
-		transition: background-color 0.2s ease;
-	}
-	
-	.dropdown-link:hover {
-		background-color: #f8f9fa;
-		color: #007bff;
-	}
-	
-	.dropdown-link:first-child {
-		border-radius: 0.25rem 0.25rem 0 0;
-	}
-	
-	.dropdown-link:last-child {
-		border-radius: 0 0 0.25rem 0.25rem;
-	}
-</style>
+	<main class="min-h-screen bg-gray-50 relative" style="z-index: 1;">
+		{@render children()}
+	</main>
+</div>
