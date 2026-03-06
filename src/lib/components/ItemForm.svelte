@@ -15,6 +15,7 @@
             SKU_A?: string;
             description?: string;
             image?: string;
+            image_path?: string;  // 复制时共用图片的路径
             weight?: string;
             p_volume?: number;
             s_volume?: number;
@@ -239,6 +240,7 @@
     </div>
 
     {#if mode === 'edit' && initialData?.id}<input type="hidden" name="id" value={initialData.id} />{/if}
+    {#if initialData?.image_path}<input type="hidden" name="image_path" value={initialData.image_path} />{/if}
 
     <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-200">
         <button type="button" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={handleCancel}>取消</button>

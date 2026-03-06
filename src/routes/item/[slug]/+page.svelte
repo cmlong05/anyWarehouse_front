@@ -80,19 +80,23 @@
 
 <div class="max-w-7xl mx-auto px-4 py-6">
     <!-- 面包屑导航 -->
-    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <a href="/" class="hover:text-blue-600 transition-colors">首页</a>
-        <span>/</span>
-        {#each data.itemDetail.categories as category}
-            {#each category.ancestors as ancestor}
-                <a href="/item/category/{ancestor.id}" class="hover:text-blue-600 transition-colors">{ancestor.name}</a>
+    <div class="mb-6 space-y-2">
+        {#each data.itemDetail.categories as category, catIndex}
+            <nav class="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
+                <a href="/item/category/4" class="hover:text-blue-600 transition-colors">主分类</a>
                 <span>/</span>
-            {/each}
-            <a href="/item/category/{category.category.id}" class="hover:text-blue-600 transition-colors">{category.category.name}</a>
-            <span>/</span>
+                {#each category.ancestors as ancestor}
+                    <a href="/item/category/{ancestor.id}" class="hover:text-blue-600 transition-colors">{ancestor.name}</a>
+                    <span>/</span>
+                {/each}
+                <a href="/item/category/{category.category.id}" class="hover:text-blue-600 transition-colors">{category.category.name}</a>
+                <span>/</span>
+                {#if catIndex === data.itemDetail.categories.length - 1}
+                    <span class="text-gray-900 font-medium font-mono">{data.itemDetail.item.SKU}</span>
+                {/if}
+            </nav>
         {/each}
-        <span class="text-gray-900 font-medium font-mono">{data.itemDetail.item.SKU}</span>
-    </nav>
+    </div>
 
     <!-- 主布局：左侧内容 + 右侧边栏 -->
     <div class="flex flex-col lg:flex-row gap-6">
@@ -102,12 +106,12 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
                 <div class="flex flex-col lg:flex-row">
                     <!-- 图片区域 -->
-                    <div class="lg:w-80 bg-gray-50 flex items-center justify-center p-6 border-b lg:border-b-0 lg:border-r border-gray-200">
+                    <div class="lg:w-80 bg-gray-50 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-gray-200 overflow-hidden">
                         {#if data.itemDetail.item.image}
                             <img 
                                 src={data.itemDetail.item.image.trim()} 
                                 alt={data.itemDetail.item.name}
-                                class="max-w-full max-h-72 object-contain rounded-lg shadow-sm"
+                                class="w-full h-full object-cover"
                             />
                         {:else}
                             <div class="w-40 h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">

@@ -26,13 +26,27 @@ export async function load({ fetch, url }) {
                     const responseData = await itemRes.json();
                     // API 返回的是嵌套结构 { item: {...} }
                     const itemData = responseData.item || responseData;
+                    
+                    // 处理图片路径：提取相对路径，去掉 /media/ 前缀
+                    let imagePath = itemData.image || '';
+                    if (imagePath) {
+                        // 去掉完整 URL 前缀，保留相对路径
+                        // 例如：http://localhost:8080/media/product/images/xxx.jpg -> product/images/xxx.jpg
+                        // 或：/media/product/images/xxx.jpg -> product/images/xxx.jpg
+                        const mediaMatch = imagePath.match(/\/media\/(.*)/);
+                        if (mediaMatch) {
+                            imagePath = mediaMatch[1];
+                        }
+                    }
+                    
                     copyFromItem = {
                         SKU: `${itemData.SKU}_COPY`, // SKU 加后缀避免冲突
                         name: `${itemData.name} (复制)`,
                         SKU_zite: itemData.SKU_zite || '',
                         SKU_A: itemData.SKU_A || '',
                         description: itemData.description || '',
-                        image: itemData.image || '',
+                        image: imagePath,  // 用于预览显示
+                        image_path: imagePath,  // 用于后端共用原图（write_only）
                         weight: itemData.weight || '',
                         p_volume: itemData.p_volume || 0,
                         s_volume: itemData.s_volume || 0,
@@ -79,7 +93,11 @@ export const actions = {
 
         // 只在有值时添加可选字段
         const imageValue = formData.get('image');
-        if (imageValue && imageValue.toString().trim()) {
+        const imagePathValue = formData.get('image_path');
+        if (imagePathValue && imagePathValue.toString().trim()) {
+            // 优先使用 image_path（复制时共用图片）
+            itemData.image_path = imagePathValue;
+        } else if (imageValue && imageValue.toString().trim()) {
             itemData.image = imageValue;
         }
 
