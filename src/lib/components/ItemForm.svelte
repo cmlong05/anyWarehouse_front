@@ -118,9 +118,47 @@
         event.preventDefault();
         formLoading = true;
         try {
-            const form = event.target as HTMLFormElement;
-            const submitData = new FormData(form);
-            if (selectedFile) submitData.set('image', selectedFile);
+            // 从 formData 构建 submitData，过滤空值
+            const submitData = new FormData();
+            
+            // 必填字段
+            submitData.set('SKU', formData.SKU);
+            submitData.set('name', formData.name);
+            
+            // 可选字符串字段：空字符串不提交
+            const optionalStringFields = ['SKU_zite', 'SKU_A', 'description', 'barcode', 'currency'] as const;
+            for (const field of optionalStringFields) {
+                const value = formData[field];
+                if (value && String(value).trim() !== '') {
+                    submitData.set(field, String(value));
+                }
+            }
+            
+            // 数值字段：空字符串或 null 不提交，让后端用默认值
+            const numericFields = ['weight', 'b_Price', 'in_fee'] as const;
+            for (const field of numericFields) {
+                const value = formData[field];
+                if (value !== '' && value !== null && value !== undefined && String(value).trim() !== '') {
+                    submitData.set(field, String(value));
+                }
+            }
+            
+            // 整数字段（体积）：0 是有效值，要提交
+            submitData.set('p_volume', String(formData.p_volume ?? 0));
+            submitData.set('s_volume', String(formData.s_volume ?? 0));
+            
+            // 分类数组
+            for (const categoryId of formData.category) {
+                submitData.append('category', String(categoryId));
+            }
+            
+            // 图片处理
+            if (selectedFile) {
+                submitData.set('image', selectedFile);
+            } else if (initialData?.image_path && !formData.image) {
+                // 复制模式：共用原图
+                submitData.set('image_path', initialData.image_path);
+            }
             
             const apiUrl = mode === 'edit' && initialData?.id 
                 ? `${config.API_BASE_URL}/product/item/${initialData.id}/`
@@ -165,19 +203,16 @@
             <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">物理属性</h3>
             <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm font-medium text-gray-700">重量:</span>
-                <NumberStepper value={parseFloat(formData.weight) || 0} min={0} step={0.01} size="sm" onchange={(v) => formData.weight = (v ?? 0).toFixed(2)} />
-                <input type="hidden" name="weight" value={formData.weight} />
+                <NumberStepper value={parseFloat(formData.weight) || 0} min={0} step={1} size="sm" decimalPlaces={0} onchange={(v) => formData.weight = String(v ?? 0)} />
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-medium text-gray-700">包装体积:</span>
-                    <NumberStepper value={formData.p_volume} min={0} step={0.01} size="sm" onchange={(v) => formData.p_volume = v ?? 0} />
-                    <input type="hidden" name="p_volume" value={formData.p_volume} />
+                    <NumberStepper value={formData.p_volume} min={0} step={1} size="sm" decimalPlaces={0} onchange={(v) => formData.p_volume = v ?? 0} />
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-medium text-gray-700">存储体积:</span>
-                    <NumberStepper value={formData.s_volume} min={0} step={0.01} size="sm" onchange={(v) => formData.s_volume = v ?? 0} />
-                    <input type="hidden" name="s_volume" value={formData.s_volume} />
+                    <NumberStepper value={formData.s_volume} min={0} step={1} size="sm" decimalPlaces={0} onchange={(v) => formData.s_volume = v ?? 0} />
                 </div>
             </div>
         </div>
@@ -188,15 +223,12 @@
             <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm font-medium text-gray-700">价格:</span>
                 <NumberStepper value={parseFloat(formData.b_Price) || 0} min={0} step={0.01} size="sm" onchange={(v) => formData.b_Price = (v ?? 0).toFixed(2)} />
-                <input type="hidden" name="b_Price" value={formData.b_Price} />
                 <div class="w-20"><Svelecte options={[{value:'CNY',label:'CNY'},{value:'USD',label:'USD'},{value:'EUR',label:'EUR'}]} bind:value={formData.currency} class="svelecte-control" /></div>
-                <input type="hidden" name="currency" value={formData.currency} />
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-medium text-gray-700">入库费用:</span>
                     <NumberStepper value={formData.in_fee ?? 0} min={0} step={0.01} size="sm" onchange={(v) => formData.in_fee = v ?? null} />
-                    <input type="hidden" name="in_fee" value={formData.in_fee ?? ''} />
                 </div>
             </div>
         </div>
@@ -205,30 +237,30 @@
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">其他信息</h3>
             <div class="mb-3">
-                <label for="imageUrl" class="block text-sm font-medium text-gray-700 mb-1">商品图片</label>
-                <div class="flex gap-4 items-start">
-                    <div class="w-[120px] h-[120px] border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
-                        {#if displayImageUrl()}
-                            <img src={displayImageUrl()} alt="商品图片预览" class="w-full h-full object-cover" onerror={handleImageError} />
-                            {#if imageError}<div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>图片加载失败</span></div>{/if}
-                        {:else}
-                            <div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>暂无图片</span></div>
-                        {/if}
-                    </div>
-                    <div class="flex flex-col gap-2 flex-1">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="imageUrl" class="text-sm font-medium text-gray-700">商品图片</label>
+                    <div class="flex gap-2">
                         <input type="file" id="imageFile" accept="image/*" class="hidden" onchange={handleImageUpload} />
-                        <button type="button" class="px-4 py-2 border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors" onclick={() => document.getElementById('imageFile')?.click()}>选择图片</button>
-                        {#if displayImageUrl()}<button type="button" class="px-4 py-2 border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors" onclick={clearImage}>清除图片</button>{/if}
+                        <button type="button" class="px-2 py-1 text-xs border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors" onclick={() => document.getElementById('imageFile')?.click()}>选择</button>
+                        {#if displayImageUrl()}<button type="button" class="px-2 py-1 text-xs border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors" onclick={clearImage}>清除</button>{/if}
                     </div>
                 </div>
-                <div class="mt-3">
+                <div class="w-full h-[200px] border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50 mb-2">
+                    {#if displayImageUrl()}
+                        <img src={displayImageUrl()} alt="商品图片预览" class="w-full h-full object-cover" onerror={handleImageError} />
+                        {#if imageError}<div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>图片加载失败</span></div>{/if}
+                    {:else}
+                        <div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>暂无图片</span></div>
+                    {/if}
+                </div>
+                <div>
                     <input type="text" id="imageUrl" bind:value={imageUrlInput} maxlength={500} placeholder="或输入图片URL" class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 focus:border-blue-400 focus:bg-white focus:outline-none" readonly={mode === 'edit'} />
                 </div>
             </div>
             <div class="mb-2">
                 <label for="category-select" class="block text-sm font-medium text-gray-700 mb-1">分类</label>
                 <Svelecte inputId="category-select" options={selectItems} multiple={true} bind:value={formData.category} placeholder="选择商品分类..." class="svelecte-control" />
-                {#each formData.category as categoryId}<input type="hidden" name="category" value={categoryId} />{/each}
+                
             </div>
         </div>
 
@@ -239,8 +271,7 @@
         </div>
     </div>
 
-    {#if mode === 'edit' && initialData?.id}<input type="hidden" name="id" value={initialData.id} />{/if}
-    {#if initialData?.image_path}<input type="hidden" name="image_path" value={initialData.image_path} />{/if}
+    
 
     <div class="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-200">
         <button type="button" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={handleCancel}>取消</button>
