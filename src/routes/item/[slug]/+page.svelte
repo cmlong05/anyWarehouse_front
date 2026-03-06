@@ -108,10 +108,11 @@
                     <!-- 图片区域 -->
                     <div class="lg:w-80 bg-gray-50 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-gray-200 overflow-hidden p-4">
                         {#if data.itemDetail.item.image}
-                            <button
-                                type="button"
-                                class="p-0 border-0 bg-transparent cursor-pointer"
-                                onclick={() => window.open(data.itemDetail.item.image, '_blank')}
+                            <a
+                                href={data.itemDetail.item.image}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="block leading-[0]"
                                 title="点击查看大图"
                             >
                                 <img 
@@ -119,7 +120,7 @@
                                     alt={data.itemDetail.item.name}
                                     class="max-w-full max-h-80 object-contain hover:scale-105 transition-transform"
                                 />
-                            </button>
+                            </a>
                         {:else}
                             <div class="w-40 h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
                                 <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
