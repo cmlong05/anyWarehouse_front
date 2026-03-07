@@ -56,7 +56,12 @@
 
             if (response.ok) {
                 const result = await response.json();
-                await goto(`/category/${result.id || initialData?.id}`);
+                // 添加成功后返回分类列表，编辑成功后留在当前页面
+                if (mode === 'add') {
+                    await goto('/item/category');
+                } else {
+                    await goto(`/item/category/${result.id || initialData?.id}`);
+                }
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${JSON.stringify(errorData)}`);
@@ -93,8 +98,9 @@
 
     {#if categories.length > 0}
         <div class="form-field">
-            <label>父分类</label>
+            <label for="parent-category">父分类</label>
             <Svelecte
+                inputId="parent-category"
                 options={selectItems}
                 bind:value={formData.parent}
                 placeholder="选择父分类（可选）"
