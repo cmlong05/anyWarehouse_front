@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { ContainerBriefID } from '$lib';
+    import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
-    import { config } from '$lib/config';
     import { goto } from '$app/navigation';
     import { FormInput, NumberStepper } from '$lib/components/ui';
 
@@ -88,31 +88,16 @@
         };
 
         try {
-            let response;
+            let result: { fastCode: string };
             if (mode === 'add') {
-                response = await fetch(`${config.API_BASE_URL}/warehouse/container/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(submitData),
-                });
+                result = await apiClient.post<{ fastCode: string }>('/warehouse/container/', submitData);
             } else {
-                response = await fetch(`${config.API_BASE_URL}/warehouse/container/${initialData?.fastCode}/`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(submitData),
-                });
+                result = await apiClient.patch<{ fastCode: string }>(`/warehouse/container/${initialData?.fastCode}/`, submitData);
             }
-
-            if (response.ok) {
-                const result = await response.json();
-                await goto(`/container/${result.fastCode || submitData.fastCode}`);
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${JSON.stringify(errorData)}`);
-            }
-        } catch (error) {
+            await goto(`/container/${result.fastCode || submitData.fastCode}`);
+        } catch (error: any) {
             console.error('Submit error:', error);
-            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+            alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${error?.message || '未知错误'}`);
         }
     }
 

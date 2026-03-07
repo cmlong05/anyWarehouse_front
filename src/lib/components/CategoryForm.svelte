@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Category } from '$lib';
+    import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
-    import { config } from '$lib/config';
     import { goto } from '$app/navigation';
     import { FormInput } from '$lib/components/ui';
 
@@ -46,28 +46,21 @@
         };
 
         try {
-            let response;
-            const url = `${config.API_BASE_URL}/product/category/`;
+            let result: Category;
             if (mode === 'add') {
-                response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
+                result = await apiClient.post<Category>('/product/category/', submitData);
             } else {
-                response = await fetch(`${url}${initialData?.id}/`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
+                result = await apiClient.patch<Category>(`/product/category/${initialData?.id}/`, submitData);
             }
 
-            if (response.ok) {
-                const result = await response.json();
-                // 添加成功后返回分类列表，编辑成功后留在当前页面
-                if (mode === 'add') {
-                    await goto('/item/category');
-                } else {
-                    await goto(`/item/category/${result.id || initialData?.id}`);
-                }
+            // 添加成功后返回分类列表，编辑成功后留在当前页面
+            if (mode === 'add') {
+                await goto('/item/category');
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${JSON.stringify(errorData)}`);
+                await goto(`/item/category/${result.id || initialData?.id}`);
             }
-        } catch (error) {
-            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+        } catch (error: any) {
+            alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${error?.message || '未知错误'}`);
         }
     }
 

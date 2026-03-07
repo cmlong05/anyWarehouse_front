@@ -22,17 +22,24 @@ export class ApiClient {
 
     private async request<T>(
         url: string,
-        options: RequestInit = {}
+        options: RequestInit = {},
+        isFormData: boolean = false
     ): Promise<T> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         try {
+            const headers: Record<string, string> = {};
+            // 只有非 FormData 请求才设置 Content-Type
+            if (!isFormData) {
+                headers['Content-Type'] = 'application/json';
+            }
+
             const response = await fetch(`${this.baseURL}${url}`, {
                 ...options,
                 signal: controller.signal,
                 headers: {
-                    'Content-Type': 'application/json',
+                    ...headers,
                     ...options.headers,
                 },
             });
@@ -83,25 +90,25 @@ export class ApiClient {
         });
     }
 
-    async post<T>(url: string, data?: unknown): Promise<T> {
+    async post<T>(url: string, data?: unknown, isFormData: boolean = false): Promise<T> {
         return this.request<T>(url, {
             method: 'POST',
-            body: data ? JSON.stringify(data) : undefined,
-        });
+            body: data ? (isFormData ? data as FormData : JSON.stringify(data)) : undefined,
+        }, isFormData);
     }
 
-    async put<T>(url: string, data?: unknown): Promise<T> {
+    async put<T>(url: string, data?: unknown, isFormData: boolean = false): Promise<T> {
         return this.request<T>(url, {
             method: 'PUT',
-            body: data ? JSON.stringify(data) : undefined,
-        });
+            body: data ? (isFormData ? data as FormData : JSON.stringify(data)) : undefined,
+        }, isFormData);
     }
 
-    async patch<T>(url: string, data?: unknown): Promise<T> {
+    async patch<T>(url: string, data?: unknown, isFormData: boolean = false): Promise<T> {
         return this.request<T>(url, {
             method: 'PATCH',
-            body: data ? JSON.stringify(data) : undefined,
-        });
+            body: data ? (isFormData ? data as FormData : JSON.stringify(data)) : undefined,
+        }, isFormData);
     }
 
     async delete<T>(url: string): Promise<T> {

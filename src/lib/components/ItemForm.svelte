@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { Category } from '$lib';
-    import { config } from '$lib/config';
+    import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
     import { FormInput, NumberStepper } from '$lib/components/ui';
 
@@ -160,21 +160,17 @@
                 submitData.set('image_path', initialData.image_path);
             }
             
-            const apiUrl = mode === 'edit' && initialData?.id 
-                ? `${config.API_BASE_URL}/product/item/${initialData.id}/`
-                : `${config.API_BASE_URL}/product/item/`;
-
-            const response = await fetch(apiUrl, { method: mode === 'edit' ? 'PATCH' : 'POST', body: submitData });
-            if (response.ok) {
-                const data = await response.json();
-                alert(mode === 'edit' ? '更新成功！' : '添加成功！');
-                await goto(`/item/${mode === 'edit' ? initialData?.id : data.id}`);
+            let result: { id: number };
+            if (mode === 'edit' && initialData?.id) {
+                result = await apiClient.patch<{ id: number }>(`/product/item/${initialData.id}/`, submitData, true);
             } else {
-                const error = await response.text();
-                alert(`提交失败: ${error || '未知错误'}`);
+                result = await apiClient.post<{ id: number }>('/product/item/', submitData, true);
             }
-        } catch (error) {
-            alert(`提交错误: ${error instanceof Error ? error.message : '未知错误'}`);
+
+            alert(mode === 'edit' ? '更新成功！' : '添加成功！');
+            await goto(`/item/${mode === 'edit' ? initialData?.id : result.id}`);
+        } catch (error: any) {
+            alert(`提交失败: ${error?.message || '未知错误'}`);
         } finally {
             formLoading = false;
         }

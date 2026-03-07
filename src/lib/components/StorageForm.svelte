@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { ContainerBriefID } from '$lib';
+    import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
-    import { config } from '$lib/config';
     import { goto } from '$app/navigation';
     import { FormInput } from '$lib/components/ui';
 
@@ -54,22 +54,14 @@
         };
 
         try {
-            let response;
-            const url = `${config.API_BASE_URL}/warehouse/storage/`;
             if (mode === 'add') {
-                response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
+                await apiClient.post('/warehouse/storage/', submitData);
             } else {
-                response = await fetch(`${url}${initialData?.id}/`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitData) });
+                await apiClient.patch(`/warehouse/storage/${initialData?.id}/`, submitData);
             }
-
-            if (response.ok) {
-                await goto(`/item/${submitData.item}`);
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${JSON.stringify(errorData)}`);
-            }
-        } catch (error) {
-            alert(`网络错误: ${error instanceof Error ? error.message : '未知错误'}`);
+            await goto(`/item/${submitData.item}`);
+        } catch (error: any) {
+            alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${error?.message || '未知错误'}`);
         }
     }
 
@@ -90,14 +82,15 @@
     {/if}
 
     <div class="form-field">
-        <label>物品</label>
-        <input type="text" value={displayItem} disabled class="readonly-input" />
+        <label for="storage-item">物品</label>
+        <input id="storage-item" type="text" value={displayItem} disabled class="readonly-input" />
         <input type="hidden" name="item" value={formData.item} />
     </div>
 
     <div class="form-field">
-        <label>存储位置 <span class="required">*</span></label>
+        <label for="storage-container">存储位置 <span class="required">*</span></label>
         <Svelecte
+            inputId="storage-container"
             name="container"
             options={selectItems}
             bind:value={formData.container}
