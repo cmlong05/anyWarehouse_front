@@ -53,12 +53,8 @@
                 result = await apiClient.patch<Category>(`/product/category/${initialData?.id}/`, submitData);
             }
 
-            // 添加成功后返回分类列表，编辑成功后留在当前页面
-            if (mode === 'add') {
-                await goto('/item/category');
-            } else {
-                await goto(`/item/category/${result.id || initialData?.id}`);
-            }
+            // 添加/编辑成功后跳转到分类详情页
+            await goto(`/item/category/${result.id}`);
         } catch (error: any) {
             alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${error?.message || '未知错误'}`);
         }
