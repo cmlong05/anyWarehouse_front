@@ -22,7 +22,7 @@
     }
 
     function getTotalStock(): number {
-        return data.itemDetail.storages.reduce((sum: number, s: { quantity: number }) => sum + s.quantity, 0);
+        return data.itemDetail.item.total_storage ?? 0;
     }
 
     const handleStorage = async (event: Event, storage: any) => {

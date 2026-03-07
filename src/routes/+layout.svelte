@@ -48,6 +48,8 @@
 	let expandedMobileItems = $state<Set<number>>(new Set());
 	// 桌面端展开的下拉菜单索引
 	let openDropdownIndex = $state<number | null>(null);
+	// 关闭定时器 ID
+	let closeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 	
 	function toggleMobileMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -73,9 +75,17 @@
 	
 	function closeDropdown() {
 		// 延迟关闭，允许鼠标移动到菜单上
-		setTimeout(() => {
+		closeTimeoutId = setTimeout(() => {
 			openDropdownIndex = null;
 		}, 150);
+	}
+	
+	function cancelCloseDropdown() {
+		// 取消定时关闭
+		if (closeTimeoutId) {
+			clearTimeout(closeTimeoutId);
+			closeTimeoutId = null;
+		}
 	}
 	
 	
@@ -99,7 +109,7 @@
 					{#each navItems as item, index}
 						{#if item.children}
 							<!-- Desktop Dropdown -->
-							<div class="relative">
+							<div class="relative" role="group" onmouseenter={cancelCloseDropdown} onmouseleave={closeDropdown}>
 								<a 
 									href={item.href}
 									class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
@@ -114,11 +124,10 @@
 								{#if openDropdownIndex === index}
 									<!-- Dropdown Menu -->
 									<div 
-										class="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
+										class="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
 										style="z-index: 9999;"
 										role="menu"
 										tabindex="-1"
-										onmouseleave={closeDropdown}
 									>
 										{#each item.children as child}
 											<a href={child.href} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">

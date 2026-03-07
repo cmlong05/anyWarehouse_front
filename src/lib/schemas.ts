@@ -108,6 +108,7 @@ export interface Item {
     in_fee?: number;
     barcode?: string;
     category?: number[];
+    total_storage?: number;  // 总数量库存（整数）
 }
 
 export interface ItemSearchResponse {
