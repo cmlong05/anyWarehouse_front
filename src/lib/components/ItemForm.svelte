@@ -24,6 +24,7 @@
             in_fee?: number | null;
             barcode?: string;
             category?: number[];
+            is_variant_template?: boolean;
         };
         categories?: Category[];
         onCancel?: () => void;
@@ -33,7 +34,7 @@
 
     let {
         mode,
-        initialData = { SKU: '', name: '', SKU_zite: '', SKU_A: '', description: '', image: '', weight: '', p_volume: 0, s_volume: 0, b_Price: '', currency: '', in_fee: null, barcode: '', category: [] },
+        initialData = { SKU: '', name: '', SKU_zite: '', SKU_A: '', description: '', image: '', weight: '', p_volume: 0, s_volume: 0, b_Price: '', currency: '', in_fee: null, barcode: '', category: [], is_variant_template: false },
         categories = [],
         onCancel,
         onShowDeleteModal
@@ -55,7 +56,8 @@
         currency: initialData?.currency || 'CNY',
         in_fee: initialData?.in_fee || null,
         barcode: initialData?.barcode || '',
-        category: initialData?.category || []
+        category: initialData?.category || [],
+        is_variant_template: initialData?.is_variant_template || false
     });
 
     let formLoading = $state(false);
@@ -152,6 +154,11 @@
                 submitData.append('category', String(categoryId));
             }
             
+            // 变体母版标记
+            if (formData.is_variant_template) {
+                submitData.set('is_variant_template', 'true');
+            }
+            
             // 图片处理
             if (selectedFile) {
                 submitData.set('image', selectedFile);
@@ -184,6 +191,21 @@
             <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">基本信息</h3>
             <FormInput label="SKU" name="SKU" required value={formData.SKU} placeholder="商品唯一标识码" maxlength={50} oninput={(v) => formData.SKU = v} />
             <FormInput label="商品名称" name="name" required value={formData.name} placeholder="商品名称" maxlength={200} oninput={(v) => formData.name = v} />
+            
+            <!-- 变体母版选项 -->
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        bind:checked={formData.is_variant_template}
+                        class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <span class="text-sm font-medium text-gray-700">作为变体母版</span>
+                </label>
+                <p class="text-xs text-gray-500 mt-1 ml-6">
+                    标记为母版后，可为该商品创建多个变体（如不同颜色、尺寸）
+                </p>
+            </div>
         </div>
 
         <!-- SKU扩展信息 -->

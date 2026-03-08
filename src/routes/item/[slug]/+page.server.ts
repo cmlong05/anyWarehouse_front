@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { ItemSet, QuotationBrief } from '$lib';
+import type { ItemVariantInfo } from '$lib/types/variant';
 
 interface QuotationByItemResponse {
     item_id: number;
@@ -33,5 +34,16 @@ export async function load({ params, fetch }: { params: { slug: string }, fetch:
         console.error('Failed to fetch quotations:', e);
     }
     
-    return { itemDetail, quotations, bestPrice };
+    // 获取物品的变体信息
+    let variantInfo: ItemVariantInfo | null = null;
+    try {
+        const variantRes = await fetch(`${config.API_BASE_URL}/product/item/${itemDetail.item.id}/variants/`);
+        if (variantRes.ok) {
+            variantInfo = await variantRes.json();
+        }
+    } catch (e) {
+        console.error('Failed to fetch variant info:', e);
+    }
+    
+    return { itemDetail, quotations, bestPrice, variantInfo };
 }

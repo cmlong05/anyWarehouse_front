@@ -116,6 +116,8 @@ export interface Item extends BaseItem  {
     date_added: string;
     barcode: string | null;
     category: number[];
+    is_variant_template?: boolean;
+    variant_attributes_config?: Record<string, string[]> | null;
 }
 
 export interface ItemSet{
@@ -916,3 +918,21 @@ export * from './api/index';
 // ========== UI 组件导出（新） ==========
 
 export * from './components/ui/index';
+
+// ========== 类型导出 ==========
+
+export type {
+    ItemAttribute,
+    ItemAttributeValue,
+    ItemAttributeDetail,
+    ItemVariant,
+    ItemVariantDetail,
+    VariantSummary,
+    ItemVariantInfo,
+    VariantSelection,
+    VariantMatchRequest,
+    VariantMatchResponse,
+    BulkCreateVariantsRequest,
+    BulkCreateVariantsResponse,
+    CreateVariantRequest,
+} from './types/variant';

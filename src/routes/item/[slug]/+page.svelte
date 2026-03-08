@@ -1,8 +1,10 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { ItemSet, QuotationBrief } from '$lib';
+    import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
+    import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
 
     let { data } = $props<{ 
@@ -10,12 +12,36 @@
             itemDetail: ItemSet;
             quotations: QuotationBrief[];
             bestPrice: { price: string; supplier: string; quotation_id: number } | null;
+            variantInfo: ItemVariantInfo | null;
         } 
     }>();
     
-    let activeTab = $state<'overview' | 'bom' | 'quotations'>('overview');
+    // 判断是否为变体母版（处理字符串和布尔值）
+    function isVariantTemplate(): boolean {
+        return data.itemDetail.item.is_variant_template === true || 
+               data.itemDetail.item.is_variant_template === 'true' ||
+               data.itemDetail.item.is_variant_template === 1;
+    }
+    
+    // 默认标签：母版显示变体，普通Item显示库存
+    let activeTab = $state<'overview' | 'bom' | 'quotations' | 'variants'>(
+        isVariantTemplate() ? 'variants' : 'overview'
+    );
     let quantityValues = $state<Record<number, number>>({});
     let descriptionExpanded = $state(false);
+
+    // 刷新变体数据
+    async function refreshVariantInfo() {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemDetail.item.id}/variants/`);
+            if (response.ok) {
+                const variantInfo = await response.json();
+                data = { ...data, variantInfo };
+            }
+        } catch (e) {
+            console.error('刷新变体数据失败:', e);
+        }
+    }
 
     function formatPrice(price: string): string {
         return parseFloat(price).toFixed(2);
@@ -135,9 +161,30 @@
                         <div class="flex items-start justify-between mb-4">
                             <div>
                                 <h1 class="text-2xl font-bold text-gray-900 mb-2">{data.itemDetail.item.name}</h1>
-                                <div class="flex items-center gap-3 text-sm">
+                                <div class="flex items-center gap-3 text-sm flex-wrap">
                                     <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full font-mono">{data.itemDetail.item.SKU}</span>
-                                    {#if getTotalStock() > 0}
+                                    
+                                    <!-- 变体标识 -->
+                                    {#if isVariantTemplate()}
+                                        <span class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                            </svg>
+                                            变体母版
+                                        </span>
+                                    {:else if data.variantInfo?.is_variant}
+                                        <span class="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                            </svg>
+                                            变体
+                                        </span>
+                                        {#if data.variantInfo?.parent_item}
+                                            <a href="/item/{data.variantInfo.parent_item.id}" class="text-xs text-blue-600 hover:underline">
+                                                母版: {data.variantInfo.parent_item.sku}
+                                            </a>
+                                        {/if}
+                                    {:else if getTotalStock() > 0}
                                         <span class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">库存充足</span>
                                     {:else}
                                         <span class="px-2.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">暂无库存</span>
@@ -242,12 +289,15 @@
                 <!-- 标签页导航 -->
                 <div class="border-b border-gray-200">
                     <nav class="flex gap-1 px-4">
-                        <button 
-                            onclick={() => activeTab = 'overview'}
-                            class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
-                        >
-                            库存管理
-                        </button>
+                        {#if !isVariantTemplate()}
+                            <!-- 普通Item显示库存管理 -->
+                            <button 
+                                onclick={() => activeTab = 'overview'}
+                                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+                            >
+                                库存管理
+                            </button>
+                        {/if}
                         <button 
                             onclick={() => activeTab = 'quotations'}
                             class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'quotations' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
@@ -263,6 +313,22 @@
                         >
                             BOM 组件
                         </button>
+                        <!-- 只有母版或有变体时才显示变体标签 -->
+                        {#if isVariantTemplate() || (data.variantInfo?.is_variant)}
+                            <button 
+                                onclick={() => activeTab = 'variants'}
+                                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'variants' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+                            >
+                                {#if isVariantTemplate()}
+                                    <span class="mr-1">变体管理</span>
+                                {:else}
+                                    变体
+                                {/if}
+                                {#if data.variantInfo?.variants && data.variantInfo.variants.length > 0}
+                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">{data.variantInfo.variants.length}</span>
+                                {/if}
+                            </button>
+                        {/if}
                     </nav>
                 </div>
 
@@ -270,21 +336,24 @@
                     <!-- 库存管理标签 -->
                     {#if activeTab === 'overview'}
                         <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-lg font-semibold text-gray-900">库存分布</h2>
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-                                    onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
-                                >
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    入库
-                                </button>
-                            </div>
+                            {#if !isVariantTemplate()}
+                                <!-- 普通Item库存管理 -->
+                                <div class="flex items-center justify-between">
+                                    <h2 class="text-lg font-semibold text-gray-900">库存分布</h2>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                                        onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        入库
+                                    </button>
+                                </div>
+                            {/if}
 
-                            {#if data.itemDetail.storages.length === 0}
+                            {#if data.itemDetail.storages.length === 0 && !isVariantTemplate()}
                                 <div class="text-center py-12 bg-gray-50 rounded-lg">
                                     <div class="w-12 h-12 mx-auto mb-3 bg-gray-200 rounded-full flex items-center justify-center">
                                         <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +363,7 @@
                                     <p class="text-gray-500">暂无库存记录</p>
                                     <p class="text-sm text-gray-400 mt-1">点击上方按钮添加库存</p>
                                 </div>
-                            {:else}
+                            {:else if !isVariantTemplate()}
                                 <div class="overflow-x-auto rounded-lg border border-gray-200">
                                     <table class="w-full text-sm min-w-[500px]">
                                         <thead class="bg-gray-50">
@@ -441,6 +510,17 @@
                             itemId={data.itemDetail.item.id}
                             itemSKU={data.itemDetail.item.SKU}
                             itemName={data.itemDetail.item.name}
+                        />
+                    {/if}
+
+                    <!-- 变体标签 -->
+                    {#if activeTab === 'variants'}
+                        <ItemVariantManager 
+                            itemId={data.itemDetail.item.id}
+                            itemSku={data.itemDetail.item.SKU}
+                            itemName={data.itemDetail.item.name}
+                            variantInfo={data.variantInfo}
+                            onRefresh={refreshVariantInfo}
                         />
                     {/if}
                 </div>
