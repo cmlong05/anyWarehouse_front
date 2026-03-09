@@ -18,7 +18,8 @@
 			label: 'Categories',
 			children: [
 				{ href: '/item/category/', label: '分类列表' },
-				{ href: '/item', label: '物品列表' }
+				{ href: '/item', label: '物品列表' },
+				{ href: '/item/attributes', label: '属性管理' }
 			]
 		},
 		{
