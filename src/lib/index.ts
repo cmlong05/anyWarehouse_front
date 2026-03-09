@@ -293,6 +293,13 @@ export interface QuotationBrief {
     price: string;
     currency: string;
     is_preferred: boolean;
+    min_quantity?: number;
+    // 变体相关字段
+    is_variant_template?: boolean;
+    is_variant?: boolean;
+    parent_item_id?: number | null;
+    parent_item_name?: string | null;
+    parent_item_sku?: string | null;
 }
 
 /** 创建/更新报价请求 */
@@ -628,6 +635,12 @@ export interface CustomerQuotationBrief {
     price: string;
     currency: string;
     is_preferred: boolean;
+    // 变体相关字段
+    is_variant_template?: boolean;
+    is_variant?: boolean;
+    parent_item_id?: number | null;
+    parent_item_name?: string | null;
+    parent_item_sku?: string | null;
 }
 
 /** 创建/更新客户报价请求 */

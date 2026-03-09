@@ -30,6 +30,37 @@
     let quantityValues = $state<Record<number, number>>({});
     let descriptionExpanded = $state(false);
 
+    // 获取首选供应商的报价
+    function getPreferredQuotation(): QuotationBrief | null {
+        return data.quotations.find((q: QuotationBrief) => 
+            q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
+        ) || null;
+    }
+
+    // 计算显示价格（如果item的b_Price为空，则显示首选供应商报价）
+    const displayPrice = $derived(() => {
+        const itemPrice = data.itemDetail.item.b_Price;
+        // 检查item自身价格是否有效（非空字符串、非null、非undefined、非0）
+        if (itemPrice && itemPrice !== '' && itemPrice !== '0' && itemPrice !== '0.00') {
+            return { price: itemPrice, currency: data.itemDetail.item.currency || 'CNY', source: 'item' as const };
+        }
+        
+        // 尝试获取首选供应商报价（处理可能的字符串/布尔类型）
+        const preferred = data.quotations.find((q: QuotationBrief) => 
+            q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
+        );
+        if (preferred) {
+            return { price: preferred.price, currency: preferred.currency, source: 'preferred' as const };
+        }
+        
+        // 尝试获取最优价格
+        if (data.bestPrice && data.bestPrice.price) {
+            return { price: data.bestPrice.price, currency: data.itemDetail.item.currency || 'CNY', source: 'best' as const };
+        }
+        
+        return { price: '-', currency: '', source: 'item' as const };
+    });
+
     // 刷新变体数据
     async function refreshVariantInfo() {
         try {
@@ -43,9 +74,86 @@
         }
     }
 
-    function formatPrice(price: string): string {
-        return parseFloat(price).toFixed(2);
+    function formatPrice(price: string | number | null | undefined): string {
+        if (price === null || price === undefined || price === '') {
+            return '-';
+        }
+        return parseFloat(String(price)).toFixed(2);
     }
+
+    // 报价分组相关
+    interface GroupedQuotation {
+        parentId: number | null;
+        parentName: string;
+        parentSku: string;
+        isTemplate: boolean;
+        quotations: QuotationBrief[];
+        expanded: boolean;
+    }
+    
+    let quotationGroups = $state<GroupedQuotation[]>([]);
+    let independentQuotations = $state<QuotationBrief[]>([]);
+    let hasVariantQuotations = $state(false);
+    
+    // 将报价按母版分组
+    function groupQuotationsByParent(quotations: QuotationBrief[]) {
+        const groups = new Map<number | string, GroupedQuotation>();
+        const independent: QuotationBrief[] = [];
+        let variantCount = 0;
+        
+        for (const q of quotations) {
+            // 如果是变体且有母版，放入对应组
+            if (q.is_variant && q.parent_item_id) {
+                variantCount++;
+                const key = q.parent_item_id;
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        parentId: q.parent_item_id,
+                        parentName: q.parent_item_name || '母版',
+                        parentSku: q.parent_item_sku || '-',
+                        isTemplate: false,
+                        quotations: [],
+                        expanded: false
+                    });
+                }
+                groups.get(key)!.quotations.push(q);
+            }
+            // 如果是母版本身
+            else if (q.is_variant_template) {
+                variantCount++;
+                const key = q.item || `template-${q.id}`;
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        parentId: typeof q.item === 'number' ? q.item : null,
+                        parentName: q.item_name || '母版',
+                        parentSku: q.item_sku || '-',
+                        isTemplate: true,
+                        quotations: [],
+                        expanded: false
+                    });
+                }
+                groups.get(key)!.quotations.push(q);
+            }
+            // 独立的普通item - 单独收集，不平铺
+            else {
+                independent.push(q);
+            }
+        }
+        
+        hasVariantQuotations = variantCount > 0 || groups.size > 0;
+        quotationGroups = Array.from(groups.values());
+        independentQuotations = independent;
+    }
+    
+    function toggleGroup(index: number) {
+        quotationGroups[index].expanded = !quotationGroups[index].expanded;
+    }
+    
+    $effect(() => {
+        if (data.quotations.length > 0) {
+            groupQuotationsByParent(data.quotations);
+        }
+    });
 
     function getTotalStock(): number {
         return data.itemDetail.item.total_storage ?? 0;
@@ -217,12 +325,40 @@
 
                     <!-- 价格 -->
                         <div class="mb-4">
-                            <span class="text-3xl font-bold text-gray-900">{formatPrice(data.itemDetail.item.b_Price)}</span>
-                            <span class="text-gray-500 ml-1">{data.itemDetail.item.currency || 'CNY'}</span>
-                            {#if data.bestPrice && parseFloat(data.bestPrice.price) < parseFloat(data.itemDetail.item.b_Price)}
-                                <div class="mt-1 text-sm text-green-600">
-                                    最优采购价: {formatPrice(data.bestPrice.price)} ({data.bestPrice.supplier})
+                            {#if displayPrice().source === 'item'}
+                                <span class="text-3xl font-bold text-gray-900">
+                                    {formatPrice(displayPrice().price)}
+                                </span>
+                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                {#if data.bestPrice && parseFloat(data.bestPrice.price) < parseFloat(data.itemDetail.item.b_Price || '0')}
+                                    <div class="mt-1 text-sm text-green-600">
+                                        最优采购价: {formatPrice(data.bestPrice.price)} ({data.bestPrice.supplier})
+                                    </div>
+                                {/if}
+                            {:else if displayPrice().source === 'preferred'}
+                                {@const preferred = data.quotations.find((q: QuotationBrief) => 
+                                    q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
+                                )}
+                                <span class="text-3xl font-bold text-amber-600">
+                                    {formatPrice(displayPrice().price)}
+                                </span>
+                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                <div class="mt-1 text-sm text-amber-600 flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                    首选供应商价: {preferred?.supplier_name || data.bestPrice?.supplier}
                                 </div>
+                            {:else}
+                                <span class="text-3xl font-bold text-gray-900">
+                                    {formatPrice(displayPrice().price)}
+                                </span>
+                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                {#if data.bestPrice}
+                                    <div class="mt-1 text-sm text-green-600">
+                                        最优采购价: {formatPrice(data.bestPrice?.price)} ({data.bestPrice?.supplier})
+                                    </div>
+                                {/if}
                             {/if}
                         </div>
 
@@ -458,10 +594,14 @@
                                     </div>
                                 {/if}
 
+                                <!-- 按母版/变体分组显示 -->
                                 <div class="overflow-hidden rounded-lg border border-gray-200">
                                     <table class="w-full text-sm">
                                         <thead class="bg-gray-50">
                                             <tr>
+                                                {#if hasVariantQuotations}
+                                                    <th class="px-4 py-3 text-left font-medium text-gray-700" style="width: 40px;"></th>
+                                                {/if}
                                                 <th class="px-4 py-3 text-left font-medium text-gray-700">供应商</th>
                                                 <th class="px-4 py-3 text-right font-medium text-gray-700">单价</th>
                                                 <th class="px-4 py-3 text-left font-medium text-gray-700">货币</th>
@@ -470,30 +610,111 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200">
-                                            {#each data.quotations as quotation}
-                                                <tr class="hover:bg-gray-50">
-                                                    <td class="px-4 py-3">
-                                                        <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
-                                                            {quotation.supplier_name}
-                                                        </a>
-                                                    </td>
-                                                    <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                                    <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                    <td class="px-4 py-3">{quotation.min_quantity}</td>
-                                                    <td class="px-4 py-3 text-center">
-                                                        {#if quotation.is_preferred}
-                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                </svg>
-                                                                首选
-                                                            </span>
-                                                        {:else}
-                                                            <span class="text-gray-400">-</span>
-                                                        {/if}
-                                                    </td>
-                                                </tr>
-                                            {/each}
+                                            {#if hasVariantQuotations}
+                                                <!-- 有变体时显示折叠结构 -->
+                                                {#each quotationGroups as group, groupIndex}
+                                                    <!-- 母版/分组行 -->
+                                                    <tr class="group-header" onclick={() => toggleGroup(groupIndex)}>
+                                                        <td class="px-4 py-3 expand-icon">
+                                                            <svg class="w-4 h-4 transition-transform {group.expanded ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </td>
+                                                        <td class="px-4 py-3 font-medium">
+                                                            {group.parentSku}
+                                                            {#if group.isTemplate}
+                                                                <span class="badge badge-purple">母版</span>
+                                                            {:else if group.parentId}
+                                                                <span class="badge badge-blue">变体组</span>
+                                                            {/if}
+                                                        </td>
+                                                        <td class="px-4 py-3 text-gray-600">{group.parentName}</td>
+                                                        <td class="px-4 py-3" colspan="3">
+                                                            <span class="text-sm text-gray-500">{group.quotations.length} 个报价</span>
+                                                        </td>
+                                                    </tr>
+                                                    <!-- 变体/报价详情行 -->
+                                                    {#if group.expanded}
+                                                        {#each group.quotations as quotation}
+                                                            <tr class="group-item hover:bg-gray-50">
+                                                                <td class="px-4 py-3"></td>
+                                                                <td class="px-4 py-3">
+                                                                    <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                                                        {quotation.supplier_name}
+                                                                    </a>
+                                                                </td>
+                                                                <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
+                                                                <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
+                                                                <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                                <td class="px-4 py-3 text-center">
+                                                                    {#if quotation.is_preferred}
+                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                            </svg>
+                                                                            首选
+                                                                        </span>
+                                                                    {:else}
+                                                                        <span class="text-gray-400">-</span>
+                                                                    {/if}
+                                                                </td>
+                                                            </tr>
+                                                        {/each}
+                                                    {/if}
+                                                {/each}
+                                                <!-- 独立物品直接平铺显示（不折叠） -->
+                                                {#each independentQuotations as quotation}
+                                                    <tr class="hover:bg-gray-50">
+                                                        <td class="px-4 py-3"></td>
+                                                        <td class="px-4 py-3">
+                                                            <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                                                {quotation.supplier_name}
+                                                            </a>
+                                                        </td>
+                                                        <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
+                                                        <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
+                                                        <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                        <td class="px-4 py-3 text-center">
+                                                            {#if quotation.is_preferred}
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                    </svg>
+                                                                    首选
+                                                                </span>
+                                                            {:else}
+                                                                <span class="text-gray-400">-</span>
+                                                            {/if}
+                                                        </td>
+                                                    </tr>
+                                                {/each}
+                                            {:else}
+                                                <!-- 无变体时直接平铺显示 -->
+                                                {#each data.quotations as quotation}
+                                                    <tr class="hover:bg-gray-50">
+                                                        <td class="px-4 py-3">
+                                                            <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                                                {quotation.supplier_name}
+                                                            </a>
+                                                        </td>
+                                                        <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
+                                                        <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
+                                                        <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                        <td class="px-4 py-3 text-center">
+                                                            {#if quotation.is_preferred}
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                    </svg>
+                                                                    首选
+                                                                </span>
+                                                            {:else}
+                                                                <span class="text-gray-400">-</span>
+                                                            {/if}
+                                                        </td>
+                                                    </tr>
+                                                {/each}
+                                            {/if}
                                         </tbody>
                                     </table>
                                 </div>
@@ -594,5 +815,48 @@
     
     .no-underline {
         text-decoration: none;
+    }
+    
+    /* 报价分组样式 */
+    .group-header {
+        background-color: #f8fafc;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .group-header:hover {
+        background-color: #f1f5f9;
+    }
+    .group-item {
+        background-color: white;
+    }
+    .group-item td:first-child {
+        border-left: 3px solid #e2e8f0;
+    }
+    .group-item td:nth-child(2) {
+        padding-left: 3rem;
+    }
+    .expand-icon {
+        text-align: center;
+        color: #64748b;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    .badge-purple {
+        background-color: #e9d5ff;
+        color: #7c3aed;
+    }
+    .badge-blue {
+        background-color: #dbeafe;
+        color: #2563eb;
+    }
+    .rotate-90 {
+        transform: rotate(90deg);
     }
 </style>

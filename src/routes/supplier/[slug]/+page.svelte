@@ -12,7 +12,7 @@
     import { PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
     import { NumberStepper } from '$lib/components/ui';
     
-    let supplierId = $derived(parseInt(page.params.slug));
+    let supplierId = $derived(parseInt(page.params.slug || '0'));
     
     let supplier = $state<Supplier | null>(null);
     let loading = $state(true);
@@ -124,6 +124,80 @@
         };
         return map[status] || '';
     }
+    
+    // 按母版分组的报价
+    interface GroupedQuotation {
+        parentId: number | null;
+        parentName: string;
+        parentSku: string;
+        isTemplate: boolean;
+        quotations: QuotationBrief[];
+        expanded: boolean;
+    }
+    
+    let groupedQuotations = $state<GroupedQuotation[]>([]);
+    let independentQuotations = $state<QuotationBrief[]>([]);
+    let hasVariants = $state(false);
+    
+    // 将报价按母版分组
+    function groupQuotationsByParent(quotations: QuotationBrief[]) {
+        const groups = new Map<number | string, GroupedQuotation>();
+        const independent: QuotationBrief[] = [];
+        let variantCount = 0;
+        
+        for (const q of quotations) {
+            // 如果是变体且有母版，放入对应组
+            if (q.is_variant && q.parent_item_id) {
+                variantCount++;
+                const key = q.parent_item_id;
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        parentId: q.parent_item_id,
+                        parentName: q.parent_item_name || '母版',
+                        parentSku: q.parent_item_sku || '-',
+                        isTemplate: false,
+                        quotations: [],
+                        expanded: false
+                    });
+                }
+                groups.get(key)!.quotations.push(q);
+            }
+            // 如果是母版本身
+            else if (q.is_variant_template) {
+                variantCount++;
+                const key = q.item || `template-${q.id}`;
+                if (!groups.has(key)) {
+                    groups.set(key, {
+                        parentId: q.item,
+                        parentName: q.item_name,
+                        parentSku: q.item_sku,
+                        isTemplate: true,
+                        quotations: [],
+                        expanded: false
+                    });
+                }
+                groups.get(key)!.quotations.push(q);
+            }
+            // 独立的普通item - 单独收集，不平铺
+            else {
+                independent.push(q);
+            }
+        }
+        
+        hasVariants = variantCount > 0 || groups.size > 0;
+        groupedQuotations = Array.from(groups.values());
+        independentQuotations = independent;
+    }
+    
+    function toggleGroup(index: number) {
+        groupedQuotations[index].expanded = !groupedQuotations[index].expanded;
+    }
+    
+    $effect(() => {
+        if (quotations.length > 0) {
+            groupQuotationsByParent(quotations);
+        }
+    });
     
     $effect(() => {
         loadSupplier();
@@ -268,6 +342,9 @@
                 <table>
                     <thead>
                         <tr>
+                            {#if hasVariants}
+                                <th style="width: 40px;"></th>
+                            {/if}
                             <th>SKU</th>
                             <th>物品名称</th>
                             <th>单价</th>
@@ -276,23 +353,105 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {#each quotations as quotation}
-                            <tr>
-                                <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
-                                <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.item_name || '-'}</td>
-                                <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
-                                <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
-                                <td class="numeric">
-                                    <NumberStepper
-                                        bind:value={quotationQuantities[quotation.id]}
-                                        min={1}
-                                        step={1}
-                                        decimalPlaces={0}
-                                        size="sm"
-                                    />
-                                </td>
-                            </tr>
-                        {/each}
+                        {#if hasVariants}
+                            <!-- 有变体时显示折叠结构 -->
+                            {#each groupedQuotations as group, groupIndex}
+                                <!-- 母版/分组行 -->
+                                <tr class="group-header" onclick={() => toggleGroup(groupIndex)}>
+                                    <td class="expand-icon">
+                                        <svg class="w-4 h-4 transition-transform {group.expanded ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </td>
+                                    <td class="font-medium">
+                                        {group.parentSku}
+                                        {#if group.isTemplate}
+                                            <span class="badge badge-purple">母版</span>
+                                        {:else if group.parentId}
+                                            <span class="badge badge-blue">变体组</span>
+                                        {/if}
+                                    </td>
+                                    <td class="text-gray-600">{group.parentName}</td>
+                                    <td colspan="3">
+                                        <span class="text-sm text-gray-500">{group.quotations.length} 个报价</span>
+                                    </td>
+                                </tr>
+                                <!-- 变体/报价详情行 -->
+                                {#if group.expanded}
+                                    {#each group.quotations as quotation}
+                                        <tr class="group-item">
+                                            <td></td>
+                                            <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
+                                            <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>
+                                                {quotation.item_name || '-'}
+                                                {#if quotation.is_preferred}
+                                                    <span class="badge badge-amber">首选</span>
+                                                {/if}
+                                            </td>
+                                            <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
+                                            <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
+                                            <td class="numeric">
+                                                <NumberStepper
+                                                    bind:value={quotationQuantities[quotation.id]}
+                                                    min={1}
+                                                    step={1}
+                                                    decimalPlaces={0}
+                                                    size="sm"
+                                                />
+                                            </td>
+                                        </tr>
+                                    {/each}
+                                {/if}
+                            {/each}
+                            <!-- 独立物品直接平铺显示（不折叠） -->
+                            {#each independentQuotations as quotation}
+                                <tr>
+                                    <td></td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>
+                                        {quotation.item_name || '-'}
+                                        {#if quotation.is_preferred}
+                                            <span class="badge badge-amber">首选</span>
+                                        {/if}
+                                    </td>
+                                    <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
+                                    <td class="numeric">
+                                        <NumberStepper
+                                            bind:value={quotationQuantities[quotation.id]}
+                                            min={1}
+                                            step={1}
+                                            decimalPlaces={0}
+                                            size="sm"
+                                        />
+                                    </td>
+                                </tr>
+                            {/each}
+                        {:else}
+                            <!-- 无变体时直接平铺显示 -->
+                            {#each quotations as quotation}
+                                <tr>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.sku || '-'}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>
+                                        {quotation.item_name || '-'}
+                                        {#if quotation.is_preferred}
+                                            <span class="badge badge-amber">首选</span>
+                                        {/if}
+                                    </td>
+                                    <td class="numeric clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.price}</td>
+                                    <td class="clickable" onclick={() => goto(`/supplier/quotation/${quotation.id}`)}>{quotation.currency}</td>
+                                    <td class="numeric">
+                                        <NumberStepper
+                                            bind:value={quotationQuantities[quotation.id]}
+                                            min={1}
+                                            step={1}
+                                            decimalPlaces={0}
+                                            size="sm"
+                                        />
+                                    </td>
+                                </tr>
+                            {/each}
+                        {/if}
                     </tbody>
                 </table>
             </div>
@@ -473,6 +632,53 @@
     .status-tag.partial { background-color: #fef3c7; color: #b45309; }
     .status-tag.received { background-color: #e0e7ff; color: #3730a3; }
     .status-tag.cancelled { background-color: #fee2e2; color: #991b1b; }
+    
+    /* 报价分组样式 */
+    .group-header {
+        background-color: #f8fafc;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .group-header:hover {
+        background-color: #f1f5f9;
+    }
+    .group-item {
+        background-color: white;
+    }
+    .group-item td:first-child {
+        border-left: 3px solid #e2e8f0;
+    }
+    .group-item td:nth-child(2) {
+        padding-left: 3rem;
+    }
+    .expand-icon {
+        text-align: center;
+        color: #64748b;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+    .badge-purple {
+        background-color: #e9d5ff;
+        color: #7c3aed;
+    }
+    .badge-blue {
+        background-color: #dbeafe;
+        color: #2563eb;
+    }
+    .badge-amber {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+    .rotate-90 {
+        transform: rotate(90deg);
+    }
     
     @media (max-width: 768px) {
         .detail-grid { grid-template-columns: 1fr; }
