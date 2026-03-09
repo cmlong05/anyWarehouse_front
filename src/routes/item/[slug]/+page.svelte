@@ -429,12 +429,9 @@
                             <div class="flex items-center justify-between">
                                 <h2 class="text-lg font-semibold text-gray-900">供应商报价</h2>
                                 <a 
-                                    href="/supplier/quotation/add?item_id={data.itemDetail.item.id}" 
-                                    class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                                    href="/supplier/quotation/add?item_id={data.itemDetail.item.id}&item_sku={data.itemDetail.item.SKU}" 
+                                    class="btn btn-success btn-sm no-underline"
                                 >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
                                     添加报价
                                 </a>
                             </div>
@@ -561,3 +558,41 @@
         </aside>
     </div>
 </div>
+
+<style>
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    
+    .btn:hover {
+        opacity: 0.9;
+    }
+    
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.8125rem;
+    }
+    
+    .btn-success {
+        background-color: #10b981;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background-color: #059669;
+    }
+    
+    .no-underline {
+        text-decoration: none;
+    }
+</style>

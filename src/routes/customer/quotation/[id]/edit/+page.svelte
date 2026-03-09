@@ -8,8 +8,13 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
+    import { CurrencySelect, NumberStepper } from '$lib/components/ui';
     
-    const id = $derived(parseInt(page.params.id));
+    // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况
+    const id = $derived(() => {
+        const paramId = page.params.id;
+        return paramId ? parseInt(paramId) : 0;
+    });
     
     let quotation = $state<CustomerQuotation | null>(null);
     let customers = $state<CustomerBrief[]>([]);
@@ -39,6 +44,13 @@
         label: `${c.code} - ${c.name}`
     })));
     
+    // 计算总价
+    let totalPrice = $derived(() => {
+        const price = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
+        const postage = typeof formData.postage === 'number' ? formData.postage : parseFloat(formData.postage as string) || 0;
+        return price + postage;
+    });
+    
     // 构建物品搜索 URL
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
     
@@ -52,9 +64,15 @@
     }
     
     async function loadData() {
+        const quotationId = id();
+        if (!quotationId) {
+            error = '无效的报价ID';
+            return;
+        }
+        
         try {
             const [quotationData, customersData] = await Promise.all([
-                customerQuotationAPI.get(id),
+                customerQuotationAPI.get(quotationId),
                 customerAPI.listBrief()
             ]);
             
@@ -85,20 +103,28 @@
         error = '';
         success = '';
         
+        const quotationId = id();
+        if (!quotationId) {
+            error = '无效的报价ID';
+            return;
+        }
+        
         if (!formData.customer) {
             error = '请选择客户';
             return;
         }
-        if (!formData.price || parseFloat(formData.price as string) <= 0) {
+        
+        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
+        if (!formData.price || priceNum <= 0) {
             error = '请输入有效的价格';
             return;
         }
         
         submitting = true;
         try {
-            await customerQuotationAPI.update(id, formData);
+            await customerQuotationAPI.update(quotationId, formData);
             success = '报价更新成功';
-            setTimeout(() => goto(`/customer/quotation/${id}`), 1000);
+            setTimeout(() => goto(`/customer/quotation/${quotationId}`), 1000);
         } catch (err) {
             error = err instanceof Error ? err.message : '更新失败';
         } finally {
@@ -107,7 +133,17 @@
     }
     
     function goBack() {
-        goto(`/customer/quotation/${id}`);
+        const quotationId = id();
+        if (quotationId) {
+            goto(`/customer/quotation/${quotationId}`);
+        } else {
+            goto('/customer/quotation');
+        }
+    }
+    
+    function formatPrice(price: string | number | null): string {
+        if (!price) return '-';
+        return parseFloat(price.toString()).toFixed(2);
     }
     
     onMount(async () => {
@@ -116,266 +152,266 @@
     });
 </script>
 
-<div class="content-container">
-    <h1>编辑客户报价</h1>
-    
-    {#if loading}
-        <Loading text="加载中..." />
-    {:else}
-        <form onsubmit={handleSubmit} class="form">
-            {#if error}
-                <Alert {error} />
-            {/if}
-            {#if success}
-                <Alert error={success} variant="info" />
-            {/if}
-            
-            <div class="form-row">
-                <div class="form-group required">
-                    <label for="customer">客户</label>
-                    <Svelecte
-                        inputId="customer"
-                        options={customerOptions}
-                        bind:value={formData.customer}
-                        placeholder="选择客户..."
-                        searchable={true}
-                        required
-                    />
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button
+                        onclick={goBack}
+                        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="返回"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">编辑客户报价</h1>
+                        {#if quotation}
+                            <p class="text-sm text-gray-500 mt-0.5">
+                                报价 ID: <span class="font-mono">{quotation.id}</span>
+                            </p>
+                        {/if}
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="item">物品</label>
-                    <Svelecte
-                        inputId="item"
-                        bind:value={formData.item}
-                        valueAsObject={false}
-                        placeholder="搜索SKU或名称..."
-                        searchable={true}
-                        minQuery={1}
-                        fetch={itemSearchUrl}
-                        fetchCallback={handleItemFetch}
-                        valueField="value"
-                        labelField="label"
-                    />
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group required">
-                    <label for="price">单价</label>
-                    <input 
-                        type="number" 
-                        id="price"
-                        step="0.01"
-                        min="0"
-                        bind:value={formData.price}
-                        required
-                    />
-                </div>
-                
-                <div class="form-group">
-                    <label for="currency">货币</label>
-                    <select id="currency" bind:value={formData.currency}>
-                        <option value="CNY">CNY - 人民币</option>
-                        <option value="USD">USD - 美元</option>
-                        <option value="EUR">EUR - 欧元</option>
-                        <option value="GBP">GBP - 英镑</option>
-                        <option value="JPY">JPY - 日元</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="min_quantity">最小订购量 (MOQ)</label>
-                    <input 
-                        type="number" 
-                        id="min_quantity"
-                        min="1"
-                        bind:value={formData.min_quantity}
-                    />
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onclick={goBack}
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        取消
+                    </button>
+                    <button
+                        type="submit"
+                        form="quotationForm"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        disabled={submitting}
+                    >
+                        {#if submitting}
+                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            保存中...
+                        {:else}
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            保存报价
+                        {/if}
+                    </button>
                 </div>
             </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="postage">邮费/运费</label>
-                    <input 
-                        type="number" 
-                        id="postage"
-                        step="0.01"
-                        min="0"
-                        bind:value={formData.postage}
-                        placeholder="可选"
-                    />
-                </div>
-                
-                <div class="form-group">
-                    <label for="lead_time_days">交货周期(天)</label>
-                    <input 
-                        type="number" 
-                        id="lead_time_days"
-                        min="1"
-                        bind:value={formData.lead_time_days}
-                        placeholder="可选"
-                    />
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="valid_from">有效期开始</label>
-                    <input 
-                        type="date" 
-                        id="valid_from"
-                        bind:value={formData.valid_from}
-                    />
-                </div>
-                
-                <div class="form-group">
-                    <label for="valid_until">有效期结束</label>
-                    <input 
-                        type="date" 
-                        id="valid_until"
-                        bind:value={formData.valid_until}
-                    />
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <label>
-                        <input type="checkbox" bind:checked={formData.is_preferred} />
-                        设为首选报价
-                    </label>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="note">备注</label>
-                <textarea 
-                    id="note"
-                    rows="3"
-                    bind:value={formData.note}
-                    placeholder="可选"
-                ></textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick={goBack}>
-                    取消
-                </button>
-                <button type="submit" class="btn btn-primary" disabled={submitting}>
-                    {submitting ? '保存中...' : '保存'}
-                </button>
-            </div>
-        </form>
-    {/if}
-</div>
+        </div>
+    </div>
 
-<style>
-    .content-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-    
-    h1 {
-        margin-bottom: 1.5rem;
-    }
-    
-    .form {
-        max-width: 800px;
-    }
-    
-    .form-row {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .form-group {
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    .form-group.required label::after {
-        content: ' *';
-        color: #dc2626;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: 500;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid var(--color-border, #ddd);
-        border-radius: 4px;
-        font-size: 1rem;
-    }
-    
-    .form-group textarea {
-        resize: vertical;
-    }
-    
-    .checkbox-group {
-        display: flex;
-        align-items: flex-end;
-        padding-bottom: 0.5rem;
-    }
-    
-    .checkbox-group label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-    }
-    
-    .checkbox-group input {
-        width: auto;
-    }
-    
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-        margin-top: 2rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--color-border, #eee);
-    }
-    
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.625rem 1.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-primary {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #2563eb;
-    }
-    
-    .btn-secondary {
-        background-color: #6b7280;
-        color: white;
-    }
-    
-    button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-</style>
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        {#if loading}
+            <Loading text="加载中..." />
+        {:else}
+            <form id="quotationForm" onsubmit={handleSubmit} class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 左侧：客户和物品选择 -->
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- 客户选择 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <span class="block text-sm font-medium text-gray-700 mb-2">
+                            客户 <span class="text-red-500">*</span>
+                        </span>
+                        <Svelecte
+                            options={customerOptions}
+                            bind:value={formData.customer}
+                            placeholder="选择客户..."
+                            searchable={true}
+                            required
+                            class="w-full"
+                        />
+                    </div>
+
+                    <!-- 物品选择 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                        <span class="block text-sm font-medium text-gray-700 mb-2">
+                            物品
+                        </span>
+                        <Svelecte
+                            bind:value={formData.item}
+                            valueAsObject={false}
+                            placeholder="搜索SKU或名称..."
+                            searchable={true}
+                            minQuery={1}
+                            fetch={itemSearchUrl}
+                            fetchCallback={handleItemFetch}
+                            valueField="value"
+                            labelField="label"
+                            class="w-full"
+                        />
+                    </div>
+
+                    {#if error}
+                        <Alert {error} />
+                    {/if}
+                    {#if success}
+                        <Alert error={success} variant="info" />
+                    {/if}
+                </div>
+
+                <!-- 右侧：价格信息 -->
+                <div class="lg:col-span-2 space-y-4">
+                    <!-- 主要价格信息 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            价格信息
+                        </h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- 单价 -->
+                            <div>
+                                <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                                    单价 <span class="text-red-500">*</span>
+                                </label>
+                                <NumberStepper
+                                    id="price"
+                                    value={typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0}
+                                    min={0}
+                                    step={0.4}
+                                    decimalPlaces={2}
+                                    onchange={(v) => formData.price = v || 0}
+                                />
+                            </div>
+
+                            <!-- 货币 -->
+                            <div>
+                                <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">货币</label>
+                                <CurrencySelect bind:value={formData.currency} />
+                            </div>
+
+                            <!-- 最小订购量 -->
+                            <div>
+                                <label for="moq" class="block text-sm font-medium text-gray-700 mb-2">最小订购量 (MOQ)</label>
+                                <NumberStepper
+                                    id="moq"
+                                    value={formData.min_quantity || 1}
+                                    min={1}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => formData.min_quantity = v || 1}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- 附加费用 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="postage" class="block text-sm font-medium text-gray-700 mb-2">邮费/运费</label>
+                                <NumberStepper
+                                    id="postage"
+                                    value={typeof formData.postage === 'number' ? formData.postage : parseFloat(formData.postage as string) || 0}
+                                    min={0}
+                                    step={0.4}
+                                    decimalPlaces={2}
+                                    onchange={(v) => formData.postage = v || 0}
+                                />
+                            </div>
+                            <div>
+                                <label for="leadTime" class="block text-sm font-medium text-gray-700 mb-2">交货周期 (天)</label>
+                                <NumberStepper
+                                    id="leadTime"
+                                    value={formData.lead_time_days || 1}
+                                    min={1}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => formData.lead_time_days = v || 1}
+                                />
+                            </div>
+                        </div>
+
+                        <!-- 价格预览 -->
+                        {#if formData.price}
+                            <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-sm text-green-700">单价 + 运费</div>
+                                        <div class="text-2xl font-bold text-green-900">
+                                            ¥{formatPrice(totalPrice())}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-sm text-green-700">预估单价成本</div>
+                                        <div class="text-lg font-semibold text-green-800">
+                                            {#if formData.min_quantity && formData.min_quantity > 1}
+                                                ¥{(totalPrice() / (formData.min_quantity || 1)).toFixed(2)}/件
+                                            {:else}
+                                                ¥{formatPrice(formData.price)}
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+
+                    <!-- 有效期和备注 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            有效期和其他
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="validFrom" class="block text-sm font-medium text-gray-700 mb-2">有效期开始</label>
+                                <input
+                                    id="validFrom"
+                                    type="date"
+                                    bind:value={formData.valid_from}
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="validUntil" class="block text-sm font-medium text-gray-700 mb-2">有效期结束</label>
+                                <input
+                                    id="validUntil"
+                                    type="date"
+                                    bind:value={formData.valid_until}
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- 首选报价 -->
+                        <label class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors mb-4">
+                            <input
+                                type="checkbox"
+                                bind:checked={formData.is_preferred}
+                                class="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                            />
+                            <div>
+                                <div class="font-medium text-amber-900">设为首选报价</div>
+                                <div class="text-sm text-amber-700">该客户将成为此物品的默认客户</div>
+                            </div>
+                        </label>
+
+                        <!-- 备注 -->
+                        <div>
+                            <label for="note" class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                            <textarea
+                                id="note"
+                                bind:value={formData.note}
+                                rows="3"
+                                placeholder="添加关于此报价的备注信息..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        {/if}
+    </div>
+</div>

@@ -8,6 +8,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
+    import { CurrencySelect } from '$lib/components/ui';
     import { NumberStepper } from '$lib/components/ui';
     
     // 从URL获取预设的客户ID和物品ID
@@ -227,17 +228,7 @@
                         
                         <div>
                             <label for="currency" class="block text-sm font-medium text-gray-700 mb-1">货币</label>
-                            <select 
-                                id="currency" 
-                                bind:value={formData.currency}
-                                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="CNY">CNY - 人民币</option>
-                                <option value="USD">USD - 美元</option>
-                                <option value="EUR">EUR - 欧元</option>
-                                <option value="GBP">GBP - 英镑</option>
-                                <option value="JPY">JPY - 日元</option>
-                            </select>
+                            <CurrencySelect bind:value={formData.currency} />
                         </div>
                         
                         <div>

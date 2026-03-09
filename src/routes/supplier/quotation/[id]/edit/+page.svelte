@@ -8,6 +8,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
+    import { CurrencySelect } from '$lib/components/ui';
     
     let quotation = $state<Quotation | null>(null);
     let suppliers = $state<SupplierBrief[]>([]);
@@ -16,7 +17,10 @@
     let error = $state('');
     let success = $state('');
     
-    const id = $derived(parseInt(page.params.id));
+    const id = $derived(() => {
+        const paramId = page.params.id;
+        return paramId ? parseInt(paramId) : 0;
+    });
     
     // 表单数据
     let formData = $state<QuotationCreateRequest>({
@@ -55,11 +59,18 @@
     }
     
     async function loadData() {
+        const quotationId = id();
+        if (!quotationId) {
+            error = '无效的报价ID';
+            loading = false;
+            return;
+        }
+        
         loading = true;
         error = '';
         try {
             const [quotationData, supplierData] = await Promise.all([
-                quotationAPI.get(id),
+                quotationAPI.get(quotationId),
                 supplierAPI.listBrief()
             ]);
             quotation = quotationData;
@@ -96,20 +107,28 @@
         error = '';
         success = '';
         
+        const quotationId = id();
+        if (!quotationId) {
+            error = '无效的报价ID';
+            return;
+        }
+        
         if (!formData.supplier) {
             error = '请选择供应商';
             return;
         }
-        if (!formData.price || parseFloat(formData.price as string) <= 0) {
+        
+        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
+        if (!formData.price || priceNum <= 0) {
             error = '请输入有效的价格';
             return;
         }
         
         submitting = true;
         try {
-            await quotationAPI.update(id, formData);
+            await quotationAPI.update(quotationId, formData);
             success = '报价更新成功';
-            setTimeout(() => goto(`/supplier/quotation/${id}`), 1000);
+            setTimeout(() => goto(`/supplier/quotation/${quotationId}`), 1000);
         } catch (err) {
             error = err instanceof Error ? err.message : '更新失败';
         } finally {
@@ -118,7 +137,12 @@
     }
     
     function goBack() {
-        goto(`/supplier/quotation/${id}`);
+        const quotationId = id();
+        if (quotationId) {
+            goto(`/supplier/quotation/${quotationId}`);
+        } else {
+            goto('/supplier/quotation');
+        }
     }
     
     onMount(loadData);
@@ -190,11 +214,11 @@
                 <div class="form-group">
                     <label for="currency">货币</label>
                     <select id="currency" bind:value={formData.currency}>
-                        <option value="CNY">CNY - 人民币</option>
-                        <option value="USD">USD - 美元</option>
-                        <option value="EUR">EUR - 欧元</option>
-                        <option value="GBP">GBP - 英镑</option>
-                        <option value="JPY">JPY - 日元</option>
+                        <option value="CNY">CNY</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="JPY">JPY</option>
                     </select>
                 </div>
                 

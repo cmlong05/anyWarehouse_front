@@ -8,21 +8,24 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
-    import { NumberStepper } from '$lib/components/ui';
+    import { NumberStepper, CurrencySelect } from '$lib/components/ui';
     
-    // 从URL获取预设的供应商ID和物品ID
+    // 从URL获取预设的供应商ID、物品ID和SKU
     const presetIds = $derived(() => {
         const urlParams = new URLSearchParams(page.url.search);
         const supplierId = urlParams.get('supplier_id');
         const itemId = urlParams.get('item_id');
+        const itemSku = urlParams.get('item_sku');
         return {
             supplierId: supplierId ? parseInt(supplierId) : null,
-            itemId: itemId ? parseInt(itemId) : null
+            itemId: itemId ? parseInt(itemId) : null,
+            itemSku: itemSku || null
         };
     });
     
     let suppliers = $state<SupplierBrief[]>([]);
     let selectedItem = $state<Item | null>(null);
+    let presetItemSku = $state<string | null>(null);
     let existingQuotations = $state<QuotationBrief[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
@@ -46,8 +49,8 @@
     
     // 计算总价
     let totalPrice = $derived(() => {
-        const price = parseFloat(formData.price as string) || 0;
-        const postage = parseFloat(formData.postage as string) || 0;
+        const price = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
+        const postage = typeof formData.postage === 'number' ? formData.postage : parseFloat(formData.postage as string) || 0;
         return price + postage;
     });
     
@@ -64,10 +67,14 @@
         try {
             suppliers = await supplierAPI.listBrief();
             
-            const { supplierId, itemId } = presetIds();
+            const { supplierId, itemId, itemSku } = presetIds();
             
             if (supplierId) {
                 formData.supplier = supplierId;
+            }
+            
+            if (itemSku) {
+                presetItemSku = itemSku;
             }
             
             if (itemId) {
@@ -140,7 +147,8 @@
             error = '请选择物品';
             return;
         }
-        if (!formData.price || parseFloat(formData.price as string) <= 0) {
+        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
+        if (!formData.price || priceNum <= 0) {
             error = '请输入有效的价格';
             return;
         }
@@ -275,6 +283,12 @@
                         <span class="block text-sm font-medium text-gray-700 mb-2">
                             选择物品 <span class="text-red-500">*</span>
                         </span>
+                        {#if presetItemSku}
+                            <div class="mb-2 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                <div class="text-xs text-blue-600 mb-0.5">当前物品 SKU</div>
+                                <div class="font-mono text-sm font-medium text-blue-900">{presetItemSku}</div>
+                            </div>
+                        {/if}
                         <Svelecte
                             bind:value={formData.item}
                             valueAsObject={false}
@@ -386,35 +400,20 @@
                                 <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
                                     单价 <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">¥</span>
-                                    <input
-                                        id="price"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        bind:value={formData.price}
-                                        placeholder="0.00"
-                                        class="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                    />
-                                </div>
+                                <NumberStepper
+                                    id="price"
+                                    value={parseFloat(formData.price as string) || 0}
+                                    min={0}
+                                    step={0.4}
+                                    decimalPlaces={2}
+                                    onchange={(v) => formData.price = v || 0}
+                                />
                             </div>
 
                             <!-- 货币 -->
                             <div>
                                 <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">货币</label>
-                                <select
-                                    id="currency"
-                                    bind:value={formData.currency}
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value="CNY">CNY - 人民币</option>
-                                    <option value="USD">USD - 美元</option>
-                                    <option value="EUR">EUR - 欧元</option>
-                                    <option value="GBP">GBP - 英镑</option>
-                                    <option value="JPY">JPY - 日元</option>
-                                </select>
+                                <CurrencySelect bind:value={formData.currency} />
                             </div>
 
                             <!-- 最小订购量 -->
@@ -425,6 +424,7 @@
                                     value={formData.min_quantity || 1}
                                     min={1}
                                     step={1}
+                                    decimalPlaces={0}
                                     onchange={(v) => formData.min_quantity = v}
                                 />
                             </div>
@@ -434,32 +434,25 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div>
                                 <label for="postage" class="block text-sm font-medium text-gray-700 mb-2">邮费/运费</label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">¥</span>
-                                    <input
-                                        id="postage"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        bind:value={formData.postage}
-                                        placeholder="可选"
-                                        class="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                </div>
+                                <NumberStepper
+                                    id="postage"
+                                    value={parseFloat(formData.postage as string) || 0}
+                                    min={0}
+                                    step={0.4}
+                                    decimalPlaces={2}
+                                    onchange={(v) => formData.postage = v || 0}
+                                />
                             </div>
                             <div>
-                                <label for="leadTime" class="block text-sm font-medium text-gray-700 mb-2">交货周期</label>
-                                <div class="relative">
-                                    <input
-                                        id="leadTime"
-                                        type="number"
-                                        min="1"
-                                        bind:value={formData.lead_time_days}
-                                        placeholder="天数"
-                                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    />
-                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">天</span>
-                                </div>
+                                <label for="leadTime" class="block text-sm font-medium text-gray-700 mb-2">交货周期 (天)</label>
+                                <NumberStepper
+                                    id="leadTime"
+                                    value={formData.lead_time_days || 1}
+                                    min={1}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => formData.lead_time_days = v || 1}
+                                />
                             </div>
                         </div>
 
@@ -477,7 +470,7 @@
                                         <div class="text-sm text-green-700">预估单价成本</div>
                                         <div class="text-lg font-semibold text-green-800">
                                             {#if formData.min_quantity && formData.min_quantity > 1}
-                                                ¥{(totalPrice() / formData.min_quantity).toFixed(2)}/件
+                                                ¥{(totalPrice() / (formData.min_quantity || 1)).toFixed(2)}/件
                                             {:else}
                                                 ¥{formatPrice(formData.price)}
                                             {/if}

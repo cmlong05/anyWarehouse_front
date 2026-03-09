@@ -306,8 +306,8 @@ export interface QuotationCreateRequest {
     lead_time_days?: number | null;
     valid_from?: string | null;
     valid_until?: string | null;
+    note?: string | null;
     is_preferred?: boolean;
-    note?: string;
 }
 
 /** 供应商及其报价 */

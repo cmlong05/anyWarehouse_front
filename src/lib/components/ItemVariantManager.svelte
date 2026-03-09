@@ -3,6 +3,7 @@
     import type { ItemVariantInfo, ItemVariant, ItemAttributeValue } from '$lib/types/variant';
     import { config } from '$lib/config';
     import VariantCreator from './VariantCreator.svelte';
+    import VariantQuotationManager from './VariantQuotationManager.svelte';
 
     interface Props {
         itemId: number;
@@ -16,6 +17,9 @@
 
     // 创建变体弹窗状态
     let showCreator = $state(false);
+    
+    // 批量报价弹窗状态
+    let showQuotationManager = $state(false);
 
     // 本地状态
     let selectedAttributes = $state<Record<string, number | null>>({});
@@ -275,6 +279,42 @@
         </div>
     {/if}
 
+    <!-- 批量报价弹窗 -->
+    {#if showQuotationManager && variantInfo?.variants}
+        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">批量设置变体报价</h3>
+                        <p class="text-sm text-gray-500 mt-0.5">为每个变体设置不同的采购价格</p>
+                    </div>
+                    <button
+                        onclick={() => showQuotationManager = false}
+                        class="text-gray-400 hover:text-gray-600"
+                        aria-label="关闭"
+                    >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <VariantQuotationManager
+                        variants={variantInfo.variants}
+                        attributes={variantInfo.variant_summary?.attributes || {}}
+                        parentItemName={itemName}
+                        parentItemSku={itemSku}
+                        onSuccess={() => {
+                            onRefresh?.();
+                            showQuotationManager = false;
+                        }}
+                        onCancel={() => showQuotationManager = false}
+                    />
+                </div>
+            </div>
+        </div>
+    {/if}
+
     <!-- 变体列表（仅母版显示） -->
     {#if isTemplate() && variantInfo?.variants && variantInfo.variants.length > 0}
         <div>
@@ -282,9 +322,20 @@
                 <h3 class="text-sm font-medium text-gray-700">
                     所有变体 ({variantInfo.variant_summary?.total_variants || variantInfo.variants.length})
                 </h3>
-                <span class="text-xs text-gray-500">
-                    总库存: {variantInfo.variant_summary?.total_stock || 0}
-                </span>
+                <div class="flex items-center gap-3">
+                    <button
+                        onclick={() => showQuotationManager = true}
+                        class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        批量报价
+                    </button>
+                    <span class="text-xs text-gray-500">
+                        总库存: {variantInfo.variant_summary?.total_stock || 0}
+                    </span>
+                </div>
             </div>
 
             <div class="overflow-hidden rounded-lg border border-gray-200">
