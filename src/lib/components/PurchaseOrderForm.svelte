@@ -15,7 +15,7 @@
     interface Props {
         purchaseOrder?: PurchaseOrder;
         supplierId: number;
-        supplier?: { id: number; name: string; contact?: string; telephone?: string; e_mail?: string; code?: string };
+        supplier?: { id: number; name: string; contact_name?: string; phone?: string; email?: string; code?: string };
         preloadItems?: any[] | null;
         onSubmit: (data: PurchaseOrderCreateRequest) => void;
         onCancel: () => void;

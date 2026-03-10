@@ -228,9 +228,9 @@ export interface Supplier {
     id: number;
     code: string;
     name: string;
-    contact: string;
-    e_mail: string;
-    telephone: string;
+    contact_name: string;
+    email: string;
+    phone: string;
     address: string;
     remark: string;
     is_active: boolean;
@@ -245,17 +245,17 @@ export interface SupplierBrief {
     id: number;
     code: string;
     name: string;
-    contact: string;
-    telephone: string;
+    contact_name: string;
+    phone: string;
 }
 
 /** 创建/更新供应商请求 */
 export interface SupplierCreateRequest {
     code: string;
     name: string;
-    contact?: string;
-    e_mail?: string;
-    telephone?: string;
+    contact_name?: string;
+    email?: string;
+    phone?: string;
     address?: string;
     remark?: string;
     is_active?: boolean;
@@ -323,9 +323,9 @@ export interface SupplierWithQuotations {
     id: number;
     code: string;
     name: string;
-    contact: string;
-    e_mail: string;
-    telephone: string;
+    contact_name: string;
+    email: string;
+    phone: string;
     address: string;
     remark: string;
     quotations: QuotationBrief[];
@@ -385,9 +385,9 @@ export interface PurchaseOrder {
     supplier_detail?: {
         id: number;
         name: string;
-        contact: string;
-        telephone: string;
-        e_mail: string;
+        contact_name: string;
+        phone: string;
+        email: string;
     };
     status: PurchaseOrderStatus;
     priority: PurchaseOrderPriority;

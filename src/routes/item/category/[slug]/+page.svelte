@@ -32,13 +32,23 @@
     }
     
     // 跳转到客户报价页面
-    function goToQuotation() {
+    function goToCustomerQuotation() {
         if (selectedItems.size === 0) {
             alert('请先选择至少一个物品');
             return;
         }
         const itemIds = Array.from(selectedItems).join(',');
         goto(`/customer/quotation/add?item_ids=${itemIds}`);
+    }
+    
+    // 跳转到供应商报价页面
+    function goToSupplierQuotation() {
+        if (selectedItems.size === 0) {
+            alert('请先选择至少一个物品');
+            return;
+        }
+        const itemIds = Array.from(selectedItems).join(',');
+        goto(`/supplier/quotation/add?item_ids=${itemIds}`);
     }
     
     // 清空选择
@@ -87,9 +97,15 @@
                         {#if selectedItems.size > 0}
                             <button 
                                 class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                                onclick={goToQuotation}
+                                onclick={goToCustomerQuotation}
                             >
-                                报价 ({selectedItems.size})
+                                客户报价 ({selectedItems.size})
+                            </button>
+                            <button 
+                                class="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors"
+                                onclick={goToSupplierQuotation}
+                            >
+                                供应商报价 ({selectedItems.size})
                             </button>
                             <button 
                                 class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"

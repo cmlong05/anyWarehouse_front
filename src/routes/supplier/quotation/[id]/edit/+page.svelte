@@ -29,7 +29,6 @@
         price: '',
         currency: 'CNY',
         min_quantity: 1,
-        postage: null,
         lead_time_days: null,
         valid_from: null,
         valid_until: null,
@@ -83,7 +82,6 @@
                 price: quotationData.price,
                 currency: quotationData.currency,
                 min_quantity: quotationData.min_quantity,
-                postage: quotationData.postage,
                 lead_time_days: quotationData.lead_time_days,
                 valid_from: quotationData.valid_from,
                 valid_until: quotationData.valid_until,
@@ -234,18 +232,6 @@
             </div>
             
             <div class="form-row">
-                <div class="form-group">
-                    <label for="postage">邮费/运费</label>
-                    <input 
-                        type="number" 
-                        id="postage"
-                        step="0.01"
-                        min="0"
-                        bind:value={formData.postage}
-                        placeholder="可选"
-                    />
-                </div>
-                
                 <div class="form-group">
                     <label for="lead_time_days">交货周期(天)</label>
                     <input 

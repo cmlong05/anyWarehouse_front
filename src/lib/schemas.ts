@@ -118,15 +118,15 @@ export interface ItemSearchResponse {
     results: Item[];
 }
 
-// ========== Customer Schemas ==========
+// ========== Party / Partner Schemas ==========
 
-export const customerSchema = z.object({
+export const partySchema = z.object({
     code: z.string()
-        .min(1, '客户编号不能为空')
-        .max(20, '客户编号不能超过20个字符'),
+        .min(1, '编号不能为空')
+        .max(20, '编号不能超过20个字符'),
     name: z.string()
-        .min(1, '客户名称不能为空')
-        .max(100, '客户名称不能超过100个字符'),
+        .min(1, '名称不能为空')
+        .max(100, '名称不能超过100个字符'),
     contact_name: z.string()
         .max(50, '联系人不能超过50个字符')
         .optional()
@@ -144,12 +144,20 @@ export const customerSchema = z.object({
         .max(200, '地址不能超过200个字符')
         .optional()
         .or(z.literal('')),
-    level: z.enum(['VIP', 'NORMAL', 'TEMP']).default('NORMAL'),
-    status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
     remark: z.string()
         .max(500, '备注不能超过500个字符')
         .optional()
-        .or(z.literal(''))
+        .or(z.literal('')),
+    is_active: z.boolean().default(true)
+});
+
+// 供应商使用基础 schema 即可
+export const supplierSchema = partySchema;
+
+// 客户在基础之上扩展等级和状态
+export const customerSchema = partySchema.extend({
+    level: z.enum(['VIP', 'NORMAL', 'TEMP']).default('NORMAL'),
+    status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
 });
 
 export const customerAddressSchema = z.object({
@@ -187,10 +195,13 @@ export const customerAddressSchema = z.object({
         .or(z.literal(''))
 });
 
+export type PartyFormData = z.infer<typeof partySchema>;
+export type SupplierFormData = z.infer<typeof supplierSchema>;
 export type CustomerFormData = z.infer<typeof customerSchema>;
 export type CustomerAddressFormData = z.infer<typeof customerAddressSchema>;
 
-export interface Customer {
+// ========== Partner / Party interfaces ==========
+export interface Party {
     id: number;
     code: string;
     name: string;
@@ -198,13 +209,22 @@ export interface Customer {
     phone?: string;
     email?: string;
     address?: string;
-    level: 'VIP' | 'NORMAL' | 'TEMP';
-    status: 'ACTIVE' | 'INACTIVE';
     remark?: string;
-    addresses?: CustomerAddress[];
-    address_count?: number;
+    is_active?: boolean;
     created_at: string;
     updated_at: string;
+}
+
+export interface Supplier extends Party {
+    date_added?: string;
+    quotation_count?: number;
+}
+
+export interface Customer extends Party {
+    level: 'VIP' | 'NORMAL' | 'TEMP';
+    status: 'ACTIVE' | 'INACTIVE';
+    addresses?: CustomerAddress[];
+    address_count?: number;
 }
 
 export interface CustomerAddress {

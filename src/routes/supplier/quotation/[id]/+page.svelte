@@ -11,7 +11,7 @@
     let loading = $state(true);
     let error = $state('');
     
-    const id = $derived(parseInt(page.params.id));
+    const id = $derived(parseInt(page.params.id || '0'));
     
     async function loadQuotation() {
         loading = true;
@@ -149,14 +149,9 @@
                     </div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">运费</div>
+                    <div class="metric-label">货币</div>
                     <div class="metric-value">
-                        {#if quotation.postage}
-                            <span class="currency">{quotation.currency}</span>
-                            <span class="amount">{formatPrice(quotation.postage)}</span>
-                        {:else}
-                            <span class="amount">-</span>
-                        {/if}
+                        <span class="currency">{quotation.currency}</span>
                     </div>
                 </div>
                 <div class="metric-box total">

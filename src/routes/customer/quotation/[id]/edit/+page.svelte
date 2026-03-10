@@ -30,11 +30,8 @@
         price: '',
         currency: 'CNY',
         min_quantity: 1,
-        postage: null,
         lead_time_days: null,
         valid_from: null,
-        valid_until: null,
-        is_preferred: false,
         note: ''
     });
     
@@ -47,8 +44,7 @@
     // 计算总价
     let totalPrice = $derived(() => {
         const price = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
-        const postage = typeof formData.postage === 'number' ? formData.postage : parseFloat(formData.postage as string) || 0;
-        return price + postage;
+        return price;
     });
     
     // 构建物品搜索 URL
@@ -86,11 +82,8 @@
                 price: quotation.price,
                 currency: quotation.currency,
                 min_quantity: quotation.min_quantity,
-                postage: quotation.postage,
                 lead_time_days: quotation.lead_time_days,
                 valid_from: quotation.valid_from,
-                valid_until: quotation.valid_until,
-                is_preferred: quotation.is_preferred,
                 note: quotation.note
             };
         } catch (err) {
@@ -307,17 +300,6 @@
                         <!-- 附加费用 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                             <div>
-                                <label for="postage" class="block text-sm font-medium text-gray-700 mb-2">邮费/运费</label>
-                                <NumberStepper
-                                    id="postage"
-                                    value={typeof formData.postage === 'number' ? formData.postage : parseFloat(formData.postage as string) || 0}
-                                    min={0}
-                                    step={0.4}
-                                    decimalPlaces={2}
-                                    onchange={(v) => formData.postage = v || 0}
-                                />
-                            </div>
-                            <div>
                                 <label for="leadTime" class="block text-sm font-medium text-gray-700 mb-2">交货周期 (天)</label>
                                 <NumberStepper
                                     id="leadTime"
@@ -335,13 +317,13 @@
                             <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <div class="text-sm text-green-700">单价 + 运费</div>
+                                        <div class="text-sm text-green-700">单价</div>
                                         <div class="text-2xl font-bold text-green-900">
                                             ¥{formatPrice(totalPrice())}
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <div class="text-sm text-green-700">预估单价成本</div>
+                                        <div class="text-sm text-green-700">预估单价</div>
                                         <div class="text-lg font-semibold text-green-800">
                                             {#if formData.min_quantity && formData.min_quantity > 1}
                                                 ¥{(totalPrice() / (formData.min_quantity || 1)).toFixed(2)}/件
@@ -374,29 +356,7 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
-                            <div>
-                                <label for="validUntil" class="block text-sm font-medium text-gray-700 mb-2">有效期结束</label>
-                                <input
-                                    id="validUntil"
-                                    type="date"
-                                    bind:value={formData.valid_until}
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
                         </div>
-
-                        <!-- 首选报价 -->
-                        <label class="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200 cursor-pointer hover:bg-amber-100 transition-colors mb-4">
-                            <input
-                                type="checkbox"
-                                bind:checked={formData.is_preferred}
-                                class="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
-                            />
-                            <div>
-                                <div class="font-medium text-amber-900">设为首选报价</div>
-                                <div class="text-sm text-amber-700">该客户将成为此物品的默认客户</div>
-                            </div>
-                        </label>
 
                         <!-- 备注 -->
                         <div>

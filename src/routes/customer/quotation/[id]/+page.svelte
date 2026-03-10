@@ -13,7 +13,7 @@
     let loading = $state(true);
     let error = $state('');
     
-    const id = $derived(parseInt(page.params.id));
+    const id = $derived(parseInt(page.params.id || '0'));
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },
@@ -135,13 +135,9 @@
                         <span class="label">最小订购量</span>
                         <span class="value">{quotation.min_quantity}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">邮费/运费</span>
-                        <span class="value">{quotation.postage || '-'}</span>
-                    </div>
                     {#if quotation.total_price}
                         <div class="info-item">
-                            <span class="label">总价（含运费）</span>
+                            <span class="label">总价</span>
                             <span class="value highlight">{quotation.total_price} {quotation.currency}</span>
                         </div>
                     {/if}
@@ -159,10 +155,7 @@
                         <span class="label">有效期开始</span>
                         <span class="value">{quotation.valid_from || '-'}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">有效期结束</span>
-                        <span class="value">{quotation.valid_until || '-'}</span>
-                    </div>
+
                 </div>
             </div>
         </div>

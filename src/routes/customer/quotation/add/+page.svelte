@@ -9,8 +9,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
-    import { CurrencySelect } from '$lib/components/ui';
-    import { NumberStepper } from '$lib/components/ui';
+    import { CurrencySelect, NumberStepper } from '$lib/components/ui';
     
     // 从URL获取预设的客户ID和物品IDs
     const presetCustomerId = $derived(() => {
@@ -46,9 +45,9 @@
         lead_time_days: number | null;
         note: string;
         itemDetail?: Item | null;
-        isVariantChild?: boolean;  // 标记是否为变体子项
-        parentLineId?: number;     // 父行ID
-        variantInfo?: ItemVariant; // 变体信息
+        isVariantChild?: boolean;
+        parentLineId?: number;
+        variantInfo?: ItemVariant;
     }
     
     let quotationLines = $state<QuotationLine[]>([]);
