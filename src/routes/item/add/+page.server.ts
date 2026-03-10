@@ -42,6 +42,7 @@ export async function load({ fetch, url }) {
                     copyFromItem = {
                         SKU: `${itemData.SKU}_COPY`, // SKU 加后缀避免冲突
                         name: `${itemData.name} (复制)`,
+                        name_en: itemData.name_en || '',
                         SKU_zite: itemData.SKU_zite || '',
                         SKU_A: itemData.SKU_A || '',
                         description: itemData.description || '',

@@ -70,6 +70,7 @@ export interface OrderItemBase {
     item?: number;
     sku: string;
     item_name: string;
+    item_name_en?: string;
     quantity: string;
     unit_price: string;
     line_total: string;
@@ -99,6 +100,7 @@ export interface OrderItemCreateRequestBase {
     item?: number | null;
     sku?: string;
     item_name?: string;
+    item_name_en?: string;
     quantity: number;
     unit_price: number;
     quotation?: number | null;
@@ -159,7 +161,6 @@ export interface QuotationBase {
     price: string;
     currency: string;
     min_quantity: number;
-    postage?: string;
     lead_time_days?: number;
     valid_from?: string;
     valid_until?: string;

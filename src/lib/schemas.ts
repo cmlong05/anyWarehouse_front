@@ -96,6 +96,7 @@ export interface Item {
     id: number;
     SKU: string;
     name: string;
+    name_en?: string;
     SKU_zite?: string;
     SKU_A?: string;
     description?: string;

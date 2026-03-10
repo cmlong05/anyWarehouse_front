@@ -1,6 +1,50 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import type { CategoryData } from '$lib';
+    
     let { data } = $props<{ category_details: CategoryData }>();
+    
+    // 选中的物品 IDs
+    let selectedItems = $state<Set<number>>(new Set());
+    
+    // 切换选中状态
+    function toggleSelection(itemId: number, event: Event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const newSet = new Set(selectedItems);
+        if (newSet.has(itemId)) {
+            newSet.delete(itemId);
+        } else {
+            newSet.add(itemId);
+        }
+        selectedItems = newSet;
+    }
+    
+    // 全选/取消全选
+    function toggleSelectAll(event: Event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (selectedItems.size === data.category_details.items.length) {
+            selectedItems = new Set();
+        } else {
+            selectedItems = new Set(data.category_details.items.map((item: { id: number }) => item.id));
+        }
+    }
+    
+    // 跳转到客户报价页面
+    function goToQuotation() {
+        if (selectedItems.size === 0) {
+            alert('请先选择至少一个物品');
+            return;
+        }
+        const itemIds = Array.from(selectedItems).join(',');
+        goto(`/customer/quotation/add?item_ids=${itemIds}`);
+    }
+    
+    // 清空选择
+    function clearSelection() {
+        selectedItems = new Set();
+    }
 </script>
 
 <svelte:head>
@@ -33,20 +77,62 @@
         <div class="lg:col-span-2 space-y-4">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col max-h-[70vh]">
                 <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
-                    <h2 class="text-lg font-semibold text-gray-900">物品</h2>
-                    <a 
-                        href="/item/add?category={data.category_details.category.id}" 
-                        class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                        添加
-                    </a>
+                    <div class="flex items-center gap-3">
+                        <h2 class="text-lg font-semibold text-gray-900">物品</h2>
+                        {#if selectedItems.size > 0}
+                            <span class="text-sm text-blue-600 font-medium">已选 {selectedItems.size} 个</span>
+                        {/if}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {#if selectedItems.size > 0}
+                            <button 
+                                class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                                onclick={goToQuotation}
+                            >
+                                报价 ({selectedItems.size})
+                            </button>
+                            <button 
+                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                onclick={clearSelection}
+                            >
+                                清空
+                            </button>
+                        {/if}
+                        <a 
+                            href="/item/add?category={data.category_details.category.id}" 
+                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                            添加
+                        </a>
+                    </div>
                 </div>
                 <div class="divide-y divide-gray-100 overflow-y-auto">
+                    {#if data.category_details.items.length > 0}
+                        <!-- 表头 -->
+                        <div class="flex items-center gap-3 px-4 py-2 bg-gray-50 border-b border-gray-100">
+                            <input 
+                                type="checkbox" 
+                                checked={data.category_details.items.length > 0 && selectedItems.size === data.category_details.items.length}
+                                indeterminate={selectedItems.size > 0 && selectedItems.size < data.category_details.items.length}
+                                onchange={toggleSelectAll}
+                                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <span class="text-xs font-medium text-gray-500">全选</span>
+                        </div>
+                    {/if}
                     {#each data.category_details.items as { id, SKU, name }}
-                        <a href="/item/{id}" class="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group">
-                            <span class="font-mono text-sm font-medium text-blue-600 group-hover:text-blue-700">{SKU}</span>
-                            <span class="text-gray-700 text-sm">{name}</span>
-                        </a>
+                        <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">
+                            <input 
+                                type="checkbox" 
+                                checked={selectedItems.has(id)}
+                                onchange={(e) => toggleSelection(id, e)}
+                                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                            />
+                            <a href="/item/{id}" class="flex-1 flex items-center gap-4 group-hover:text-blue-600">
+                                <span class="font-mono text-sm font-medium text-blue-600 group-hover:text-blue-700">{SKU}</span>
+                                <span class="text-gray-700 text-sm">{name}</span>
+                            </a>
+                        </div>
                     {:else}
                         <div class="px-4 py-8 text-center text-gray-400">
                             暂无物品

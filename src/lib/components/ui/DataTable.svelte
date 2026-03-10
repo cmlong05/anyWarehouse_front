@@ -1,6 +1,7 @@
+
 <script lang="ts">
     /**
-     * 通用数据表格组件
+     * 通用数据表格组件（使用 TailwindCSS）
      */
     import type { Snippet } from 'svelte';
     
@@ -29,7 +30,8 @@
         onRowClick?: (item: T) => void;
         
         // 自定义渲染
-        cellRender?: Snippet<[{ item: T; column: Column; value: unknown }]>;
+        cellRender?: Snippet<[{ item: T; column: Column; value: unknown }]>
+        headerCellRender?: Snippet<[{ column: Column }]>
         
         // 样式
         class?: string;
@@ -45,6 +47,7 @@
         clickable = false,
         onRowClick,
         cellRender,
+        headerCellRender,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         class: className = '',
         zebra = true,
@@ -61,48 +64,88 @@
             onRowClick(item);
         }
     }
+    
+    function getContainerClasses() {
+        return [
+            'overflow-x-auto',
+            'bg-white',
+            'rounded-md',
+            className,
+            bordered ? 'shadow' : ''
+        ].filter(Boolean).join(' ');
+    }
+
+    function getTableClasses() {
+        return [
+            'w-full',
+            'border-collapse',
+            'text-sm',
+            clickable ? 'cursor-pointer' : ''
+        ].filter(Boolean).join(' ');
+    }
 </script>
 
-<div class="data-table-container {className}" class:bordered>
-    <table class="data-table" class:zebra class:clickable>
+<div class={getContainerClasses()}>
+    <table class={getTableClasses()}>
         <thead>
             <tr>
                 {#each columns as column}
-                    <th 
-                        class="align-{column.align || 'left'}"
+                    <th
+                        class={
+                            [
+                                'px-4',
+                                'py-3',
+                                'whitespace-nowrap',
+                                'text-gray-700',
+                                'font-semibold',
+                                column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
+                            ].join(' ')
+                        }
                         style:width={column.width}
                     >
-                        {column.title}
+                        {#if headerCellRender}
+                            {@render headerCellRender({ column })}
+                        {:else}
+                            {column.title}
+                        {/if}
                     </th>
                 {/each}
             </tr>
         </thead>
-        <tbody>
+        <tbody class={zebra ? 'odd:bg-white even:bg-gray-50' : ''}>
             {#if loading}
-                <tr class="loading-row">
+                <tr>
                     <td colspan={columns.length}>
-                        <div class="loading-cell">
-                            <span class="spinner"></span>
+                        <div class="py-12 text-gray-500 flex flex-col items-center gap-2">
+                            <span class="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"></span>
                             <span>加载中...</span>
                         </div>
                     </td>
                 </tr>
             {:else if data.length === 0}
-                <tr class="empty-row">
+                <tr>
                     <td colspan={columns.length}>
-                        <div class="empty-cell">
+                        <div class="py-12 text-gray-500 flex flex-col items-center gap-2">
                             {emptyText}
                         </div>
                     </td>
                 </tr>
             {:else}
                 {#each data as item}
-                    <tr 
-                        class:clickable
+                    <tr
+                        class="hover:bg-gray-100"
                         onclick={() => handleRowClick(item)}
                     >
                         {#each columns as column}
-                            <td class="align-{column.align || 'left'}">
+                            <td
+                                class={
+                                    [
+                                        'px-4',
+                                        'py-3',
+                                        column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
+                                    ].join(' ')
+                                }
+                            >
                                 {#if cellRender}
                                     {@render cellRender({ item, column, value: getValue(item, column.key) })}
                                 {:else}
@@ -117,93 +160,3 @@
     </table>
 </div>
 
-<style>
-    .data-table-container {
-        overflow-x: auto;
-        background: white;
-        border-radius: 0.5rem;
-    }
-    
-    .data-table-container.bordered {
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-    
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .data-table th {
-        background: #f9fafb;
-        font-weight: 600;
-        color: #374151;
-        white-space: nowrap;
-    }
-    
-    .data-table tbody tr {
-        transition: background 0.15s;
-    }
-    
-    .data-table.zebra tbody tr:nth-child(even) {
-        background: #f9fafb;
-    }
-    
-    .data-table tbody tr:hover {
-        background: #f3f4f6;
-    }
-    
-    .data-table.clickable tbody tr {
-        cursor: pointer;
-    }
-    
-    .align-left { text-align: left; }
-    .align-center { text-align: center; }
-    .align-right { text-align: right; }
-    
-    .loading-row,
-    .empty-row {
-        text-align: center;
-    }
-    
-    .loading-cell,
-    .empty-cell {
-        padding: 3rem;
-        color: #6b7280;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .spinner {
-        width: 24px;
-        height: 24px;
-        border: 2px solid #e5e7eb;
-        border-top-color: #3b82f6;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    
-    @media (max-width: 768px) {
-        .data-table {
-            font-size: 0.8rem;
-        }
-        
-        .data-table th,
-        .data-table td {
-            padding: 0.5rem 0.75rem;
-        }
-    }
-</style>

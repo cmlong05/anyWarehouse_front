@@ -11,8 +11,12 @@
     let items = $derived(data?.items ?? []);
     let searchQuery = $state(data?.searchQuery ?? '');
     
+    // 选中的物品 IDs
+    let selectedItems = $state<Set<number>>(new Set());
+    
     // 表格列定义
     const columns = [
+        { key: 'checkbox', title: '', width: '40px' },
         { key: 'SKU', title: 'SKU', width: '120px' },
         { key: 'name', title: '品项名称' },
     ];
@@ -36,6 +40,43 @@
     function viewDetail(item: BaseItem) {
         goto(`/item/${item.id}`);
     }
+    
+    // 切换选中状态
+    function toggleSelection(itemId: number, event: Event) {
+        event.stopPropagation();
+        const newSet = new Set(selectedItems);
+        if (newSet.has(itemId)) {
+            newSet.delete(itemId);
+        } else {
+            newSet.add(itemId);
+        }
+        selectedItems = newSet;
+    }
+    
+    // 全选/取消全选
+    function toggleSelectAll(event: Event) {
+        event.stopPropagation();
+        if (selectedItems.size === items.length) {
+            selectedItems = new Set();
+        } else {
+            selectedItems = new Set(items.map((item: BaseItem) => item.id));
+        }
+    }
+    
+    // 跳转到客户报价页面
+    function goToQuotation() {
+        if (selectedItems.size === 0) {
+            alert('请先选择至少一个物品');
+            return;
+        }
+        const itemIds = Array.from(selectedItems).join(',');
+        goto(`/customer/quotation/add?item_ids=${itemIds}`);
+    }
+    
+    // 清空选择
+    function clearSelection() {
+        selectedItems = new Set();
+    }
 </script>
 
 <svelte:head>
@@ -45,12 +86,33 @@
 <PageContainer>
     <PageHeader title="所有品项">
         {#snippet actions()}
-            <a href="/item/add" class="btn btn-primary">添加品项</a>
+            <div class="flex gap-2">
+                {#if selectedItems.size > 0}
+                    <button 
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                        onclick={goToQuotation}
+                    >
+                        报价 ({selectedItems.size})
+                    </button>
+                    <button 
+                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors"
+                        onclick={clearSelection}
+                    >
+                        清空
+                    </button>
+                {/if}
+                <a 
+                    href="/item/add" 
+                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors"
+                >
+                    添加品项
+                </a>
+            </div>
         {/snippet}
     </PageHeader>
     
     <!-- 搜索框 -->
-    <div class="search-box">
+    <div class="relative mb-4">
         <FormInput
             label=""
             name="search"
@@ -59,17 +121,23 @@
             onchange={(v) => { searchQuery = v; handleSearch(); }}
         />
         {#if searchQuery}
-            <button class="clear-btn" onclick={clearSearch}>
+            <button 
+                class="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-400 hover:text-gray-600 p-1 text-base leading-none" 
+                onclick={clearSearch}
+            >
                 ✕
             </button>
         {/if}
     </div>
     
     <!-- 结果统计 -->
-    <div class="result-stats">
+    <div class="mb-4 text-gray-500 text-sm">
         共 {items.length} 个品项
+        {#if selectedItems.size > 0}
+            <span class="text-blue-600 font-medium">，已选择 {selectedItems.size} 个</span>
+        {/if}
         {#if data?.searchQuery}
-            <span class="search-term">（搜索: "{data.searchQuery}"）</span>
+            <span class="text-blue-500">（搜索: "{data.searchQuery}"）</span>
         {/if}
     </div>
 
@@ -80,64 +148,34 @@
         onRowClick={viewDetail}
         emptyText={data?.searchQuery ? '没有找到匹配的品项' : '暂无品项'}
     >
-        {#snippet cellRender({ column, value })}
-            {#if column.key === 'SKU'}
-                <span class="sku-badge">{value}</span>
+        {#snippet cellRender({ column, value, item })}
+            {#if column.key === 'checkbox'}
+                <input 
+                    type="checkbox" 
+                    checked={selectedItems.has(item.id)}
+                    onchange={(e) => toggleSelection(item.id, e)}
+                    onclick={(e) => e.stopPropagation()}
+                    class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+            {:else if column.key === 'SKU'}
+                <span class="font-mono font-semibold text-blue-500 bg-blue-50 px-2 py-1 rounded">{value}</span>
             {:else}
                 {value}
             {/if}
         {/snippet}
+        
+        {#snippet headerCellRender({ column })}
+            {#if column.key === 'checkbox'}
+                <input 
+                    type="checkbox" 
+                    checked={items.length > 0 && selectedItems.size === items.length}
+                    indeterminate={selectedItems.size > 0 && selectedItems.size < items.length}
+                    onchange={toggleSelectAll}
+                    class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+            {:else}
+                {column.title}
+            {/if}
+        {/snippet}
     </DataTable>
 </PageContainer>
-
-<style>
-    .search-box {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-    
-    .search-box :global(.form-field) {
-        margin: 0;
-    }
-    
-    .search-box :global(label) {
-        display: none;
-    }
-    
-    .clear-btn {
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #6b7280;
-        cursor: pointer;
-        padding: 0.25rem;
-        font-size: 1rem;
-        line-height: 1;
-    }
-    
-    .clear-btn:hover {
-        color: #374151;
-    }
-    
-    .result-stats {
-        margin-bottom: 1rem;
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-    
-    .search-term {
-        color: #3b82f6;
-    }
-    
-    .sku-badge {
-        font-family: monospace;
-        font-weight: 600;
-        color: #3b82f6;
-        background-color: #eff6ff;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-    }
-</style>

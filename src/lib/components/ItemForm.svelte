@@ -11,6 +11,7 @@
             id?: number;
             SKU: string;
             name: string;
+            name_en?: string;
             SKU_zite?: string;
             SKU_A?: string;
             description?: string;
@@ -45,6 +46,7 @@
     let formData = $state({
         SKU: initialData?.SKU || '',
         name: initialData?.name || '',
+        name_en: initialData?.name_en || '',
         SKU_zite: initialData?.SKU_zite || '',
         SKU_A: initialData?.SKU_A || '',
         description: initialData?.description || '',
@@ -128,7 +130,7 @@
             submitData.set('name', formData.name);
             
             // 可选字符串字段：空字符串不提交
-            const optionalStringFields = ['SKU_zite', 'SKU_A', 'description', 'barcode', 'currency'] as const;
+            const optionalStringFields = ['SKU_zite', 'SKU_A', 'description', 'barcode', 'currency', 'name_en'] as const;
             for (const field of optionalStringFields) {
                 const value = formData[field];
                 if (value && String(value).trim() !== '') {
@@ -190,7 +192,8 @@
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">基本信息</h3>
             <FormInput label="SKU" name="SKU" required value={formData.SKU} placeholder="商品唯一标识码" maxlength={50} oninput={(v) => formData.SKU = v} />
-            <FormInput label="商品名称" name="name" required value={formData.name} placeholder="商品名称" maxlength={200} oninput={(v) => formData.name = v} />
+            <FormInput label="商品名称" name="name" required value={formData.name} placeholder="商品名称（中文）" maxlength={200} oninput={(v) => formData.name = v} />
+            <FormInput label="商品名称 (英文)" name="name_en" value={formData.name_en || ''} placeholder="Product Name (English), 可选" maxlength={200} oninput={(v) => formData.name_en = v} />
             
             <!-- 变体母版选项 -->
             <div class="mt-3 pt-3 border-t border-gray-200">

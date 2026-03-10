@@ -37,6 +37,7 @@
         initialData={data.copyFromItem || (data.defaultCategoryId ? {
             SKU: '',
             name: '',
+            name_en: '',
             SKU_zite: '',
             SKU_A: '',
             description: '',

@@ -15,6 +15,7 @@ export interface BaseItem {
     id: number;
     SKU: string;
     name: string;
+    name_en?: string;
 }
 
 // ========== Component (BOM) 组件相关接口 ==========
@@ -166,6 +167,7 @@ export interface StorageItem {
     item_id: number;
     item_SKU: string;
     item_name: string;
+    item_name_en?: string;
     quantity: number;
 }
 // ItemSet 组件
@@ -270,7 +272,6 @@ export interface Quotation {
     price: string;
     currency: string;
     min_quantity: number;
-    postage: string | null;
     lead_time_days: number | null;
     valid_from: string | null;
     valid_until: string | null;
@@ -289,6 +290,7 @@ export interface QuotationBrief {
     item: number | null;
     item_sku: string;
     item_name: string;
+    item_name_en?: string;
     sku: string;
     price: string;
     currency: string;
@@ -309,7 +311,6 @@ export interface QuotationCreateRequest {
     price: string | number;
     currency?: string;
     min_quantity?: number;
-    postage?: string | number | null;
     lead_time_days?: number | null;
     valid_from?: string | null;
     valid_until?: string | null;
@@ -611,7 +612,6 @@ export interface CustomerQuotation {
     price: string;
     currency: string;
     min_quantity: number;
-    postage: string | null;
     lead_time_days: number | null;
     valid_from: string | null;
     valid_until: string | null;
@@ -631,6 +631,7 @@ export interface CustomerQuotationBrief {
     item: number | null;
     item_sku: string;
     item_name: string;
+    item_name_en?: string;
     sku: string;
     price: string;
     currency: string;
@@ -650,11 +651,8 @@ export interface CustomerQuotationCreateRequest {
     price: string | number;
     currency?: string;
     min_quantity?: number;
-    postage?: string | number | null;
     lead_time_days?: number | null;
     valid_from?: string | null;
-    valid_until?: string | null;
-    is_preferred?: boolean;
     note?: string;
 }
 
