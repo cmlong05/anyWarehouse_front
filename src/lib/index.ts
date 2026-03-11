@@ -699,6 +699,7 @@ export interface SalesOrderItem {
     item_detail?: BaseItem & { image?: string; weight?: string };
     sku: string;
     item_name: string;
+    item_name_en?: string;
     quantity: number;
     quantity_shipped: number;
     quantity_prepared?: number;  // 已预备（已添加到confirmed/packed发货单但尚未发货）

@@ -168,6 +168,7 @@ export function useOrderForm(
             item: currentItem.item || null,
             sku: currentItem.sku || '',
             item_name: currentItem.item_name || '',
+            item_name_en: currentItem.item_name_en || '',
             quantity: currentItem.quantity || 1,
             unit_price: currentItem.unit_price || 0,
             quotation: currentItem.quotation || null,
@@ -195,7 +196,8 @@ export function useOrderForm(
             quotation: undefined,
             item: null,
             sku: '',
-            item_name: ''
+            item_name: '',
+            item_name_en: ''
         });
         itemErrors = {};
     }
@@ -262,6 +264,7 @@ export function useOrderForm(
                 item: item.item,
                 sku: item.sku,
                 item_name: item.item_name,
+                item_name_en: item.item_name_en,
                 quantity: item.quantity,
                 unit_price: Number(item.unit_price),
                 quotation: item.quotation,

@@ -3,6 +3,7 @@
     import type { ItemSet, QuotationBrief } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
+    import { localeStore } from '$lib/i18n/sales';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
     import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
@@ -209,7 +210,7 @@
 </script>
 
 <svelte:head>
-    <title>{data.itemDetail.item.name} | 品项详情</title>
+    <title>{data.itemDetail.item.name}{data.itemDetail.item.name_en ? ` / ${data.itemDetail.item.name_en}` : ''} | 物品详情</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 py-6">
@@ -251,7 +252,7 @@
                             >
                                 <img 
                                     src={data.itemDetail.item.image.trim()} 
-                                    alt={data.itemDetail.item.name}
+                                    alt="{data.itemDetail.item.name}{data.itemDetail.item.name_en ? ` / ${data.itemDetail.item.name_en}` : ''}"
                                     class="max-w-full max-h-80 object-contain hover:scale-105 transition-transform"
                                 />
                             </a>
@@ -268,7 +269,10 @@
                     <div class="flex-1 p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div>
-                                <h1 class="text-2xl font-bold text-gray-900 mb-2">{data.itemDetail.item.name}</h1>
+                                <h1 class="text-2xl font-bold text-gray-900 mb-1">{data.itemDetail.item.name}</h1>
+                                {#if data.itemDetail.item.name_en}
+                                    <p class="text-lg text-gray-500 mb-2">{data.itemDetail.item.name_en}</p>
+                                {/if}
                                 <div class="flex items-center gap-3 text-sm flex-wrap">
                                     <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full font-mono">{data.itemDetail.item.SKU}</span>
                                     

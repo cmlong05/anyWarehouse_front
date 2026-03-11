@@ -6,6 +6,7 @@
     import type { SalesOrder } from '$lib';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
+    import { localeStore } from '$lib/i18n/sales';
 
     let orderId = $derived(parseInt(page.params.id || '0'));
     let order = $state<SalesOrder | null>(null);
@@ -183,7 +184,9 @@
                         <tr class="border-b border-gray-200">
                             <td class="py-2 px-3 text-sm">{item.line_number}</td>
                             <td class="py-2 px-3 text-sm font-mono">{item.sku}</td>
-                            <td class="py-2 px-3 text-sm">{item.item_name}</td>
+                            <td class="py-2 px-3 text-sm">
+                                {$localeStore === 'en' ? (item.item_name_en || item.item_name) : item.item_name}
+                            </td>
                             <td class="py-2 px-3 text-sm text-right">{item.quantity}</td>
                             <td class="py-2 px-3 text-sm text-right">PCS</td>
                             <td class="py-2 px-3 text-sm text-right">${parseFloat(item.unit_price).toFixed(4)}</td>

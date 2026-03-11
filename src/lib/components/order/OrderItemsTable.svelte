@@ -1,10 +1,12 @@
 <script lang="ts">
     import { safeParseFloat } from '$lib/utils';
+    import { localeStore } from '$lib/i18n/sales';
 
     interface OrderItem {
         line_number: number;
         sku: string;
         item_name: string;
+        item_name_en?: string;
         quantity: string | number;
         quantity_shipped?: string | number;
         quantity_received?: string | number;
@@ -100,7 +102,9 @@
                         <tr class:completed={isFullyProcessed(item)}>
                             <td>{item.line_number}</td>
                             <td class="mono">{item.sku}</td>
-                            <td>{item.item_name}</td>
+                            <td>
+                                {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
+                            </td>
                             <td class="numeric">{item.quantity}</td>
                             <td class="numeric">{shipped}</td>
                             <td class="numeric">{pending}</td>

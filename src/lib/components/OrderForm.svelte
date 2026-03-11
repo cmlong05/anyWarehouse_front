@@ -125,6 +125,7 @@ $effect(() => {
                 item?: number; 
                 sku?: string; 
                 item_name?: string; 
+                item_name_en?: string;
                 price: string;
             };
             setCurrentItemQuotation(q);
@@ -162,6 +163,7 @@ $effect(() => {
             item?: number; 
             sku?: string; 
             item_name?: string; 
+            item_name_en?: string;
             price: string;
             item_is_variant_template?: boolean;
             is_variant_template?: boolean;
@@ -176,6 +178,7 @@ $effect(() => {
             item: currentItem.item || null,
             sku: currentItem.sku || '',
             item_name: currentItem.item_name || '',
+            item_name_en: (currentItem.item_name_en || quotation.item_name_en) || '',
             quantity: currentItem.quantity || 1,
             unit_price: currentItem.unit_price || 0,
             quotation: currentItem.quotation || null,
@@ -196,6 +199,7 @@ $effect(() => {
                         id: number; 
                         SKU: string; 
                         name: string;
+                        name_en?: string;
                         b_Price?: string;
                     } | null;
                     
@@ -209,6 +213,7 @@ $effect(() => {
                         item: variant.variant_item,
                         sku: variantDetail?.SKU || '',
                         item_name: variantDetail?.name || '',
+                        item_name_en: variantDetail?.name_en || '',
                         quantity: 1,
                         unit_price: parseFloat(variantDetail?.b_Price || '0') || 0,
                         quotation: null,
