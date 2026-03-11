@@ -20,6 +20,7 @@
         customerId: number;
         customer?: Customer;
         preloadItems?: any[] | null;
+        preloadQuotationPrices?: Record<string, { price: number; currency: string }> | null;
         onSubmit: (data: SalesOrderCreateRequest) => void;
         onCancel: () => void;
         submitLabel?: string;
@@ -31,6 +32,7 @@
         customerId,
         customer,
         preloadItems,
+        preloadQuotationPrices,
         onSubmit, 
         onCancel, 
         submitLabel = '保存',
@@ -61,7 +63,7 @@
             
             // 如果有预加载数据，处理变体展开
             if (preloadItems && preloadItems.length > 0) {
-                expandedPreloadItems = await processPreloadItems(preloadItems, quotations);
+                expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
             }
         } catch (err) {
             console.error('加载报价失败:', err);
@@ -87,7 +89,8 @@
     // 处理预加载数据，按母版分组并展开变体
     async function processPreloadItems(
         items: any[], 
-        allQuotations: CustomerQuotationBrief[]
+        allQuotations: CustomerQuotationBrief[],
+        allQuotationPrices?: Record<string, { price: number; currency: string }> | null
     ): Promise<OrderFormItem[]> {
         const result: OrderFormItem[] = [];
         
@@ -177,6 +180,13 @@
                 // 查找是否选中了此变体
                 const selectedChild = group.children.find(c => c.item === variant.variant_item);
                 
+                const variantSku = variantDetail?.SKU || '';
+                // 优先使用预加载的报价价格，其次是选中项的价格，最后回退到基础价格
+                const unitPrice = selectedChild?.unit_price 
+                    ?? allQuotationPrices?.[variantSku]?.price 
+                    ?? parseFloat(variantDetail?.b_Price || '0') 
+                    ?? 0;
+                
                 // 构建变体属性字符串
                 const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
                     av.value
@@ -185,10 +195,10 @@
                 result.push({
                     id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     item: variant.variant_item,
-                    sku: variantDetail?.SKU || '',
+                    sku: variantSku,
                     item_name: variantDetail?.name || '',
                     quantity: selectedChild?.quantity || 0,
-                    unit_price: selectedChild?.unit_price || parseFloat(variantDetail?.b_Price || '0') || 0,
+                    unit_price: unitPrice,
                     quotation: selectedChild?.quotation_id || null,
                     expected_delivery: null,
                     notes: '',
@@ -227,7 +237,7 @@
     $effect(() => {
         if (preloadItems && preloadItems.length > 0 && quotations.length > 0 && !preloadProcessed) {
             (async () => {
-                expandedPreloadItems = await processPreloadItems(preloadItems, quotations);
+                expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
                 preloadProcessed = true;
             })();
         }

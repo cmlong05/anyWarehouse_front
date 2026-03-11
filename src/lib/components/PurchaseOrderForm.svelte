@@ -20,6 +20,7 @@
         supplierId: number;
         supplier?: { id: number; name: string; contact_name?: string; phone?: string; email?: string; code?: string };
         preloadItems?: any[] | null;
+        preloadQuotationPrices?: Record<string, { price: number; currency: string }> | null;
         onSubmit: (data: PurchaseOrderCreateRequest) => void;
         onCancel: () => void;
         submitLabel?: string;
@@ -31,6 +32,7 @@
         supplierId,
         supplier,
         preloadItems,
+        preloadQuotationPrices,
         onSubmit, 
         onCancel, 
         submitLabel = '保存',
@@ -83,7 +85,8 @@
     // 处理预加载数据，展开变体母版并按母版分组
     async function processPreloadItems(
         items: any[], 
-        allQuotations: QuotationBrief[]
+        allQuotations: QuotationBrief[],
+        allQuotationPrices?: Record<string, { price: number; currency: string }> | null
     ): Promise<OrderFormItem[]> {
         const result: OrderFormItem[] = [];
         
@@ -173,6 +176,13 @@
                 // 查找是否选中了此变体
                 const selectedChild = group.children.find(c => c.item === variant.variant_item);
                 
+                const variantSku = variantDetail?.SKU || '';
+                // 优先使用预加载的报价价格，其次是选中项的价格，最后回退到基础价格
+                const unitPrice = selectedChild?.unit_price 
+                    ?? allQuotationPrices?.[variantSku]?.price 
+                    ?? parseFloat(variantDetail?.b_Price || '0') 
+                    ?? 0;
+                
                 // 构建变体属性字符串
                 const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
                     av.value
@@ -181,10 +191,10 @@
                 result.push({
                     id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     item: variant.variant_item,
-                    sku: variantDetail?.SKU || '',
+                    sku: variantSku,
                     item_name: variantDetail?.name || '',
                     quantity: selectedChild?.quantity || 0,  // 如果选中了，使用其数量
-                    unit_price: selectedChild?.unit_price || parseFloat(variantDetail?.b_Price || '0') || 0,
+                    unit_price: unitPrice,
                     quotation: selectedChild?.quotation_id || null,
                     expected_delivery: null,
                     notes: '',
@@ -227,7 +237,7 @@
             // (simple by comparing lengths)
             if (!expandedPreloadItems || expandedPreloadItems.length !== preloadItems.length) {
                 (async () => {
-                    expandedPreloadItems = await processPreloadItems(preloadItems, quotations);
+                    expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
                 })();
             }
         }

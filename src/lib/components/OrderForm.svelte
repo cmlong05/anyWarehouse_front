@@ -197,6 +197,18 @@ $effect(() => {
         if (isVariantTemplate(quotation) && quotation.item) {
             const variants = await fetchItemVariants(quotation.item);
             if (variants.length > 0) {
+                // 尝试从 sessionStorage 获取预加载的报价价格信息
+                let preloadPrices: Record<string, { price: number; currency: string }> = {};
+                try {
+                    const preloadData = sessionStorage.getItem('sales_order_preload_items');
+                    if (preloadData) {
+                        const parsed = JSON.parse(preloadData);
+                        preloadPrices = parsed.all_quotation_prices || {};
+                    }
+                } catch {
+                    // 忽略解析错误
+                }
+                
                 const variantItems: OrderFormItem[] = variants.map((variant, idx) => {
                     const variantDetail = variant.variant_item_detail as { 
                         id: number; 
@@ -206,6 +218,10 @@ $effect(() => {
                         b_Price?: string;
                     } | null;
                     
+                    const variantSku = variantDetail?.SKU || '';
+                    // 优先使用预加载的报价价格，如果没有则使用基础价格
+                    const unitPrice = preloadPrices[variantSku]?.price ?? parseFloat(variantDetail?.b_Price || '0') ?? 0;
+                    
                     // 构建变体属性字符串（从 attribute_values_detail 获取属性值名称）
                     const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
                         av.value
@@ -214,11 +230,11 @@ $effect(() => {
                     return {
                         id: `item_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 9)}`,
                         item: variant.variant_item,
-                        sku: variantDetail?.SKU || '',
+                        sku: variantSku,
                         item_name: variantDetail?.name || '',
                         item_name_en: variantDetail?.name_en || '',
                         quantity: 1,
-                        unit_price: parseFloat(variantDetail?.b_Price || '0') || 0,
+                        unit_price: unitPrice,
                         quotation: null,
                         expected_delivery: null,
                         notes: '',

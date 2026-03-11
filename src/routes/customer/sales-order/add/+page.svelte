@@ -22,6 +22,7 @@
     let submitting = $state(false);
     let error = $state('');
     let preloadItems = $state<any[] | null>(null);
+    let preloadQuotationPrices = $state<Record<string, { price: number; currency: string }> | null>(null);
     let copyFromOrder = $state<{ order_number: string; order_data: any } | null>(null);
     
     const breadcrumbs = $derived([
@@ -131,6 +132,8 @@
                         unit_price: item.unit_price,
                         quotation_id: item.quotation_id
                     }));
+                    // 保留所有报价价格信息（用于变体价格显示）
+                    preloadQuotationPrices = preloadData.all_quotation_prices || {};
                 }
                 // 清除 sessionStorage 中的数据
                 sessionStorage.removeItem('sales_order_preload_items');
@@ -189,6 +192,7 @@
                 customer={customer}
                 salesOrder={copyFromOrder?.order_data}
                 {preloadItems}
+                {preloadQuotationPrices}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 submitLabel={copyFromOrder ? '创建订单' : '创建订单'}

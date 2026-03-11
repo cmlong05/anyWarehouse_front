@@ -102,10 +102,23 @@
                 unit_price: parseFloat(q.price)
             }));
         
+        // 收集所有可用的报价价格信息（用于创建订单时显示真实报价）
+        const allQuotationPrices: Record<string, { price: number; currency: string; item: number | null }> = {};
+        quotations.forEach(q => {
+            if (q.sku) {
+                allQuotationPrices[q.sku] = {
+                    price: parseFloat(q.price || '0'),
+                    currency: q.currency || 'CNY',
+                    item: q.item
+                };
+            }
+        });
+        
         if (selectedItems.length > 0) {
             sessionStorage.setItem('purchase_order_preload_items', JSON.stringify({
                 supplier_id: supplier!.id,
-                items: selectedItems
+                items: selectedItems,
+                all_quotation_prices: allQuotationPrices
             }));
         }
         

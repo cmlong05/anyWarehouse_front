@@ -127,6 +127,7 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
         // 清除可能存在的复制订单数据，避免新建订单时显示"复制自订单"
         sessionStorage.removeItem('sales_order_copy_data');
         
+        // 收集选中的项目（数量>0）
         const selectedItems = quotations
             .filter(q => {
                 const qty = quotationQuantities[q.id];
@@ -141,10 +142,23 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
                 unit_price: parseFloat(q.price || '0')
             }));
         
+        // 收集所有可用的报价信息（包括未选中的变体，用于创建订单时显示真实报价）
+        const allQuotationPrices: Record<string, { price: number; currency: string; item: number | null }> = {};
+        quotations.forEach(q => {
+            if (q.sku) {
+                allQuotationPrices[q.sku] = {
+                    price: parseFloat(q.price || '0'),
+                    currency: q.currency || 'CNY',
+                    item: q.item
+                };
+            }
+        });
+        
         if (selectedItems.length > 0) {
             sessionStorage.setItem('sales_order_preload_items', JSON.stringify({
                 partner_id: options.partnerId,
-                items: selectedItems
+                items: selectedItems,
+                all_quotation_prices: allQuotationPrices
             }));
         }
         

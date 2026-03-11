@@ -107,13 +107,13 @@
     });
 </script>
 
-<div class="py-6 border-t border-gray-200">
-    <div class="flex justify-between items-center mb-6">
+<div class="py-4 border-t border-gray-200">
+    <div class="flex justify-between items-center mb-4">
         <div class="flex items-center gap-2">
-            <h2 class="text-xl font-medium text-gray-800">{title}</h2>
+            <h2 class="text-lg font-medium text-gray-800">{title}</h2>
             <a 
                 href={addHref} 
-                class="inline-flex items-center px-3 py-1.5 font-medium text-white bg-green-300 hover:bg-green-400 rounded-md transition-colors shadow-sm"
+                class="inline-flex items-center px-2.5 py-1 text-sm font-medium text-white bg-green-300 hover:bg-green-400 rounded-md transition-colors shadow-sm"
             >
                 添加报价
             </a>
@@ -129,22 +129,22 @@
     {#if loading}
         <Loading text="加载报价..." />
     {:else if quotations.length === 0}
-        <div class="text-center py-12 text-gray-500">
+        <div class="text-center py-8 text-gray-500">
             <p>{emptyText}</p>
         </div>
     {:else}
         <div class="overflow-x-auto">
-            <table class="w-full text-sm border-collapse">
+            <table class="w-full text-xs border-collapse">
                 <thead>
                     <tr>
                         {#if hasVariants}
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200" style="width: 40px;"></th>
+                            <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200 w-8"></th>
                         {/if}
-                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">货币</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
+                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
+                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
+                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价</th>
+                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">货币</th>
+                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -152,35 +152,35 @@
                         <!-- 有变体时显示折叠结构 -->
                         {#each groupedQuotations as group, groupIndex}
                             <!-- 母版/分组行 -->
-                            <tr class="group-header" onclick={() => toggleGroup(groupIndex)}>
-                                <td class="px-4 py-3 expand-icon">
+                            <tr class="bg-slate-50 cursor-pointer transition-colors duration-200 hover:bg-slate-100" onclick={() => toggleGroup(groupIndex)}>
+                                <td class="px-2 py-2 text-slate-500">
                                     <svg class="w-4 h-4 transition-transform {group.expanded ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                     </svg>
                                 </td>
-                                <td class="px-4 py-3 font-medium">
+                                <td class="px-2 py-2 font-medium">
                                     {group.parentSku}
                                     {#if group.isTemplate}
-                                        <span class="badge badge-purple">母版</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium ml-1.5 bg-purple-200 text-purple-700">母版</span>
                                     {:else if group.parentId}
-                                        <span class="badge badge-blue">变体组</span>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[0.625rem] font-medium ml-1.5 bg-blue-200 text-blue-600">变体组</span>
                                     {/if}
                                 </td>
-                                <td class="px-4 py-3 text-gray-600">{group.parentName}</td>
-                                <td class="px-4 py-3 text-right" colspan="3">
-                                    <span class="text-sm text-gray-500">{group.quotations.length} 个报价</span>
+                                <td class="px-2 py-2 text-gray-600">{group.parentName}</td>
+                                <td class="px-2 py-2 text-right" colspan="3">
+                                    <span class="text-xs text-gray-500">{group.quotations.length} 个报价</span>
                                 </td>
                             </tr>
                             <!-- 变体/报价详情行 -->
                             {#if group.expanded}
                                 {#each group.quotations as quotation}
-                                    <tr class="group-item">
-                                        <td class="px-4 py-3"></td>
-                                        <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
-                                        <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.item_name || '-'}</td>
-                                        <td class="px-4 py-3 text-gray-600 text-right font-mono cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
-                                        <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
-                                        <td class="px-4 py-3 text-right">
+                                    <tr class="bg-white">
+                                        <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
+                                        <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                        <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                        <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
+                                        <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                        <td class="px-2 py-1.5 text-right">
                                             <NumberStepper
                                                 value={quotationQuantities[quotation.id] ?? undefined}
                                                 step={1}
@@ -196,12 +196,12 @@
                         <!-- 独立物品直接平铺显示（不折叠） -->
                         {#each independentQuotations as quotation}
                             <tr class="border-b border-gray-200">
-                                <td class="px-4 py-3"></td>
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.item_name || '-'}</td>
-                                <td class="px-4 py-3 text-gray-600 text-right font-mono cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
+                                <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
+                                <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                <td class="px-2 py-1.5 text-right">
                                     <NumberStepper
                                         value={quotationQuantities[quotation.id] ?? undefined}
                                         step={1}
@@ -216,11 +216,11 @@
                         <!-- 无变体时直接平铺显示 -->
                         {#each quotations as quotation}
                             <tr class="border-b border-gray-200">
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.item_name || '-'}</td>
-                                <td class="px-4 py-3 text-gray-600 text-right font-mono cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.price}</td>
-                                <td class="px-4 py-3 text-gray-600 cursor-pointer hover:bg-gray-100" onclick={() => onRowClick(quotation.id)}>{quotation.currency}</td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
+                                <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                <td class="px-2 py-1.5 text-right">
                                     <NumberStepper
                                         value={quotationQuantities[quotation.id] ?? undefined}
                                         step={1}
@@ -235,7 +235,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-6 flex justify-end">
+        <div class="mt-4 flex justify-end">
             <button 
                 class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-md transition-colors"
                 onclick={onCreateOrder}
@@ -245,46 +245,3 @@
         </div>
     {/if}
 </div>
-
-<style>
-    .group-header {
-        background-color: #f8fafc;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .group-header:hover {
-        background-color: #f1f5f9;
-    }
-    .group-item {
-        background-color: white;
-    }
-    .group-item td:first-child {
-        border-left: 3px solid #e2e8f0;
-    }
-    .group-item td:nth-child(2) {
-        padding-left: 3rem;
-    }
-    .expand-icon {
-        color: #64748b;
-    }
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.125rem 0.5rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin-left: 0.5rem;
-    }
-    .badge-purple {
-        background-color: #e9d5ff;
-        color: #7c3aed;
-    }
-    .badge-blue {
-        background-color: #dbeafe;
-        color: #2563eb;
-    }
-    .rotate-90 {
-        transform: rotate(90deg);
-    }
-</style>

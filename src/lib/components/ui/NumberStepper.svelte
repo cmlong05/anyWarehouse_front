@@ -95,10 +95,8 @@
         if (newVal < min) return;
         value = newVal;
         onchange?.(newVal);
-        // 按钮操作后更新显示值
-        if (!isEditing) {
-            inputValue = formatValue(newVal);
-        }
+        // 无论是否在编辑状态，都立即更新显示值，避免鼠标滚轮时延迟
+        inputValue = formatValue(newVal);
     }
     
     function increment() {
@@ -108,10 +106,8 @@
         if (max !== undefined && newVal > max) return;
         value = newVal;
         onchange?.(newVal);
-        // 按钮操作后更新显示值
-        if (!isEditing) {
-            inputValue = formatValue(newVal);
-        }
+        // 无论是否在编辑状态，都立即更新显示值，避免鼠标滚轮时延迟
+        inputValue = formatValue(newVal);
     }
 </script>
 

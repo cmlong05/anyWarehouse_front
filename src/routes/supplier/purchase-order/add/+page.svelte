@@ -22,6 +22,7 @@
     let submitting = $state(false);
     let error = $state('');
     let preloadItems = $state<any[] | null>(null);
+    let preloadQuotationPrices = $state<Record<string, { price: number; currency: string }> | null>(null);
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },
@@ -83,6 +84,8 @@
                 const currentSupplierId = supplierId();
                 if (parsed.supplier_id === currentSupplierId && parsed.items?.length > 0) {
                     preloadItems = parsed.items;
+                    // 保留所有报价价格信息（用于变体价格显示）
+                    preloadQuotationPrices = parsed.all_quotation_prices || {};
                 }
                 // 清除 sessionStorage 中的数据
                 sessionStorage.removeItem('purchase_order_preload_items');
@@ -129,6 +132,7 @@
                 supplierId={supplier.id}
                 supplier={supplier}
                 {preloadItems}
+                {preloadQuotationPrices}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 submitLabel="创建订单"
