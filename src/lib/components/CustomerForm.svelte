@@ -20,13 +20,21 @@
     }: Props = $props();
 
     // extras state
-    let level: 'VIP' | 'NORMAL' | 'TEMP' = $state(initialData.level || 'NORMAL');
-    let status: 'ACTIVE' | 'INACTIVE' = $state(initialData.status || 'ACTIVE');
+    let level: 'VIP' | 'NORMAL' | 'TEMP' = $state('NORMAL');
+    let status: 'ACTIVE' | 'INACTIVE' = $state('ACTIVE');
+    
+    // 当 initialData 变化时更新状态
+    $effect(() => {
+        level = initialData.level || 'NORMAL';
+        status = initialData.status || 'ACTIVE';
+    });
 
     // initialData without extras for PartyForm
-    const cleanInitial: Partial<CustomerFormData> = { ...initialData };
-    delete cleanInitial.level;
-    delete cleanInitial.status;
+    const cleanInitial: Partial<CustomerFormData> = $derived({ ...initialData });
+    $effect(() => {
+        delete cleanInitial.level;
+        delete cleanInitial.status;
+    });
 
     const levelOptions = [
         { value: 'VIP', label: 'VIP客户' },

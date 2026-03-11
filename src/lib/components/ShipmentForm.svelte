@@ -17,7 +17,8 @@
     
     let { mode, shipmentId, initialOrderId, onSuccess, onCancel }: Props = $props();
 
-    const form = useShipmentForm({ mode, shipmentId, initialOrderId, onSuccess });
+    // 使用 $derived 包裹 composable 调用以响应 props 变化
+    const form = $derived(useShipmentForm({ mode, shipmentId, initialOrderId, onSuccess }));
 
     onMount(() => {
         form.init();

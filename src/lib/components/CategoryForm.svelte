@@ -26,14 +26,21 @@
         onDelete
     }: Props = $props();
 
-    const selectItems = categories
+    const selectItems = $derived(categories
         .filter((item: Category) => mode === 'add' || item.id !== initialData.id)
-        .map((item: Category) => ({ value: item.id, label: item.name }));
+        .map((item: Category) => ({ value: item.id, label: item.name })));
 
     let formData = $state({
-        name: initialData?.name || '',
-        parent: initialData?.parent || null,
-        top_category: initialData?.top_category || false
+        name: '',
+        parent: null as number | null,
+        top_category: false
+    });
+    
+    // 当 initialData 变化时更新表单数据
+    $effect(() => {
+        formData.name = initialData?.name || '';
+        formData.parent = initialData?.parent || null;
+        formData.top_category = initialData?.top_category || false;
     });
 
     async function handleSubmit(event: Event) {

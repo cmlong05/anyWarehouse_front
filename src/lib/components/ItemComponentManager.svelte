@@ -11,8 +11,8 @@
 
     let { itemId, itemSKU, itemName }: Props = $props();
 
-    // 使用BOM管理逻辑
-    const bom = useBOMManager(itemId, itemSKU);
+    // 使用BOM管理逻辑 - 使用 $derived 包裹以响应 props 变化
+    const bom = $derived(useBOMManager(itemId, itemSKU));
 
     // 本地状态
     let activeTab = $state<'components' | 'tree' | 'total' | 'whereUsed'>('components');

@@ -43,10 +43,10 @@
     }: Props = $props();
 
     // 转换为 Svelecte 需要的格式
-    const selectItems = containers.map((item: ContainerBriefID) => ({
+    const selectItems = $derived(containers.map((item: ContainerBriefID) => ({
         value: item.fastCode,
         label: item.fastCode
-    }));
+    })));
 
     const getParentFastCode = (parentId: number | null | undefined): string | null => {
         if (!parentId) return null;
@@ -55,15 +55,28 @@
     };
 
     let formData = $state({
-        fastCode: initialData.fastCode || '',
-        barcode: initialData.barcode || '',
-        mark: initialData.mark || '',
-        volume: initialData.volume || 0,
-        zz_volume: initialData.zz_volume || 0,
-        zz_weight: initialData.zz_weight || 0,
-        a_volume: initialData.a_volume || 0,
-        total_weight: initialData.total_weight || 0,
-        parent: getParentFastCode(initialData.parent)
+        fastCode: '',
+        barcode: '',
+        mark: '',
+        volume: 0,
+        zz_volume: 0,
+        zz_weight: 0,
+        a_volume: 0,
+        total_weight: 0,
+        parent: null as string | null
+    });
+    
+    // 当 initialData 变化时更新表单数据
+    $effect(() => {
+        formData.fastCode = initialData.fastCode || '';
+        formData.barcode = initialData.barcode || '';
+        formData.mark = initialData.mark || '';
+        formData.volume = initialData.volume || 0;
+        formData.zz_volume = initialData.zz_volume || 0;
+        formData.zz_weight = initialData.zz_weight || 0;
+        formData.a_volume = initialData.a_volume || 0;
+        formData.total_weight = initialData.total_weight || 0;
+        formData.parent = getParentFastCode(initialData.parent);
     });
 
     const getParentId = (parentFastCode: string | null): number | null => {

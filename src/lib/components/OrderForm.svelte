@@ -56,6 +56,9 @@
         onCancel
     }: Props = $props();
     
+    // 使用 $derived 包裹 composable 调用以响应 props 变化
+    const orderForm = $derived(useOrderForm(partnerId, initialData));
+    
     const {
         formData,
         errors,
@@ -72,7 +75,7 @@
         removeItem,
         setCurrentItemQuotation,
         prepareSubmitData,
-    } = useOrderForm(partnerId, initialData);
+    } = $derived(orderForm);
 
     const quantityStep = 1;
     const quantityMin = 1;

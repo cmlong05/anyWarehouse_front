@@ -43,17 +43,14 @@
                     <div class="edit-form">
                         <div class="form-row">
                             <div class="form-group">
-                                <label>数量:</label>
-                                <input type="number" bind:value={editData.quantity} min="1" max="999999" />
+                                <label>数量: <input type="number" bind:value={editData.quantity} min="1" max="999999" /></label>
                             </div>
                             <div class="form-group">
-                                <label>排序:</label>
-                                <input type="number" bind:value={editData.order} min="0" max="9999" />
+                                <label>排序: <input type="number" bind:value={editData.order} min="0" max="9999" /></label>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>备注:</label>
-                            <input type="text" bind:value={editData.note} maxlength="500" />
+                            <label>备注: <input type="text" bind:value={editData.note} maxlength="500" /></label>
                         </div>
                         <div class="edit-actions">
                             <button class="btn btn-primary btn-sm" onclick={() => saveEdit(component.id)}>保存</button>

@@ -15,18 +15,20 @@
     
     let { data }: Props = $props();
     
-    // 使用共享逻辑
-    const partnerDetail = usePartnerDetail<Customer, CustomerQuotationBrief, any>({
+    // 使用共享逻辑 - 使用 $derived 包裹以响应 props 变化
+    const partnerDetail = $derived(usePartnerDetail<Customer, CustomerQuotationBrief, any>({
         partnerId: data.customer.id,
         api: customerAPI,
         listPath: '/customer',
         orderPath: '/customer/sales-order/add',
         quotationPath: '/customer/quotation/add',
         orderListPath: '/customer/sales-order',
-    });
+    }));
     
-    // 初始化
-    partnerDetail.init(data.customer);
+    // 初始化 - 在 $effect 中调用以确保响应性
+    $effect(() => {
+        partnerDetail.init(data.customer);
+    });
     
     function getOrderStatusClass(status: string): string {
         const map: Record<string, string> = {

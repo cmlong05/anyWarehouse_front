@@ -25,28 +25,28 @@
     children
   }: Props = $props();
 
-  const maxWidthClass = {
+  const maxWidthClass = $derived({
     sm: 'max-w-2xl',
     md: 'max-w-3xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
     '2xl': 'max-w-7xl',
     full: 'max-w-full'
-  }[maxWidth];
+  }[maxWidth]);
 
-  const paddingClass = {
+  const paddingClass = $derived({
     none: 'px-0',
     sm: 'px-4',
     md: 'px-6',
     lg: 'px-8'
-  }[padding];
+  }[padding]);
 
-  const pyClass = {
+  const pyClass = $derived({
     none: 'py-0',
     sm: 'py-4',
     md: 'py-6',
     lg: 'py-8'
-  }[py];
+  }[py]);
 </script>
 
 <div class="{maxWidthClass} mx-auto {paddingClass} {pyClass} {className}">

@@ -9,7 +9,7 @@
     import { DeleteConfirmModal, LinkPackageModal, NewPackageModal } from '$lib/components/shipment';
 
     // 获取发货单ID
-    let shipmentId = $derived(parseInt(page.params.id));
+    let shipmentId = $derived(parseInt(page.params.id || '0'));
 
     // 使用共享逻辑
     const shipmentDetail = useShipmentDetail(() => shipmentId);

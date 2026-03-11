@@ -9,7 +9,12 @@
     
     // 安全获取 items 数组
     let items = $derived(data?.items ?? []);
-    let searchQuery = $state(data?.searchQuery ?? '');
+    let searchQuery = $state('');
+    
+    // 当 data.searchQuery 变化时更新
+    $effect(() => {
+        searchQuery = data?.searchQuery ?? '';
+    });
     
     // 选中的物品 IDs
     let selectedItems = $state<Set<number>>(new Set());

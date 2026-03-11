@@ -25,11 +25,11 @@
         onclick,
     }: Props = $props();
     
-    const sizeClass = {
+    const sizeClass = $derived({
         sm: 'input-number-sm',
         md: '',
         lg: 'input-number-lg',
-    }[size];
+    }[size]);
     
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;

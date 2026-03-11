@@ -23,7 +23,7 @@
     } from '$lib/composables/useOrderDetail.svelte';
 
     // 获取订单ID
-    let orderId = $derived(parseInt(page.params.id));
+    let orderId = $derived(parseInt(page.params.id || '0'));
 
     // 使用共享逻辑
     const orderDetail = useOrderDetail<SalesOrder, string>({

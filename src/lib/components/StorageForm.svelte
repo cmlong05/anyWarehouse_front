@@ -31,16 +31,25 @@
     })));
 
     let formData = $state({
-        item: initialData?.item || itemId || '',
-        container: initialData?.container || '',
-        quantity: initialData?.quantity || '',
-        text: initialData?.text || '',
-        sample: initialData?.sample || false
+        item: '',
+        container: '',
+        quantity: '',
+        text: '',
+        sample: false
+    });
+    
+    // 当 initialData 或 itemId/itemSKU 变化时更新表单数据
+    $effect(() => {
+        formData.item = String(initialData?.item || itemId || '');
+        formData.container = String(initialData?.container || '');
+        formData.quantity = String(initialData?.quantity || '');
+        formData.text = initialData?.text || '';
+        formData.sample = initialData?.sample || false;
     });
 
-    const displayItem = mode === 'edit' 
+    const displayItem = $derived(mode === 'edit' 
         ? (initialData?.itemSKU || initialData?.item || '') 
-        : (itemSKU || itemId || '');
+        : (itemSKU || itemId || ''));
 
     async function handleSubmit(event: Event) {
         event.preventDefault();

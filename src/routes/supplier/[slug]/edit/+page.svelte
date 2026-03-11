@@ -15,7 +15,7 @@
     let saving = $state(false);
     let error = $state('');
     
-    const id = $derived(parseInt(page.params.slug));
+    const id = $derived(parseInt(page.params.slug || '0'));
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },

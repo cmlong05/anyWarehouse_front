@@ -5,7 +5,7 @@
     import type { Shipment } from '$lib/shipmentTypes';
 
     // 获取发货单ID
-    let shipmentId = $derived(parseInt($page.params.id));
+    let shipmentId = $derived(parseInt($page.params.id || '0'));
 
     function handleSuccess(shipment: Shipment) {
         setTimeout(() => {

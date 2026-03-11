@@ -4,7 +4,7 @@
     import PackageForm from '$lib/components/PackageForm.svelte';
     import type { Package } from '$lib/shipmentTypes';
 
-    let packageId = $derived(parseInt($page.params.id));
+    let packageId = $derived(parseInt($page.params.id || '0'));
 
     function handleSuccess(pkg: Package) {
         setTimeout(() => {

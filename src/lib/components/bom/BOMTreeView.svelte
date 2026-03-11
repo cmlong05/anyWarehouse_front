@@ -10,6 +10,8 @@
         onCalculate: () => void;
     }
     
+    import BOMTreeView from './BOMTreeView.svelte';
+    
     let { nodes, itemSKU, calculating, result, onCalculate }: Props = $props();
 
     // 递归计算样式缩进
@@ -57,7 +59,7 @@
                         {#if node.children?.length}
                             <div class="tree-children">
                                 {#each node.children as child}
-                                    <svelte:self nodes={[child]} itemSKU={itemSKU} {calculating} {result} {onCalculate} />
+                                    <BOMTreeView nodes={[child]} itemSKU={itemSKU} {calculating} {result} {onCalculate} />
                                 {/each}
                             </div>
                         {/if}

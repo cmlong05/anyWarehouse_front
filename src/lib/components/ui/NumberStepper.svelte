@@ -29,11 +29,11 @@
         onchange,
     }: Props = $props();
     
-    const sizeClass = {
+    const sizeClass = $derived({
         sm: 'stepper-sm',
         md: '',
         lg: 'stepper-lg',
-    }[size];
+    }[size]);
     
     // 格式化显示值，处理字符串类型数据
     let displayValue = $derived(value === undefined ? '' : Number(value).toFixed(decimalPlaces));

@@ -12,13 +12,13 @@
     }>();
 
     // 获取父分类ID：ancestors数组中的最后一个就是直接父分类
-    const parentId = data.categoryData.ancestors.length > 0 
+    const parentId = $derived(data.categoryData.ancestors.length > 0 
         ? data.categoryData.ancestors[data.categoryData.ancestors.length - 1].id 
-        : null;
+        : null);
 </script>
 
 <svelte:head>
-    <title>编辑分类 - {data.categoryData.category.name}</title>
+    <title>编辑分类 - {data?.categoryData?.category?.name ?? ''}</title>
 </svelte:head>
 
 <PageContainer>
@@ -27,14 +27,15 @@
         subtitle={`分类：${data.categoryData.category.name}`}
     />
 
+    {@const initialData = {
+        id: data?.categoryData?.category?.id,
+        name: data?.categoryData?.category?.name ?? '',
+        parent: parentId,
+        top_category: data?.categoryData?.category?.top_category ?? false
+    }}
     <CategoryForm 
         mode="edit"
-        initialData={{
-            id: data.categoryData.category.id,
-            name: data.categoryData.category.name,
-            parent: parentId,
-            top_category: data.categoryData.category.top_category
-        }}
-        categories={data.categories}
+        {initialData}
+        categories={data?.categories ?? []}
     />
 </PageContainer>

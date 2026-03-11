@@ -39,12 +39,12 @@
     class: className = ''
   }: Props = $props();
 
-  const mbClass = {
+  const mbClass = $derived({
     none: 'mb-0',
     sm: 'mb-4',
     md: 'mb-6',
     lg: 'mb-8'
-  }[mb];
+  }[mb]);
 
   function handleBack() {
     if (onBack) {

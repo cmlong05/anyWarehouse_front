@@ -11,7 +11,7 @@
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     // 获取订单ID
-    let orderId = $derived(parseInt(page.params.id));
+    let orderId = $derived(parseInt(page.params.id || '0'));
     
     let order = $state<SalesOrder | null>(null);
     let customer = $state<Customer | null>(null);

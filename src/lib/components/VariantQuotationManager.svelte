@@ -40,7 +40,12 @@
     let error = $state('');
 
     // 选中的供应商
-    let selectedSupplierId = $state<number>(presetSupplierId || 0);
+    let selectedSupplierId = $state<number>(0);
+    
+    // 当 presetSupplierId 变化时更新
+    $effect(() => {
+        selectedSupplierId = presetSupplierId || 0;
+    });
     let selectedSupplier = $derived(suppliers.find(s => s.id === selectedSupplierId));
 
     // 加载状态
@@ -210,9 +215,9 @@
 <div class="space-y-6">
     <!-- 供应商选择 -->
     <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <label class="block text-sm font-medium text-blue-900 mb-2">
+        <div class="block text-sm font-medium text-blue-900 mb-2">
             选择供应商 <span class="text-red-500">*</span>
-        </label>
+        </div>
         {#if presetSupplierId}
             <!-- 已预设供应商，只显示信息 -->
             <div class="flex items-center gap-3">
