@@ -7,6 +7,8 @@
     import { useOrderForm } from '$lib/composables/useOrderForm.svelte';
     import Svelecte from 'svelecte';
     import { NumberStepper } from './ui';
+    import { config } from '$lib/config';
+    import type { ItemVariant } from '$lib/types/variant';
     
     export type OrderType = 'purchase' | 'sales';
     
@@ -77,10 +79,9 @@
         prepareSubmitData,
     } = $derived(orderForm);
 
-    const quantityStep = 1;
-    const quantityMin = 1;
-    const quantityDecimals = 0;
-    
+    // Svelecte 选中值
+    let selectedQuotation = $state<QuotationOption | undefined>(undefined);
+
     // 获取已添加的 SKU 列表
     const addedSkus = $derived(new Set(formData.items.map(item => item.sku).filter(Boolean)));
     
@@ -91,10 +92,31 @@
             return !addedSkus.has(q.sku);
         })
     );
-    
-    // Svelecte 选中值
-    let selectedQuotation = $state<QuotationOption | undefined>(undefined);
-    
+
+    // 数量输入配置
+    const quantityMin = 1;
+    const quantityStep = 1;
+    const quantityDecimals = 0;
+
+// --------------------------------------------------------
+// ensure that when initialData.items is populated (for example
+// after preload expansion) we copy those items into the underlying
+// formData.  useOrderForm only reads the initial data once, so
+// when the derived `initialData` value changes later we must
+// patch the state manually.  We only overwrite when the form
+// is still empty to avoid blowing away user edits.
+// --------------------------------------------------------
+$effect(() => {
+    if (initialData && Array.isArray(initialData.items) && initialData.items.length > 0) {
+        if (formData.items.length === 0) {
+            // copy the array so that we don't hold a reference to the
+            // original object; the objects themselves may carry the
+            // isVariantChild/parentId flags which are important for
+            // styling.
+            formData.items = initialData.items.map(i => ({ ...i }));
+        }
+    }
+});
     function handleItemSelect(selected: QuotationOption | undefined) {
         selectedQuotation = selected;
         if (selected && 'quotation' in selected) {
@@ -111,12 +133,105 @@
         }
     }
     
-    function handleAddItem() {
-        if (addItem()) {
-            // 添加成功后清空选择
-            selectedQuotation = undefined;
-            resetCurrentItem();
+    // 获取物品的变体列表
+    async function fetchItemVariants(itemId: number): Promise<ItemVariant[]> {
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${itemId}/variants/`);
+            if (response.ok) {
+                const data = await response.json();
+                return data.variants || [];
+            }
+        } catch (err) {
+            // 获取变体列表失败
         }
+        return [];
+    }
+    
+    // 检查是否为变体母版
+    function isVariantTemplate(quotation: unknown): boolean {
+        const q = quotation as { item_is_variant_template?: boolean; is_variant_template?: boolean };
+        return q.item_is_variant_template === true || q.is_variant_template === true;
+    }
+    
+    async function handleAddItem() {
+        if (!validateItem()) return;
+        
+        // 获取当前要添加的报价信息
+        const quotation = selectedQuotation?.quotation as { 
+            id: number; 
+            item?: number; 
+            sku?: string; 
+            item_name?: string; 
+            price: string;
+            item_is_variant_template?: boolean;
+            is_variant_template?: boolean;
+        } | undefined;
+        
+        if (!quotation) return;
+        
+        // 添加主项
+        const parentId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newItem: OrderFormItem = {
+            id: parentId,
+            item: currentItem.item || null,
+            sku: currentItem.sku || '',
+            item_name: currentItem.item_name || '',
+            quantity: currentItem.quantity || 1,
+            unit_price: currentItem.unit_price || 0,
+            quotation: currentItem.quotation || null,
+            expected_delivery: currentItem.expected_delivery || null,
+            notes: currentItem.notes || '',
+            isVariantChild: false,
+        };
+        
+        // 将新项目添加到列表
+        const currentItems = [...formData.items, newItem];
+        
+        // 如果是变体母版，自动展开变体子项
+        if (isVariantTemplate(quotation) && quotation.item) {
+            const variants = await fetchItemVariants(quotation.item);
+            if (variants.length > 0) {
+                const variantItems: OrderFormItem[] = variants.map((variant, idx) => {
+                    const variantDetail = variant.variant_item_detail as { 
+                        id: number; 
+                        SKU: string; 
+                        name: string;
+                        b_Price?: string;
+                    } | null;
+                    
+                    // 构建变体属性字符串（从 attribute_values_detail 获取属性值名称）
+                    const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
+                        av.value
+                    ).filter(Boolean).join(' / ') || '';
+                    
+                    return {
+                        id: `item_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 9)}`,
+                        item: variant.variant_item,
+                        sku: variantDetail?.SKU || '',
+                        item_name: variantDetail?.name || '',
+                        quantity: 1,
+                        unit_price: parseFloat(variantDetail?.b_Price || '0') || 0,
+                        quotation: null,
+                        expected_delivery: null,
+                        notes: '',
+                        isVariantChild: true,
+                        parentId: parentId,
+                        variantAttributes: attrValues,
+                    };
+                });
+                
+                // 将变体子项添加到主项后面
+                formData.items = [...currentItems, ...variantItems];
+            } else {
+                formData.items = currentItems;
+            }
+        } else {
+            formData.items = currentItems;
+        }
+        
+        // 重置当前项和选择
+        selectedQuotation = undefined;
+        resetCurrentItem();
     }
     
     function handleSubmit(e: Event) {
@@ -342,10 +457,47 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         {#each formData.items as item, index}
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-4 py-3 text-gray-500">{index + 1}</td>
-                                <td class="px-4 py-3 font-mono text-xs text-gray-600">{item.sku || '-'}</td>
-                                <td class="px-4 py-3 text-gray-900">{item.item_name || '-'}</td>
+                            {@const parentIndex = item.parentId ? formData.items.findIndex(i => i.id === item.parentId) + 1 : null}
+                            {@const siblingIndex = item.parentId ? formData.items.filter(i => i.parentId === item.parentId).findIndex(i => i.id === item.id) + 1 : null}
+                            {@const displayIndex = item.isVariantChild && parentIndex ? `${parentIndex}-${siblingIndex}` : String(index + 1)}
+                            <tr class="{item.isVariantChild ? 'bg-purple-50/50' : 'hover:bg-gray-50'} transition-colors">
+                                <td class="px-4 py-3 {item.isVariantChild ? 'text-purple-600' : 'text-gray-500'}">{displayIndex}</td>
+                                <td class="px-4 py-3">
+                                    {#if item.isVariantChild}
+                                        <!-- 变体子项：显示缩进和物品信息 -->
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
+                                            <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">变体</span>
+                                        </div>
+                                    {:else if item.quantity === 0 && formData.items.some(i => i.parentId === item.id)}
+                                        <!-- 母版分组行（数量为0，作为分组标识） -->
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-xs text-gray-500">{item.sku || '-'}</span>
+                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">母版</span>
+                                        </div>
+                                    {:else}
+                                        <!-- 普通行：直接显示 SKU -->
+                                        <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
+                                    {/if}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {#if item.isVariantChild}
+                                        <!-- 变体子项：显示物品名称和属性 -->
+                                        <div class="text-gray-900">{item.item_name || '-'}</div>
+                                        {#if item.variantAttributes}
+                                            <div class="text-xs text-purple-600 mt-0.5">{item.variantAttributes}</div>
+                                        {/if}
+                                    {:else if item.quantity === 0 && formData.items.some(i => i.parentId === item.id)}
+                                        <!-- 母版分组行 -->
+                                        <span class="text-gray-500">{item.item_name || '-'}</span>
+                                    {:else}
+                                        <!-- 普通行/母版行：直接显示物品名称 -->
+                                        <span class="text-gray-900">{item.item_name || '-'}</span>
+                                    {/if}
+                                </td>
                                 <td class="px-4 py-3 text-right">
                                     <NumberStepper
                                         value={item.quantity}
@@ -374,7 +526,14 @@
                                     <button
                                         type="button"
                                         class="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        onclick={() => removeItem(index)}
+                                        onclick={() => {
+                                            // 如果是母版行，同时删除其所有变体子项
+                                            if (!item.isVariantChild && item.id) {
+                                                formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
+                                            } else {
+                                                removeItem(index);
+                                            }
+                                        }}
                                         disabled={loading}
                                         title="删除"
                                         aria-label="删除此明细项"

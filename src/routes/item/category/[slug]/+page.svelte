@@ -131,7 +131,7 @@
                                 checked={data.category_details.items.length > 0 && selectedItems.size === data.category_details.items.length}
                                 indeterminate={selectedItems.size > 0 && selectedItems.size < data.category_details.items.length}
                                 onchange={toggleSelectAll}
-                                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                class="w-4 h-4 rounded border-gray-300 bg-white text-white accent-blue-600 focus:ring-blue-500"
                             />
                             <span class="text-xs font-medium text-gray-500">全选</span>
                         </div>
@@ -142,7 +142,7 @@
                                 type="checkbox" 
                                 checked={selectedItems.has(id)}
                                 onchange={(e) => toggleSelection(id, e)}
-                                class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                class="w-4 h-4 rounded border-gray-300 bg-white text-white accent-blue-600 focus:ring-blue-500"
                             />
                             <a href="/item/{id}" class="flex-1 flex items-center gap-4 group-hover:text-blue-600">
                                 <span class="font-mono text-sm font-medium text-blue-600 group-hover:text-blue-700">{SKU}</span>

@@ -11,9 +11,10 @@
 
     interface Props {
         items: AmountItem[];
+        title?: string;
     }
     
-    let { items }: Props = $props();
+    let { items, title = '金额信息' }: Props = $props();
 
     function formatValue(item: AmountItem): string {
         const prefix = item.prefix || '¥';
@@ -24,7 +25,7 @@
 </script>
 
 <div class="info-section">
-    <h2>金额信息</h2>
+    <h2>{title}</h2>
     <div class="amount-grid">
         {#each items as item}
             <div class="amount-item" class:total={item.isTotal}>

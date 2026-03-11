@@ -7,6 +7,7 @@
     import { safeParseFloat } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
+    import { LocaleSwitcher } from '$lib/components/shipment';
     import { 
         OrderDetailHeader, 
         OrderInfoGrid, 
@@ -21,6 +22,8 @@
         SALES_STATUS_TRANSITIONS,
         SHIPMENT_STATUS_MAP
     } from '$lib/composables/useOrderDetail.svelte';
+    import { localeStore, t, getStatusText as getSalesStatusText } from '$lib/i18n/sales';
+    import { getStatusText as getShipmentStatusText } from '$lib/i18n/shipment';
 
     // 获取订单ID
     let orderId = $derived(parseInt(page.params.id || '0'));
@@ -133,91 +136,145 @@
                 class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 onclick={orderDetail.goBack}
             >
-                返回列表
+                {t('sales.btn.back', $localeStore)}
             </button>
             <button 
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 onclick={orderDetail.loadOrder}
             >
-                重试
+                {t('sales.btn.retry', $localeStore)}
             </button>
         </div>
     {:else if orderDetail.order}
         {@const order = orderDetail.order}
         
         <!-- 头部 -->
-        <OrderDetailHeader
-            title="销售订单详情"
-            orderNumber={order.order_number}
-            status={order.status}
-            statusMap={SALES_STATUS_MAP}
-            transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
-            updating={orderDetail.updating}
-            canEdit={['draft', 'confirmed', 'approved'].includes(order.status)}
-            canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
-            onBack={orderDetail.goBack}
-            onEdit={editOrder}
-            onDelete={orderDetail.deleteOrder}
-            onCopy={copyOrder}
-            onStatusChange={(status) => orderDetail.changeStatus(status as string)}
-        />
+        <div class="flex justify-between items-center mb-4">
+            {#key $localeStore}
+            <OrderDetailHeader
+                title={t('sales.detail.title', $localeStore)}
+                orderNumber={order.order_number}
+                status={order.status}
+                statusMap={SALES_STATUS_MAP}
+                transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
+                updating={orderDetail.updating}
+                canEdit={['draft', 'confirmed', 'approved'].includes(order.status)}
+                canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
+                labels={{
+                    backToList: t('sales.btn.backToList', $localeStore),
+                    copyOrder: t('sales.btn.copy', $localeStore),
+                    edit: t('sales.btn.edit', $localeStore),
+                    delete: t('sales.btn.delete', $localeStore),
+                }}
+                onBack={orderDetail.goBack}
+                onEdit={editOrder}
+                onDelete={orderDetail.deleteOrder}
+                onCopy={copyOrder}
+                onStatusChange={(status) => orderDetail.changeStatus(status as string)}
+            />
+            {/key}
+            <LocaleSwitcher variant="button" />
+        </div>
 
         <!-- 基本信息 -->
+        {#key $localeStore}
         <OrderInfoGrid
-            title="基本信息"
+            title={t('sales.basic.title', $localeStore)}
+            priorityMap={{
+                low: { label: t('sales.priority.low', $localeStore), class: 'priority-low' },
+                normal: { label: t('sales.priority.normal', $localeStore), class: 'priority-normal' },
+                high: { label: t('sales.priority.high', $localeStore), class: 'priority-high' },
+                urgent: { label: t('sales.priority.urgent', $localeStore), class: 'priority-urgent' },
+            }}
             items={[
-                { label: '客户', value: order.customer_detail?.name, href: `/customer/${order.customer}` },
-                { label: '优先级', value: order.priority, format: 'priority' },
-                { label: '下单日期', value: order.order_date },
-                { label: '预计交货', value: order.expected_delivery },
-                { label: '实际交货', value: order.actual_delivery },
-                { label: '创建人', value: order.created_by },
+                { label: t('sales.field.customer', $localeStore), value: order.customer_detail?.name, href: `/customer/${order.customer}` },
+                { label: t('sales.field.priority', $localeStore), value: order.priority, format: 'priority' },
+                { label: t('sales.field.orderDate', $localeStore), value: order.order_date },
+                { label: t('sales.field.expectedDelivery', $localeStore), value: order.expected_delivery },
+                { label: t('sales.field.actualDelivery', $localeStore), value: order.actual_delivery },
+                { label: t('sales.field.createdBy', $localeStore), value: order.created_by },
             ]}
         />
 
         <!-- 金额信息 -->
         <OrderAmountGrid
+            title={t('sales.amount.title', $localeStore)}
             items={[
-                { label: '商品小计', value: order.subtotal },
-                { label: '税率', value: `${order.tax_rate}%`, prefix: '' },
-                { label: '税额', value: order.tax_amount },
-                { label: '运费', value: order.shipping_cost },
-                { label: '折扣', value: order.discount, isNegative: true },
-                { label: '订单总计', value: order.total_amount, isTotal: true },
+                { label: t('sales.field.subtotal', $localeStore), value: order.subtotal },
+                { label: t('sales.field.taxRate', $localeStore), value: `${order.tax_rate}%`, prefix: '' },
+                { label: t('sales.field.taxAmount', $localeStore), value: order.tax_amount },
+                { label: t('sales.field.shippingCost', $localeStore), value: order.shipping_cost },
+                { label: t('sales.field.discount', $localeStore), value: order.discount, isNegative: true },
+                { label: t('sales.field.totalAmount', $localeStore), value: order.total_amount, isTotal: true },
             ]}
         />
 
         <!-- 收货信息 -->
         <OrderInfoGrid
-            title="收货信息"
+            title={t('sales.shipping.title', $localeStore)}
             items={[
-                { label: '收货地址', value: order.shipping_address },
-                { label: '收货联系人', value: order.contact_person },
-                { label: '收货电话', value: order.contact_phone },
-                { label: '付款条款', value: order.payment_terms },
+                { label: t('sales.field.shippingAddress', $localeStore), value: order.shipping_address },
+                { label: t('sales.field.contactPerson', $localeStore), value: order.contact_person },
+                { label: t('sales.field.contactPhone', $localeStore), value: order.contact_phone },
+                { label: t('sales.field.paymentTerms', $localeStore), value: order.payment_terms },
             ]}
         />
+        {/key}
 
         <!-- 订单明细 + 关联发货单 -->
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 mb-6">
-            <OrderItemsTable items={order.items || []} type="sales" />
+            {#key $localeStore}
+            <OrderItemsTable 
+                items={order.items || []} 
+                type="sales" 
+                labels={{
+                    title: t('sales.items.title', $localeStore),
+                    itemName: t('sales.table.itemName', $localeStore),
+                    quantity: t('sales.table.quantity', $localeStore),
+                    shipped: t('sales.table.shipped', $localeStore),
+                    pendingShip: t('sales.table.pendingShip', $localeStore),
+                    unitPrice: t('sales.table.unitPrice', $localeStore),
+                    subtotal: t('sales.table.subtotal', $localeStore),
+                    status: t('sales.table.status', $localeStore),
+                    completed: t('sales.table.completed', $localeStore),
+                    partial: t('sales.table.partial', $localeStore),
+                    pending: t('sales.table.pending', $localeStore),
+                    noItems: t('sales.msg.noItems', $localeStore),
+                }}
+            />
+            {/key}
 
             <div class="flex flex-col gap-4 lg:order-none order-first">
+                <!-- 打印 PI 按钮 -->
+                <div class="bg-white rounded-lg p-6 shadow">
+                    <button
+                        type="button"
+                        class="w-full py-3 px-4 text-base font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                        onclick={() => goto(`/customer/sales-order/${order.id}/pi`)}
+                    >
+                        📄 打印 PI
+                    </button>
+                </div>
+
                 {#if ['confirmed', 'partial'].includes(order.status)}
                     <div class="bg-white rounded-lg p-6 shadow">
+                        {#key $localeStore}
                         <button
                             type="button"
                             class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                             onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
                         >
-                            +生成发货单
+                            +{t('sales.btn.generateShipment', $localeStore)}
                         </button>
+                        {/key}
                     </div>
                 {/if}
                 
                 {#if order.shipments && order.shipments.length > 0}
                     <div class="bg-white rounded-lg p-6 shadow">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">关联发货单 ({order.shipments.length})</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                            {t('sales.shipment.title', $localeStore)} ({order.shipments.length})
+                        </h3>
                         <div class="flex flex-col gap-3">
                             {#each order.shipments as shipment}
                                 <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -229,12 +286,12 @@
                                             {shipment.shipment_no}
                                         </a>
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
-                                            {SHIPMENT_STATUS_MAP[shipment.status] || shipment.status}
+                                            {getShipmentStatusText(shipment.status, $localeStore)}
                                         </span>
                                     </div>
                                     <div class="flex flex-col gap-1 text-sm text-gray-600">
-                                        <span>包裹: {shipment.total_packages}</span>
-                                        <span>{new Date(shipment.created_at).toLocaleString('zh-CN')}</span>
+                                        <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
+                                        <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
                                     </div>
                                 </div>
                             {/each}
@@ -247,16 +304,16 @@
         <!-- 备注 -->
         {#if order.notes || order.internal_notes}
             <div class="bg-white rounded-lg p-6 shadow mb-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">备注</h2>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">{t('sales.notes.title', $localeStore)}</h2>
                 {#if order.notes}
                     <div class="bg-gray-50 p-4 rounded-lg mb-3">
-                        <span class="text-sm text-gray-600 block mb-2">订单备注</span>
+                        <span class="text-sm text-gray-600 block mb-2">{t('sales.field.notes', $localeStore)}</span>
                         <p class="text-gray-900">{order.notes}</p>
                     </div>
                 {/if}
                 {#if order.internal_notes}
                     <div class="bg-yellow-50 p-4 rounded-lg">
-                        <span class="text-sm text-gray-600 block mb-2">内部备注</span>
+                        <span class="text-sm text-gray-600 block mb-2">{t('sales.field.internalNotes', $localeStore)}</span>
                         <p class="text-gray-900">{order.internal_notes}</p>
                     </div>
                 {/if}
@@ -268,7 +325,7 @@
 <!-- 发货弹窗 -->
 <ShipReceiveModal
     show={shipModal.showModal}
-    title="订单发货"
+    title={t('sales.shipModal.title', $localeStore)}
     items={orderDetail.order?.items || []}
     quantities={shipModal.quantities}
     notes={shipModal.notes}

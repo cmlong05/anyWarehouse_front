@@ -1,6 +1,13 @@
 <script lang="ts">
     import type { StatusConfig, StatusTransition } from '$lib/composables/useOrderDetail.svelte';
 
+    interface Labels {
+        backToList?: string;
+        copyOrder?: string;
+        edit?: string;
+        delete?: string;
+    }
+
     interface Props {
         title: string;
         orderNumber: string;
@@ -10,6 +17,7 @@
         updating?: boolean;
         canEdit?: boolean;
         canDelete?: boolean;
+        labels?: Labels;
         onBack: () => void;
         onEdit?: () => void;
         onDelete?: () => void;
@@ -26,28 +34,38 @@
         updating = false,
         canEdit = false,
         canDelete = false,
+        labels = {},
         onBack,
         onEdit,
         onDelete,
         onCopy,
         onStatusChange,
     }: Props = $props();
+
+    const defaultLabels: Labels = {
+        backToList: '← 返回列表',
+        copyOrder: '📋 复制订单',
+        edit: '编辑',
+        delete: '删除',
+    };
+
+    const l = { ...defaultLabels, ...labels };
 </script>
 
 <div class="page-header">
     <div class="header-left">
-        <button class="btn btn-text" onclick={onBack}>← 返回列表</button>
+        <button class="btn btn-text" onclick={onBack}>{l.backToList}</button>
         <h1>{title}</h1>
     </div>
     <div class="header-actions">
         {#if onCopy}
-            <button class="btn btn-secondary" onclick={onCopy}>📋 复制订单</button>
+            <button class="btn btn-secondary" onclick={onCopy}>{l.copyOrder}</button>
         {/if}
         {#if canEdit && onEdit}
-            <button class="btn btn-secondary" onclick={onEdit}>编辑</button>
+            <button class="btn btn-secondary" onclick={onEdit}>{l.edit}</button>
         {/if}
         {#if canDelete && onDelete}
-            <button class="btn btn-danger" onclick={onDelete}>删除</button>
+            <button class="btn btn-danger" onclick={onDelete}>{l.delete}</button>
         {/if}
     </div>
 </div>

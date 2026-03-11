@@ -15,13 +15,50 @@
         is_fully_received?: boolean;
     }
 
+    interface Labels {
+        title?: string;
+        itemName?: string;
+        quantity?: string;
+        shipped?: string;
+        received?: string;
+        pendingShip?: string;
+        pendingReceive?: string;
+        unitPrice?: string;
+        subtotal?: string;
+        status?: string;
+        completed?: string;
+        partial?: string;
+        pending?: string;
+        noItems?: string;
+    }
+
     interface Props {
         items: OrderItem[];
         showPrices?: boolean;
         type: 'sales' | 'purchase';
+        labels?: Labels;
     }
     
-    let { items, showPrices = true, type }: Props = $props();
+    let { items, showPrices = true, type, labels = {} }: Props = $props();
+
+    const defaultLabels: Labels = {
+        title: '订单明细',
+        itemName: '物品名称',
+        quantity: '数量',
+        shipped: '已发货',
+        received: '已到货',
+        pendingShip: '待发货',
+        pendingReceive: '待到货',
+        unitPrice: '单价',
+        subtotal: '小计',
+        status: '状态',
+        completed: '已完成',
+        partial: '部分完成',
+        pending: '待处理',
+        noItems: '暂无明细',
+    };
+
+    const l = { ...defaultLabels, ...labels };
 
     function getShippedQty(item: OrderItem): number {
         return safeParseFloat(type === 'sales' ? item.quantity_shipped : item.quantity_received);
@@ -37,7 +74,7 @@
 </script>
 
 <div class="items-main">
-    <h2>订单明细 ({items.length}项)</h2>
+    <h2>{l.title} ({items.length})</h2>
     {#if items.length > 0}
         <div class="items-table-container">
             <table class="items-table">
@@ -45,15 +82,15 @@
                     <tr>
                         <th>#</th>
                         <th>SKU</th>
-                        <th>物品名称</th>
-                        <th class="numeric">数量</th>
-                        <th class="numeric">{type === 'sales' ? '已发货' : '已到货'}</th>
-                        <th class="numeric">待{type === 'sales' ? '发货' : '到货'}</th>
+                        <th>{l.itemName}</th>
+                        <th class="numeric">{l.quantity}</th>
+                        <th class="numeric">{type === 'sales' ? l.shipped : l.received}</th>
+                        <th class="numeric">{type === 'sales' ? l.pendingShip : l.pendingReceive}</th>
                         {#if showPrices}
-                            <th class="numeric">单价</th>
-                            <th class="numeric">小计</th>
+                            <th class="numeric">{l.unitPrice}</th>
+                            <th class="numeric">{l.subtotal}</th>
                         {/if}
-                        <th>状态</th>
+                        <th>{l.status}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,11 +110,11 @@
                             {/if}
                             <td>
                                 {#if isFullyProcessed(item)}
-                                    <span class="badge badge-success">已完成</span>
+                                    <span class="badge badge-success">{l.completed}</span>
                                 {:else if shipped > 0}
-                                    <span class="badge badge-warning">部分完成</span>
+                                    <span class="badge badge-warning">{l.partial}</span>
                                 {:else}
-                                    <span class="badge badge-pending">待处理</span>
+                                    <span class="badge badge-pending">{l.pending}</span>
                                 {/if}
                             </td>
                         </tr>
@@ -86,7 +123,7 @@
             </table>
         </div>
     {:else}
-        <p class="empty-text">暂无明细</p>
+        <p class="empty-text">{l.noItems}</p>
     {/if}
 </div>
 

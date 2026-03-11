@@ -1,6 +1,11 @@
 <script lang="ts">
     import { PRIORITY_MAP } from '$lib/composables/useOrderDetail.svelte';
 
+    interface PriorityMap {
+        label: string;
+        class: string;
+    }
+
     interface InfoItem {
         label: string;
         value: string | number | null | undefined;
@@ -11,20 +16,21 @@
     interface Props {
         title: string;
         items: InfoItem[];
+        priorityMap?: Record<string, PriorityMap>;
     }
     
-    let { title, items }: Props = $props();
+    let { title, items, priorityMap = PRIORITY_MAP }: Props = $props();
 
     function formatValue(item: InfoItem): string {
         if (item.value === undefined || item.value === null || item.value === '') return '-';
         if (item.format === 'priority') {
-            return PRIORITY_MAP[String(item.value)]?.label || String(item.value);
+            return priorityMap[String(item.value)]?.label || String(item.value);
         }
         return String(item.value);
     }
 
     function getPriorityClass(value: string | number | null | undefined): string {
-        const key = PRIORITY_MAP[String(value)]?.class || '';
+        const key = priorityMap[String(value)]?.class || '';
         switch (key) {
             case 'priority-low': return 'bg-gray-100 text-gray-600';
             case 'priority-normal': return 'bg-blue-100 text-blue-800';

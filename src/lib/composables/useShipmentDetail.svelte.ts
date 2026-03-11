@@ -4,6 +4,7 @@
 import { goto } from '$app/navigation';
 import { shipmentAPI, packageAPI } from '$lib/api';
 import type { Shipment, Package } from '$lib/shipmentTypes';
+import { t, getStatusText, type Locale } from '$lib/i18n/shipment';
 
 export interface ShipmentActionConfig {
     action: string;
@@ -12,23 +13,28 @@ export interface ShipmentActionConfig {
     confirmMessage: string;
 }
 
-// 发货单状态流转配置
-export const SHIPMENT_ACTIONS: Record<string, ShipmentActionConfig[]> = {
-    draft: [
-        { action: 'confirm', label: '确认发货单', variant: 'primary', confirmMessage: '确认要确认此发货单吗？确认后不可修改明细。' },
-        { action: 'sync', label: '同步明细', variant: 'outline', confirmMessage: '确认要同步发货明细到包裹吗？' },
-    ],
-    confirmed: [
-        { action: 'pack', label: '打包完成', variant: 'primary', confirmMessage: '确认已打包完成？' },
-        { action: 'ship', label: '直接发货', variant: 'outline', confirmMessage: '确认要发货吗？' },
-    ],
-    packed: [
-        { action: 'ship', label: '确认发货', variant: 'primary', confirmMessage: '确认要发货吗？' },
-    ],
-    shipped: [
-        { action: 'deliver', label: '确认签收', variant: 'primary', confirmMessage: '确认已签收？' },
-    ],
+// 发货单状态流转配置 - 基于当前语言
+export function getShipmentActions(locale: Locale = 'zh'): Record<string, ShipmentActionConfig[]> {
+    return {
+        draft: [
+            { action: 'confirm', label: t('shipment.btn.confirm', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmConfirm', locale) || 'Confirm this shipment?' },
+            { action: 'sync', label: t('shipment.btn.sync', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
+        ],
+        confirmed: [
+            { action: 'pack', label: t('shipment.btn.pack', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmPack', locale) || 'Confirm packing complete?' },
+            { action: 'ship', label: t('shipment.btn.ship', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmShip', locale) || 'Confirm shipment?' },
+        ],
+        packed: [
+            { action: 'ship', label: t('shipment.btn.ship', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmShip', locale) || 'Confirm shipment?' },
+        ],
+        shipped: [
+            { action: 'deliver', label: t('shipment.btn.deliver', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmDeliver', locale) || 'Confirm delivery?' },
+        ],
+    };
 }
+
+// 保持兼容性 - 默认中文
+export const SHIPMENT_ACTIONS = getShipmentActions('zh');
 
 export function useShipmentDetail(shipmentId: () => number) {
     let shipment = $state<Shipment | null>(null);

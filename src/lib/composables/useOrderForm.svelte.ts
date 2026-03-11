@@ -8,6 +8,9 @@ import { getTodayString } from '$lib/utils';
 
 export interface OrderFormItem extends OrderItemCreateRequestBase {
     id?: string; // 临时 ID，用于列表渲染
+    isVariantChild?: boolean; // 是否为变体子项
+    parentId?: string; // 父项（母版）的临时 ID
+    variantAttributes?: string; // 变体属性组合（如 "红色 / XL"）
 }
 
 export interface OrderFormData {
@@ -114,7 +117,9 @@ export function useOrderForm(
             errors.expected_delivery = '预计交货日期不能早于下单日期';
         }
         
-        if (formData.items.length === 0) {
+        // 检查是否有有效的明细项（数量>0，母版分组行数量为0不计入）
+        const validItems = formData.items.filter(item => item.quantity > 0);
+        if (validItems.length === 0) {
             errors.items = '请至少添加一个明细项';
         }
         
@@ -250,17 +255,19 @@ export function useOrderForm(
      * 准备提交数据
      */
     function prepareSubmitData(type: 'purchase' | 'sales'): Record<string, unknown> {
-        // 映射 items 为后端需要的格式
-        const items = formData.items.map(item => ({
-            item: item.item,
-            sku: item.sku,
-            item_name: item.item_name,
-            quantity: item.quantity,
-            unit_price: Number(item.unit_price),
-            quotation: item.quotation,
-            expected_delivery: item.expected_delivery || null,
-            notes: item.notes
-        }));
+        // 映射 items 为后端需要的格式，过滤掉数量为0的项（母版分组标识）
+        const items = formData.items
+            .filter(item => item.quantity > 0)
+            .map(item => ({
+                item: item.item,
+                sku: item.sku,
+                item_name: item.item_name,
+                quantity: item.quantity,
+                unit_price: Number(item.unit_price),
+                quotation: item.quotation,
+                expected_delivery: item.expected_delivery || null,
+                notes: item.notes
+            }));
         
         return {
             [type === 'sales' ? 'customer' : 'supplier']: partnerId,
