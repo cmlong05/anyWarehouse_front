@@ -173,13 +173,15 @@ $effect(() => {
         
         // 添加主项
         const parentId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const isTemplate = isVariantTemplate(quotation);
         const newItem: OrderFormItem = {
             id: parentId,
             item: currentItem.item || null,
             sku: currentItem.sku || '',
             item_name: currentItem.item_name || '',
             item_name_en: (currentItem.item_name_en || quotation.item_name_en) || '',
-            quantity: currentItem.quantity || 1,
+            // 如果是变体母版，数量设为 0（仅作为分组标识）
+            quantity: isTemplate ? 0 : (currentItem.quantity || 1),
             unit_price: currentItem.unit_price || 0,
             quotation: currentItem.quotation || null,
             expected_delivery: currentItem.expected_delivery || null,
@@ -506,7 +508,7 @@ $effect(() => {
                                 <td class="px-4 py-3 text-right">
                                     <NumberStepper
                                         value={item.quantity}
-                                        min={quantityMin}
+                                        min={item.isVariantChild ? quantityMin : (formData.items.some(i => i.parentId === item.id) ? 0 : quantityMin)}
                                         step={quantityStep}
                                         decimalPlaces={quantityDecimals}
                                         size="sm"
