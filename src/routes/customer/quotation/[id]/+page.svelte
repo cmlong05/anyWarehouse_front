@@ -109,11 +109,23 @@
                 <div class="info-list">
                     <div class="info-item">
                         <span class="label">SKU</span>
-                        <span class="value code">{quotation.sku || quotation.item_detail?.SKU || '-'}</span>
+                        <span class="value">
+                            {#if quotation.item}
+                                <a href="/item/{quotation.item}" class="link code">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
+                            {:else}
+                                <span class="code">{quotation.sku || '-'}</span>
+                            {/if}
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="label">物品名称</span>
-                        <span class="value">{quotation.item_detail?.name || '-'}</span>
+                        <span class="value">
+                            {#if quotation.item}
+                                <a href="/item/{quotation.item}" class="link">{quotation.item_detail?.name || '-'}</a>
+                            {:else}
+                                {quotation.item_detail?.name || '-'}
+                            {/if}
+                        </span>
                     </div>
                     {#if quotation.item_detail?.weight}
                         <div class="info-item">

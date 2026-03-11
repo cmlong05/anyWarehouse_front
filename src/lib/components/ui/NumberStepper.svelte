@@ -35,14 +35,47 @@
         lg: 'stepper-lg',
     }[size]);
     
-    // 格式化显示值，处理字符串类型数据
-    let displayValue = $derived(value === undefined ? '' : Number(value).toFixed(decimalPlaces));
+    // 输入框的显示值（允许临时编辑）
+    let inputValue = $state('');
+    // 是否正在编辑
+    let isEditing = $state(false);
+    
+    // 格式化值用于显示
+    function formatValue(val: number | undefined): string {
+        if (val === undefined || val === null) return '';
+        return Number(val).toFixed(decimalPlaces);
+    }
+    
+    // 同步外部 value 到 inputValue（非编辑状态）
+    $effect(() => {
+        if (!isEditing) {
+            inputValue = formatValue(value);
+        }
+    });
     
     function handleInput(e: Event) {
         const target = e.target as HTMLInputElement;
-        const val = target.value === '' ? undefined : parseFloat(target.value);
+        const rawValue = target.value;
+        inputValue = rawValue;
+        
+        const val = rawValue === '' ? undefined : parseFloat(rawValue);
         value = val;
         onchange?.(val);
+    }
+    
+    function handleFocus() {
+        isEditing = true;
+        // 聚焦时，如果有值，移除末尾的0，方便编辑
+        if (value !== undefined && value !== null) {
+            // 将显示值转为普通数字字符串，方便编辑
+            inputValue = String(value);
+        }
+    }
+    
+    function handleBlur() {
+        isEditing = false;
+        // 失焦时格式化
+        inputValue = formatValue(value);
     }
     
     function handleWheel(e: WheelEvent) {
@@ -62,6 +95,10 @@
         if (newVal < min) return;
         value = newVal;
         onchange?.(newVal);
+        // 按钮操作后更新显示值
+        if (!isEditing) {
+            inputValue = formatValue(newVal);
+        }
     }
     
     function increment() {
@@ -71,6 +108,10 @@
         if (max !== undefined && newVal > max) return;
         value = newVal;
         onchange?.(newVal);
+        // 按钮操作后更新显示值
+        if (!isEditing) {
+            inputValue = formatValue(newVal);
+        }
     }
 </script>
 
@@ -89,13 +130,15 @@
         {name}
         type="number"
         class="stepper-input"
-        value={displayValue}
+        value={inputValue}
         {min}
         {max}
         {step}
         {placeholder}
         {disabled}
         oninput={handleInput}
+        onfocus={handleFocus}
+        onblur={handleBlur}
         onwheel={handleWheel}
     />
     <button 

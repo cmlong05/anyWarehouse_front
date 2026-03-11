@@ -42,6 +42,8 @@
     let loadingQuotations = $state(false);
     // 预加载并展开变体的订单项
     let expandedPreloadItems = $state<OrderFormItem[] | undefined>(undefined);
+    // 标记是否已经处理过预加载数据（防止重复处理）
+    let preloadProcessed = $state(false);
     
     // 转换为Svelecte选项格式
     const quotationOptions = $derived(quotations.map(q => ({
@@ -223,12 +225,11 @@
     // whenever quotations or preloadItems update we need to expand
     // the latter if necessary
     $effect(() => {
-        if (preloadItems && preloadItems.length > 0 && quotations.length > 0) {
-            if (!expandedPreloadItems || expandedPreloadItems.length !== preloadItems.length) {
-                (async () => {
-                    expandedPreloadItems = await processPreloadItems(preloadItems, quotations);
-                })();
-            }
+        if (preloadItems && preloadItems.length > 0 && quotations.length > 0 && !preloadProcessed) {
+            (async () => {
+                expandedPreloadItems = await processPreloadItems(preloadItems, quotations);
+                preloadProcessed = true;
+            })();
         }
     });
     

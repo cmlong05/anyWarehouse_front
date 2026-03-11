@@ -75,6 +75,7 @@
         addItem,
         resetCurrentItem,
         removeItem,
+        updateItemField,
         setCurrentItemQuotation,
         prepareSubmitData,
     } = $derived(orderForm);
@@ -513,7 +514,7 @@ $effect(() => {
                                         decimalPlaces={quantityDecimals}
                                         size="sm"
                                         disabled={loading}
-                                        onchange={(v) => formData.items[index].quantity = v ?? 0}
+                                        onchange={(v) => updateItemField(index, 'quantity', v ?? 0)}
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right">
@@ -523,7 +524,7 @@ $effect(() => {
                                         step={0.01}
                                         size="sm"
                                         disabled={loading}
-                                        onchange={(v) => formData.items[index].unit_price = v ?? 0}
+                                        onchange={(v) => updateItemField(index, 'unit_price', v ?? 0)}
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">

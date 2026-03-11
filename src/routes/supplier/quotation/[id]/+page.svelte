@@ -127,7 +127,11 @@
             </div>
             <div class="info-block">
                 <div class="block-label">SKU</div>
-                <span class="block-value code">{quotation.sku || quotation.item_detail?.SKU || '-'}</span>
+                {#if quotation.item}
+                    <a href="/item/{quotation.item}" class="block-value link code">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
+                {:else}
+                    <span class="block-value code">{quotation.sku || '-'}</span>
+                {/if}
             </div>
         </div>
 
