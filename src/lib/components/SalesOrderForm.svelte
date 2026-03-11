@@ -55,7 +55,7 @@
         loadingQuotations = true;
         try {
             const result = await customerAPI.getQuotations(customerId);
-            quotations = result.results || [];
+            quotations = result.quotations || [];
             
             // 如果有预加载数据，处理变体展开
             if (preloadItems && preloadItems.length > 0) {

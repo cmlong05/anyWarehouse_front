@@ -44,20 +44,10 @@ export class CustomerAPI extends BaseAPI<Customer, CustomerFormData> {
     }
 
     /** 获取客户报价列表 */
-    async getQuotations(id: number, params?: {
-        item_id?: number;
-        is_preferred?: boolean;
-        ordering?: string;
-        page?: number;
-        page_size?: number;
-    }): Promise<PaginatedResponse<CustomerQuotationBrief>> {
-        const queryParams: Record<string, string> = {};
-        if (params?.item_id) queryParams.item_id = params.item_id.toString();
-        if (params?.is_preferred !== undefined) queryParams.is_preferred = String(params.is_preferred);
-        if (params?.ordering) queryParams.ordering = params.ordering;
-        if (params?.page) queryParams.page = params.page.toString();
-        if (params?.page_size) queryParams.page_size = params.page_size.toString();
-        return this.client.get<PaginatedResponse<CustomerQuotationBrief>>(`${this.basePath}${id}/quotations/`, queryParams);
+    async getQuotations(id: number, itemId?: number): Promise<{ customer: CustomerBrief; quotations: CustomerQuotationBrief[]; count: number }> {
+        const params: Record<string, string> = {};
+        if (itemId) params.item_id = itemId.toString();
+        return this.client.get(`${this.basePath}${id}/quotations/`, params);
     }
 
     /** 获取客户最近的销售订单 */

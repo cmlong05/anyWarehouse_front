@@ -9,7 +9,7 @@ export interface PartnerDetailOptions<T, Q, O> {
         get: (id: number) => Promise<T>;
         update: (id: number, data: Partial<T>) => Promise<T>;
         delete: (id: number) => Promise<void>;
-        getQuotations: (id: number) => Promise<{ results?: Q[] } | Q[]>;
+        getQuotations: (id: number) => Promise<{ quotations?: Q[]; results?: Q[] } | Q[]>;
         getRecentOrders: (id: number) => Promise<{ orders?: O[] } | O[]>;
     };
     listPath: string;
@@ -61,7 +61,15 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
         quotationsLoading = true;
         try {
             const result = await options.api.getQuotations(options.partnerId);
-            quotations = Array.isArray(result) ? result : (result.results || []);
+            if (Array.isArray(result)) {
+                quotations = result;
+            } else if (result.quotations) {
+                quotations = result.quotations;
+            } else if (result.results) {
+                quotations = result.results;
+            } else {
+                quotations = [];
+            }
         } catch (err) {
             console.error('加载报价失败:', err);
         } finally {
