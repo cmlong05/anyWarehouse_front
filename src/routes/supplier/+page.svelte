@@ -66,7 +66,7 @@
     {/if}
     
     <!-- 搜索 -->
-    <div class="search-box">
+    <div class="relative mb-6">
         <FormInput
             label=""
             name="search"
@@ -75,19 +75,19 @@
             onchange={(v) => { searchQuery = v; loadSuppliers(); }}
         />
         {#if searchQuery}
-            <button class="clear-btn" onclick={() => { searchQuery = ''; loadSuppliers(); }}>
+            <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-none text-gray-500 cursor-pointer p-1" onclick={() => { searchQuery = ''; loadSuppliers(); }}>
                 ✕
             </button>
         {/if}
     </div>
     
     {#if !loading && suppliers.length === 0}
-        <div class="empty-state">
-            <p>{searchQuery ? '没有找到匹配的供应商' : '暂无供应商'}</p>
+        <div class="text-center py-12 text-gray-500">
+            <p class="mb-4">{searchQuery ? '没有找到匹配的供应商' : '暂无供应商'}</p>
             {#if !searchQuery}
                 <a href="/supplier/add" class="btn btn-primary">添加第一个供应商</a>
             {:else}
-                <button class="btn btn-secondary" onclick={() => { searchQuery = ''; loadSuppliers(); }}>
+                <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors" onclick={() => { searchQuery = ''; loadSuppliers(); }}>
                     清除搜索
                 </button>
             {/if}
@@ -103,67 +103,15 @@
         >
             {#snippet cellRender({ column, value })}
                 {#if column.key === 'code'}
-                    <span class="code-badge">{value}</span>
+                    <span class="font-mono text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{value}</span>
                 {:else}
                     {value || '-'}
                 {/if}
             {/snippet}
         </DataTable>
         
-        <div class="summary">
+        <div class="mt-4 text-gray-500 text-sm">
             共 {suppliers.length} 个供应商
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .search-box {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
-    
-    .search-box :global(.form-field) {
-        margin: 0;
-    }
-    
-    .search-box :global(label) {
-        display: none;
-    }
-    
-    .clear-btn {
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #6b7280;
-        cursor: pointer;
-        padding: 0.25rem;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 0;
-        color: #6b7280;
-    }
-    
-    .empty-state p {
-        margin-bottom: 1rem;
-    }
-    
-    .code-badge {
-        font-family: monospace;
-        font-size: 0.85rem;
-        color: #6b7280;
-        background-color: #f3f4f6;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-    }
-    
-    .summary {
-        margin-top: 1rem;
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-</style>

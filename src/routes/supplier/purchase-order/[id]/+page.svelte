@@ -75,14 +75,14 @@
     }
 </script>
 
-<div class="purchase-order-detail">
+<div class="p-6 max-w-6xl mx-auto">
     {#if orderDetail.loading}
         <Loading />
     {:else if orderDetail.error}
         <Alert error={orderDetail.error} onDismiss={() => orderDetail.error = null} />
-        <div class="error-actions">
-            <button class="btn btn-secondary" onclick={orderDetail.goBack}>返回列表</button>
-            <button class="btn btn-primary" onclick={orderDetail.loadOrder}>重试</button>
+        <div class="flex gap-4 mt-4">
+            <button class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={orderDetail.goBack}>返回列表</button>
+            <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" onclick={orderDetail.loadOrder}>重试</button>
         </div>
     {:else if orderDetail.order}
         {@const order = orderDetail.order}
@@ -105,8 +105,8 @@
 
         <!-- 收货按钮（额外操作） -->
         {#if ['ordered', 'partial'].includes(order.status)}
-            <div class="extra-actions">
-                <button class="btn btn-success" onclick={openReceiveModal} disabled={orderDetail.updating}>
+            <div class="flex justify-end mb-4">
+                <button class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-60 transition-colors" onclick={openReceiveModal} disabled={orderDetail.updating}>
                     收货
                 </button>
             </div>
@@ -153,17 +153,17 @@
 
         <!-- 收货进度 -->
         {#if order.progress_percentage !== undefined}
-            <div class="info-section">
-                <h2>收货进度</h2>
-                <div class="progress-section">
-                    <div class="progress-header">
+            <div class="bg-white rounded-lg p-6 mb-6 shadow-sm">
+                <h2 class="text-lg font-semibold mb-4">收货进度</h2>
+                <div class="mt-4">
+                    <div class="flex justify-between mb-2">
                         <span>进度</span>
                         <span>{order.progress_percentage}%</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {order.progress_percentage}%"></div>
+                    <div class="h-2 bg-gray-200 rounded overflow-hidden">
+                        <div class="h-full bg-green-600 rounded transition-all duration-300" style="width: {order.progress_percentage}%"></div>
                     </div>
-                    <div class="progress-stats">
+                    <div class="mt-2 text-sm text-gray-600">
                         <span>已收: {order.total_received} / {order.total_quantity}</span>
                     </div>
                 </div>
@@ -172,18 +172,18 @@
 
         <!-- 备注 -->
         {#if order.notes || order.internal_notes}
-            <div class="info-section">
-                <h2>备注</h2>
+            <div class="bg-white rounded-lg p-6 mb-6 shadow-sm">
+                <h2 class="text-lg font-semibold mb-4">备注</h2>
                 {#if order.notes}
-                    <div class="note-box">
-                        <span class="label">订单备注</span>
-                        <p>{order.notes}</p>
+                    <div class="bg-gray-50 p-4 rounded mb-3">
+                        <span class="text-xs text-gray-500 block mb-2">订单备注</span>
+                        <p class="text-gray-700 m-0">{order.notes}</p>
                     </div>
                 {/if}
                 {#if order.internal_notes}
-                    <div class="note-box internal">
-                        <span class="label">内部备注</span>
-                        <p>{order.internal_notes}</p>
+                    <div class="bg-amber-100 p-4 rounded">
+                        <span class="text-xs text-gray-500 block mb-2">内部备注</span>
+                        <p class="text-gray-700 m-0">{order.internal_notes}</p>
                     </div>
                 {/if}
             </div>
@@ -205,130 +205,3 @@
     onConfirm={receiveModal.confirmShip}
     onNotesChange={(v) => receiveModal.notes = v}
 />
-
-<style>
-    .purchase-order-detail {
-        padding: 1.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .error-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .extra-actions {
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .info-section {
-        background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    .info-section h2 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #333;
-    }
-
-    .progress-section {
-        margin-top: 1rem;
-    }
-
-    .progress-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-    }
-
-    .progress-bar {
-        height: 8px;
-        background: #e9ecef;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: #28a745;
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-
-    .progress-stats {
-        margin-top: 0.5rem;
-        font-size: 0.85rem;
-        color: #666;
-    }
-
-    .note-box {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 0.75rem;
-    }
-
-    .note-box.internal {
-        background: #fff3cd;
-    }
-
-    .note-box .label {
-        font-size: 0.8rem;
-        color: #666;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-
-    .note-box p {
-        margin: 0;
-        color: #333;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    .btn-success {
-        background-color: #28a745;
-        color: white;
-    }
-
-    .btn-success:hover:not(:disabled) {
-        background-color: #218838;
-    }
-
-    @media (max-width: 768px) {
-        .purchase-order-detail {
-            padding: 1rem;
-        }
-    }
-</style>

@@ -403,8 +403,7 @@
                                     <div class="flex justify-end mt-1">
                                         <button 
                                             onclick={() => descriptionExpanded = !descriptionExpanded}
-                                            class="text-[10px] flex items-center gap-0.5 cursor-pointer text-gray-500 hover:text-gray-700"
-                                            style="background: none; border: none; padding: 0; margin: 0; font: inherit; outline: none; color: #6b7280;"
+                                            class="text-[10px] flex items-center gap-0.5 cursor-pointer text-gray-500 hover:text-gray-700 bg-transparent border-0 p-0 m-0 font-inherit outline-none"
                                         >
                                             {descriptionExpanded ? '收起' : '更多...'}
                                             <svg 
@@ -570,7 +569,7 @@
                                 <h2 class="text-lg font-semibold text-gray-900">供应商报价</h2>
                                 <a 
                                     href="/supplier/quotation/add?item_id={data.itemDetail.item.id}&item_sku={data.itemDetail.item.SKU}" 
-                                    class="btn btn-success btn-sm no-underline"
+                                    class="inline-flex items-center justify-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-md no-underline transition-opacity hover:opacity-90"
                                 >
                                     添加报价
                                 </a>
@@ -604,7 +603,7 @@
                                         <thead class="bg-gray-50">
                                             <tr>
                                                 {#if hasVariantQuotations}
-                                                    <th class="px-4 py-3 text-left font-medium text-gray-700" style="width: 40px;"></th>
+                                                    <th class="px-4 py-3 text-left font-medium text-gray-700 w-10"></th>
                                                 {/if}
                                                 <th class="px-4 py-3 text-left font-medium text-gray-700">供应商</th>
                                                 <th class="px-4 py-3 text-right font-medium text-gray-700">单价</th>
@@ -618,8 +617,8 @@
                                                 <!-- 有变体时显示折叠结构 -->
                                                 {#each quotationGroups as group, groupIndex}
                                                     <!-- 母版/分组行 -->
-                                                    <tr class="group-header" onclick={() => toggleGroup(groupIndex)}>
-                                                        <td class="px-4 py-3 expand-icon">
+                                                    <tr class="bg-slate-50 cursor-pointer transition-colors hover:bg-slate-100" onclick={() => toggleGroup(groupIndex)}>
+                                                        <td class="px-4 py-3 text-center text-slate-500">
                                                             <svg class="w-4 h-4 transition-transform {group.expanded ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                                             </svg>
@@ -627,9 +626,9 @@
                                                         <td class="px-4 py-3 font-medium">
                                                             {group.parentSku}
                                                             {#if group.isTemplate}
-                                                                <span class="badge badge-purple">母版</span>
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 bg-purple-200 text-purple-700">母版</span>
                                                             {:else if group.parentId}
-                                                                <span class="badge badge-blue">变体组</span>
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 bg-blue-100 text-blue-600">变体组</span>
                                                             {/if}
                                                         </td>
                                                         <td class="px-4 py-3 text-gray-600">{group.parentName}</td>
@@ -640,9 +639,9 @@
                                                     <!-- 变体/报价详情行 -->
                                                     {#if group.expanded}
                                                         {#each group.quotations as quotation}
-                                                            <tr class="group-item hover:bg-gray-50">
-                                                                <td class="px-4 py-3"></td>
-                                                                <td class="px-4 py-3">
+                                                            <tr class="bg-white hover:bg-gray-50">
+                                                                <td class="px-4 py-3 border-l-[3px] border-gray-200"></td>
+                                                                <td class="px-4 py-3 pl-12">
                                                                     <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
                                                                         {quotation.supplier_name}
                                                                     </a>
@@ -783,84 +782,3 @@
         </aside>
     </div>
 </div>
-
-<style>
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
-    }
-    
-    .btn:hover {
-        opacity: 0.9;
-    }
-    
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-    
-    .btn-success {
-        background-color: #10b981;
-        color: white;
-    }
-    
-    .btn-success:hover {
-        background-color: #059669;
-    }
-    
-    .no-underline {
-        text-decoration: none;
-    }
-    
-    /* 报价分组样式 */
-    .group-header {
-        background-color: #f8fafc;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-    .group-header:hover {
-        background-color: #f1f5f9;
-    }
-    .group-item {
-        background-color: white;
-    }
-    .group-item td:first-child {
-        border-left: 3px solid #e2e8f0;
-    }
-    .group-item td:nth-child(2) {
-        padding-left: 3rem;
-    }
-    .expand-icon {
-        text-align: center;
-        color: #64748b;
-    }
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.125rem 0.5rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin-left: 0.5rem;
-    }
-    .badge-purple {
-        background-color: #e9d5ff;
-        color: #7c3aed;
-    }
-    .badge-blue {
-        background-color: #dbeafe;
-        color: #2563eb;
-    }
-    .rotate-90 {
-        transform: rotate(90deg);
-    }
-</style>

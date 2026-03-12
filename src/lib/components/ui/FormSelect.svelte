@@ -54,6 +54,8 @@
         {value}
         {disabled}
         onchange={handleChange}
+        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm transition-all duration-150 ease-in-out focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70 bg-white cursor-pointer appearance-none pr-10"
+        style="background-image: url(&quot;data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e&quot;); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;"
     >
         {#if placeholder}
             <option value="" disabled selected={!value}>{placeholder}</option>
@@ -65,35 +67,3 @@
         {/each}
     </select>
 </FormField>
-
-<style>
-    select {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        transition: all 0.15s ease;
-        width: 100%;
-        box-sizing: border-box;
-        background-color: white;
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 0.5rem center;
-        background-repeat: no-repeat;
-        background-size: 1.5em 1.5em;
-        padding-right: 2.5rem;
-    }
-    
-    select:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    
-    select:disabled {
-        background-color: #f3f4f6;
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-</style>

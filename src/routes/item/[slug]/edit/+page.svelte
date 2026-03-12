@@ -60,7 +60,7 @@
     />
 
     {#if error}
-        <div class="error-alert" role="alert">
+        <div class="bg-red-100 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-4" role="alert">
             {error}
         </div>
     {/if}
@@ -102,14 +102,3 @@
     onConfirm={handleDelete}
     onCancel={() => showDeleteModal = false}
 />
-
-<style>
-    .error-alert {
-        background-color: #fee2e2;
-        border: 1px solid #fecaca;
-        color: #991b1b;
-        padding: 0.75rem 1rem;
-        border-radius: 0.375rem;
-        margin-bottom: 1rem;
-    }
-</style>

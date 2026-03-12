@@ -69,322 +69,84 @@
 
 <svelte:window onclick={handleClickOutside} onkeydown={handleKeyDown} />
 
-<div class="home-container">
-    <h1>AnyWarehouse 仓库管理系统</h1>
+<div class="max-w-3xl mx-auto my-8 p-8">
+    <h1 class="text-gray-800 mb-2">AnyWarehouse 仓库管理系统</h1>
     <p>欢迎使用简易仓库管理系统</p>
     
-    <div class="search-section">
-        <div class="search-wrapper">
-            <div class="search-box">
+    <div class="mt-8 mb-8">
+        <div class="search-wrapper relative max-w-2xl mx-auto">
+            <div class="relative flex items-center">
                 <input 
                     type="text"
                     bind:value={searchQuery}
                     oninput={handleInput}
                     placeholder="搜索商品名称、SKU、编号或描述..."
-                    class="search-input"
+                    class="w-full py-3 pr-10 pl-4 text-base border-2 border-gray-200 rounded-md outline-none transition-colors focus:border-blue-500"
                     autocomplete="off"
                 />
                 {#if isSearching}
-                    <span class="search-spinner">⟳</span>
+                    <span class="absolute right-4 text-blue-500 animate-spin">⟳</span>
                 {:else if searchQuery}
-                    <button class="clear-btn" onclick={() => { searchQuery = ''; searchResults = []; showResults = false; }}>✕</button>
+                    <button class="absolute right-3 bg-transparent border-none text-gray-400 cursor-pointer text-base p-1 hover:text-red-600" onclick={() => { searchQuery = ''; searchResults = []; showResults = false; }}>✕</button>
                 {/if}
             </div>
             
             {#if showResults && searchResults.length > 0}
-                <div class="search-dropdown">
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
                     {#each searchResults as item}
-                        <button class="search-result-item" onclick={() => handleSelect(item)}>
-                            <div class="result-main">
-                                <span class="result-sku">{item.SKU}</span>
-                                <span class="result-name">{item.name}</span>
+                        <button class="flex flex-col w-full px-4 py-3 text-left bg-transparent border-0 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 last:border-b-0" onclick={() => handleSelect(item)}>
+                            <div class="flex items-center gap-3">
+                                <span class="font-mono font-semibold text-blue-500 text-sm whitespace-nowrap">{item.SKU}</span>
+                                <span class="font-medium text-gray-800">{item.name}</span>
                             </div>
                             {#if item.description}
-                                <span class="result-desc">{item.description}</span>
+                                <span class="text-sm text-gray-400 mt-1 overflow-hidden text-ellipsis whitespace-nowrap">{item.description}</span>
                             {/if}
                         </button>
                     {/each}
                 </div>
             {:else if showResults && !isSearching && searchQuery}
-                <div class="search-dropdown">
-                    <div class="no-results">未找到匹配的商品</div>
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                    <div class="p-4 text-center text-gray-400">未找到匹配的商品</div>
                 </div>
             {/if}
         </div>
     </div>
     
-    <div class="quick-actions">
-        <h3>快速操作</h3>
-        <div class="action-buttons">
-            <a href="/container/add" class="btn btn-primary">
+    <div class="mt-12 p-8 bg-gray-50 rounded-lg">
+        <h3 class="mt-0 mb-6 text-gray-600">快速操作</h3>
+        <div class="flex gap-4 md:flex-col">
+            <a href="/container/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加根容器
             </a>
-            <a href="/category/add" class="btn btn-primary">
+            <a href="/category/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加根分类
             </a>
-            <a href="/item/add" class="btn btn-primary">
+            <a href="/item/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加商品
             </a>
         </div>
     </div>
 
-    <div class="navigation-section">
-        <h3>导航</h3>
-        <div class="nav-links">
-            <a href="/item" class="nav-link">
-                <h4>商品管理</h4>
-                <p>查看和管理所有商品信息</p>
+    <div class="mt-12 p-8 bg-white rounded-lg border border-gray-200">
+        <h3 class="mt-0 mb-6 text-gray-600">导航</h3>
+        <div class="grid gap-4 md:grid-cols-1" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+            <a href="/item" class="block p-6 no-underline bg-gray-50 border border-gray-200 rounded-md transition-all hover:bg-gray-100 hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-md">
+                <h4 class="m-0 mb-2 text-blue-500 text-lg">商品管理</h4>
+                <p class="m-0 text-gray-400 text-sm leading-relaxed">查看和管理所有商品信息</p>
             </a>
-            <a href="/category" class="nav-link">
-                <h4>分类管理</h4>
-                <p>管理商品分类体系</p>
+            <a href="/category" class="block p-6 no-underline bg-gray-50 border border-gray-200 rounded-md transition-all hover:bg-gray-100 hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-md">
+                <h4 class="m-0 mb-2 text-blue-500 text-lg">分类管理</h4>
+                <p class="m-0 text-gray-400 text-sm leading-relaxed">管理商品分类体系</p>
             </a>
-            <a href="/container" class="nav-link">
-                <h4>容器管理</h4>
-                <p>管理存储容器结构</p>
+            <a href="/container" class="block p-6 no-underline bg-gray-50 border border-gray-200 rounded-md transition-all hover:bg-gray-100 hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-md">
+                <h4 class="m-0 mb-2 text-blue-500 text-lg">容器管理</h4>
+                <p class="m-0 text-gray-400 text-sm leading-relaxed">管理存储容器结构</p>
             </a>
-            <a href="/storage" class="nav-link">
-                <h4>库存管理</h4>
-                <p>查看和管理库存信息</p>
+            <a href="/storage" class="block p-6 no-underline bg-gray-50 border border-gray-200 rounded-md transition-all hover:bg-gray-100 hover:border-blue-500 hover:-translate-y-0.5 hover:shadow-md">
+                <h4 class="m-0 mb-2 text-blue-500 text-lg">库存管理</h4>
+                <p class="m-0 text-gray-400 text-sm leading-relaxed">查看和管理库存信息</p>
             </a>
         </div>
     </div>
 </div>
-
-<style>
-    .home-container {
-        max-width: 800px;
-        margin: 2rem auto;
-        padding: 2rem;
-    }
-    
-    .home-container h1 {
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
-    
-    .search-section {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
-    
-    .search-wrapper {
-        position: relative;
-        max-width: 700px;
-        margin: 0 auto;
-    }
-    
-    .search-box {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-    
-    .search-input {
-        width: 100%;
-        padding: 0.75rem 2.5rem 0.75rem 1rem;
-        font-size: 1rem;
-        border: 2px solid #dee2e6;
-        border-radius: 6px;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-    
-    .search-input:focus {
-        border-color: #007bff;
-    }
-    
-    .search-spinner {
-        position: absolute;
-        right: 1rem;
-        color: #007bff;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .clear-btn {
-        position: absolute;
-        right: 0.75rem;
-        background: none;
-        border: none;
-        color: #6c757d;
-        cursor: pointer;
-        font-size: 1rem;
-        padding: 0.25rem;
-    }
-    
-    .clear-btn:hover {
-        color: #dc2626;
-    }
-    
-    .search-dropdown {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        margin-top: 0.25rem;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        max-height: 400px;
-        overflow-y: auto;
-        z-index: 100;
-    }
-    
-    .search-result-item {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        padding: 0.75rem 1rem;
-        text-align: left;
-        background: none;
-        border: none;
-        border-bottom: 1px solid #f0f0f0;
-        cursor: pointer;
-        transition: background-color 0.15s;
-    }
-    
-    .search-result-item:last-child {
-        border-bottom: none;
-    }
-    
-    .search-result-item:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .result-main {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .result-sku {
-        font-family: monospace;
-        font-weight: 600;
-        color: #007bff;
-        font-size: 0.9rem;
-        white-space: nowrap;
-    }
-    
-    .result-name {
-        color: #333;
-        font-weight: 500;
-    }
-    
-    .result-desc {
-        font-size: 0.85rem;
-        color: #6c757d;
-        margin-top: 0.25rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .no-results {
-        padding: 1rem;
-        text-align: center;
-        color: #6c757d;
-    }
-    
-    .quick-actions {
-        margin-top: 3rem;
-        padding: 2rem;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-    }
-    
-    .quick-actions h3 {
-        margin-top: 0;
-        margin-bottom: 1.5rem;
-        color: #495057;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-    }
-    
-    .btn {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        text-decoration: none;
-        border-radius: 4px;
-        font-weight: bold;
-        text-align: center;
-        transition: background-color 0.2s;
-    }
-    
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #0056b3;
-    }
-
-    .navigation-section {
-        margin-top: 3rem;
-        padding: 2rem;
-        background-color: #fff;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-    }
-
-    .navigation-section h3 {
-        margin-top: 0;
-        margin-bottom: 1.5rem;
-        color: #495057;
-    }
-
-    .nav-links {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-
-    .nav-link {
-        display: block;
-        padding: 1.5rem;
-        text-decoration: none;
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-        transition: all 0.2s ease-in-out;
-    }
-
-    .nav-link:hover {
-        background-color: #e9ecef;
-        border-color: #007bff;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .nav-link h4 {
-        margin: 0 0 0.5rem 0;
-        color: #007bff;
-        font-size: 1.1rem;
-    }
-
-    .nav-link p {
-        margin: 0;
-        color: #6c757d;
-        font-size: 0.9rem;
-        line-height: 1.4;
-    }
-
-    @media (max-width: 768px) {
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .nav-links {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>

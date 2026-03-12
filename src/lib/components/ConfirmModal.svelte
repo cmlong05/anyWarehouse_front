@@ -40,44 +40,49 @@
 
 {#if isOpen}
     <div 
-        class="modal-backdrop" 
+        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
         onclick={handleBackdropClick}
         onkeydown={(e) => e.key === 'Escape' && !loading && onCancel?.()}
         role="button"
         tabindex="-1"
         aria-label="关闭弹窗"
     >
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>{title}</h3>
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-[90%]">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
+                <h3 class="text-gray-900 text-lg font-semibold">{title}</h3>
                 {#if !loading}
-                    <button class="close-btn" onclick={handleCancel}>×</button>
+                    <button 
+                        class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all" 
+                        onclick={handleCancel}
+                    >
+                        ×
+                    </button>
                 {/if}
             </div>
             
-            <div class="modal-body">
-                <div class="warning-icon">⚠️</div>
-                <p class="message">{message}</p>
+            <div class="px-6 py-8 text-center">
+                <div class="text-5xl mb-4">⚠️</div>
+                <p class="text-gray-600 mb-3 leading-relaxed">{message}</p>
                 {#if itemName}
-                    <p class="item-name">"{itemName}"</p>
+                    <p class="text-gray-900 font-semibold text-lg break-words">"{itemName}"</p>
                 {/if}
             </div>
             
-            <div class="modal-footer">
+            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
                 <button 
-                    class="btn btn-secondary" 
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2" 
                     onclick={handleCancel}
                     disabled={loading}
                 >
                     {cancelText}
                 </button>
                 <button 
-                    class="btn btn-danger" 
+                    class="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2" 
                     onclick={handleConfirm}
                     disabled={loading}
                 >
                     {#if loading}
-                        <span class="loading-spinner"></span>
+                        <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         删除中...
                     {:else}
                         {confirmText}
@@ -87,165 +92,3 @@
         </div>
     </div>
 {/if}
-
-<style>
-    .modal-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        max-width: 450px;
-        width: 90%;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1.25rem 1.5rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .modal-header h3 {
-        margin: 0;
-        color: #1f2937;
-        font-size: 1.125rem;
-        font-weight: 600;
-    }
-
-    .close-btn {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: #6b7280;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 6px;
-        transition: all 0.15s ease;
-    }
-
-    .close-btn:hover {
-        background-color: #f3f4f6;
-        color: #374151;
-    }
-
-    .modal-body {
-        padding: 2rem 1.5rem;
-        text-align: center;
-    }
-
-    .warning-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-
-    .message {
-        margin: 0 0 0.75rem 0;
-        color: #4b5563;
-        line-height: 1.5;
-    }
-
-    .item-name {
-        margin: 0;
-        color: #1f2937;
-        font-weight: 600;
-        font-size: 1.1rem;
-        word-break: break-word;
-    }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.75rem;
-        padding: 1rem 1.5rem;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-secondary {
-        background-color: #f3f4f6;
-        color: #374151;
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-        background-color: #e5e7eb;
-    }
-
-    .btn-danger {
-        background-color: #dc2626;
-        color: white;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-        background-color: #b91c1c;
-    }
-
-    .loading-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 480px) {
-        .modal-content {
-            width: 95%;
-            margin: 1rem;
-        }
-
-        .modal-header,
-        .modal-body,
-        .modal-footer {
-            padding: 1rem;
-        }
-
-        .modal-footer {
-            flex-direction: column-reverse;
-        }
-
-        .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-</style>

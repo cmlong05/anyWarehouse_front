@@ -82,13 +82,13 @@
         />
 
         <!-- 备注 -->
-        <div class="form-control">
-            <label class="label" for="notes">
-                <span class="label-text">备注</span>
+        <div class="mb-2">
+            <label class="block mb-1" for="notes">
+                <span class="text-sm text-gray-700">备注</span>
             </label>
             <textarea 
                 id="notes"
-                class="textarea textarea-bordered"
+                class="w-full p-2 border border-gray-300 rounded-md resize-y"
                 bind:value={form.notes}
                 placeholder="输入备注信息"
                 rows="3"
@@ -97,7 +97,7 @@
 
         <!-- 提示 -->
         {#if form.mode === 'create'}
-            <div class="alert alert-info text-sm">
+            <div class="flex items-center gap-3 p-4 bg-blue-100 text-blue-800 rounded-md text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -106,11 +106,11 @@
         {/if}
 
         <!-- 操作按钮 -->
-        <div class="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" class="btn btn-ghost" onclick={() => onCancel?.()}>取消</button>
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button type="button" class="px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-all duration-150 bg-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-70 disabled:cursor-not-allowed" onclick={() => onCancel?.()}>取消</button>
             <button 
                 type="submit" 
-                class="btn btn-primary relative"
+                class="px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-all duration-150 bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-70 disabled:cursor-not-allowed"
                 disabled={form.saving}
             >
                 {form.saving ? '保存中...' : (form.mode === 'create' ? '创建发货单' : '保存修改')}
@@ -118,67 +118,3 @@
         </div>
     </form>
 {/if}
-
-<style>
-    .space-y-6 > * + * { margin-top: 1.5rem; }
-    
-    .form-control { margin-bottom: 0.5rem; }
-    .label { display: block; margin-bottom: 0.25rem; }
-    .label-text { font-size: 0.875rem; color: #374151; }
-    .textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        resize: vertical;
-    }
-    
-    .alert {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
-        background: #dbeafe;
-        color: #1e40af;
-        border-radius: 0.375rem;
-    }
-    
-    .flex { display: flex; }
-    .justify-end { justify-content: flex-end; }
-    .gap-3 { gap: 0.75rem; }
-    .pt-4 { padding-top: 1rem; }
-    .border-t { border-top: 1px solid #e5e7eb; }
-    
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
-    
-    .btn-ghost {
-        background: transparent;
-        color: #6b7280;
-    }
-    
-    .btn-ghost:hover:not(:disabled) {
-        background: #f3f4f6;
-    }
-    
-    .btn-primary {
-        background: #3b82f6;
-        color: white;
-    }
-    
-    .btn-primary:hover:not(:disabled) {
-        background: #2563eb;
-    }
-</style>

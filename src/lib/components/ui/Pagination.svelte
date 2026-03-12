@@ -48,9 +48,9 @@
 </script>
 
 {#if totalPages > 1}
-    <div class="pagination">
+    <div class="flex justify-center items-center gap-1 p-4 flex-wrap">
         <button
-            class="btn btn-prev"
+            class="min-w-[2rem] h-8 px-2 border border-gray-200 bg-white rounded-md text-sm cursor-pointer transition-all duration-150 ease-in-out flex items-center justify-center font-bold hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
             onclick={() => goToPage(page - 1)}
             disabled={page === 1 || disabled}
             aria-label="上一页"
@@ -60,11 +60,14 @@
         
         {#each getPageNumbers() as p}
             {#if p === -1}
-                <span class="ellipsis">...</span>
+                <span class="text-gray-400 px-2 select-none">...</span>
             {:else}
                 <button
-                    class="btn btn-page"
-                    class:active={p === page}
+                    class="min-w-[2rem] h-8 px-2 border border-gray-200 bg-white rounded-md text-sm cursor-pointer transition-all duration-150 ease-in-out flex items-center justify-center hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class:bg-blue-500={p === page}
+                    class:border-blue-500={p === page}
+                    class:text-white={p === page}
+                    class:hover:bg-blue-600={p === page}
                     onclick={() => goToPage(p)}
                     disabled={disabled}
                     aria-label="第 {p} 页"
@@ -76,7 +79,7 @@
         {/each}
         
         <button
-            class="btn btn-next"
+            class="min-w-[2rem] h-8 px-2 border border-gray-200 bg-white rounded-md text-sm cursor-pointer transition-all duration-150 ease-in-out flex items-center justify-center font-bold hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
             onclick={() => goToPage(page + 1)}
             disabled={page === totalPages || disabled}
             aria-label="下一页"
@@ -85,90 +88,9 @@
         </button>
         
         {#if showInfo}
-            <span class="page-info">
+            <span class="ml-4 text-gray-500 text-sm whitespace-nowrap">
                 共 {totalCount} 条
             </span>
         {/if}
     </div>
 {/if}
-
-<style>
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .btn {
-        min-width: 2rem;
-        height: 2rem;
-        padding: 0 0.5rem;
-        border: 1px solid #e5e7eb;
-        background: white;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .btn:hover:not(:disabled) {
-        background: #f3f4f6;
-        border-color: #d1d5db;
-    }
-    
-    .btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .btn.active {
-        background: #3b82f6;
-        border-color: #3b82f6;
-        color: white;
-    }
-    
-    .btn.active:hover {
-        background: #2563eb;
-    }
-    
-    .btn-prev,
-    .btn-next {
-        font-weight: bold;
-    }
-    
-    .ellipsis {
-        color: #9ca3af;
-        padding: 0 0.5rem;
-        user-select: none;
-    }
-    
-    .page-info {
-        margin-left: 1rem;
-        color: #6b7280;
-        font-size: 0.875rem;
-        white-space: nowrap;
-    }
-    
-    @media (max-width: 640px) {
-        .pagination {
-            gap: 0.125rem;
-        }
-        
-        .btn {
-            min-width: 1.75rem;
-            height: 1.75rem;
-            font-size: 0.8rem;
-        }
-        
-        .page-info {
-            margin-left: 0.5rem;
-            font-size: 0.8rem;
-        }
-    }
-</style>

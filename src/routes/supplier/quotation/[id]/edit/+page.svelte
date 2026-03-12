@@ -146,18 +146,18 @@
     onMount(loadData);
 </script>
 
-<div class="content-container">
-    <h1>编辑报价</h1>
+<div class="p-6">
+    <h1 class="text-2xl font-bold mb-6">编辑报价</h1>
     
     {#if loading}
         <Loading text="加载中..." />
     {:else if error && !quotation}
         <Alert {error} />
-        <button class="btn btn-secondary" onclick={() => goto('/supplier')}>
+        <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors mt-4" onclick={() => goto('/supplier')}>
             返回供应商列表
         </button>
     {:else}
-        <form onsubmit={handleSubmit} class="form">
+        <form onsubmit={handleSubmit} class="max-w-3xl">
             {#if error}
                 <Alert {error} />
             {/if}
@@ -165,9 +165,9 @@
                 <Alert error={success} variant="info" />
             {/if}
             
-            <div class="form-row">
-                <div class="form-group required">
-                    <label for="supplier">供应商</label>
+            <div class="flex gap-4 mb-4 flex-wrap">
+                <div class="flex-1 min-w-52">
+                    <label for="supplier" class="block mb-1 font-medium">供应商 <span class="text-red-600">*</span></label>
                     <Svelecte
                         inputId="supplier"
                         options={supplierOptions}
@@ -178,8 +178,8 @@
                     />
                 </div>
                 
-                <div class="form-group">
-                    <label for="item">物品</label>
+                <div class="flex-1 min-w-52">
+                    <label for="item" class="block mb-1 font-medium">物品</label>
                     <Svelecte
                         inputId="item"
                         bind:value={formData.item}
@@ -196,9 +196,9 @@
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group required">
-                    <label for="price">单价</label>
+            <div class="flex gap-4 mb-4 flex-wrap">
+                <div class="flex-1 min-w-52">
+                    <label for="price" class="block mb-1 font-medium">单价 <span class="text-red-600">*</span></label>
                     <input 
                         type="number" 
                         id="price"
@@ -206,12 +206,13 @@
                         min="0"
                         bind:value={formData.price}
                         required
+                        class="w-full p-2 border border-gray-300 rounded text-base"
                     />
                 </div>
                 
-                <div class="form-group">
-                    <label for="currency">货币</label>
-                    <select id="currency" bind:value={formData.currency}>
+                <div class="flex-1 min-w-52">
+                    <label for="currency" class="block mb-1 font-medium">货币</label>
+                    <select id="currency" bind:value={formData.currency} class="w-full p-2 border border-gray-300 rounded text-base">
                         <option value="CNY">CNY</option>
                         <option value="USD">USD</option>
                         <option value="EUR">EUR</option>
@@ -220,150 +221,80 @@
                     </select>
                 </div>
                 
-                <div class="form-group">
-                    <label for="min_quantity">最小订购量 (MOQ)</label>
+                <div class="flex-1 min-w-52">
+                    <label for="min_quantity" class="block mb-1 font-medium">最小订购量 (MOQ)</label>
                     <input 
                         type="number" 
                         id="min_quantity"
                         min="1"
                         bind:value={formData.min_quantity}
+                        class="w-full p-2 border border-gray-300 rounded text-base"
                     />
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="lead_time_days">交货周期(天)</label>
+            <div class="flex gap-4 mb-4 flex-wrap">
+                <div class="flex-1 min-w-52">
+                    <label for="lead_time_days" class="block mb-1 font-medium">交货周期(天)</label>
                     <input 
                         type="number" 
                         id="lead_time_days"
                         min="1"
                         bind:value={formData.lead_time_days}
                         placeholder="可选"
+                        class="w-full p-2 border border-gray-300 rounded text-base"
                     />
                 </div>
             </div>
             
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="valid_from">有效期开始</label>
+            <div class="flex gap-4 mb-4 flex-wrap">
+                <div class="flex-1 min-w-52">
+                    <label for="valid_from" class="block mb-1 font-medium">有效期开始</label>
                     <input 
                         type="date" 
                         id="valid_from"
                         bind:value={formData.valid_from}
+                        class="w-full p-2 border border-gray-300 rounded text-base"
                     />
                 </div>
                 
-                <div class="form-group">
-                    <label for="valid_until">有效期结束</label>
+                <div class="flex-1 min-w-52">
+                    <label for="valid_until" class="block mb-1 font-medium">有效期结束</label>
                     <input 
                         type="date" 
                         id="valid_until"
                         bind:value={formData.valid_until}
+                        class="w-full p-2 border border-gray-300 rounded text-base"
                     />
                 </div>
                 
-                <div class="form-group checkbox-group">
-                    <label>
-                        <input type="checkbox" bind:checked={formData.is_preferred} />
+                <div class="flex-1 min-w-52 flex items-end pb-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" bind:checked={formData.is_preferred} class="w-auto" />
                         设为首选报价
                     </label>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label for="note">备注</label>
+            <div class="mb-4">
+                <label for="note" class="block mb-1 font-medium">备注</label>
                 <textarea 
                     id="note"
                     rows="3"
                     bind:value={formData.note}
                     placeholder="可选"
+                    class="w-full p-2 border border-gray-300 rounded text-base resize-y"
                 ></textarea>
             </div>
             
-            <div class="form-actions">
-                <button type="button" class="btn btn-secondary" onclick={goBack}>
+            <div class="flex gap-4 justify-end mt-8 pt-4 border-t border-gray-200">
+                <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors" onclick={goBack}>
                     取消
                 </button>
-                <button type="submit" class="btn btn-primary" disabled={submitting}>
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting}>
                     {submitting ? '保存中...' : '保存'}
                 </button>
             </div>
         </form>
     {/if}
 </div>
-
-<style>
-    .form {
-        max-width: 800px;
-    }
-    
-    .form-row {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-    }
-    
-    .form-group {
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    .form-group.required label::after {
-        content: ' *';
-        color: #dc2626;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: 500;
-    }
-    
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid var(--color-border, #ddd);
-        border-radius: 4px;
-        font-size: 1rem;
-    }
-    
-    .form-group textarea {
-        resize: vertical;
-    }
-    
-    .checkbox-group {
-        display: flex;
-        align-items: flex-end;
-        padding-bottom: 0.5rem;
-    }
-    
-    .checkbox-group label {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-    }
-    
-    .checkbox-group input {
-        width: auto;
-    }
-    
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-        margin-top: 2rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--color-border, #eee);
-    }
-    
-    button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-    
-</style>

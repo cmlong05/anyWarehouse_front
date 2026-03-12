@@ -106,7 +106,7 @@
     <PageHeader title="新建采购订单" mb="md">
         {#snippet actions()}
             {#if supplier}
-                <span class="supplier-badge">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-sky-100 text-sky-700">
                     供应商: {supplier.name}
                 </span>
             {/if}
@@ -117,8 +117,11 @@
         <Loading text="加载中..." />
     {:else if error && !supplier}
         <Alert error={error} />
-        <div class="actions">
-            <button class="btn btn-secondary" onclick={() => goto('/supplier')}>
+        <div class="flex gap-4 mt-4">
+            <button 
+                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
+                onclick={() => goto('/supplier')}
+            >
                 返回供应商列表
             </button>
         </div>
@@ -127,7 +130,7 @@
             <Alert error={error} onDismiss={() => error = ''} />
         {/if}
         
-        <div class="form-container">
+        <div class="bg-white p-6 rounded-lg border border-gray-200 md:p-6">
             <PurchaseOrderForm
                 supplierId={supplier.id}
                 supplier={supplier}
@@ -141,33 +144,3 @@
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .supplier-badge {
-        background: #e0f2fe;
-        color: #0369a1;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .form-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    @media (max-width: 768px) {
-        .form-container {
-            padding: 1rem;
-        }
-    }
-</style>

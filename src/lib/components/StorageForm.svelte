@@ -85,19 +85,19 @@
     }
 </script>
 
-<form onsubmit={handleSubmit}>
+<form onsubmit={handleSubmit} class="max-w-xl mx-auto">
     {#if mode === 'edit' && initialData?.id}
-        <div class="storage-id">存储ID: {initialData.id}</div>
+        <div class="bg-gray-100 p-2 rounded-md mb-4 font-bold text-gray-500">存储ID: {initialData.id}</div>
     {/if}
 
-    <div class="form-field">
-        <label for="storage-item">物品</label>
-        <input id="storage-item" type="text" value={displayItem} disabled class="readonly-input" />
+    <div class="mb-4">
+        <label for="storage-item" class="block mb-1 font-bold text-gray-700">物品</label>
+        <input id="storage-item" type="text" value={displayItem} disabled class="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 box-border" />
         <input type="hidden" name="item" value={formData.item} />
     </div>
 
-    <div class="form-field">
-        <label for="storage-container">存储位置 <span class="required">*</span></label>
+    <div class="mb-4">
+        <label for="storage-container" class="block mb-1 font-bold text-gray-700">存储位置 <span class="text-red-600">*</span></label>
         <Svelecte
             inputId="storage-container"
             name="container"
@@ -126,50 +126,18 @@
         oninput={(v) => formData.text = v}
     />
 
-    <div class="form-field checkbox-field">
-        <label class="checkbox-label">
-            <input type="checkbox" name="sample" bind:checked={formData.sample} />
+    <div class="flex items-center mb-4">
+        <label class="flex items-center gap-2 cursor-pointer font-normal">
+            <input type="checkbox" name="sample" bind:checked={formData.sample} class="w-5 h-5" />
             <span>样品（不计入库存）</span>
         </label>
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">{mode === 'add' ? '添加存储' : '保存修改'}</button>
-        <button type="button" class="btn btn-secondary" onclick={handleCancel}>取消</button>
+    <div class="flex flex-col md:flex-row gap-4 mt-8 flex-wrap">
+        <button type="submit" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 w-full md:w-auto">{mode === 'add' ? '添加存储' : '保存修改'}</button>
+        <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-gray-500 text-white hover:opacity-90 w-full md:w-auto" onclick={handleCancel}>取消</button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="btn btn-danger" onclick={handleDeleteClick}>删除存储</button>
+            <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-red-600 text-white hover:opacity-90 w-full md:w-auto" onclick={handleDeleteClick}>删除存储</button>
         {/if}
     </div>
 </form>
-
-<style>
-    form { max-width: 500px; margin: 0 auto; }
-    form :global(.form-field) { margin-bottom: 1rem; }
-    
-    .form-field label { display: block; margin-bottom: 0.25rem; font-weight: bold; color: #374151; }
-    .required { color: #dc2626; }
-    
-    .readonly-input {
-        width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;
-        background-color: #f3f4f6; color: #6b7280; box-sizing: border-box;
-    }
-    
-    .checkbox-field { display: flex; align-items: center; }
-    .checkbox-label { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: normal; }
-    .checkbox-label input { width: 1.2rem; height: 1.2rem; }
-    
-    .form-actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
-    
-    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.375rem; cursor: pointer; font-size: 1rem; font-weight: 500; transition: opacity 0.15s; }
-    .btn:hover { opacity: 0.9; }
-    .btn-primary { background-color: #007bff; color: white; }
-    .btn-secondary { background-color: #6c757d; color: white; }
-    .btn-danger { background-color: #dc3545; color: white; }
-    
-    .storage-id { background-color: #f8f9fa; padding: 0.5rem; border-radius: 0.375rem; margin-bottom: 1rem; font-weight: bold; color: #6c757d; }
-    
-    @media (max-width: 768px) {
-        .form-actions { flex-direction: column; }
-        .btn { width: 100%; }
-    }
-</style>

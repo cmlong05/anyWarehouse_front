@@ -224,21 +224,21 @@
 {#if loading}
     <Loading text="加载中..." />
 {:else}
-    <div class="package-form">
+    <div class="max-w-6xl mx-auto p-4">
         {#if error}<Alert error={{message: error}} onDismiss={() => error = ''} />{/if}
         {#if success}<Alert error={{message: success}} variant="info" onDismiss={() => success = ''} />{/if}
 
-        <div class="form-section">
-            <h3>基本信息</h3>
-            <div class="form-row">
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">基本信息</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormInput label="包裹编号" name="packageNo" value={packageNo} required disabled={mode === 'edit'} oninput={(v) => packageNo = v} />
                 <FormSelect label="快递单号" name="trackingNumber" options={trackingOptions} value={trackingNumberId?.toString() || ''} onchange={(v) => trackingNumberId = v ? Number(v) : null} />
             </div>
         </div>
 
-        <div class="form-section">
-            <h3>尺寸重量</h3>
-            <div class="form-row four-cols">
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">尺寸重量</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <FormInput label="重量(kg)" name="weight" type="number" value={weight ?? ''} step={0.01} min={0} oninput={(v) => weight = v ? Number(v) : null} />
                 <FormInput label="长(cm)" name="length" type="number" value={length ?? ''} step={0.1} min={0} oninput={(v) => length = v ? Number(v) : null} />
                 <FormInput label="宽(cm)" name="width" type="number" value={width ?? ''} step={0.1} min={0} oninput={(v) => width = v ? Number(v) : null} />
@@ -247,11 +247,11 @@
         </div>
 
         <!-- 发货单选择 -->
-        <div class="form-section">
-            <h3>关联发货单</h3>
-            <div class="shipment-list">
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">关联发货单</h3>
+            <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto border border-gray-300 rounded-lg p-2 bg-white">
                 {#each availableShipments as shipment}
-                    <label class="shipment-item">
+                    <label class="flex items-center gap-2 p-2 bg-gray-50 rounded cursor-pointer border border-transparent hover:bg-gray-200 hover:border-gray-400 transition-all duration-150">
                         <input type="checkbox" checked={selectedShipmentIds.includes(shipment.id)} onchange={(e) => onShipmentToggle(shipment.id, (e.target as HTMLInputElement).checked)} />
                         <span>{shipment.shipment_no}</span>
                     </label>
@@ -261,8 +261,8 @@
 
         <!-- 双栏布局：使用通用组件 -->
         {#if selectedShipmentIds.length > 0}
-            <div class="form-section">
-                <h3>商品明细 <small>(总计: {getTotalItems()} 项, {getTotalQuantity()} 件)</small></h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {getTotalQuantity()} 件)</small></h3>
                 
                 <DualSelectionPanel
                     availableTitle="📋 发货单明细"
@@ -272,25 +272,25 @@
                 >
                     {#snippet available()}
                         {#if availableItems().length > 0}
-                            <table class="data-table">
+                            <table class="w-full border-collapse text-sm">
                                 <thead>
                                     <tr>
-                                        <th class="text-left">发货单</th>
-                                        <th class="text-left">SKU</th>
-                                        <th class="text-left">商品名称</th>
-                                        <th class="text-right w-16">待打包</th>
-                                        <th class="text-center w-16">操作</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">发货单</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品名称</th>
+                                        <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">待打包</th>
+                                        <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {#each availableItems() as { shipmentId, shipmentNo, item, maxQty }}
-                                        <tr>
-                                            <td class="font-mono text-xs">{shipmentNo}</td>
-                                            <td class="font-mono text-xs">{item.sku}</td>
-                                            <td>{item.product_name}</td>
-                                            <td class="text-right text-error font-medium">{maxQty.toFixed(0)}</td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn-add" onclick={() => addItemToPreview(shipmentId, item, maxQty)}>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{shipmentNo}</td>
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
+                                            <td class="p-2 border-b border-gray-200">{item.product_name}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{maxQty.toFixed(0)}</td>
+                                            <td class="text-center p-2 border-b border-gray-200">
+                                                <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700 transition-colors" onclick={() => addItemToPreview(shipmentId, item, maxQty)}>
                                                     添加
                                                 </button>
                                             </td>
@@ -299,7 +299,7 @@
                                 </tbody>
                             </table>
                         {:else}
-                            <div class="empty-state">
+                            <div class="text-center p-12 text-gray-400 text-sm">
                                 <p>所有商品已添加到包裹</p>
                             </div>
                         {/if}
@@ -307,27 +307,27 @@
                     
                     {#snippet selected()}
                         {#if packagePreviewItems.length > 0}
-                            <div class="table-actions">
-                                <button type="button" class="btn-text" onclick={clearAllItems}>清空</button>
-                                <button type="button" class="btn-text" onclick={fillAllPending}>全部填充</button>
+                            <div class="flex justify-end gap-2 mb-2">
+                                <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={clearAllItems}>清空</button>
+                                <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={fillAllPending}>全部填充</button>
                             </div>
-                            <table class="data-table">
+                            <table class="w-full border-collapse text-sm">
                                 <thead>
                                     <tr>
-                                        <th class="text-left">发货单</th>
-                                        <th class="text-left">SKU</th>
-                                        <th class="text-left">商品</th>
-                                        <th class="text-right w-24">数量</th>
-                                        <th class="text-center w-16">操作</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">发货单</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
+                                        <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品</th>
+                                        <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-24">数量</th>
+                                        <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {#each packagePreviewItems as item}
-                                        <tr>
-                                            <td class="font-mono text-xs">{item.shipmentNo}</td>
-                                            <td class="font-mono text-xs">{item.sku}</td>
-                                            <td>{item.productName}</td>
-                                            <td class="text-right">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
+                                            <td class="p-2 border-b border-gray-200">{item.productName}</td>
+                                            <td class="text-right p-2 border-b border-gray-200">
                                                 <NumberStepper
                                                     bind:value={item.quantity}
                                                     min={1}
@@ -336,8 +336,8 @@
                                                     size="sm"
                                                 />
                                             </td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn-remove" onclick={() => removePreviewItem(item.id)}>
+                                            <td class="text-center p-2 border-b border-gray-200">
+                                                <button type="button" class="px-2 py-1 bg-red-600 text-white rounded text-xs cursor-pointer" onclick={() => removePreviewItem(item.id)}>
                                                     删除
                                                 </button>
                                             </td>
@@ -346,7 +346,7 @@
                                 </tbody>
                             </table>
                         {:else}
-                            <div class="empty-state">
+                            <div class="text-center p-12 text-gray-400 text-sm">
                                 <p>点击左侧"添加"按钮添加商品</p>
                             </div>
                         {/if}
@@ -356,105 +356,15 @@
         {/if}
 
         <!-- 备注 -->
-        <div class="form-section">
-            <h3>备注</h3>
-            <textarea bind:value={notes} rows={3} placeholder="可选"></textarea>
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">备注</h3>
+            <textarea bind:value={notes} rows={3} placeholder="可选" class="w-full p-3 border border-gray-300 rounded resize-y min-h-[80px]"></textarea>
         </div>
 
         <!-- 按钮 -->
-        <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick={onCancel} disabled={saving}>取消</button>
-            <button type="button" class="btn btn-primary" onclick={handleSubmit} disabled={saving}>{saving ? '保存中...' : mode === 'create' ? '创建包裹' : '更新包裹'}</button>
+        <div class="flex justify-end gap-4 mt-6">
+            <button type="button" class="px-6 py-3 rounded text-base font-medium cursor-pointer transition-opacity duration-150 bg-gray-500 text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" onclick={onCancel} disabled={saving}>取消</button>
+            <button type="button" class="px-6 py-3 rounded text-base font-medium cursor-pointer transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" onclick={handleSubmit} disabled={saving}>{saving ? '保存中...' : mode === 'create' ? '创建包裹' : '更新包裹'}</button>
         </div>
     </div>
 {/if}
-
-<style>
-    .package-form { max-width: 1200px; margin: 0 auto; padding: 1rem; }
-    .form-section { background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .form-section h3 { margin: 0 0 1rem 0; color: #495057; font-size: 1.1rem; font-weight: 600; }
-    .form-section h3 small { font-weight: normal; color: #6c757d; }
-    
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-row.four-cols { grid-template-columns: repeat(4, 1fr); }
-    .form-row :global(.form-field) { margin: 0; }
-    
-    @media (max-width: 768px) {
-        .form-row, .form-row.four-cols { grid-template-columns: 1fr; }
-    }
-    
-    .shipment-list { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 0.5rem; 
-        max-height: 200px; 
-        overflow-y: auto; 
-        border: 1px solid #dee2e6; 
-        border-radius: 8px; 
-        padding: 0.5rem; 
-        background: white; 
-    }
-    
-    .shipment-item { 
-        display: flex; 
-        align-items: center; 
-        gap: 0.5rem; 
-        padding: 0.5rem; 
-        background: #f8f9fa; 
-        border-radius: 4px; 
-        cursor: pointer; 
-        border: 1px solid transparent; 
-        transition: all 0.15s; 
-    }
-    
-    .shipment-item:hover { 
-        background: #e9ecef; 
-        border-color: #adb5bd; 
-    }
-    
-    textarea { 
-        width: 100%; 
-        padding: 0.75rem; 
-        border: 1px solid #ced4da; 
-        border-radius: 4px; 
-        resize: vertical; 
-        min-height: 80px; 
-    }
-    
-    .form-actions { 
-        display: flex; 
-        justify-content: flex-end; 
-        gap: 1rem; 
-        margin-top: 1.5rem; 
-    }
-    
-    .btn { 
-        padding: 0.75rem 1.5rem; 
-        border: none; 
-        border-radius: 4px; 
-        font-size: 1rem; 
-        font-weight: 500; 
-        cursor: pointer; 
-        transition: opacity 0.15s; 
-    }
-    
-    .btn:disabled { 
-        opacity: 0.6; 
-        cursor: not-allowed; 
-    }
-    
-    .btn-primary { 
-        background: #007bff; 
-        color: white; 
-    }
-    
-    .btn-secondary { 
-        background: #6c757d; 
-        color: white; 
-    }
-    
-    .btn-primary:hover:not(:disabled), 
-    .btn-secondary:hover:not(:disabled) { 
-        opacity: 0.9; 
-    }
-</style>

@@ -95,7 +95,7 @@
     <PageHeader title="编辑采购订单" mb="md">
         {#snippet actions()}
             {#if order}
-                <span class="order-badge">
+                <span class="bg-sky-100 text-sky-700 px-4 py-2 rounded-full text-sm font-medium">
                     订单: {order.order_number}
                 </span>
             {/if}
@@ -106,13 +106,13 @@
         <Loading text="加载中..." />
     {:else if error}
         <Alert error={error} />
-        <div class="actions">
-            <button class="btn btn-secondary" onclick={() => goto('/supplier/purchase-order')}>
+        <div class="flex gap-4 mt-4">
+            <button class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={() => goto('/supplier/purchase-order')}>
                 返回订单列表
             </button>
         </div>
     {:else if order}
-        <div class="form-container">
+        <div class="bg-white p-6 rounded-lg border border-gray-200 md:p-4">
             <PurchaseOrderForm
                 purchaseOrder={order}
                 supplierId={order.supplier}
@@ -125,48 +125,3 @@
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .order-badge {
-        background: #e0f2fe;
-        color: #0369a1;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .form-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-    
-    @media (max-width: 768px) {
-        .form-container {
-            padding: 1rem;
-        }
-    }
-</style>

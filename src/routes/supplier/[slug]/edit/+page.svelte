@@ -70,11 +70,11 @@
         <Loading text="加载供应商信息..." />
     {:else if error && !supplier}
         <Alert error={error} onDismiss={() => error = ''} />
-        <div class="actions">
-            <button class="btn btn-secondary" onclick={() => goto('/supplier')}>
+        <div class="flex gap-4 mt-4">
+            <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors" onclick={() => goto('/supplier')}>
                 返回列表
             </button>
-            <button class="btn btn-primary" onclick={loadSupplier}>
+            <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors" onclick={loadSupplier}>
                 重试
             </button>
         </div>
@@ -85,7 +85,7 @@
             <Alert error={error} onDismiss={() => error = ''} />
         {/if}
         
-        <div class="form-container">
+        <div class="bg-white p-8 rounded-lg border border-gray-200 md:p-6 sm:p-4">
             <SupplierForm 
                 {supplier}
                 onSubmit={handleSubmit}
@@ -96,24 +96,3 @@
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .form-container {
-        background: white;
-        padding: 2rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    @media (max-width: 768px) {
-        .form-container {
-            padding: 1.5rem 1rem;
-        }
-    }
-</style>

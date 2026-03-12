@@ -60,9 +60,9 @@
     });
 </script>
 
-<div class="component-manager">
-    <div class="manager-header">
-        <h3>BOM 物料清单管理</h3>
+<div class="border-t-2 border-gray-200 py-6 mt-6">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
+        <h3 class="text-gray-800 font-semibold text-lg">BOM 物料清单管理</h3>
         <AddComponentForm
             {itemId}
             {itemSKU}
@@ -75,7 +75,7 @@
     </div>
 
     {#if bom.error}
-        <div class="error-message">{bom.error}</div>
+        <div class="bg-red-50 text-red-800 p-3 rounded mb-4">{bom.error}</div>
     {/if}
 
     <!-- 标签页 -->
@@ -87,9 +87,9 @@
     />
 
     <!-- 标签页内容 -->
-    <div class="tab-content">
+    <div class="min-h-[200px]">
         {#if bom.loading}
-            <div class="loading">加载中...</div>
+            <div class="text-center p-8 text-gray-500">加载中...</div>
         {:else}
             {#if activeTab === 'components'}
                 <ComponentList
@@ -119,49 +119,3 @@
         {/if}
     </div>
 </div>
-
-<style>
-    .component-manager {
-        border-top: 2px solid #dee2e6;
-        padding: 1.5rem 0;
-        margin-top: 1.5rem;
-    }
-
-    .manager-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .manager-header h3 {
-        margin: 0;
-        color: #333;
-    }
-
-    .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 0.75rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-    }
-
-    .tab-content {
-        min-height: 200px;
-    }
-
-    .loading {
-        text-align: center;
-        padding: 2rem;
-        color: #6c757d;
-    }
-
-    @media (max-width: 768px) {
-        .manager-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.75rem;
-        }
-    }
-</style>

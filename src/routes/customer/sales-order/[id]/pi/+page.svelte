@@ -74,7 +74,7 @@
         </div>
     {:else if order}
         <!-- 工具栏 -->
-        <div class="max-w-5xl mx-auto mb-4 flex justify-between items-center no-print">
+        <div class="max-w-5xl mx-auto mb-4 flex justify-between items-center print:hidden">
             <div class="flex gap-2">
                 <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600" onclick={goBack}>
                     ← 返回
@@ -86,7 +86,7 @@
         </div>
 
         <!-- 编辑区 -->
-        <div class="max-w-5xl mx-auto mb-4 bg-white p-4 rounded-lg shadow no-print">
+        <div class="max-w-5xl mx-auto mb-4 bg-white p-4 rounded-lg shadow print:hidden">
             <h3 class="font-semibold mb-3">PI 信息设置</h3>
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -121,7 +121,7 @@
         </div>
 
         <!-- PI 文档 -->
-        <div class="max-w-5xl mx-auto bg-white p-8 shadow-lg pi-document">
+        <div class="max-w-5xl mx-auto bg-white p-8 shadow-lg print:shadow-none print:p-0 print:max-w-full print:m-0">
             <!-- 头部 -->
             <div class="flex justify-between items-start mb-8 border-b-2 border-gray-800 pb-4">
                 <div class="flex-1">
@@ -270,7 +270,7 @@
     }
     
     @media print {
-        .no-print {
+        .print\:hidden {
             display: none !important;
         }
         
@@ -285,10 +285,19 @@
             margin: 1cm;  /* 给页面内容留边距 */
         }
         
-        .pi-document {
+        .print\:shadow-none {
             box-shadow: none !important;
+        }
+        
+        .print\:p-0 {
             padding: 0 !important;
+        }
+        
+        .print\:max-w-full {
             max-width: 100% !important;
+        }
+        
+        .print\:m-0 {
             margin: 0 !important;
         }
     }

@@ -30,18 +30,18 @@
     }
 </script>
 
-<div class="form-header">
-    <button class="btn btn-primary btn-sm" onclick={onToggle}>
+<div class="mb-4">
+    <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-blue-600" onclick={onToggle}>
         {show ? '取消' : '添加组件'}
     </button>
 </div>
 
 {#if show}
-    <div class="add-form">
-        <h4>添加组件到 {itemSKU}</h4>
-        <div class="form-row">
-            <div class="form-group full-width">
-                <label for="child-item">搜索子物品:</label>
+    <div class="bg-white p-4 rounded-md mb-4 border border-gray-200">
+        <h4 class="mb-4 text-gray-700 font-medium">添加组件到 {itemSKU}</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4 col-span-full">
+                <label for="child-item" class="block mb-2 font-medium text-gray-600">搜索子物品:</label>
                 <Svelecte
                     inputId="child-item"
                     bind:value={selectedChildItemId}
@@ -60,113 +60,26 @@
             </div>
         </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="comp-quantity">数量:</label>
-                <input type="number" id="comp-quantity" bind:value={formData.quantity} min="1" max="999999" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mb-4">
+                <label for="comp-quantity" class="block mb-2 font-medium text-gray-600">数量:</label>
+                <input type="number" id="comp-quantity" bind:value={formData.quantity} min="1" max="999999" class="w-full p-2 border border-gray-300 rounded" />
             </div>
-            <div class="form-group">
-                <label for="comp-order">排序:</label>
-                <input type="number" id="comp-order" bind:value={formData.order} min="0" max="9999" />
+            <div class="mb-4">
+                <label for="comp-order" class="block mb-2 font-medium text-gray-600">排序:</label>
+                <input type="number" id="comp-order" bind:value={formData.order} min="0" max="9999" class="w-full p-2 border border-gray-300 rounded" />
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="comp-note">备注:</label>
-            <input type="text" id="comp-note" bind:value={formData.note} maxlength="500" placeholder="可选：添加备注信息" />
+        <div class="mb-4">
+            <label for="comp-note" class="block mb-2 font-medium text-gray-600">备注:</label>
+            <input type="text" id="comp-note" bind:value={formData.note} maxlength="500" placeholder="可选：添加备注信息" class="w-full p-2 border border-gray-300 rounded" />
         </div>
 
-        <div class="form-actions">
-            <button class="btn btn-primary" onclick={handleSubmit} disabled={!selectedChildItemId || loading}>
+        <div class="flex justify-end gap-2">
+            <button class="px-4 py-2 text-sm bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-blue-600" onclick={handleSubmit} disabled={!selectedChildItemId || loading}>
                 {loading ? '添加中...' : '确认添加'}
             </button>
         </div>
     </div>
 {/if}
-
-<style>
-    .form-header {
-        margin-bottom: 1rem;
-    }
-
-    .add-form {
-        background: white;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        border: 1px solid #dee2e6;
-    }
-
-    .add-form h4 {
-        margin: 0 0 1rem 0;
-        color: #495057;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .form-group {
-        margin-bottom: 1rem;
-    }
-
-    .form-group.full-width {
-        grid-column: 1 / -1;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: #495057;
-    }
-
-    .form-group input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-primary {
-        background: #1976d2;
-        color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background: #1565c0;
-    }
-
-    .btn-sm {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.8125rem;
-    }
-
-    @media (max-width: 768px) {
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>

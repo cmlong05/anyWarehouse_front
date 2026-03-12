@@ -19,21 +19,25 @@
 </script>
 
 {#if variant === 'button'}
-    <div class="locale-switcher">
+    <div class="flex gap-2 items-center">
         {#each locales as loc}
             <button
-                class="locale-btn"
-                class:active={$localeStore === loc.value}
+                class="flex items-center justify-center w-8 h-8 p-0 border border-gray-200 rounded-md bg-white text-gray-500 text-sm cursor-pointer transition-all duration-150 ease-in-out hover:border-gray-300 hover:bg-gray-50"
+                class:border-blue-500={$localeStore === loc.value}
+                class:bg-blue-50={$localeStore === loc.value}
+                class:text-blue-700={$localeStore === loc.value}
+                class:font-medium={$localeStore === loc.value}
                 onclick={() => switchLocale(loc.value)}
                 title={loc.label}
             >
-                <span class="flag">{loc.flag}</span>
+                <span class="text-base">{loc.flag}</span>
             </button>
         {/each}
     </div>
 {:else if variant === 'select'}
     <select 
-        class="locale-select"
+        class="py-2 pl-3 pr-8 border border-gray-200 rounded-md bg-white text-sm cursor-pointer appearance-none bg-no-repeat bg-right"
+        style="background-image: url(&quot;data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e&quot;); background-position: right 0.5rem center; background-size: 1.5em 1.5em;"
         value={$localeStore}
         onchange={(e) => switchLocale((e.target as HTMLSelectElement).value as Locale)}
     >
@@ -42,11 +46,15 @@
         {/each}
     </select>
 {:else if variant === 'tabs'}
-    <div class="locale-tabs">
-        {#each locales as loc}
+    <div class="flex border border-gray-200 rounded-md overflow-hidden">
+        {#each locales as loc, index}
             <button
-                class="locale-tab"
-                class:active={$localeStore === loc.value}
+                class="py-2 px-4 border-0 bg-white text-gray-500 text-sm cursor-pointer transition-all duration-150 ease-in-out hover:bg-gray-50"
+                class:border-r={index !== locales.length - 1}
+                class:border-gray-200={index !== locales.length - 1}
+                class:bg-blue-500={$localeStore === loc.value}
+                class:text-white={$localeStore === loc.value}
+                class:font-medium={$localeStore === loc.value}
                 onclick={() => switchLocale(loc.value)}
             >
                 {loc.flag} {loc.label}
@@ -54,83 +62,3 @@
         {/each}
     </div>
 {/if}
-
-<style>
-    .locale-switcher {
-        display: flex;
-        gap: 0.5rem;
-        align-items: center;
-    }
-    
-    .locale-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2rem;
-        height: 2rem;
-        padding: 0;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.375rem;
-        background: white;
-        color: #6b7280;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .locale-btn:hover {
-        border-color: #d1d5db;
-        background: #f9fafb;
-    }
-    
-    .locale-btn.active {
-        border-color: #3b82f6;
-        background: #eff6ff;
-        color: #1d4ed8;
-        font-weight: 500;
-    }
-    
-    .flag {
-        font-size: 1rem;
-    }
-    
-    .locale-select {
-        padding: 0.5rem 2rem 0.5rem 0.75rem;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.375rem;
-        background: white;
-        font-size: 0.875rem;
-        cursor: pointer;
-    }
-    
-    .locale-tabs {
-        display: flex;
-        border: 1px solid #e5e7eb;
-        border-radius: 0.375rem;
-        overflow: hidden;
-    }
-    
-    .locale-tab {
-        padding: 0.5rem 1rem;
-        border: none;
-        background: white;
-        color: #6b7280;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    
-    .locale-tab:not(:last-child) {
-        border-right: 1px solid #e5e7eb;
-    }
-    
-    .locale-tab:hover {
-        background: #f9fafb;
-    }
-    
-    .locale-tab.active {
-        background: #3b82f6;
-        color: white;
-        font-weight: 500;
-    }
-</style>

@@ -24,57 +24,17 @@
     }: Props = $props();
 </script>
 
-<div class="form-field {className}" class:full-width={fullWidth} class:error={!!error}>
-    <label for={htmlFor}>
+<div class="flex flex-col gap-1 {className}" class:col-span-full={fullWidth}>
+    <label for={htmlFor} class="text-sm font-medium text-gray-700">
         {label}
         {#if required}
-            <span class="required-mark">*</span>
+            <span class="text-red-600 ml-1">*</span>
         {/if}
     </label>
-    {@render children?.()}
+    <div class={error ? '[&_input]:border-red-600 [&_input]:focus:border-red-600 [&_input]:focus:ring-2 [&_input]:focus:ring-red-600/20 [&_select]:border-red-600 [&_select]:focus:border-red-600 [&_select]:focus:ring-2 [&_select]:focus:ring-red-600/20 [&_textarea]:border-red-600 [&_textarea]:focus:border-red-600 [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-red-600/20' : ''}>
+        {@render children?.()}
+    </div>
     {#if error}
-        <span class="error-message">{error}</span>
+        <span class="text-red-600 text-xs mt-1">{error}</span>
     {/if}
 </div>
-
-<style>
-    .form-field {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-    
-    .form-field.full-width {
-        grid-column: 1 / -1;
-    }
-    
-    .form-field label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #374151;
-    }
-    
-    .required-mark {
-        color: #dc2626;
-        margin-left: 0.25rem;
-    }
-    
-    .error-message {
-        color: #dc2626;
-        font-size: 0.75rem;
-        margin-top: 0.25rem;
-    }
-    
-    .form-field.error :global(input),
-    .form-field.error :global(select),
-    .form-field.error :global(textarea) {
-        border-color: #dc2626;
-    }
-    
-    .form-field.error :global(input:focus),
-    .form-field.error :global(select:focus),
-    .form-field.error :global(textarea:focus) {
-        border-color: #dc2626;
-        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
-    }
-</style>

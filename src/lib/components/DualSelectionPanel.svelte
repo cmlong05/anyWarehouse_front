@@ -28,20 +28,20 @@
     }: Props = $props();
 </script>
 
-<div class="dual-selection-panel">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {#if showAvailable}
-        <div class="column available-column">
-            <h4 class="column-title">
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="flex justify-between items-center m-0 mb-4 text-base font-semibold text-gray-700 pb-3 border-b border-gray-200">
                 <span>{availableTitle}</span>
                 {#if availableSubtitle}
-                    <span class="subtitle">{availableSubtitle}</span>
+                    <span class="text-xs font-normal text-gray-500">{availableSubtitle}</span>
                 {/if}
             </h4>
-            <div class="column-content">
+            <div class="min-h-[200px]">
                 {#if available}
                     {@render available()}
                 {:else}
-                    <div class="empty-state">
+                    <div class="text-center p-12 text-gray-400 text-sm">
                         <p>{availableEmptyText}</p>
                     </div>
                 {/if}
@@ -50,18 +50,18 @@
     {/if}
     
     {#if showSelected}
-        <div class="column selected-column">
-            <h4 class="column-title">
+        <div class="bg-white rounded-lg p-4 border border-gray-200">
+            <h4 class="flex justify-between items-center m-0 mb-4 text-base font-semibold text-gray-700 pb-3 border-b border-gray-200">
                 <span>{selectedTitle}</span>
                 {#if selectedSubtitle}
-                    <span class="subtitle">{selectedSubtitle}</span>
+                    <span class="text-xs font-normal text-gray-500">{selectedSubtitle}</span>
                 {/if}
             </h4>
-            <div class="column-content">
+            <div class="min-h-[200px]">
                 {#if selected}
                     {@render selected()}
                 {:else}
-                    <div class="empty-state">
+                    <div class="text-center p-12 text-gray-400 text-sm">
                         <p>{selectedEmptyText}</p>
                     </div>
                 {/if}
@@ -71,52 +71,6 @@
 </div>
 
 <style>
-    .dual-selection-panel {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-    }
-    
-    @media (max-width: 1024px) {
-        .dual-selection-panel { grid-template-columns: 1fr; }
-    }
-    
-    .column {
-        background: white;
-        border-radius: 8px;
-        padding: 1rem;
-        border: 1px solid #e9ecef;
-    }
-    
-    .column-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 0 0 1rem 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: #374151;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .column-title .subtitle {
-        font-size: 0.75rem;
-        font-weight: normal;
-        color: #6b7280;
-    }
-    
-    .column-content {
-        min-height: 200px;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #9ca3af;
-        font-size: 0.875rem;
-    }
-    
     /* 表格基础样式 */
     :global(.data-table) {
         width: 100%;

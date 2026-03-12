@@ -66,11 +66,11 @@
         <Loading text="加载报价信息..." />
     {:else if error}
         <Alert error={error} onDismiss={() => error = ''} />
-        <div class="actions">
-            <button class="btn btn-secondary" onclick={() => goto('/customer')}>
+        <div class="flex gap-4 mt-4">
+            <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors" onclick={() => goto('/customer')}>
                 返回客户列表
             </button>
-            <button class="btn btn-primary" onclick={loadQuotation}>
+            <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors" onclick={loadQuotation}>
                 重试
             </button>
         </div>
@@ -78,94 +78,94 @@
         <PageHeader title="报价详情" mb="md">
             {#snippet left()}
                 {#if quotation?.is_preferred}
-                    <span class="preferred-badge">★ 首选报价</span>
+                    <span class="bg-green-100 text-green-800 text-sm px-3 py-1.5 rounded-full font-medium">★ 首选报价</span>
                 {/if}
             {/snippet}
             {#snippet actions()}
-                <a href="/customer/quotation/{id}/edit" class="btn btn-primary btn-sm">编辑</a>
-                <button class="btn btn-error btn-sm" onclick={deleteQuotation}>删除</button>
+                <a href="/customer/quotation/{id}/edit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">编辑</a>
+                <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm" onclick={deleteQuotation}>删除</button>
             {/snippet}
         </PageHeader>
         
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>客户信息</h3>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="label">客户编号</span>
-                        <span class="value code">{quotation.customer_detail?.code || '-'}</span>
+        <div class="grid gap-6 mb-6 md:grid-cols-1" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">客户信息</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">客户编号</span>
+                        <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.customer_detail?.code || '-'}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">客户名称</span>
-                        <span class="value">
-                            <a href="/customer/{quotation.customer}" class="link">{quotation.customer_detail?.name || '-'}</a>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">客户名称</span>
+                        <span class="font-medium text-gray-900">
+                            <a href="/customer/{quotation.customer}" class="text-blue-500 hover:underline">{quotation.customer_detail?.name || '-'}</a>
                         </span>
                     </div>
                 </div>
             </div>
             
-            <div class="info-card">
-                <h3>物品信息</h3>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="label">SKU</span>
-                        <span class="value">
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">物品信息</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">SKU</span>
+                        <span class="font-medium">
                             {#if quotation.item}
-                                <a href="/item/{quotation.item}" class="link code">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
+                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
                             {:else}
-                                <span class="code">{quotation.sku || '-'}</span>
+                                <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.sku || '-'}</span>
                             {/if}
                         </span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">物品名称</span>
-                        <span class="value">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">物品名称</span>
+                        <span class="font-medium text-gray-900">
                             {#if quotation.item}
-                                <a href="/item/{quotation.item}" class="link">{quotation.item_detail?.name || '-'}</a>
+                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline">{quotation.item_detail?.name || '-'}</a>
                             {:else}
                                 {quotation.item_detail?.name || '-'}
                             {/if}
                         </span>
                     </div>
                     {#if quotation.item_detail?.weight}
-                        <div class="info-item">
-                            <span class="label">重量</span>
-                            <span class="value">{quotation.item_detail.weight} g</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">重量</span>
+                            <span class="font-medium">{quotation.item_detail.weight} g</span>
                         </div>
                     {/if}
                 </div>
             </div>
             
-            <div class="info-card">
-                <h3>价格信息</h3>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="label">单价</span>
-                        <span class="value highlight">{quotation.price} {quotation.currency}</span>
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">价格信息</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">单价</span>
+                        <span class="font-medium text-blue-500 text-lg">{quotation.price} {quotation.currency}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">最小订购量</span>
-                        <span class="value">{quotation.min_quantity}</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">最小订购量</span>
+                        <span class="font-medium">{quotation.min_quantity}</span>
                     </div>
                     {#if quotation.total_price}
-                        <div class="info-item">
-                            <span class="label">总价</span>
-                            <span class="value highlight">{quotation.total_price} {quotation.currency}</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 text-sm">总价</span>
+                            <span class="font-medium text-blue-500 text-lg">{quotation.total_price} {quotation.currency}</span>
                         </div>
                     {/if}
                 </div>
             </div>
             
-            <div class="info-card">
-                <h3>其他信息</h3>
-                <div class="info-list">
-                    <div class="info-item">
-                        <span class="label">交货周期</span>
-                        <span class="value">{quotation.lead_time_days ? `${quotation.lead_time_days} 天` : '-'}</span>
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">其他信息</h3>
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">交货周期</span>
+                        <span class="font-medium">{quotation.lead_time_days ? `${quotation.lead_time_days} 天` : '-'}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="label">有效期开始</span>
-                        <span class="value">{quotation.valid_from || '-'}</span>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-500 text-sm">有效期开始</span>
+                        <span class="font-medium">{quotation.valid_from || '-'}</span>
                     </div>
 
                 </div>
@@ -173,136 +173,15 @@
         </div>
         
         {#if quotation.note}
-            <div class="remark-card">
-                <h3>备注</h3>
-                <p>{quotation.note}</p>
+            <div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">备注</h3>
+                <p class="text-gray-600 leading-relaxed whitespace-pre-wrap m-0">{quotation.note}</p>
             </div>
         {/if}
         
-        <div class="meta-info">
-            <p>创建时间: {new Date(quotation.created_at).toLocaleString()}</p>
-            <p>更新时间: {new Date(quotation.updated_at).toLocaleString()}</p>
+        <div class="text-gray-500 text-sm py-4 border-t border-gray-200">
+            <p class="my-1">创建时间: {new Date(quotation.created_at).toLocaleString()}</p>
+            <p class="my-1">更新时间: {new Date(quotation.updated_at).toLocaleString()}</p>
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .preferred-badge {
-        background-color: #dcfce7;
-        color: #166534;
-        font-size: 0.8rem;
-        padding: 0.375rem 0.75rem;
-        border-radius: 9999px;
-        font-weight: 500;
-    }
-    
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .info-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .info-card h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #374151;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #f3f4f6;
-    }
-    
-    .info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .info-item .label {
-        color: #6b7280;
-        font-size: 0.9rem;
-    }
-    
-    .info-item .value {
-        color: #1f2937;
-        font-weight: 500;
-    }
-    
-    .info-item .value.code {
-        font-family: monospace;
-        background-color: #f3f4f6;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.9rem;
-    }
-    
-    .info-item .value.highlight {
-        color: #3b82f6;
-        font-size: 1.1rem;
-    }
-    
-    .link {
-        color: #3b82f6;
-        text-decoration: none;
-    }
-    
-    .link:hover {
-        text-decoration: underline;
-    }
-    
-    .remark-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 1.5rem;
-    }
-    
-    .remark-card h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #374151;
-    }
-    
-    .remark-card p {
-        margin: 0;
-        color: #4b5563;
-        line-height: 1.6;
-        white-space: pre-wrap;
-    }
-    
-    .meta-info {
-        color: #6b7280;
-        font-size: 0.85rem;
-        padding: 1rem 0;
-        border-top: 1px solid #e5e7eb;
-    }
-    
-    .meta-info p {
-        margin: 0.25rem 0;
-    }
-    
-    .actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-    
-    @media (max-width: 768px) {
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>

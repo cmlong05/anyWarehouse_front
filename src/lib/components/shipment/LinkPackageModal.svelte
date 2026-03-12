@@ -40,7 +40,7 @@
                             <input 
                                 type="radio" 
                                 name="selectedPackage"
-                                class="radio radio-primary mr-3"
+                                class="w-5 h-5 rounded-full border-2 border-gray-300 cursor-pointer checked:border-blue-600 checked:bg-blue-600 mr-3"
                                 checked={selectedId === pkg.id}
                                 onchange={() => onSelect(pkg.id)}
                             />
@@ -65,61 +65,20 @@
             {/if}
             
             <div class="flex justify-end gap-3 mt-6">
-                <button class="btn btn-ghost" onclick={onClose}>取消</button>
-                <button class="btn btn-primary" 
-                        onclick={onLink} 
-                        disabled={linking || !selectedId || packages.length === 0}>
+                <button 
+                    class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-transparent text-gray-600 hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed" 
+                    onclick={onClose}
+                >
+                    取消
+                </button>
+                <button 
+                    class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed" 
+                    onclick={onLink} 
+                    disabled={linking || !selectedId || packages.length === 0}
+                >
                     {linking ? '关联中...' : '关联到发货单'}
                 </button>
             </div>
         </div>
     </div>
 {/if}
-
-<style>
-    .radio {
-        width: 1.25rem;
-        height: 1.25rem;
-        border-radius: 50%;
-        border: 2px solid #ccc;
-        cursor: pointer;
-    }
-
-    .radio:checked {
-        border-color: #1976d2;
-        background: #1976d2;
-    }
-
-    .btn {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-    .btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-ghost {
-        background: transparent;
-        color: #666;
-    }
-
-    .btn-ghost:hover:not(:disabled) {
-        background: #f0f0f0;
-    }
-
-    .btn-primary {
-        background: #1976d2;
-        color: white;
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        background: #1565c0;
-    }
-</style>

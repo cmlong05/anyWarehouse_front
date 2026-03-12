@@ -134,22 +134,22 @@
     }
 </script>
 
-<form onsubmit={handleSubmit}>
+<form onsubmit={handleSubmit} class="max-w-xl mx-auto">
     {#if mode === 'edit' && initialData.id}
-        <div class="container-id">
+        <div class="bg-gray-100 p-2 rounded-md mb-4 font-bold text-gray-500">
             容器ID: {initialData.id}
         </div>
     {/if}
     
     {#if containers.length > 0}
-        <div class="form-field">
-            <label for="parent">父容器</label>
+        <div class="mb-4">
+            <label for="parent" class="block mb-1 font-bold text-gray-700">父容器</label>
             {#if mode === 'add' && formData.parent}
                 <input 
                     type="text" 
                     value={formData.parent}
                     disabled
-                    class="readonly-input"
+                    class="w-full p-2 border border-gray-300 rounded-md bg-gray-100 text-gray-500 box-border"
                 />
             {:else}
                 <Svelecte
@@ -189,8 +189,8 @@
         oninput={(v) => formData.mark = v}
     />
 
-    <div class="form-field">
-        <label for="volume">总容量</label>
+    <div class="mb-4">
+        <label for="volume" class="block mb-1 font-bold text-gray-700">总容量</label>
         <NumberStepper
             id="volume"
             name="volume"
@@ -202,8 +202,8 @@
         />
     </div>
 
-    <div class="form-field">
-        <label for="zz_volume">自占体积</label>
+    <div class="mb-4">
+        <label for="zz_volume" class="block mb-1 font-bold text-gray-700">自占体积</label>
         <NumberStepper
             id="zz_volume"
             name="zz_volume"
@@ -215,8 +215,8 @@
         />
     </div>
 
-    <div class="form-field">
-        <label for="zz_weight">箱体自重</label>
+    <div class="mb-4">
+        <label for="zz_weight" class="block mb-1 font-bold text-gray-700">箱体自重</label>
         <NumberStepper
             id="zz_weight"
             name="zz_weight"
@@ -228,100 +228,17 @@
         />
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">
+    <div class="flex flex-col md:flex-row gap-4 mt-8 flex-wrap">
+        <button type="submit" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 w-full md:w-auto">
             {mode === 'add' ? '添加容器' : '保存修改'}
         </button>
-        <button type="button" class="btn btn-secondary" onclick={handleCancel}>
+        <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-gray-500 text-white hover:opacity-90 w-full md:w-auto" onclick={handleCancel}>
             取消
         </button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="btn btn-danger" onclick={handleDelete}>
+            <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-red-600 text-white hover:opacity-90 w-full md:w-auto" onclick={handleDelete}>
                 删除容器
             </button>
         {/if}
     </div>
 </form>
-
-<style>
-    form {
-        max-width: 500px;
-        margin: 0 auto;
-    }
-
-    form :global(.form-field) {
-        margin-bottom: 1rem;
-    }
-
-    .form-field label {
-        display: block;
-        margin-bottom: 0.25rem;
-        font-weight: bold;
-        color: #374151;
-    }
-
-    .readonly-input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        background-color: #f3f4f6;
-        color: #6b7280;
-        box-sizing: border-box;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 0.375rem;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 500;
-        transition: opacity 0.15s ease;
-    }
-
-    .btn:hover {
-        opacity: 0.9;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: white;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        color: white;
-    }
-
-    .container-id {
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 0.375rem;
-        margin-bottom: 1rem;
-        font-weight: bold;
-        color: #6c757d;
-    }
-
-    @media (max-width: 768px) {
-        .form-actions {
-            flex-direction: column;
-        }
-        
-        .btn {
-            width: 100%;
-        }
-    }
-</style>

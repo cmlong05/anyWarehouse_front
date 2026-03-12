@@ -9,74 +9,41 @@
     let { activeTab, componentsCount, whereUsedCount, onChange }: Props = $props();
 </script>
 
-<div class="tabs">
+<div class="flex flex-wrap gap-2 border-b-2 border-gray-200 mb-4">
     <button
-        class="tab-btn"
-        class:active={activeTab === 'components'}
+        class="px-4 py-3 md:px-3 md:py-2 md:text-sm border-none bg-transparent cursor-pointer text-gray-500 border-b-2 border-transparent -mb-0.5 transition-all duration-200 hover:text-gray-600"
+        class:text-blue-600={activeTab === 'components'}
+        class:border-b-blue-600={activeTab === 'components'}
+        class:font-medium={activeTab === 'components'}
         onclick={() => onChange('components')}
     >
         组件列表 ({componentsCount})
     </button>
     <button
-        class="tab-btn"
-        class:active={activeTab === 'tree'}
+        class="px-4 py-3 md:px-3 md:py-2 md:text-sm border-none bg-transparent cursor-pointer text-gray-500 border-b-2 border-transparent -mb-0.5 transition-all duration-200 hover:text-gray-600"
+        class:text-blue-600={activeTab === 'tree'}
+        class:border-b-blue-600={activeTab === 'tree'}
+        class:font-medium={activeTab === 'tree'}
         onclick={() => onChange('tree')}
     >
         BOM树
     </button>
     <button
-        class="tab-btn"
-        class:active={activeTab === 'total'}
+        class="px-4 py-3 md:px-3 md:py-2 md:text-sm border-none bg-transparent cursor-pointer text-gray-500 border-b-2 border-transparent -mb-0.5 transition-all duration-200 hover:text-gray-600"
+        class:text-blue-600={activeTab === 'total'}
+        class:border-b-blue-600={activeTab === 'total'}
+        class:font-medium={activeTab === 'total'}
         onclick={() => onChange('total')}
     >
         物料汇总
     </button>
     <button
-        class="tab-btn"
-        class:active={activeTab === 'whereUsed'}
+        class="px-4 py-3 md:px-3 md:py-2 md:text-sm border-none bg-transparent cursor-pointer text-gray-500 border-b-2 border-transparent -mb-0.5 transition-all duration-200 hover:text-gray-600"
+        class:text-blue-600={activeTab === 'whereUsed'}
+        class:border-b-blue-600={activeTab === 'whereUsed'}
+        class:font-medium={activeTab === 'whereUsed'}
         onclick={() => onChange('whereUsed')}
     >
         被用于 ({whereUsedCount})
     </button>
 </div>
-
-<style>
-    .tabs {
-        display: flex;
-        gap: 0.5rem;
-        border-bottom: 2px solid #dee2e6;
-        margin-bottom: 1rem;
-    }
-
-    .tab-btn {
-        padding: 0.75rem 1rem;
-        border: none;
-        background: none;
-        cursor: pointer;
-        color: #6c757d;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -2px;
-        transition: all 0.2s;
-    }
-
-    .tab-btn:hover {
-        color: #495057;
-    }
-
-    .tab-btn.active {
-        color: #1976d2;
-        border-bottom-color: #1976d2;
-        font-weight: 500;
-    }
-
-    @media (max-width: 768px) {
-        .tabs {
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
-        }
-    }
-</style>

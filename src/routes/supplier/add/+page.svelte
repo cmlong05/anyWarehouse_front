@@ -47,7 +47,7 @@
         <Alert error={error} onDismiss={() => error = ''} />
     {/if}
     
-    <div class="form-container">
+    <div class="bg-white p-8 rounded-lg border border-gray-200 md:p-6 sm:p-4">
         <SupplierForm 
             onSubmit={handleSubmit}
             onCancel={handleCancel}
@@ -56,18 +56,3 @@
         />
     </div>
 </PageContainer>
-
-<style>
-    .form-container {
-        background: white;
-        padding: 2rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    @media (max-width: 768px) {
-        .form-container {
-            padding: 1.5rem 1rem;
-        }
-    }
-</style>

@@ -158,14 +158,14 @@
     >
         {#snippet left()}
             {#if copyFromOrder}
-                <span class="copy-badge">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-amber-100 text-amber-700">
                     复制自: {copyFromOrder.order_number}
                 </span>
             {/if}
         {/snippet}
         {#snippet actions()}
             {#if customer}
-                <span class="customer-badge">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-sky-100 text-sky-700">
                     客户: {customer.name}
                 </span>
             {/if}
@@ -176,8 +176,11 @@
         <Loading text="加载中..." />
     {:else if error && !customer}
         <Alert error={error} />
-        <div class="actions">
-            <button class="btn btn-secondary" onclick={() => goto('/customer')}>
+        <div class="flex gap-4 mt-4">
+            <button 
+                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors" 
+                onclick={() => goto('/customer')}
+            >
                 返回客户列表
             </button>
         </div>
@@ -186,7 +189,7 @@
             <Alert error={error} onDismiss={() => error = ''} />
         {/if}
         
-        <div class="form-container">
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
             <SalesOrderForm
                 customerId={customer.id}
                 customer={customer}
@@ -201,36 +204,3 @@
         </div>
     {/if}
 </PageContainer>
-
-<style>
-    .customer-badge {
-        background: #e0f2fe;
-        color: #0369a1;
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-    
-    .copy-badge {
-        background: #fef3c7;
-        color: #92400e;
-        padding: 0.375rem 0.75rem;
-        border-radius: 9999px;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-    
-    .form-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-</style>

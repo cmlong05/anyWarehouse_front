@@ -78,33 +78,6 @@
         oninput={handleInput}
         onchange={handleChange}
         onblur={onblur}
+        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm transition-all duration-150 ease-in-out focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-70 placeholder:text-gray-400"
     />
 </FormField>
-
-<style>
-    input {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #d1d5db;
-        border-radius: 0.375rem;
-        font-size: 0.875rem;
-        transition: all 0.15s ease;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    
-    input:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    
-    input:disabled {
-        background-color: #f3f4f6;
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-    
-    input::placeholder {
-        color: #9ca3af;
-    }
-</style>

@@ -131,10 +131,15 @@
     
     function getOrderStatusClass(status: string): string {
         const map: Record<string, string> = {
-            'draft': 'draft', 'pending': 'pending', 'approved': 'approved',
-            'ordered': 'ordered', 'partial': 'partial', 'received': 'received', 'cancelled': 'cancelled',
+            'draft': 'bg-gray-100 text-gray-700',
+            'pending': 'bg-amber-100 text-amber-700',
+            'approved': 'bg-blue-100 text-blue-700',
+            'ordered': 'bg-emerald-100 text-emerald-700',
+            'partial': 'bg-amber-100 text-amber-700',
+            'received': 'bg-indigo-100 text-indigo-700',
+            'cancelled': 'bg-red-100 text-red-700',
         };
-        return map[status] || '';
+        return map[status] || 'bg-gray-100 text-gray-700';
     }
     
     $effect(() => {
@@ -159,7 +164,9 @@
     {:else if !supplier}
         <Alert error={error || "供应商不存在或已删除"} />
         <div class="mt-4">
-            <a href="/supplier" class="btn btn-secondary">返回供应商列表</a>
+            <a href="/supplier" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                返回供应商列表
+            </a>
         </div>
     {:else}
     <Breadcrumb items={[
@@ -184,72 +191,74 @@
         onDelete={() => showDeleteModal = true}
     />
     
-    <div class="detail-grid">
-        <div class="info-card">
-            <h3>基本信息</h3>
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="label">供应商编号</span>
-                    <span class="value code">{supplier!.code}</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-medium text-gray-700 pb-3 mb-4 border-b border-gray-200">基本信息</h3>
+            <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">供应商编号</span>
+                    <span class="text-gray-900 text-right font-mono text-gray-600">{supplier!.code}</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">联系人</span>
-                    <span class="value">{supplier!.contact_name || '-'}</span>
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">联系人</span>
+                    <span class="text-gray-900 text-right">{supplier!.contact_name || '-'}</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">联系电话</span>
-                    <span class="value">{supplier!.phone || '-'}</span>
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">联系电话</span>
+                    <span class="text-gray-900 text-right">{supplier!.phone || '-'}</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">电子邮箱</span>
-                    <span class="value">{supplier!.email || '-'}</span>
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">电子邮箱</span>
+                    <span class="text-gray-900 text-right">{supplier!.email || '-'}</span>
                 </div>
             </div>
         </div>
         
-        <div class="info-card">
-            <h3>备注</h3>
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="value">{supplier!.remark || '-'}</span>
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-medium text-gray-700 pb-3 mb-4 border-b border-gray-200">备注</h3>
+            <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-900 text-right">{supplier!.remark || '-'}</span>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- 最近采购订单 -->
-    <div class="orders-section">
-        <div class="section-header">
-            <h2>最近采购订单</h2>
-            <a href="/supplier/purchase-order?supplier_id={supplier!.id}" class="btn btn-primary btn-sm">查看全部</a>
+    <div class="py-6 border-t border-gray-200">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">最近采购订单</h2>
+            <a href="/supplier/purchase-order?supplier_id={supplier!.id}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
+                查看全部
+            </a>
         </div>
         
         {#if ordersLoading}
             <Loading text="加载订单..." />
         {:else if recentOrders.length === 0}
-            <div class="empty-state-small"><p>暂无采购订单</p></div>
+            <div class="text-center py-6 text-gray-500 text-sm"><p>暂无采购订单</p></div>
         {:else}
-            <div class="orders-table">
-                <table>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm">
                     <thead>
-                        <tr>
-                            <th>订单号</th>
-                            <th>下单日期</th>
-                            <th>状态</th>
-                            <th>金额</th>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">订单号</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">下单日期</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">状态</th>
+                            <th class="px-4 py-3 text-right font-semibold text-gray-700 border-b border-gray-200">金额</th>
                         </tr>
                     </thead>
                     <tbody>
                         {#each recentOrders as order}
-                            <tr class="clickable" onclick={() => goto(`/supplier/purchase-order/${order.id}`)}>
-                                <td class="code">{order.order_number}</td>
-                                <td>{order.order_date}</td>
-                                <td>
-                                    <span class="status-tag {getOrderStatusClass(order.status)}">
+                            <tr class="cursor-pointer hover:bg-gray-50 transition-colors" onclick={() => goto(`/supplier/purchase-order/${order.id}`)}>
+                                <td class="px-4 py-3 font-mono text-gray-600 border-b border-gray-200">{order.order_number}</td>
+                                <td class="px-4 py-3 text-gray-600 border-b border-gray-200">{order.order_date}</td>
+                                <td class="px-4 py-3 border-b border-gray-200">
+                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {getOrderStatusClass(order.status)}">
                                         {getStatusLabel(order.status)}
                                     </span>
                                 </td>
-                                <td class="numeric">¥{Number(order.total_amount).toFixed(2)}</td>
+                                <td class="px-4 py-3 font-mono text-right border-b border-gray-200">¥{Number(order.total_amount).toFixed(2)}</td>
                             </tr>
                         {/each}
                     </tbody>
@@ -272,27 +281,27 @@
     />
     
     <!-- 地址信息和其他信息 -->
-    <div class="detail-grid">
-        <div class="info-card">
-            <h3>地址信息</h3>
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="label">主地址</span>
-                    <span class="value">{supplier!.address || '-'}</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-medium text-gray-700 pb-3 mb-4 border-b border-gray-200">地址信息</h3>
+            <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">主地址</span>
+                    <span class="text-gray-900 text-right">{supplier!.address || '-'}</span>
                 </div>
             </div>
         </div>
         
-        <div class="info-card">
-            <h3>其他信息</h3>
-            <div class="info-list">
-                <div class="info-item">
-                    <span class="label">创建时间</span>
-                    <span class="value">{formatDate(supplier!.created_at)}</span>
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <h3 class="text-lg font-medium text-gray-700 pb-3 mb-4 border-b border-gray-200">其他信息</h3>
+            <div class="flex flex-col gap-3">
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">创建时间</span>
+                    <span class="text-gray-900 text-right">{formatDate(supplier!.created_at)}</span>
                 </div>
-                <div class="info-item">
-                    <span class="label">更新时间</span>
-                    <span class="value">{formatDate(supplier!.updated_at)}</span>
+                <div class="flex justify-between items-start gap-4">
+                    <span class="text-gray-500 text-sm flex-shrink-0">更新时间</span>
+                    <span class="text-gray-900 text-right">{formatDate(supplier!.updated_at)}</span>
                 </div>
             </div>
         </div>
@@ -300,8 +309,8 @@
     
     <!-- 底部操作区 -->
     {#if supplier}
-        <div class="bottom-actions">
-            <button class="btn btn-error" onclick={() => showDeleteModal = true}>删除供应商</button>
+        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-start">
+            <button class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors" onclick={() => showDeleteModal = true}>删除供应商</button>
         </div>
     {/if}
     {/if}
@@ -318,157 +327,3 @@
     onConfirm={handleDelete}
     onCancel={() => showDeleteModal = false}
 />
-
-<style>
-    .status-badge {
-        display: inline-block;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .status-badge.active { background-color: #d1fae5; color: #065f46; }
-    .status-badge.inactive { background-color: #fee2e2; color: #991b1b; }
-    
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-    
-    .info-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .info-card.full-width { grid-column: 1 / -1; }
-    
-    .info-card h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.1rem;
-        color: #374151;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    .info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .info-item .label { color: #6b7280; font-size: 0.875rem; flex-shrink: 0; }
-    .info-item .value { color: #1f2937; text-align: right; word-break: break-word; }
-    .info-item .value.code { font-family: monospace; color: #6b7280; }
-    
-    .orders-section, .quotations-section {
-        padding: 1.5rem 0;
-        border-top: 1px solid #e5e7eb;
-    }
-    
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    .section-header h2 {
-        margin: 0;
-        font-size: 1.25rem;
-        color: #1f2937;
-    }
-    
-    .section-actions { display: flex; gap: 0.5rem; }
-    .section-footer { margin-top: 1.5rem; display: flex; justify-content: flex-end; }
-    
-    .bottom-actions {
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: flex-start;
-    }
-    
-    .empty-state-small { text-align: center; padding: 1.5rem 0; color: #6b7280; font-size: 0.9rem; }
-    .empty-state { text-align: center; padding: 3rem 0; color: #6b7280; }
-    
-    .orders-table, .quotations-table { overflow-x: auto; }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-    }
-    
-    th, td {
-        padding: 0.75rem 1rem;
-        text-align: left;
-        border-bottom: 1px solid #e5e7eb;
-    }
-    
-    th { font-weight: 600; color: #374151; background-color: #f9fafb; }
-    td { color: #4b5563; }
-    
-    .numeric { font-family: monospace; text-align: right; }
-    .code { font-family: monospace; }
-    .clickable { cursor: pointer; }
-    .clickable:hover { background-color: #f3f4f6; }
-    
-    .status-tag {
-        display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .status-tag.draft { background-color: #f3f4f6; color: #4b5563; }
-    .status-tag.pending { background-color: #fef3c7; color: #92400e; }
-    .status-tag.approved { background-color: #dbeafe; color: #1e40af; }
-    .status-tag.ordered { background-color: #d1fae5; color: #065f46; }
-    .status-tag.partial { background-color: #fef3c7; color: #b45309; }
-    .status-tag.received { background-color: #e0e7ff; color: #3730a3; }
-    .status-tag.cancelled { background-color: #fee2e2; color: #991b1b; }
-    
-
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.125rem 0.5rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        margin-left: 0.5rem;
-    }
-    .badge-purple {
-        background-color: #e9d5ff;
-        color: #7c3aed;
-    }
-    .badge-blue {
-        background-color: #dbeafe;
-        color: #2563eb;
-    }
-    .badge-amber {
-        background-color: #fef3c7;
-        color: #d97706;
-    }
-    .rotate-90 {
-        transform: rotate(90deg);
-    }
-    
-    @media (max-width: 768px) {
-        .detail-grid { grid-template-columns: 1fr; }
-    }
-</style>
