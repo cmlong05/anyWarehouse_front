@@ -213,6 +213,27 @@ export function useOrderForm(
      * 更新明细项字段
      */
     function updateItemField(index: number, field: keyof OrderFormItem, value: unknown) {
+        if (field === 'quantity') {
+            const qty = Number(value) || 0;
+            if (qty <= 0) {
+                const item = formData.items[index];
+                if (item) {
+                    if (item.isVariantChild) {
+                        // simply remove the child row
+                        removeItem(index);
+                        return;
+                    }
+                    // parent template row has children?
+                    if (formData.items.some(i => i.parentId === item.id)) {
+                        formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
+                        return;
+                    }
+                    // normal item or orphan parent
+                    removeItem(index);
+                    return;
+                }
+            }
+        }
         formData.items = formData.items.map((item, i) => 
             i === index ? { ...item, [field]: value } : item
         );

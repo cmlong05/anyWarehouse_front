@@ -95,7 +95,12 @@
     );
 
     // 数量输入配置
+    // regular items require at least 1, but variant child rows may be left at
+    // zero (preloaded or intentionally unselected) and are filtered out on
+    // submit.  give them a lower min so the native browser validator doesn't
+    // block the form.
     const quantityMin = 1;
+    const variantQuantityMin = 0;
     const quantityStep = 1;
     const quantityDecimals = 0;
 
@@ -525,7 +530,7 @@ $effect(() => {
                                 <td class="px-4 py-3 text-right">
                                     <NumberStepper
                                         value={item.quantity}
-                                        min={item.isVariantChild ? quantityMin : (formData.items.some(i => i.parentId === item.id) ? 0 : quantityMin)}
+                                        min={item.isVariantChild ? variantQuantityMin : (formData.items.some(i => i.parentId === item.id) ? 0 : quantityMin)}
                                         step={quantityStep}
                                         decimalPlaces={quantityDecimals}
                                         size="sm"
