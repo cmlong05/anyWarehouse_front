@@ -1,6 +1,7 @@
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { localeStore } from '$lib/i18n/sales';
+
     import { 
         isVariantChild, 
         getVariantParentId, 
@@ -223,6 +224,7 @@
                         {@const shipped = getShippedQty(item)}
                         {@const pending = getPendingQty(item)}
                         {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
+                        {@const itemId = item.item_detail?.id}
                         <tr class={getRowClass(section)}>
                             <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'text-purple-600' : ''}">
                                 {#if section.type === 'variant'}
@@ -236,11 +238,9 @@
                                     {item.line_number}
                                 {/if}
                             </td>
-                            <td class="p-3 text-left border-b border-gray-100 font-mono">
-                                {#if section.type === 'variant'}
-                                    <div class="flex items-center gap-2 pl-4">
-                                        <span>{item.sku}</span>
-                                    </div>
+                            <td class="p-3 text-left border-b border-gray-100 font-mono {section.type === 'variant' ? 'pl-4' : ''}">
+                                {#if itemId}
+                                    <a href="/item/{itemId}" class="text-blue-600 hover:underline">{item.sku}</a>
                                 {:else}
                                     {item.sku}
                                 {/if}

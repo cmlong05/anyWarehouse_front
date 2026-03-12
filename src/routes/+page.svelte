@@ -58,7 +58,7 @@
             showResults = false;
         }
     }
-    
+
     // 组件销毁时清理定时器，防止内存泄漏
     onDestroy(() => {
         if (searchTimeout) {
@@ -70,8 +70,8 @@
 <svelte:window onclick={handleClickOutside} onkeydown={handleKeyDown} />
 
 <div class="max-w-3xl mx-auto my-8 p-8">
-    <h1 class="text-gray-800 mb-2">AnyWarehouse 仓库管理系统</h1>
-    <p>欢迎使用简易仓库管理系统</p>
+    <h1 class="text-gray-800 mb-2">简易资源管理系统</h1>
+    <p>欢迎使用简易企业资源管理系统</p>
     
     <div class="mt-8 mb-8">
         <div class="search-wrapper relative max-w-2xl mx-auto">
@@ -116,13 +116,13 @@
     <div class="mt-12 p-8 bg-gray-50 rounded-lg">
         <h3 class="mt-0 mb-6 text-gray-600">快速操作</h3>
         <div class="flex gap-4 md:flex-col">
-            <a href="/container/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
+            <a href="/container/add" class="inline-block px-6 py-3 bg-blue-500 !text-white visited:!text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加根容器
             </a>
-            <a href="/category/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
+            <a href="/category/add" class="inline-block px-6 py-3 bg-blue-500 !text-white visited:!text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加根分类
             </a>
-            <a href="/item/add" class="inline-block px-6 py-3 bg-blue-500 text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
+            <a href="/item/add" class="inline-block px-6 py-3 bg-blue-500 !text-white visited:!text-white font-bold text-center no-underline rounded transition-colors hover:bg-blue-600">
                 添加商品
             </a>
         </div>
