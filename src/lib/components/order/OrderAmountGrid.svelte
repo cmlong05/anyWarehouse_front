@@ -12,12 +12,25 @@
     interface Props {
         items: AmountItem[];
         title?: string;
+        currency?: string;
     }
     
-    let { items, title = '金额信息' }: Props = $props();
+    let { items, title = '金额信息', currency = 'CNY' }: Props = $props();
+    
+    // 获取货币符号
+    function getCurrencySymbol(curr: string): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[curr] || curr + ' ';
+    }
 
     function formatValue(item: AmountItem): string {
-        const prefix = item.prefix || '¥';
+        const prefix = item.prefix !== undefined ? item.prefix : getCurrencySymbol(currency);
         const value = safeParseFloat(item.value);
         const sign = item.isNegative ? '-' : '';
         return `${sign}${prefix}${value.toFixed(2)}`;

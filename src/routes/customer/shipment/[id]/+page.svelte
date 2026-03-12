@@ -37,6 +37,18 @@
         return classes[status] || 'bg-gray-100 text-gray-600';
     }
 
+    // 获取货币符号
+    function getCurrencySymbol(currency: string | undefined): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[currency || 'CNY'] || '¥';
+    }
+
     // 按钮变体样式
     function getButtonClass(variant: string): string {
         const base = 'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed';
@@ -274,7 +286,7 @@
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div><span class="text-gray-500">客户：</span><span class="text-gray-900">{shipment.order_detail?.customer_name}</span></div>
-                            <div><span class="text-gray-500">总金额：</span><span class="text-gray-900">¥{shipment.order_detail?.total_amount}</span></div>
+                            <div><span class="text-gray-500">总金额：</span><span class="text-gray-900">{getCurrencySymbol(shipment.order_detail?.currency)}{shipment.order_detail?.total_amount}</span></div>
                             <div><span class="text-gray-500">收货人：</span><span class="text-gray-900">{shipment.order_detail?.contact_person || '-'}</span></div>
                             <div><span class="text-gray-500">电话：</span><span class="text-gray-900">{shipment.order_detail?.contact_phone || '-'}</span></div>
                         </div>

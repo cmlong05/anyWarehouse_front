@@ -74,6 +74,7 @@
                                 <NumberStepper
                                     bind:value={item.quantityPlan}
                                     step={1}
+                                    decimalPlaces={0}
                                     size="sm"
                                 />
                                 <span class="text-xs text-gray-400">/ 建议最大 {item.quantityPendingReal.toFixed(0)}</span>

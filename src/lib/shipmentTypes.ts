@@ -93,6 +93,7 @@ export interface Shipment {
         contact_phone?: string;
         shipping_address?: string;
         total_amount?: string;
+        currency?: string;
     };
     items?: ShipmentItem[];
     packages?: PackageBrief[];

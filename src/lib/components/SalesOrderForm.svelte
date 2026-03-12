@@ -47,10 +47,22 @@
     // 标记是否已经处理过预加载数据（防止重复处理）
     let preloadProcessed = $state(false);
     
+    // 获取货币符号
+    function getCurrencySymbol(currency: string): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[currency] || currency + ' ';
+    }
+    
     // 转换为Svelecte选项格式
     const quotationOptions = $derived(quotations.map(q => ({
         value: q.id,
-        label: `${q.sku || '-'} - ${q.item_name || '-'} (¥${q.price})`,
+        label: `${q.sku || '-'} - ${q.item_name || '-'} (${getCurrencySymbol(q.currency)}${q.price})`,
         quotation: q
     })));
     

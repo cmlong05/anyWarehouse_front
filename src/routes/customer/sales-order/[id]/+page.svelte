@@ -199,6 +199,7 @@
         <!-- 金额信息 -->
         <OrderAmountGrid
             title={t('sales.amount.title', $localeStore)}
+            currency={order.currency || 'CNY'}
             items={[
                 { label: t('sales.field.subtotal', $localeStore), value: order.subtotal },
                 { label: t('sales.field.taxRate', $localeStore), value: `${order.tax_rate}%`, prefix: '' },
@@ -226,7 +227,8 @@
             {#key $localeStore}
             <OrderItemsTable 
                 items={order.items || []} 
-                type="sales" 
+                type="sales"
+                currency={order.currency || 'CNY'}
                 labels={{
                     title: t('sales.items.title', $localeStore),
                     itemName: t('sales.table.itemName', $localeStore),

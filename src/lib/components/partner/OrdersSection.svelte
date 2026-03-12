@@ -7,6 +7,7 @@
         order_date?: string;
         status?: string;
         total_amount?: string;
+        currency?: string;
     }
     
     interface Props {
@@ -56,7 +57,17 @@
                                     {getStatusLabel(order.status || '')}
                                 </span>
                             </td>
-                            <td class="p-3 px-4 text-right border-b border-gray-200 text-gray-600 font-mono">¥{Number(order.total_amount).toFixed(2)}</td>
+                            <td class="p-3 px-4 text-right border-b border-gray-200 text-gray-600 font-mono">
+                                {#if order.currency === 'USD'}
+                                    ${Number(order.total_amount).toFixed(2)}
+                                {:else if order.currency === 'EUR'}
+                                    €{Number(order.total_amount).toFixed(2)}
+                                {:else if order.currency === 'GBP'}
+                                    £{Number(order.total_amount).toFixed(2)}
+                                {:else}
+                                    ¥{Number(order.total_amount).toFixed(2)}
+                                {/if}
+                            </td>
                         </tr>
                     {/each}
                 </tbody>

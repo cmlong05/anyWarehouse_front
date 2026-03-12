@@ -400,6 +400,7 @@ export interface PurchaseOrder {
     shipping_cost: string;
     discount: string;
     total_amount: string;
+    currency?: string;
     shipping_address: string;
     contact_person: string;
     contact_phone: string;
@@ -797,10 +798,10 @@ export interface SalesOrderBrief {
     order_date: string;
     expected_delivery: string | null;
     total_amount: string;
+    currency?: string;
     item_count: number;
     total_quantity?: number;
     created_at: string;
-    currency?: string;
 }
 
 /** 创建销售订单请求 */

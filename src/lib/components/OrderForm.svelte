@@ -86,6 +86,43 @@
     // 获取已添加的 SKU 列表
     const addedSkus = $derived(new Set(formData.items.map(item => item.sku).filter(Boolean)));
     
+    // 创建报价ID到报价对象的映射，用于查找货币单位
+    const quotationMap = $derived(() => {
+        const map = new Map<number, { currency?: string }>();
+        quotationOptions.forEach(opt => {
+            const q = opt.quotation as { id?: number; currency?: string };
+            if (q?.id) {
+                map.set(q.id, q);
+            }
+        });
+        return map;
+    });
+    
+    // 获取订单主要货币单位（根据第一个有报价的明细项）
+    const orderCurrency = $derived(() => {
+        // 优先查找有数量的明细项对应的报价货币
+        for (const item of formData.items) {
+            if (item.quotation && item.quantity > 0) {
+                const q = quotationMap().get(item.quotation);
+                if (q?.currency) return q.currency;
+            }
+        }
+        // 如果没有找到，返回默认值
+        return 'CNY';
+    });
+    
+    // 获取货币符号
+    function getCurrencySymbol(currency: string): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[currency] || currency + ' ';
+    }
+    
     // 过滤掉已存在的 SKU
     const filteredQuotationOptions = $derived(
         quotationOptions.filter(opt => {
@@ -549,7 +586,7 @@ $effect(() => {
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">
-                                    ¥{(item.quantity * Number(item.unit_price)).toFixed(2)}
+                                    {getCurrencySymbol(item.quotation ? quotationMap().get(item.quotation)?.currency || 'CNY' : 'CNY')}{(item.quantity * Number(item.unit_price)).toFixed(2)}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <button
@@ -578,7 +615,7 @@ $effect(() => {
                     <tfoot class="bg-gray-50 font-medium">
                         <tr>
                             <td colspan="5" class="px-4 py-3 text-right text-gray-700">小计:</td>
-                            <td class="px-4 py-3 text-right text-gray-900">¥{subtotal.toFixed(2)}</td>
+                            <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency())}{subtotal.toFixed(2)}</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -646,23 +683,23 @@ $effect(() => {
             <div class="bg-gray-50 rounded-lg p-4 space-y-2 lg:col-span-1">
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">商品小计:</span>
-                    <span class="font-medium text-gray-900">¥{subtotal.toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{subtotal.toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">税额:</span>
-                    <span class="font-medium text-gray-900">¥{taxAmount.toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{taxAmount.toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">运费:</span>
-                    <span class="font-medium text-gray-900">¥{Number(formData.shipping_cost).toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{Number(formData.shipping_cost).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">折扣:</span>
-                    <span class="font-medium text-gray-900">-¥{Number(formData.discount).toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">-{getCurrencySymbol(orderCurrency())}{Number(formData.discount).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                     <span class="text-gray-900">订单总计:</span>
-                    <span class="text-blue-600">¥{totalAmount.toFixed(2)}</span>
+                    <span class="text-blue-600">{getCurrencySymbol(orderCurrency())}{totalAmount.toFixed(2)}</span>
                 </div>
             </div>
         </div>

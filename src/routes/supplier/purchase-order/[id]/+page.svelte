@@ -127,6 +127,7 @@
 
         <!-- 金额信息 -->
         <OrderAmountGrid
+            currency={order.currency || 'CNY'}
             items={[
                 { label: '商品小计', value: order.subtotal },
                 { label: '税率', value: `${order.tax_rate}%`, prefix: '' },
@@ -149,7 +150,7 @@
         />
 
         <!-- 订单明细 -->
-        <OrderItemsTable items={order.items || []} type="purchase" />
+        <OrderItemsTable items={order.items || []} type="purchase" currency={order.currency || 'CNY'} />
 
         <!-- 收货进度 -->
         {#if order.progress_percentage !== undefined}

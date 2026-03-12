@@ -99,9 +99,21 @@
         goto(`/supplier/purchase-order/${id}`);
     }
 
+    // 获取货币符号
+    function getCurrencySymbol(currency: string): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[currency] || currency + ' ';
+    }
+    
     // 格式化金额
-    function formatAmount(amount: string): string {
-        return `¥${parseFloat(amount).toFixed(2)}`;
+    function formatAmount(amount: string, currency: string = 'CNY'): string {
+        return `${getCurrencySymbol(currency)}${parseFloat(amount).toFixed(2)}`;
     }
 
     // 从URL获取供应商筛选
@@ -232,7 +244,7 @@
                 {:else if column.key === 'expected_delivery'}
                     <span class="text-gray-500">{value || '-'}</span>
                 {:else if column.key === 'total_amount'}
-                    <span class="font-medium text-gray-900">{formatAmount(value as string)}</span>
+                    <span class="font-medium text-gray-900">{formatAmount(value as string, (item as PurchaseOrderBrief).currency)}</span>
                 {:else}
                     <span class="text-gray-700">{value}</span>
                 {/if}

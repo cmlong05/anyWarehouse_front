@@ -149,7 +149,7 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
                 allQuotationPrices[q.sku] = {
                     price: parseFloat(q.price || '0'),
                     currency: q.currency || 'CNY',
-                    item: q.item
+                    item: q.item ?? null
                 };
             }
         });

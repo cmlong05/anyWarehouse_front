@@ -46,6 +46,18 @@
         return statusLabels[status] || status;
     }
     
+    // 获取货币符号
+    function getCurrencySymbol(currency: string | undefined): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[currency || 'CNY'] || '¥';
+    }
+    
     async function loadQuotations() {
         if (!supplier) return;
         quotationsLoading = true;
@@ -258,7 +270,7 @@
                                         {getStatusLabel(order.status)}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 font-mono text-right border-b border-gray-200">¥{Number(order.total_amount).toFixed(2)}</td>
+                                <td class="px-4 py-3 font-mono text-right border-b border-gray-200">{getCurrencySymbol(order.currency)}{Number(order.total_amount).toFixed(2)}</td>
                             </tr>
                         {/each}
                     </tbody>

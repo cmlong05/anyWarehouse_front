@@ -58,9 +58,22 @@
         showPrices?: boolean;
         type: 'sales' | 'purchase';
         labels?: Labels;
+        currency?: string;
     }
     
-    let { items, showPrices = true, type, labels = {} }: Props = $props();
+    let { items, showPrices = true, type, labels = {}, currency = 'CNY' }: Props = $props();
+    
+    // 获取货币符号
+    function getCurrencySymbol(curr: string): string {
+        const symbols: Record<string, string> = {
+            'CNY': '¥',
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£',
+            'JPY': '¥',
+        };
+        return symbols[curr] || curr + ' ';
+    }
 
     const defaultLabels: Labels = {
         title: '订单明细',
@@ -268,8 +281,8 @@
                             <td class="p-3 text-right border-b border-gray-100">{shipped}</td>
                             <td class="p-3 text-right border-b border-gray-100">{pending}</td>
                             {#if showPrices}
-                                <td class="p-3 text-right border-b border-gray-100">¥{safeParseFloat(item.unit_price).toFixed(2)}</td>
-                                <td class="p-3 text-right border-b border-gray-100">¥{safeParseFloat(item.line_total).toFixed(2)}</td>
+                                <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.unit_price).toFixed(2)}</td>
+                                <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.line_total).toFixed(2)}</td>
                             {/if}
                             <td class="p-3 text-left border-b border-gray-100">
                                 {#if isFullyProcessed(item)}
