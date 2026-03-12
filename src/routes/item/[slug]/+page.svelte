@@ -367,7 +367,7 @@
                         </div>
 
                         <!-- 属性网格 -->
-                        <div class="grid grid-cols-4 gap-3">
+                        <div class="grid grid-cols-3 gap-3">
                             <div class="p-3 bg-gray-50 rounded-lg text-center">
                                 <div class="text-xs text-gray-500 mb-1">重量</div>
                                 <div class="font-medium text-gray-900">{data.itemDetail.item.weight}g</div>
@@ -379,10 +379,6 @@
                             <div class="p-3 bg-gray-50 rounded-lg text-center">
                                 <div class="text-xs text-gray-500 mb-1">总库存</div>
                                 <div class="font-medium {getTotalStock() > 0 ? 'text-green-600' : 'text-red-600'}">{getTotalStock()}</div>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded-lg text-center">
-                                <div class="text-xs text-gray-500 mb-1">位置数</div>
-                                <div class="font-medium text-gray-900">{data.itemDetail.storages.length}</div>
                             </div>
                         </div>
 
