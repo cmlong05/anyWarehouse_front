@@ -60,6 +60,7 @@
                         totalPending={form.totalPending}
                         totalPrepared={form.totalPrepared}
                         onAdd={form.addItemToPlan}
+                        onAddAll={form.addAllToPlan}
                     />
                 {/snippet}
                 {#snippet selected()}

@@ -1,15 +1,17 @@
 <script lang="ts">
     import type { SalesOrderItem } from '$lib/index';
     import { safeParseFloat } from '$lib/utils';
+    import Plus from 'lucide-svelte/icons/plus';
 
     interface Props {
         items: SalesOrderItem[];
         totalPending: number;
         totalPrepared: number;
         onAdd: (item: SalesOrderItem) => void;
+        onAddAll?: () => void;
     }
     
-    let { items, totalPending, totalPrepared, onAdd }: Props = $props();
+    let { items, totalPending, totalPrepared, onAdd, onAddAll }: Props = $props();
     
     const subtitle = $derived(() => {
         let text = `待发: ${totalPending.toFixed(0)}`;
@@ -26,6 +28,18 @@
             <span>📋 订单明细</span>
             <span class="text-xs text-gray-500 font-normal">{subtitle()}</span>
         </h3>
+        {#if items.length > 0 && onAddAll}
+            <div class="mt-2">
+                <button 
+                    type="button" 
+                    class="w-full px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                    onclick={() => onAddAll?.()}
+                >
+                    <Plus class="h-4 w-4" />
+                    一键全部添加 ({items.length})
+                </button>
+            </div>
+        {/if}
     </div>
     
     {#if items.length > 0}

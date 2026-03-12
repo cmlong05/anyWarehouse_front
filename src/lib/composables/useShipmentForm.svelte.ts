@@ -177,6 +177,27 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         planItems = [...planItems, planItem];
     }
 
+    function addAllToPlan() {
+        const newItems = displayableOrderItems
+            .filter(orderItem => !planItems.some(p => p.orderItemId === orderItem.id))
+            .map(orderItem => {
+                const pendingReal = orderItem.quantity_pending_real || 0;
+                return {
+                    id: `plan_${orderItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    orderItemId: orderItem.id,
+                    sku: orderItem.sku,
+                    itemName: orderItem.item_name,
+                    quantityOrdered: Math.round(safeParseFloat(orderItem.quantity)),
+                    quantityShipped: Math.round(safeParseFloat(orderItem.quantity_shipped)),
+                    quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
+                    quantityPendingReal: Math.round(pendingReal),
+                    quantityPlan: Math.round(pendingReal)
+                };
+            });
+        
+        planItems = [...planItems, ...newItems];
+    }
+
     function removePlanItem(id: string) {
         planItems = planItems.filter(item => item.id !== id);
     }
@@ -286,6 +307,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         init,
         onOrderSelect,
         addItemToPlan,
+        addAllToPlan,
         removePlanItem,
         clearAllPlan,
         fillAllPending,
