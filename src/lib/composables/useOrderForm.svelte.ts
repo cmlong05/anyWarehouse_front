@@ -10,7 +10,7 @@ export interface OrderFormItem extends OrderItemCreateRequestBase {
     id?: string; // 临时 ID，用于列表渲染
     isVariantChild?: boolean; // 是否为变体子项
     parentId?: string; // 父项（母版）的临时 ID
-    variantAttributes?: string; // 变体属性组合（如 "红色 / XL"）
+    variantAttributes?: Array<{ value: string; color?: string }>; // 变体属性组合（带颜色）
 }
 
 export interface OrderFormData {

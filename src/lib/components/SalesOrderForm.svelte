@@ -10,6 +10,7 @@
         OrderFormItem
     } from '$lib';
     import type { ItemVariant } from '$lib/types/variant';
+    import { buildVariantAttributes } from '$lib/utils/variant';
     import OrderForm from './OrderForm.svelte';
     import { customerAPI } from '$lib/api';
     import { config } from '$lib/config';
@@ -199,10 +200,8 @@
                     ?? parseFloat(variantDetail?.b_Price || '0') 
                     ?? 0;
                 
-                // 构建变体属性字符串
-                const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
-                    av.value
-                ).filter(Boolean).join(' / ') || '';
+                // 构建变体属性数组
+                const attrValues = buildVariantAttributes(variant.attribute_values_detail);
                 
                 result.push({
                     id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,

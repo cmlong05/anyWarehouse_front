@@ -1,11 +1,13 @@
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { localeStore } from '$lib/i18n/sales';
-
-    interface VariantAttribute {
-        attribute: string;
-        value: string;
-    }
+    import { 
+        isVariantChild, 
+        getVariantParentId, 
+        getVariantAttributes,
+        type VariantAttribute 
+    } from '$lib/utils/variant';
+    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
 
     interface ItemDetail {
         id: number;
@@ -104,24 +106,6 @@
 
     function isFullyProcessed(item: OrderItem): boolean {
         return type === 'sales' ? !!item.is_fully_shipped : !!item.is_fully_received;
-    }
-
-    function isVariantChild(item: OrderItem): boolean {
-        const val = item.item_detail?.is_variant as boolean | string | number | undefined;
-        if (val === true) return true;
-        if (typeof val === 'string' && (val as string).toLowerCase() === 'true') return true;
-        if (val === 1 || val === '1') return true;
-        return false;
-    }
-
-    function getVariantParentId(item: OrderItem): number | null {
-        return item.item_detail?.parent_item_id || null;
-    }
-
-    function getVariantAttributesDisplay(item: OrderItem): string {
-        const attrs = item.item_detail?.variant_attributes;
-        if (!attrs || attrs.length === 0) return '';
-        return attrs.map(av => av.value).join(' / ');
     }
 
     // 按母版分组物品
@@ -238,7 +222,7 @@
                         {@const item = section.item}
                         {@const shipped = getShippedQty(item)}
                         {@const pending = getPendingQty(item)}
-                        {@const variantAttrs = section.type === 'variant' ? getVariantAttributesDisplay(item) : ''}
+                        {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                         <tr class={getRowClass(section)}>
                             <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'text-purple-600' : ''}">
                                 {#if section.type === 'variant'}
@@ -268,9 +252,7 @@
                                             <span class="text-gray-900">
                                                 {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
                                             </span>
-                                            {#if variantAttrs}
-                                                <span class="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{variantAttrs}</span>
-                                            {/if}
+                                            <VariantAttributeBadge attributes={variantAttrs} />
                                         </div>
                                     </div>
                                 {:else}

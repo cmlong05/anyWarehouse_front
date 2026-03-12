@@ -45,7 +45,7 @@ export interface ItemDetail {
     parent_item_id?: number | null;
     parent_item_name?: string;
     parent_item_sku?: string;
-    variant_attributes?: Array<{ attribute: string; value: string }>;
+    variant_attributes?: Array<{ attribute: string; value: string; color?: string }>;
 }
 
 /** 发货明细 */

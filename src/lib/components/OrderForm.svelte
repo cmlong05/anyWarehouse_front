@@ -9,6 +9,8 @@
     import { NumberStepper } from './ui';
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
+    import { buildVariantAttributes } from '$lib/utils/variant';
+    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
     
     export type OrderType = 'purchase' | 'sales';
     
@@ -264,10 +266,8 @@ $effect(() => {
                     // 优先使用预加载的报价价格，如果没有则使用基础价格
                     const unitPrice = preloadPrices[variantSku]?.price ?? parseFloat(variantDetail?.b_Price || '0') ?? 0;
                     
-                    // 构建变体属性字符串（从 attribute_values_detail 获取属性值名称）
-                    const attrValues = variant.attribute_values_detail?.map((av: { value?: string }) => 
-                        av.value
-                    ).filter(Boolean).join(' / ') || '';
+                    // 构建变体属性数组
+                    const attrValues = buildVariantAttributes(variant.attribute_values_detail);
                     
                     return {
                         id: `item_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 9)}`,
@@ -553,9 +553,7 @@ $effect(() => {
                                     {#if item.isVariantChild}
                                         <!-- 变体子项：显示物品名称和属性 -->
                                         <div class="text-gray-900">{item.item_name || '-'}</div>
-                                        {#if item.variantAttributes}
-                                            <div class="text-xs text-purple-600 mt-0.5">{item.variantAttributes}</div>
-                                        {/if}
+                                        <VariantAttributeBadge attributes={item.variantAttributes || []} class="mt-0.5" />
                                     {:else if item.quantity === 0 && formData.items.some(i => i.parentId === item.id)}
                                         <!-- 母版分组行 -->
                                         <span class="text-gray-500">{item.item_name || '-'}</span>

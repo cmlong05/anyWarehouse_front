@@ -91,26 +91,10 @@
         window.print();
     }
 
-    // 变体相关辅助函数
-    import type { ShipmentItem, ItemDetail } from '$lib/shipmentTypes';
-
-    function isVariantChild(item: ShipmentItem): boolean {
-        const val = item.item_detail?.is_variant as boolean | string | number | undefined;
-        if (val === true) return true;
-        if (typeof val === 'string' && (val as string).toLowerCase() === 'true') return true;
-        if (val === 1 || val === '1') return true;
-        return false;
-    }
-
-    function getVariantParentId(item: ShipmentItem): number | null {
-        return item.item_detail?.parent_item_id || null;
-    }
-
-    function getVariantAttributesDisplay(item: ShipmentItem): string {
-        const attrs = item.item_detail?.variant_attributes;
-        if (!attrs || attrs.length === 0) return '';
-        return attrs.map(av => av.value).join(' / ');
-    }
+    // 变体相关
+    import type { ShipmentItem } from '$lib/shipmentTypes';
+    import { isVariantChild, getVariantParentId, getVariantAttributes } from '$lib/utils/variant';
+    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
 
     // 按母版分组物品
     interface GroupedSection {
@@ -333,7 +317,7 @@
                                     {@const qty = safeParseFloat(item.quantity)}
                                     {@const packed = safeParseFloat(item.quantity_packed, 0)}
                                     {@const pending = qty - packed}
-                                    {@const variantAttrs = section.type === 'variant' ? getVariantAttributesDisplay(item) : ''}
+                                    {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                                     <tr class="{section.type === 'variant' ? 'bg-purple-50/50' : section.type === 'parent' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'} transition-colors">
                                         <td class="px-3 py-2.5 font-mono text-xs {section.type === 'variant' ? 'text-purple-600' : 'text-gray-600'}">
                                             {#if section.type === 'variant'}
@@ -349,9 +333,7 @@
                                                 <div class="flex flex-col gap-1 pl-4">
                                                     <div class="flex items-center gap-2">
                                                         <span>{item.product_name}</span>
-                                                        {#if variantAttrs}
-                                                            <span class="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{variantAttrs}</span>
-                                                        {/if}
+                                                        <VariantAttributeBadge attributes={variantAttrs} />
                                                     </div>
                                                 </div>
                                             {:else}
