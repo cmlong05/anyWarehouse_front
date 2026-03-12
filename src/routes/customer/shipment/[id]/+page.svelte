@@ -73,6 +73,90 @@
         if (!confirm(confirmMessage)) return;
         await shipmentDetail.executeAction(action);
     }
+
+    // 变体相关辅助函数
+    import type { ShipmentItem, ItemDetail } from '$lib/shipmentTypes';
+
+    function isVariantChild(item: ShipmentItem): boolean {
+        const val = item.item_detail?.is_variant as boolean | string | number | undefined;
+        if (val === true) return true;
+        if (typeof val === 'string' && (val as string).toLowerCase() === 'true') return true;
+        if (val === 1 || val === '1') return true;
+        return false;
+    }
+
+    function getVariantParentId(item: ShipmentItem): number | null {
+        return item.item_detail?.parent_item_id || null;
+    }
+
+    function getVariantAttributesDisplay(item: ShipmentItem): string {
+        const attrs = item.item_detail?.variant_attributes;
+        if (!attrs || attrs.length === 0) return '';
+        return attrs.map(av => av.value).join(' / ');
+    }
+
+    // 按母版分组物品
+    interface GroupedSection {
+        type: 'parent' | 'variant' | 'normal';
+        item: ShipmentItem;
+    }
+
+    function getGroupedSections(items: ShipmentItem[]): GroupedSection[] {
+        const result: GroupedSection[] = [];
+        const processed = new Set<number>();
+        
+        // 先找出所有变体子项并按母版分组
+        const variantsByParent = new Map<number, ShipmentItem[]>();
+        
+        for (const item of items) {
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
+                if (parentId) {
+                    if (!variantsByParent.has(parentId)) {
+                        variantsByParent.set(parentId, []);
+                    }
+                    variantsByParent.get(parentId)!.push(item);
+                }
+            }
+        }
+        
+        // 按原始顺序处理物品
+        for (const item of items) {
+            if (processed.has(item.id)) continue;
+            
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
+                if (parentId && variantsByParent.has(parentId)) {
+                    const variants = variantsByParent.get(parentId)!;
+                    
+                    // 插入母版行
+                    const firstVariant = variants[0];
+                    result.push({
+                        type: 'parent',
+                        item: {
+                            ...firstVariant,
+                            id: -parentId, // 负数ID避免冲突
+                            sku: firstVariant.item_detail?.parent_item_sku || '',
+                            product_name: firstVariant.item_detail?.parent_item_name || '',
+                            quantity: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0).toString(),
+                            quantity_packed: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_packed), 0).toString(),
+                        } as ShipmentItem,
+                    });
+                    
+                    // 插入变体子项
+                    for (const variant of variants) {
+                        result.push({ type: 'variant', item: variant });
+                        processed.add(variant.id);
+                    }
+                }
+            } else {
+                result.push({ type: 'normal', item });
+                processed.add(item.id);
+            }
+        }
+        
+        return result;
+    }
 </script>
 
 <svelte:head>
@@ -209,6 +293,7 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">发货计划明细</h2>
                 {#if shipment.items?.length}
+                    {@const sections = getGroupedSections(shipment.items)}
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm border-collapse">
                             <thead>
@@ -222,13 +307,36 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                {#each shipment.items as item}
+                                {#each sections as section}
+                                    {@const item = section.item}
                                     {@const qty = safeParseFloat(item.quantity)}
                                     {@const packed = safeParseFloat(item.quantity_packed, 0)}
                                     {@const pending = qty - packed}
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-3 py-2.5 font-mono text-xs text-gray-600">{item.sku}</td>
-                                        <td class="px-3 py-2.5 text-gray-900">{item.product_name}</td>
+                                    {@const variantAttrs = section.type === 'variant' ? getVariantAttributesDisplay(item) : ''}
+                                    <tr class="{section.type === 'variant' ? 'bg-purple-50/50' : section.type === 'parent' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'} transition-colors">
+                                        <td class="px-3 py-2.5 font-mono text-xs {section.type === 'variant' ? 'text-purple-600' : 'text-gray-600'}">
+                                            {#if section.type === 'variant'}
+                                                <div class="flex items-center gap-2 pl-4">
+                                                    <span>{item.sku}</span>
+                                                </div>
+                                            {:else}
+                                                {item.sku}
+                                            {/if}
+                                        </td>
+                                        <td class="px-3 py-2.5 text-gray-900">
+                                            {#if section.type === 'variant'}
+                                                <div class="flex flex-col gap-1 pl-4">
+                                                    <div class="flex items-center gap-2">
+                                                        <span>{item.product_name}</span>
+                                                        {#if variantAttrs}
+                                                            <span class="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{variantAttrs}</span>
+                                                        {/if}
+                                                    </div>
+                                                </div>
+                                            {:else}
+                                                {item.product_name}
+                                            {/if}
+                                        </td>
                                         <td class="px-3 py-2.5 text-right font-medium text-gray-900">{qty.toFixed(0)}</td>
                                         <td class="px-3 py-2.5 text-right text-green-600">{packed.toFixed(0)}</td>
                                         <td class="px-3 py-2.5 text-right {pending > 0 ? 'text-red-600' : 'text-gray-400'}">

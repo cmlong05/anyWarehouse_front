@@ -34,6 +34,20 @@ export interface TrackingNumberCreateRequest {
     remark?: string;
 }
 
+/** 物品详情（包含变体信息） */
+export interface ItemDetail {
+    id: number;
+    name: string;
+    name_en?: string;
+    SKU: string;
+    is_variant_template?: boolean;
+    is_variant?: boolean;
+    parent_item_id?: number | null;
+    parent_item_name?: string;
+    parent_item_sku?: string;
+    variant_attributes?: Array<{ attribute: string; value: string }>;
+}
+
 /** 发货明细 */
 export interface ShipmentItem {
     id: number;
@@ -48,6 +62,7 @@ export interface ShipmentItem {
     quantity_pending?: string;
     quantity_shipped?: string;  // 已发货数量（从订单同步）
     notes?: string;
+    item_detail?: ItemDetail;
     created_at: string;
     updated_at: string;
 }
@@ -152,6 +167,7 @@ export interface PackageItem {
     product_name: string;
     item?: number;
     notes?: string;
+    item_detail?: ItemDetail;
     created_at: string;
     updated_at: string;
 }

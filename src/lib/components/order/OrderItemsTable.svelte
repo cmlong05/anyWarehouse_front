@@ -2,6 +2,24 @@
     import { safeParseFloat } from '$lib/utils';
     import { localeStore } from '$lib/i18n/sales';
 
+    interface VariantAttribute {
+        attribute: string;
+        value: string;
+    }
+
+    interface ItemDetail {
+        id: number;
+        name: string;
+        name_en?: string;
+        SKU: string;
+        is_variant_template?: boolean;
+        is_variant?: boolean;
+        parent_item_id?: number | null;
+        parent_item_name?: string;
+        parent_item_sku?: string;
+        variant_attributes?: VariantAttribute[];
+    }
+
     interface OrderItem {
         line_number: number;
         sku: string;
@@ -15,6 +33,7 @@
         line_total?: string | number;
         is_fully_shipped?: boolean;
         is_fully_received?: boolean;
+        item_detail?: ItemDetail;
     }
 
     interface Labels {
@@ -73,6 +92,112 @@
     function isFullyProcessed(item: OrderItem): boolean {
         return type === 'sales' ? !!item.is_fully_shipped : !!item.is_fully_received;
     }
+
+    function isVariantChild(item: OrderItem): boolean {
+        const val = item.item_detail?.is_variant as boolean | string | number | undefined;
+        if (val === true) return true;
+        if (typeof val === 'string' && (val as string).toLowerCase() === 'true') return true;
+        if (val === 1 || val === '1') return true;
+        return false;
+    }
+
+    function getVariantParentId(item: OrderItem): number | null {
+        return item.item_detail?.parent_item_id || null;
+    }
+
+    function getVariantAttributesDisplay(item: OrderItem): string {
+        const attrs = item.item_detail?.variant_attributes;
+        if (!attrs || attrs.length === 0) return '';
+        return attrs.map(av => av.value).join(' / ');
+    }
+
+    // 按母版分组物品
+    interface GroupedSection {
+        type: 'parent' | 'variant' | 'normal';
+        item: OrderItem;
+        isFirstVariant?: boolean;
+    }
+
+    function getGroupedSections(items: OrderItem[]): GroupedSection[] {
+        const result: GroupedSection[] = [];
+        const processed = new Set<number>();
+        
+        // 先找出所有变体子项并按母版分组
+        const variantsByParent = new Map<number, OrderItem[]>();
+        const normalItems: OrderItem[] = [];
+        
+        for (const item of items) {
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
+                if (parentId) {
+                    if (!variantsByParent.has(parentId)) {
+                        variantsByParent.set(parentId, []);
+                    }
+                    variantsByParent.get(parentId)!.push(item);
+                } else {
+                    normalItems.push(item);
+                }
+            } else {
+                normalItems.push(item);
+            }
+        }
+        
+        // 按原始顺序处理物品
+        for (const item of items) {
+            if (processed.has(item.line_number)) continue;
+            
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
+                if (parentId && variantsByParent.has(parentId)) {
+                    const variants = variantsByParent.get(parentId)!;
+                    
+                    // 插入母版行（使用第一个变体的信息）
+                    const firstVariant = variants[0];
+                    result.push({
+                        type: 'parent',
+                        item: {
+                            ...firstVariant,
+                            line_number: firstVariant.line_number,
+                            sku: firstVariant.item_detail?.parent_item_sku || '',
+                            item_name: firstVariant.item_detail?.parent_item_name || '',
+                            quantity: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0).toString(),
+                            quantity_shipped: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_shipped), 0).toString(),
+                            quantity_received: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_received), 0).toString(),
+                        } as OrderItem,
+                    });
+                    
+                    // 插入变体子项
+                    for (let i = 0; i < variants.length; i++) {
+                        result.push({
+                            type: 'variant',
+                            item: variants[i],
+                            isFirstVariant: i === 0,
+                        });
+                        processed.add(variants[i].line_number);
+                    }
+                }
+            } else {
+                result.push({ type: 'normal', item });
+                processed.add(item.line_number);
+            }
+        }
+        
+        return result;
+    }
+
+    // 获取行样式类
+    function getRowClass(section: GroupedSection): string {
+        if (section.type === 'variant') {
+            return 'bg-purple-50/50';
+        }
+        if (section.type === 'parent') {
+            return 'bg-gray-100 font-medium';
+        }
+        return isFullyProcessed(section.item) ? 'opacity-70' : '';
+    }
+
+    // 分组后的物品列表
+    let groupedSections = $derived(getGroupedSections(items));
 </script>
 
 <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -96,14 +221,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {#each items as item}
+                    {#each groupedSections as section}
+                        {@const item = section.item}
                         {@const shipped = getShippedQty(item)}
                         {@const pending = getPendingQty(item)}
-                        <tr class="opacity-70" class:opacity-70={isFullyProcessed(item)}>
-                            <td class="p-3 text-left border-b border-gray-100">{item.line_number}</td>
-                            <td class="p-3 text-left border-b border-gray-100 font-mono">{item.sku}</td>
+                        {@const variantAttrs = section.type === 'variant' ? getVariantAttributesDisplay(item) : ''}
+                        <tr class={getRowClass(section)}>
+                            <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'text-purple-600' : ''}">
+                                {#if section.type === 'variant'}
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        <span>{item.line_number}</span>
+                                    </div>
+                                {:else}
+                                    {item.line_number}
+                                {/if}
+                            </td>
+                            <td class="p-3 text-left border-b border-gray-100 font-mono">
+                                {#if section.type === 'variant'}
+                                    <div class="flex items-center gap-2 pl-4">
+                                        <span>{item.sku}</span>
+                                    </div>
+                                {:else}
+                                    {item.sku}
+                                {/if}
+                            </td>
                             <td class="p-3 text-left border-b border-gray-100">
-                                {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
+                                {#if section.type === 'variant'}
+                                    <div class="flex flex-col gap-1 pl-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-900">
+                                                {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
+                                            </span>
+                                            {#if variantAttrs}
+                                                <span class="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{variantAttrs}</span>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                {:else}
+                                    {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
+                                {/if}
                             </td>
                             <td class="p-3 text-right border-b border-gray-100">{item.quantity}</td>
                             <td class="p-3 text-right border-b border-gray-100">{shipped}</td>

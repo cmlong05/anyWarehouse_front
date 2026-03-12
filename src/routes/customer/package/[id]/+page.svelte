@@ -86,6 +86,73 @@
             return () => window.removeEventListener('keydown', handler);
         }
     });
+
+    // 变体相关辅助函数
+    import type { ItemDetail } from '$lib/shipmentTypes';
+
+    interface PackageItemWithVariant extends PackageItem {
+        item_detail?: ItemDetail;
+    }
+
+    function isVariantChild(item: PackageItemWithVariant): boolean {
+        const val = item.item_detail?.is_variant as boolean | string | number | undefined;
+        if (val === true) return true;
+        if (typeof val === 'string' && (val as string).toLowerCase() === 'true') return true;
+        if (val === 1 || val === '1') return true;
+        return false;
+    }
+
+    function getVariantParentId(item: PackageItemWithVariant): number | null {
+        return item.item_detail?.parent_item_id || null;
+    }
+
+    function getVariantAttributesDisplay(item: PackageItemWithVariant): string {
+        const attrs = item.item_detail?.variant_attributes;
+        if (!attrs || attrs.length === 0) return '';
+        return attrs.map(av => av.value).join(' / ');
+    }
+
+    function getVariantParentInfo(item: PackageItemWithVariant): { sku?: string; name?: string } | null {
+        if (!item.item_detail?.is_variant) return null;
+        return {
+            sku: item.item_detail.parent_item_sku,
+            name: item.item_detail.parent_item_name
+        };
+    }
+
+    // 重新排序和分组包裹明细：母版在前，变体子项紧随其后
+    function getGroupedPackageItems(items: PackageItemWithVariant[]): PackageItemWithVariant[] {
+        const result: PackageItemWithVariant[] = [];
+        const processed = new Set<number>();
+        
+        // 先处理所有非变体子项（母版或普通物品）
+        for (const item of items) {
+            if (!isVariantChild(item)) {
+                result.push(item);
+                processed.add(item.id);
+                
+                // 找到该母版的所有变体子项并紧随添加
+                const parentId = item.item_detail?.id;
+                if (parentId) {
+                    for (const variant of items) {
+                        if (isVariantChild(variant) && getVariantParentId(variant) === parentId) {
+                            result.push(variant);
+                            processed.add(variant.id);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 添加剩余的变体子项（孤儿变体，找不到母版的情况）
+        for (const item of items) {
+            if (!processed.has(item.id)) {
+                result.push(item);
+            }
+        }
+        
+        return result;
+    }
 </script>
 
 <svelte:head>
@@ -245,6 +312,7 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold mb-4">包裹明细</h2>
                 {#if pkg.items && pkg.items.length > 0}
+                    {@const groupedItems = getGroupedPackageItems(pkg.items as PackageItemWithVariant[])}
                     <table class="table w-full">
                         <thead>
                             <tr class="bg-gray-50">
@@ -255,10 +323,42 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {#each pkg.items as item}
-                                <tr class="hover:bg-gray-50">
-                                    <td class="font-mono">{item.sku}</td>
-                                    <td>{item.product_name}</td>
+                            {#each groupedItems as item}
+                                {@const isVariant = isVariantChild(item)}
+                                {@const variantAttrs = getVariantAttributesDisplay(item)}
+                                <tr class="{isVariant ? 'bg-purple-50/50' : 'hover:bg-gray-50'}">
+                                    <td class="font-mono {isVariant ? 'text-purple-600' : ''}">
+                                        {#if isVariant}
+                                            <div class="flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                                <span>{item.sku}</span>
+                                            </div>
+                                        {:else}
+                                            {item.sku}
+                                        {/if}
+                                    </td>
+                                    <td>
+                                        {#if isVariant}
+                                            {@const parentInfo = getVariantParentInfo(item)}
+                                            <div class="flex flex-col gap-1">
+                                                {#if parentInfo}
+                                                    <span class="text-xs text-gray-500">
+                                                        母版: <span class="font-mono">{parentInfo.sku}</span> - {parentInfo.name}
+                                                    </span>
+                                                {/if}
+                                                <div class="flex items-center gap-2">
+                                                    <span>{item.product_name}</span>
+                                                    {#if variantAttrs}
+                                                        <span class="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">{variantAttrs}</span>
+                                                    {/if}
+                                                </div>
+                                            </div>
+                                        {:else}
+                                            {item.product_name}
+                                        {/if}
+                                    </td>
                                     <td class="text-right">{(parseFloat(item.quantity as string) || 0).toFixed(0)}</td>
                                     <td class="text-sm text-gray-500">
                                         {#if item.order_number}
