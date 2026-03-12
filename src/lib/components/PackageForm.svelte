@@ -331,7 +331,6 @@
                                                 <NumberStepper
                                                     bind:value={item.quantity}
                                                     min={1}
-                                                    max={item.maxQuantity}
                                                     step={1}
                                                     decimalPlaces={0}
                                                     size="sm"
