@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { safeParseFloat } from '$lib/utils';
+    import { safeParseFloat, formatNumber } from '$lib/utils';
     import { localeStore } from '$lib/i18n/sales';
 
     interface VariantAttribute {
@@ -277,9 +277,9 @@
                                     {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
                                 {/if}
                             </td>
-                            <td class="p-3 text-right border-b border-gray-100">{item.quantity}</td>
-                            <td class="p-3 text-right border-b border-gray-100">{shipped}</td>
-                            <td class="p-3 text-right border-b border-gray-100">{pending}</td>
+                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
+                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(shipped)}</td>
+                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(pending)}</td>
                             {#if showPrices}
                                 <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.unit_price).toFixed(2)}</td>
                                 <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.line_total).toFixed(2)}</td>

@@ -1,6 +1,7 @@
 <!-- container/[slug] 存储容器显示页面 -->
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
+    import { formatNumber } from '$lib/utils';
     
     interface Props {
         data: {
@@ -85,7 +86,7 @@
                 {#each data.containerRes.storages as storage}
                     <li>
                         <span class="width26">
-                            {storage.quantity}
+                            {formatNumber(storage.quantity)}
                         </span> *
                         <a href={`/item/${storage.item_id}`}>{storage.item_SKU}
                         </a>  - {storage.item_name}

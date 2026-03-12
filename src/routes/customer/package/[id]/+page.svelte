@@ -3,7 +3,7 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
     import { packageAPI } from '$lib/api';
-    import { formatDate } from '$lib/utils';
+    import { formatDate, formatNumber } from '$lib/utils';
     import type { Package, PackageItem } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -201,7 +201,7 @@
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">总数量</span>
-                        <p class="font-medium">{(parseFloat(pkg.total_quantity as string) || 0).toFixed(0)}</p>
+                        <p class="font-medium">{formatNumber(pkg.total_quantity)}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">重量</span>
@@ -359,7 +359,7 @@
                                             {item.product_name}
                                         {/if}
                                     </td>
-                                    <td class="text-right">{(parseFloat(item.quantity as string) || 0).toFixed(0)}</td>
+                                    <td class="text-right">{formatNumber(item.quantity)}</td>
                                     <td class="text-sm text-gray-500">
                                         {#if item.order_number}
                                             {item.order_number}

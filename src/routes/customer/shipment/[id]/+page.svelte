@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/state';
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
-    import { formatDate, safeParseFloat } from '$lib/utils';
+    import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
     import type { PackageItem } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
@@ -84,6 +84,11 @@
     async function handleAction(action: string, confirmMessage: string) {
         if (!confirm(confirmMessage)) return;
         await shipmentDetail.executeAction(action);
+    }
+
+    // 打印发货单
+    function printShipment() {
+        window.print();
     }
 
     // 变体相关辅助函数
@@ -175,21 +180,22 @@
     <title>发货详情 - {shipmentDetail.shipment?.shipment_no || '加载中...'} - AnyWarehouse</title>
 </svelte:head>
 
-<div class="max-w-6xl mx-auto px-4 py-6">
-    <!-- 头部 -->
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <button 
-                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors" 
-                aria-label="返回" 
-                onclick={shipmentDetail.goBack}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-            </button>
-            <h1 class="text-2xl font-bold text-gray-900">发货详情</h1>
+<div class="min-h-screen bg-gray-100 p-4 print:bg-white print:p-0">
+    <!-- 工具栏 -->
+        <div class="max-w-5xl mx-auto mb-4 flex justify-between items-center print:hidden">
+            <div class="flex gap-2">
+                <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600" onclick={shipmentDetail.goBack}>
+                    ← 返回
+                </button>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={printShipment}>
+                    🖨️ 打印
+                </button>
+            </div>
         </div>
+
+    <!-- 头部 -->
+    <div class="max-w-5xl mx-auto flex items-center justify-between mb-6 print:hidden">
+        <h1 class="text-2xl font-bold text-gray-900">发货详情</h1>
         
         {#if shipmentDetail.shipment}
             <div class="flex gap-2 flex-wrap">
@@ -232,13 +238,16 @@
     {/if}
 
     {#if shipmentDetail.loading}
-        <Loading />
+        <div class="max-w-5xl mx-auto">
+            <Loading />
+        </div>
     {:else if shipmentDetail.shipment}
         {@const shipment = shipmentDetail.shipment}
         
-        <div class="space-y-6">
+        <!-- 发货单文档 -->
+        <div class="max-w-5xl mx-auto space-y-6 print:max-w-full print:m-0">
             <!-- 基本信息 -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">基本信息</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
@@ -271,7 +280,7 @@
             </div>
 
             <!-- 关联订单 -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">关联订单</h2>
                 {#if shipment.order}
                     <div class="border border-gray-200 rounded-lg p-4">
@@ -302,7 +311,7 @@
             </div>
 
             <!-- 发货计划明细 -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">发货计划明细</h2>
                 {#if shipment.items?.length}
                     {@const sections = getGroupedSections(shipment.items)}
@@ -349,10 +358,10 @@
                                                 {item.product_name}
                                             {/if}
                                         </td>
-                                        <td class="px-3 py-2.5 text-right font-medium text-gray-900">{qty.toFixed(0)}</td>
-                                        <td class="px-3 py-2.5 text-right text-green-600">{packed.toFixed(0)}</td>
+                                        <td class="px-3 py-2.5 text-right font-medium text-gray-900">{formatNumber(qty)}</td>
+                                        <td class="px-3 py-2.5 text-right text-green-600">{formatNumber(packed)}</td>
                                         <td class="px-3 py-2.5 text-right {pending > 0 ? 'text-red-600' : 'text-gray-400'}">
-                                            {pending.toFixed(0)}
+                                            {formatNumber(pending)}
                                         </td>
                                         <td class="px-3 py-2.5 text-center">
                                             {#if pending === 0}
@@ -370,7 +379,7 @@
                     </div>
                     <div class="mt-4 flex gap-4 text-sm text-gray-600">
                         <span>总计: <strong class="text-gray-900">{shipment.items.length}</strong> 种商品</span>
-                        <span>总数量: <strong class="text-gray-900">{shipment.items.reduce((sum, i) => sum + parseFloat(i.quantity), 0).toFixed(0)}</strong></span>
+                        <span>总数量: <strong class="text-gray-900">{formatNumber(shipment.items.reduce((sum, i) => sum + safeParseFloat(i.quantity), 0))}</strong></span>
                     </div>
                 {:else}
                     <p class="text-gray-400">暂无发货计划明细</p>
@@ -378,10 +387,10 @@
             </div>
 
             <!-- 包裹列表 -->
-            <div class="bg-white rounded-lg shadow p-6">
+            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-900">包裹列表</h2>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 print:hidden">
                         <button 
                             class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                             onclick={() => shipmentDetail.openLinkPackageModal()}
@@ -424,7 +433,7 @@
                                     </div>
                                     <div><span class="text-gray-500">商品种类：</span><span class="text-gray-900">{pkg.items?.length || 0}</span></div>
                                     <div><span class="text-gray-500">总数量：</span>
-                                        <span class="text-gray-900">{(pkg.items?.reduce((sum: number, i: PackageItem) => sum + safeParseFloat(i.quantity, 0), 0) || 0).toFixed(0)}</span>
+                                        <span class="text-gray-900">{formatNumber(pkg.items?.reduce((sum: number, i: PackageItem) => sum + safeParseFloat(i.quantity, 0), 0) || 0)}</span>
                                     </div>
                                 </div>
                             </a>
@@ -471,3 +480,29 @@
         shipmentDetail.loadShipment();
     }}
 />
+
+<style>
+    /* 隐藏浏览器打印的页眉页脚 */
+    @page {
+        margin: 0;
+    }
+    
+    @media print {
+        /* 隐藏导航栏 */
+        :global(nav),
+        :global(.sticky) {
+            display: none !important;
+        }
+        
+        /* 页面边距 */
+        :global(body) {
+            margin: 1cm;
+        }
+        
+        /* 链接样式 */
+        :global(a) {
+            text-decoration: none !important;
+            color: inherit !important;
+        }
+    }
+</style>

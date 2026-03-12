@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { packageAPI } from '$lib/api';
-    import { formatDate } from '$lib/utils';
+    import { formatDate, formatNumber } from '$lib/utils';
     import type { PackageBrief } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -218,7 +218,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">{pkg.items?.length || 0}</td>
-                            <td class="px-4 py-3 text-right">{(parseFloat(pkg.total_quantity as string) || 0).toFixed(0)}</td>
+                            <td class="px-4 py-3 text-right">{formatNumber(pkg.total_quantity)}</td>
                             <td class="px-4 py-3 text-right">
                                 {pkg.weight ? `${parseFloat(pkg.weight).toFixed(3)} kg` : '-'}
                             </td>

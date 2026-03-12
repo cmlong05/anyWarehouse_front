@@ -7,6 +7,7 @@
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { localeStore } from '$lib/i18n/sales';
+    import { formatNumber } from '$lib/utils';
 
     let orderId = $derived(parseInt(page.params.id || '0'));
     let order = $state<SalesOrder | null>(null);
@@ -187,7 +188,7 @@
                             <td class="py-2 px-3 text-sm">
                                 {$localeStore === 'en' ? (item.item_name_en || item.item_name) : item.item_name}
                             </td>
-                            <td class="py-2 px-3 text-sm text-right">{item.quantity}</td>
+                            <td class="py-2 px-3 text-sm text-right">{formatNumber(item.quantity)}</td>
                             <td class="py-2 px-3 text-sm text-right">PCS</td>
                             <td class="py-2 px-3 text-sm text-right">${parseFloat(item.unit_price).toFixed(4)}</td>
                             <td class="py-2 px-3 text-sm text-right">${parseFloat(item.line_total).toFixed(2)}</td>

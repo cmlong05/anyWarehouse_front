@@ -1,5 +1,6 @@
 <script lang="ts">
     import Alert from '$lib/components/Alert.svelte';
+    import { formatNumber } from '$lib/utils';
 
     interface Item {
         id: number;
@@ -81,8 +82,8 @@
                                 <tr>
                                     <td class="p-3 text-left border-b border-gray-100 font-mono">{item.sku}</td>
                                     <td class="p-3 text-left border-b border-gray-100">{item.item_name}</td>
-                                    <td class="p-3 text-right border-b border-gray-100">{item.quantity}</td>
-                                    <td class="p-3 text-right border-b border-gray-100">{getProcessedQty(item)}</td>
+                                    <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
+                                    <td class="p-3 text-right border-b border-gray-100">{formatNumber(getProcessedQty(item))}</td>
                                     <td class="p-3 text-right border-b border-gray-100">
                                         <input
                                             type="number"

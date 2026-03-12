@@ -4,7 +4,7 @@
     import { goto } from '$app/navigation';
     import { purchaseOrderAPI } from '$lib/api';
     import type { PurchaseOrder, PurchaseOrderItem } from '$lib';
-    import { safeParseFloat } from '$lib/utils';
+    import { safeParseFloat, formatNumber } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { 
@@ -165,7 +165,7 @@
                         <div class="h-full bg-green-600 rounded transition-all duration-300" style="width: {order.progress_percentage}%"></div>
                     </div>
                     <div class="mt-2 text-sm text-gray-600">
-                        <span>已收: {order.total_received} / {order.total_quantity}</span>
+                        <span>已收: {formatNumber(order.total_received)} / {formatNumber(order.total_quantity)}</span>
                     </div>
                 </div>
             </div>

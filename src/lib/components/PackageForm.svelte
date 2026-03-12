@@ -1,7 +1,7 @@
 <script lang="ts">
     import { packageAPI, trackingNumberAPI, shipmentAPI } from '$lib/api';
     import type { TrackingNumberBrief, ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem } from '$lib/shipmentTypes';
-    import { safeParseFloat } from '$lib/utils';
+    import { safeParseFloat, formatNumber } from '$lib/utils';
     import { FormInput, FormSelect, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
@@ -262,13 +262,13 @@
         <!-- 双栏布局：使用通用组件 -->
         {#if selectedShipmentIds.length > 0}
             <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {getTotalQuantity()} 件)</small></h3>
+                <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
                 
                 <DualSelectionPanel
                     availableTitle="📋 发货单明细"
-                    availableSubtitle={`待添加: ${totalPending().toFixed(0)}`}
+                    availableSubtitle={`待添加: ${formatNumber(totalPending())}`}
                     selectedTitle="📦 包裹内容"
-                    selectedSubtitle={`已添加: ${totalAdded().toFixed(0)}`}
+                    selectedSubtitle={`已添加: ${formatNumber(totalAdded())}`}
                 >
                     {#snippet available()}
                         {#if availableItems().length > 0}
@@ -288,7 +288,7 @@
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{shipmentNo}</td>
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
                                             <td class="p-2 border-b border-gray-200">{item.product_name}</td>
-                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{maxQty.toFixed(0)}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{formatNumber(maxQty)}</td>
                                             <td class="text-center p-2 border-b border-gray-200">
                                                 <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700 transition-colors" onclick={() => addItemToPreview(shipmentId, item, maxQty)}>
                                                     添加
@@ -333,6 +333,7 @@
                                                     min={1}
                                                     max={item.maxQuantity}
                                                     step={1}
+                                                    decimalPlaces={0}
                                                     size="sm"
                                                 />
                                             </td>

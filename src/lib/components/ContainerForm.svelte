@@ -197,6 +197,7 @@
             value={formData.volume}
             min={1}
             step={1}
+            decimalPlaces={0}
             size="sm"
             onchange={(v) => formData.volume = v ?? 0}
         />

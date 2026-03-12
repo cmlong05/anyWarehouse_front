@@ -4,6 +4,7 @@
     import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
     import { localeStore } from '$lib/i18n/sales';
+    import { formatNumber } from '$lib/utils';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
     import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
@@ -528,7 +529,7 @@
                                                     </td>
                                                     <td class="px-2 sm:px-4 py-3 text-right">
                                                         <a href="/storage/{storage.id}" class="font-medium text-gray-900 hover:text-blue-600">
-                                                            {storage.quantity}
+                                                            {formatNumber(storage.quantity)}
                                                         </a>
                                                     </td>
                                                     <td class="px-2 sm:px-4 py-3">
@@ -644,7 +645,7 @@
                                                                 </td>
                                                                 <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
                                                                 <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                                <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                                <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
                                                                 <td class="px-4 py-3 text-center">
                                                                     {#if quotation.is_preferred}
                                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -672,7 +673,7 @@
                                                         </td>
                                                         <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
                                                         <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                        <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                        <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
                                                         <td class="px-4 py-3 text-center">
                                                             {#if quotation.is_preferred}
                                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -698,7 +699,7 @@
                                                         </td>
                                                         <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
                                                         <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                        <td class="px-4 py-3">{quotation.min_quantity}</td>
+                                                        <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
                                                         <td class="px-4 py-3 text-center">
                                                             {#if quotation.is_preferred}
                                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
