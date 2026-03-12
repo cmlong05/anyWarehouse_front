@@ -8,6 +8,7 @@
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
     import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
+    import Plus from 'lucide-svelte/icons/plus';
 
     let { data } = $props<{ 
         data: { 
@@ -481,9 +482,7 @@
                                         class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                                         onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
                                     >
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                        </svg>
+                                        <Plus class="h-5 w-5" />
                                         入库
                                     </button>
                                 </div>

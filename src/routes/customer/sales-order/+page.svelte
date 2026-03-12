@@ -10,6 +10,7 @@
     import { LocaleSwitcher } from '$lib/components/shipment';
     import Alert from '$lib/components/Alert.svelte';
     import { localeStore, t, getStatusText, getPriorityText } from '$lib/i18n/sales';
+    import Plus from 'lucide-svelte/icons/plus';
 
     // 客户列表
     let customers = $state<CustomerBrief[]>([]);
@@ -183,9 +184,7 @@
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                 onclick={() => goto('/customer')}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus class="h-5 w-5" />
                 {$localeStore === 'zh' ? '从客户创建' : 'Create from Customer'}
             </button>
         {/snippet}

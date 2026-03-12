@@ -6,6 +6,7 @@
     import type { PackageBrief } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
+    import Plus from 'lucide-svelte/icons/plus';
 
     let packages = $state<PackageBrief[]>([]);
     let loading = $state(true);
@@ -137,9 +138,7 @@
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold">包裹管理</h1>
         <button class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2" onclick={goToAdd}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus class="h-5 w-5 flex-shrink-0" />
             <span>新建包裹</span>
         </button>
     </div>

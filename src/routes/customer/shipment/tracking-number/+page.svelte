@@ -6,6 +6,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import Plus from 'lucide-svelte/icons/plus';
 
     let trackingNumbers: TrackingNumber[] = [];
     let loading = true;
@@ -195,9 +196,7 @@
             </div>
         </div>
         <button class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2" on:click={openCreateModal}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus class="h-5 w-5 flex-shrink-0" />
             <span>新建单号</span>
         </button>
     </div>

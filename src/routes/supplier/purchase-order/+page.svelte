@@ -8,6 +8,7 @@
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
     import Alert from '$lib/components/Alert.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
+    import Plus from 'lucide-svelte/icons/plus';
 
     // 供应商列表
     let suppliers = $state<SupplierBrief[]>([]);
@@ -142,9 +143,7 @@
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                 onclick={() => goto('/supplier')}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus class="h-5 w-5" />
                 从供应商创建
             </button>
         {/snippet}

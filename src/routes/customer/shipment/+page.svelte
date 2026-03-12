@@ -10,6 +10,7 @@
     import { DataTable, Pagination, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Alert from '$lib/components/Alert.svelte';
+    import Plus from 'lucide-svelte/icons/plus';
 
     let shipments = $state<Shipment[]>([]);
     let loading = $state(true);
@@ -167,9 +168,7 @@
                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
                 onclick={goToAdd}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
+                <Plus class="h-5 w-5 flex-shrink-0" />
                 <span>新建发货批次</span>
             </button>
         {/snippet}
