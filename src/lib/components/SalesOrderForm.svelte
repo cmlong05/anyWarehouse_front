@@ -269,6 +269,8 @@
         notes: salesOrder?.notes || undefined,
         internal_notes: salesOrder?.internal_notes || undefined,
         items: salesOrder?.items?.map(item => ({
+            id: `item_${item.id}`,  // 使用数据库 ID 生成临时 ID
+            dbId: item.id,  // 保存数据库 ID 用于更新
             item: item.item || null,
             sku: item.sku || '',
             item_name: item.item_name || '',

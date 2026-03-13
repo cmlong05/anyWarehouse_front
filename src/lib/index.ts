@@ -480,6 +480,20 @@ export interface PurchaseOrderUpdateRequest {
     notes?: string;
     internal_notes?: string;
     status?: PurchaseOrderStatus;
+    items?: PurchaseOrderItemUpdateRequest[];
+}
+
+/** 采购订单明细更新请求 */
+export interface PurchaseOrderItemUpdateRequest {
+    id?: number;  // 数据库 ID，有则更新，无则创建
+    item?: number | null;
+    sku?: string;
+    item_name?: string;
+    quantity: number;
+    unit_price: string | number;
+    quotation?: number | null;
+    expected_delivery?: string | null;
+    notes?: string;
 }
 
 /** 收货请求 */
@@ -837,6 +851,21 @@ export interface SalesOrderUpdateRequest {
     notes?: string;
     internal_notes?: string;
     status?: SalesOrderStatus;
+    items?: SalesOrderItemUpdateRequest[];
+}
+
+/** 销售订单明细更新请求 */
+export interface SalesOrderItemUpdateRequest {
+    id?: number;  // 数据库 ID，有则更新，无则创建
+    item?: number | null;
+    sku?: string;
+    item_name?: string;
+    item_name_en?: string;
+    quantity: number;
+    unit_price: number;
+    quotation?: number | null;
+    expected_delivery?: string | null;
+    notes?: string;
 }
 
 /** 发货请求 */

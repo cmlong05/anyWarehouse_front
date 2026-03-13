@@ -8,6 +8,7 @@ import { getTodayString } from '$lib/utils';
 
 export interface OrderFormItem extends OrderItemCreateRequestBase {
     id?: string; // 临时 ID，用于列表渲染
+    dbId?: number; // 数据库 ID，用于更新已有项
     isVariantChild?: boolean; // 是否为变体子项
     parentId?: string; // 父项（母版）的临时 ID
     variantAttributes?: Array<{ value: string; color?: string }>; // 变体属性组合（带颜色）
@@ -282,6 +283,7 @@ export function useOrderForm(
         const items = formData.items
             .filter(item => item.quantity > 0)
             .map(item => ({
+                id: item.dbId,  // 传递数据库 ID 用于识别已有项
                 item: item.item,
                 sku: item.sku,
                 item_name: item.item_name,
