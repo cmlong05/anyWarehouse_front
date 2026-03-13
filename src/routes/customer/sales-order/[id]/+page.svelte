@@ -19,8 +19,7 @@
         useOrderDetail, 
         useShipModal, 
         SALES_STATUS_MAP, 
-        SALES_STATUS_TRANSITIONS,
-        SHIPMENT_STATUS_MAP
+        SALES_STATUS_TRANSITIONS
     } from '$lib/composables/useOrderDetail.svelte';
     import { localeStore, t, getStatusText as getSalesStatusText } from '$lib/i18n/sales';
     import { getStatusText as getShipmentStatusText } from '$lib/i18n/shipment';
@@ -173,7 +172,17 @@
                 onStatusChange={(status) => orderDetail.changeStatus(status as string)}
             />
             {/key}
-            <LocaleSwitcher variant="button" />
+            <div class="flex items-center gap-3">
+                <!-- 打印 PI 按钮 -->
+                <button
+                    type="button"
+                    class="py-2 px-4 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    onclick={() => goto(`/customer/sales-order/${order.id}/pi`)}
+                >
+                    📄 打印 PI
+                </button>
+                <LocaleSwitcher variant="button" />
+            </div>
         </div>
 
         <!-- 基本信息 -->
@@ -187,6 +196,7 @@
                 urgent: { label: t('sales.priority.urgent', $localeStore), class: 'priority-urgent' },
             }}
             items={[
+                { label: t('sales.field.orderNumber', $localeStore), value: order.order_number },
                 { label: t('sales.field.customer', $localeStore), value: order.customer_detail?.name, href: `/customer/${order.customer}` },
                 { label: t('sales.field.priority', $localeStore), value: order.priority, format: 'priority' },
                 { label: t('sales.field.orderDate', $localeStore), value: order.order_date },
@@ -222,86 +232,73 @@
         />
         {/key}
 
-        <!-- 订单明细 + 关联发货单 -->
-        <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 mb-6">
-            {#key $localeStore}
-            <OrderItemsTable 
-                items={order.items || []} 
-                type="sales"
-                currency={order.currency || 'CNY'}
-                labels={{
-                    title: t('sales.items.title', $localeStore),
-                    itemName: t('sales.table.itemName', $localeStore),
-                    quantity: t('sales.table.quantity', $localeStore),
-                    shipped: t('sales.table.shipped', $localeStore),
-                    pendingShip: t('sales.table.pendingShip', $localeStore),
-                    unitPrice: t('sales.table.unitPrice', $localeStore),
-                    subtotal: t('sales.table.subtotal', $localeStore),
-                    status: t('sales.table.status', $localeStore),
-                    completed: t('sales.table.completed', $localeStore),
-                    partial: t('sales.table.partial', $localeStore),
-                    pending: t('sales.table.pending', $localeStore),
-                    noItems: t('sales.msg.noItems', $localeStore),
-                }}
-            />
-            {/key}
+        <!-- 订单明细 - 占据整行 -->
+        {#key $localeStore}
+        <OrderItemsTable 
+            items={order.items || []} 
+            type="sales"
+            currency={order.currency || 'CNY'}
+            labels={{
+                title: t('sales.items.title', $localeStore),
+                itemName: t('sales.table.itemName', $localeStore),
+                quantity: t('sales.table.quantity', $localeStore),
+                shipped: t('sales.table.shipped', $localeStore),
+                pendingShip: t('sales.table.pendingShip', $localeStore),
+                unitPrice: t('sales.table.unitPrice', $localeStore),
+                subtotal: t('sales.table.subtotal', $localeStore),
+                status: t('sales.table.status', $localeStore),
+                completed: t('sales.table.completed', $localeStore),
+                partial: t('sales.table.partial', $localeStore),
+                pending: t('sales.table.pending', $localeStore),
+                noItems: t('sales.msg.noItems', $localeStore),
+            }}
+        />
+        {/key}
 
-            <div class="flex flex-col gap-4 lg:order-none order-first">
-                <!-- 打印 PI 按钮 -->
-                <div class="bg-white rounded-lg p-6 shadow">
-                    <button
-                        type="button"
-                        class="w-full py-3 px-4 text-base font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                        onclick={() => goto(`/customer/sales-order/${order.id}/pi`)}
-                    >
-                        📄 打印 PI
-                    </button>
-                </div>
-
-                {#if ['confirmed', 'partial'].includes(order.status)}
-                    <div class="bg-white rounded-lg p-6 shadow">
-                        {#key $localeStore}
-                        <button
-                            type="button"
-                            class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                            onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
-                        >
-                            +{t('sales.btn.generateShipment', $localeStore)}
-                        </button>
-                        {/key}
-                    </div>
-                {/if}
-                
-                {#if order.shipments && order.shipments.length > 0}
-                    <div class="bg-white rounded-lg p-6 shadow">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">
-                            {t('sales.shipment.title', $localeStore)} ({order.shipments.length})
-                        </h3>
-                        <div class="flex flex-col gap-3">
-                            {#each order.shipments as shipment}
-                                <a 
-                                    href="/customer/shipment/{shipment.id}" 
-                                    class="block border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 cursor-pointer transition-all"
-                                >
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="font-medium text-gray-900">
-                                            {shipment.shipment_no}
-                                        </span>
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
-                                            {getShipmentStatusText(shipment.status, $localeStore)}
-                                        </span>
-                                    </div>
-                                    <div class="flex flex-col gap-1 text-sm text-gray-600">
-                                        <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
-                                        <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
-                                    </div>
-                                </a>
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
+        <!-- 生成发货单按钮 -->
+        {#if ['confirmed', 'partial'].includes(order.status)}
+            <div class="my-6">
+                {#key $localeStore}
+                <button
+                    type="button"
+                    class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
+                >
+                    +{t('sales.btn.generateShipment', $localeStore)}
+                </button>
+                {/key}
             </div>
-        </div>
+        {/if}
+
+        <!-- 关联发货单 - 单独一行 -->
+        {#if order.shipments && order.shipments.length > 0}
+            <div class="bg-white rounded-lg p-6 shadow mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    {t('sales.shipment.title', $localeStore)} ({order.shipments.length})
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {#each order.shipments as shipment}
+                        <a 
+                            href="/customer/shipment/{shipment.id}" 
+                            class="block border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 cursor-pointer transition-all"
+                        >
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-gray-900">
+                                    {shipment.shipment_no}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
+                                    {getShipmentStatusText(shipment.status, $localeStore)}
+                                </span>
+                            </div>
+                            <div class="flex flex-col gap-1 text-sm text-gray-600">
+                                <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
+                                <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
+                            </div>
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        {/if}
 
         <!-- 备注 -->
         {#if order.notes || order.internal_notes}

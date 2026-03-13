@@ -88,6 +88,7 @@ export interface Shipment {
     order_detail?: {
         id: number;
         order_number: string;
+        customer_id?: number;
         customer_name?: string;
         contact_person?: string;
         contact_phone?: string;

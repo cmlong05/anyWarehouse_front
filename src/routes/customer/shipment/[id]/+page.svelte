@@ -254,6 +254,15 @@
                         <span class="text-gray-500 text-sm block">更新时间</span>
                         <p class="font-medium text-gray-900">{formatDate(shipment.updated_at)}</p>
                     </div>
+                    <div>
+                        <span class="text-gray-500 text-sm block">客户</span>
+                        <a 
+                            href="/customer/{shipment.order_detail?.customer_id}" 
+                            class="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            {shipment.order_detail?.customer_name || '-'}
+                        </a>
+                    </div>
                 </div>
                 {#if shipment.notes}
                     <div class="mt-4 pt-4 border-t border-gray-100">
@@ -277,7 +286,6 @@
                             </span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div><span class="text-gray-500">客户：</span><span class="text-gray-900">{shipment.order_detail?.customer_name}</span></div>
                             <div><span class="text-gray-500">总金额：</span><span class="text-gray-900">{getCurrencySymbol(shipment.order_detail?.currency)}{shipment.order_detail?.total_amount}</span></div>
                             <div><span class="text-gray-500">收货人：</span><span class="text-gray-900">{shipment.order_detail?.contact_person || '-'}</span></div>
                             <div><span class="text-gray-500">电话：</span><span class="text-gray-900">{shipment.order_detail?.contact_phone || '-'}</span></div>
