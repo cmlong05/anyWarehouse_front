@@ -446,6 +446,45 @@
         <div class="bg-gray-50 p-4 rounded-lg mb-4">
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
             
+            <!-- 手动添加商品表单 - 独立一行 -->
+            <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
+                <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品（不关联发货单）:</div>
+                <div class="flex flex-wrap gap-2 items-end">
+                    <div class="flex-[2] min-w-[200px]">
+                        <Svelecte
+                            inputId="manual-item-select"
+                            valueAsObject={false}
+                            placeholder="搜索SKU或名称..."
+                            searchable={true}
+                            minQuery={1}
+                            fetch={itemSearchUrl}
+                            fetchCallback={handleItemFetch}
+                            valueField="value"
+                            labelField="label"
+                            bind:value={selectedItemId}
+                            onChange={(val: unknown) => handleItemSelect(val)}
+                            clearable={true}
+                        />
+                    </div>
+                    <div class="w-24">
+                        <input 
+                            type="number" 
+                            placeholder="数量" 
+                            bind:value={manualQuantity}
+                            min="1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    <button 
+                        type="button" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                        onclick={addManualItem}
+                    >
+                        添加
+                    </button>
+                </div>
+            </div>
+            
             {#if selectedShipmentIds.length > 0}
                 <DualSelectionPanel
                     availableTitle="📋 发货单明细"
@@ -489,45 +528,6 @@
                     {/snippet}
                     
                     {#snippet selected()}
-                        <!-- 手动添加商品表单 -->
-                        <div class="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
-                            <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品（不关联发货单）:</div>
-                            <div class="flex flex-wrap gap-2 items-end">
-                                <div class="flex-[2] min-w-[200px]">
-                                    <Svelecte
-                                        inputId="manual-item-select"
-                                        valueAsObject={false}
-                                        placeholder="搜索SKU或名称..."
-                                        searchable={true}
-                                        minQuery={1}
-                                        fetch={itemSearchUrl}
-                                        fetchCallback={handleItemFetch}
-                                        valueField="value"
-                                        labelField="label"
-                                        bind:value={selectedItemId}
-                                        onChange={(val: unknown) => handleItemSelect(val)}
-                                        clearable={true}
-                                    />
-                                </div>
-                                <div class="w-24">
-                                    <input 
-                                        type="number" 
-                                        placeholder="数量" 
-                                        bind:value={manualQuantity}
-                                        min="1"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
-                                    />
-                                </div>
-                                <button 
-                                    type="button" 
-                                    class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-                                    onclick={addManualItem}
-                                >
-                                    添加
-                                </button>
-                            </div>
-                        </div>
-                        
                         {#if packagePreviewItems.length > 0}
                             <div class="flex justify-end gap-2 mb-2">
                                 <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={clearAllItems}>清空</button>
@@ -577,48 +577,9 @@
                     {/snippet}
                 </DualSelectionPanel>
             {:else}
-                <!-- 没有发货单时，只显示包裹内容和手动添加表单 -->
+                <!-- 没有发货单时，只显示包裹内容 -->
                 <div class="bg-white p-4 rounded border">
                     <h4 class="text-sm font-semibold text-gray-700 mb-3">📦 包裹内容 <span class="font-normal text-gray-500">({formatNumber(totalAdded())} 件)</span></h4>
-                    
-                    <!-- 手动添加商品表单 -->
-                    <div class="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
-                        <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品:</div>
-                        <div class="flex flex-wrap gap-2 items-end">
-                            <div class="flex-[2] min-w-[200px]">
-                                <Svelecte
-                                    inputId="manual-item-select-no-shipment"
-                                    valueAsObject={false}
-                                    placeholder="搜索SKU或名称..."
-                                    searchable={true}
-                                    minQuery={1}
-                                    fetch={itemSearchUrl}
-                                    fetchCallback={handleItemFetch}
-                                    valueField="value"
-                                    labelField="label"
-                                    bind:value={selectedItemId}
-                                    onChange={(val: unknown) => handleItemSelect(val)}
-                                    clearable={true}
-                                />
-                            </div>
-                            <div class="w-24">
-                                <input 
-                                    type="number" 
-                                    placeholder="数量" 
-                                    bind:value={manualQuantity}
-                                    min="1"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
-                                />
-                            </div>
-                            <button 
-                                type="button" 
-                                class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-                                onclick={addManualItem}
-                            >
-                                添加
-                            </button>
-                        </div>
-                    </div>
                     
                     {#if packagePreviewItems.length > 0}
                         <div class="flex justify-end gap-2 mb-2">
