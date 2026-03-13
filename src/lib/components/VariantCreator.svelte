@@ -1,7 +1,7 @@
 <script lang="ts">
     import { config } from '$lib/config';
     import type { ItemAttribute, ItemAttributeValue, BulkCreateVariantsResponse } from '$lib/types/variant';
-    import AttributeManager from './AttributeManager.svelte';
+    import { NumberStepper } from '$lib/components/ui';
 
     interface Props {
         parentItemId: number;
@@ -282,13 +282,14 @@
                     </label>
                     {#if !inheritPrice}
                         <div class="pl-6">
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
+                            <NumberStepper
+                                value={defaultPrice ? Number(defaultPrice) : undefined}
+                                min={0}
+                                step={0.01}
+                                decimalPlaces={2}
                                 placeholder="输入价格"
-                                bind:value={defaultPrice}
-                                class="w-32 px-3 py-1.5 text-sm border border-gray-300 rounded focus:border-blue-400 focus:outline-none"
+                                size="sm"
+                                onchange={(v) => defaultPrice = v !== undefined ? String(v) : ''}
                             />
                         </div>
                     {/if}

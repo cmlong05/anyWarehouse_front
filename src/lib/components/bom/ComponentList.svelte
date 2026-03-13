@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ComponentDetail } from '$lib';
     import type { ComponentFormData } from '$lib/composables/useBOMManager.svelte';
+    import { NumberStepper } from '$lib/components/ui';
 
     interface Props {
         components: ComponentDetail[];
@@ -43,10 +44,28 @@
                     <div class="w-full">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="mb-3">
-                                <label class="block mb-1 text-sm text-gray-600">数量: <input type="number" bind:value={editData.quantity} min="1" max="999999" class="w-full p-2 border border-gray-300 rounded" /></label>
+                                <label for="edit-quantity-{component.id}" class="block mb-1 text-sm text-gray-600">数量:</label>
+                                <NumberStepper
+                                    id="edit-quantity-{component.id}"
+                                    value={editData.quantity}
+                                    min={1}
+                                    max={999999}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => editData.quantity = v ?? 1}
+                                />
                             </div>
                             <div class="mb-3">
-                                <label class="block mb-1 text-sm text-gray-600">排序: <input type="number" bind:value={editData.order} min="0" max="9999" class="w-full p-2 border border-gray-300 rounded" /></label>
+                                <label for="edit-order-{component.id}" class="block mb-1 text-sm text-gray-600">排序:</label>
+                                <NumberStepper
+                                    id="edit-order-{component.id}"
+                                    value={editData.order}
+                                    min={0}
+                                    max={9999}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => editData.order = v ?? 0}
+                                />
                             </div>
                         </div>
                         <div class="mb-3">

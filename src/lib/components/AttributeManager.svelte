@@ -1,7 +1,7 @@
 <script lang="ts">
     import { config } from '$lib/config';
     import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
-    import { FormInput } from '$lib/components/ui';
+    import { FormInput, NumberStepper } from '$lib/components/ui';
 
     interface Props {
         onSelect?: (attributeId: number, valueId: number) => void;
@@ -380,11 +380,14 @@
                                     bind:value={editAttrCode}
                                     class="w-24 px-3 py-1.5 text-sm border border-gray-300 rounded focus:border-blue-400 focus:outline-none"
                                 />
-                                <input
-                                    type="number"
+                                <NumberStepper
+                                    value={editAttrOrder}
+                                    min={0}
+                                    step={1}
+                                    decimalPlaces={0}
                                     placeholder="排序"
-                                    bind:value={editAttrOrder}
-                                    class="w-16 px-3 py-1.5 text-sm border border-gray-300 rounded focus:border-blue-400 focus:outline-none"
+                                    size="sm"
+                                    onchange={(v) => editAttrOrder = v ?? 0}
                                 />
                             </div>
                             <div class="flex gap-2">
@@ -454,11 +457,14 @@
                                             class="w-6 h-6 p-0 border border-gray-300 rounded cursor-pointer"
                                         />
                                     {/if}
-                                    <input
-                                        type="number"
-                                        bind:value={editValueOrder}
-                                        class="w-12 px-2 py-1 text-xs border border-gray-300 rounded"
+                                    <NumberStepper
+                                        value={editValueOrder}
+                                        min={0}
+                                        step={1}
+                                        decimalPlaces={0}
                                         placeholder="排序"
+                                        size="sm"
+                                        onchange={(v) => editValueOrder = v ?? 0}
                                     />
                                     <button
                                         onclick={() => saveValueEdit(value.id)}

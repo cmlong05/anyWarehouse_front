@@ -422,10 +422,50 @@
         <div class="bg-gray-50 p-4 rounded-lg mb-4">
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">尺寸重量</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <FormInput label="重量(kg)" name="weight" type="number" value={weight ?? ''} step={0.01} min={0} oninput={(v) => weight = v ? Number(v) : null} />
-                <FormInput label="长(cm)" name="length" type="number" value={length ?? ''} step={0.1} min={0} oninput={(v) => length = v ? Number(v) : null} />
-                <FormInput label="宽(cm)" name="width" type="number" value={width ?? ''} step={0.1} min={0} oninput={(v) => width = v ? Number(v) : null} />
-                <FormInput label="高(cm)" name="height" type="number" value={height ?? ''} step={0.1} min={0} oninput={(v) => height = v ? Number(v) : null} />
+                <div>
+                    <label for="weight" class="block text-sm text-gray-600 mb-1">重量(kg)</label>
+                    <NumberStepper
+                        id="weight"
+                        value={weight ?? undefined}
+                        min={0}
+                        step={0.01}
+                        decimalPlaces={2}
+                        onchange={(v) => weight = v ?? null}
+                    />
+                </div>
+                <div>
+                    <label for="length" class="block text-sm text-gray-600 mb-1">长(cm)</label>
+                    <NumberStepper
+                        id="length"
+                        value={length ?? undefined}
+                        min={0}
+                        step={0.1}
+                        decimalPlaces={1}
+                        onchange={(v) => length = v ?? null}
+                    />
+                </div>
+                <div>
+                    <label for="width" class="block text-sm text-gray-600 mb-1">宽(cm)</label>
+                    <NumberStepper
+                        id="width"
+                        value={width ?? undefined}
+                        min={0}
+                        step={0.1}
+                        decimalPlaces={1}
+                        onchange={(v) => width = v ?? null}
+                    />
+                </div>
+                <div>
+                    <label for="height" class="block text-sm text-gray-600 mb-1">高(cm)</label>
+                    <NumberStepper
+                        id="height"
+                        value={height ?? undefined}
+                        min={0}
+                        step={0.1}
+                        decimalPlaces={1}
+                        onchange={(v) => height = v ?? null}
+                    />
+                </div>
             </div>
         </div>
 
@@ -448,7 +488,7 @@
             
             <!-- 手动添加商品表单 - 独立一行 -->
             <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
-                <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品（不关联发货单）:</div>
+                <div class="text-xs text-blue-700 font-medium mb-2">添加商品:</div>
                 <div class="flex flex-wrap gap-2 items-end">
                     <div class="flex-[2] min-w-[200px]">
                         <Svelecte
@@ -466,13 +506,15 @@
                             clearable={true}
                         />
                     </div>
-                    <div class="w-24">
-                        <input 
-                            type="number" 
-                            placeholder="数量" 
-                            bind:value={manualQuantity}
-                            min="1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                    <div class="w-28">
+                        <NumberStepper
+                            value={manualQuantity ?? 1}
+                            min={1}
+                            step={1}
+                            decimalPlaces={0}
+                            size="sm"
+                            placeholder="数量"
+                            onchange={(v) => manualQuantity = v ?? 1}
                         />
                     </div>
                     <button 

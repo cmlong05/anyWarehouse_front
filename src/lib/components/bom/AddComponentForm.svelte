@@ -3,6 +3,7 @@
     import { config } from '$lib/config';
     import type { BaseItem } from '$lib';
     import type { ComponentFormData } from '$lib/composables/useBOMManager.svelte';
+    import { NumberStepper } from '$lib/components/ui';
 
     interface Props {
         itemId: number;
@@ -63,11 +64,27 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="mb-4">
                 <label for="comp-quantity" class="block mb-2 font-medium text-gray-600">数量:</label>
-                <input type="number" id="comp-quantity" bind:value={formData.quantity} min="1" max="999999" class="w-full p-2 border border-gray-300 rounded" />
+                <NumberStepper
+                    id="comp-quantity"
+                    value={formData.quantity}
+                    min={1}
+                    max={999999}
+                    step={1}
+                    decimalPlaces={0}
+                    onchange={(v) => formData.quantity = v ?? 1}
+                />
             </div>
             <div class="mb-4">
                 <label for="comp-order" class="block mb-2 font-medium text-gray-600">排序:</label>
-                <input type="number" id="comp-order" bind:value={formData.order} min="0" max="9999" class="w-full p-2 border border-gray-300 rounded" />
+                <NumberStepper
+                    id="comp-order"
+                    value={formData.order}
+                    min={0}
+                    max={9999}
+                    step={1}
+                    decimalPlaces={0}
+                    onchange={(v) => formData.order = v ?? 0}
+                />
             </div>
         </div>
 

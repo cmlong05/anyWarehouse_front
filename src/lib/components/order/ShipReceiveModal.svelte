@@ -1,6 +1,7 @@
 <script lang="ts">
     import Alert from '$lib/components/Alert.svelte';
     import { formatNumber } from '$lib/utils';
+    import { NumberStepper } from '$lib/components/ui';
 
     interface Item {
         id: number;
@@ -85,13 +86,14 @@
                                     <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
                                     <td class="p-3 text-right border-b border-gray-100">{formatNumber(getProcessedQty(item))}</td>
                                     <td class="p-3 text-right border-b border-gray-100">
-                                        <input
-                                            type="number"
-                                            min="0"
+                                        <NumberStepper
+                                            value={quantities[item.id] ?? 0}
+                                            min={0}
                                             max={getPendingQty(item)}
-                                            step="1"
-                                            bind:value={quantities[item.id]}
-                                            class="w-20 p-1.5 border border-gray-300 rounded text-right"
+                                            step={1}
+                                            decimalPlaces={0}
+                                            size="sm"
+                                            onchange={(v) => quantities[item.id] = v ?? 0}
                                         />
                                     </td>
                                 </tr>

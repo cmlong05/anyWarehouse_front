@@ -3,7 +3,7 @@
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
     import { goto } from '$app/navigation';
-    import { FormInput } from '$lib/components/ui';
+    import { FormInput, NumberStepper } from '$lib/components/ui';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -108,15 +108,17 @@
         />
     </div>
 
-    <FormInput
-        label="数量"
-        name="quantity"
-        type="number"
-        value={formData.quantity}
-        required
-        min={1}
-        oninput={(v) => formData.quantity = v}
-    />
+    <div class="mb-4">
+        <label for="quantity" class="block mb-1 font-bold text-gray-700">数量 <span class="text-red-600">*</span></label>
+        <NumberStepper
+            id="quantity"
+            value={typeof formData.quantity === 'string' ? parseInt(formData.quantity) : formData.quantity}
+            min={1}
+            step={1}
+            decimalPlaces={0}
+            onchange={(v) => formData.quantity = v ?? 1}
+        />
+    </div>
 
     <FormInput
         label="备注"

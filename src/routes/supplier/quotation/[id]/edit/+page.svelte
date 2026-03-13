@@ -8,7 +8,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
-    import { CurrencySelect } from '$lib/components/ui';
+    import {  NumberStepper } from '$lib/components/ui';
     
     let quotation = $state<Quotation | null>(null);
     let suppliers = $state<SupplierBrief[]>([]);
@@ -199,14 +199,14 @@
             <div class="flex gap-4 mb-4 flex-wrap">
                 <div class="flex-1 min-w-52">
                     <label for="price" class="block mb-1 font-medium">单价 <span class="text-red-600">*</span></label>
-                    <input 
-                        type="number" 
+                    <NumberStepper
                         id="price"
-                        step="0.01"
-                        min="0"
-                        bind:value={formData.price}
-                        required
-                        class="w-full p-2 border border-gray-300 rounded text-base"
+                        value={formData.price ? Number(formData.price) : undefined}
+                        min={0}
+                        step={0.01}
+                        decimalPlaces={2}
+                        placeholder="0.00"
+                        onchange={(v) => formData.price = v !== undefined ? String(v) : ''}
                     />
                 </div>
                 
@@ -223,12 +223,13 @@
                 
                 <div class="flex-1 min-w-52">
                     <label for="min_quantity" class="block mb-1 font-medium">最小订购量 (MOQ)</label>
-                    <input 
-                        type="number" 
+                    <NumberStepper
                         id="min_quantity"
-                        min="1"
-                        bind:value={formData.min_quantity}
-                        class="w-full p-2 border border-gray-300 rounded text-base"
+                        value={formData.min_quantity}
+                        min={1}
+                        step={1}
+                        decimalPlaces={0}
+                        onchange={(v) => formData.min_quantity = v ?? 1}
                     />
                 </div>
             </div>
@@ -236,13 +237,14 @@
             <div class="flex gap-4 mb-4 flex-wrap">
                 <div class="flex-1 min-w-52">
                     <label for="lead_time_days" class="block mb-1 font-medium">交货周期(天)</label>
-                    <input 
-                        type="number" 
+                    <NumberStepper
                         id="lead_time_days"
-                        min="1"
-                        bind:value={formData.lead_time_days}
+                        value={formData.lead_time_days ?? undefined}
+                        min={1}
+                        step={1}
+                        decimalPlaces={0}
                         placeholder="可选"
-                        class="w-full p-2 border border-gray-300 rounded text-base"
+                        onchange={(v) => formData.lead_time_days = v ?? null}
                     />
                 </div>
             </div>
