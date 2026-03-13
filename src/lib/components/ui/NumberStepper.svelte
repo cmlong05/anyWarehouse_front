@@ -2,7 +2,7 @@
     interface Props {
         id?: string;
         name?: string;
-        value?: number | undefined;
+        value?: number | null | undefined;
         min?: number;
         max?: number;
         step?: number;
@@ -11,13 +11,13 @@
         disabled?: boolean;
         size?: 'sm' | 'md' | 'lg';
         class?: string;
-        onchange?: (value: number | undefined) => void;
+        onchange?: (value: number | null | undefined) => void;
     }
     
     let {
         id,
         name,
-        value = $bindable(undefined),
+        value = $bindable(undefined as number | null | undefined),
         min = 0,
         max,
         step = 1,
@@ -41,7 +41,7 @@
     let isEditing = $state(false);
     
     // 格式化值用于显示
-    function formatValue(val: number | undefined): string {
+    function formatValue(val: number | null | undefined): string {
         if (val === undefined || val === null) return '';
         return Number(val).toFixed(decimalPlaces);
     }
@@ -58,7 +58,7 @@
         const rawValue = target.value;
         inputValue = rawValue;
         
-        const val = rawValue === '' ? undefined : parseFloat(rawValue);
+        const val = rawValue === '' ? null : parseFloat(rawValue);
         value = val;
         onchange?.(val);
     }

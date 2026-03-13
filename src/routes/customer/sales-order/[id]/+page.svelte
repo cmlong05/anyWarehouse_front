@@ -158,7 +158,7 @@
                 statusMap={SALES_STATUS_MAP}
                 transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
                 updating={orderDetail.updating}
-                canEdit={['draft', 'confirmed', 'approved'].includes(order.status)}
+                canEdit={['draft', 'pending', 'confirmed', 'approved'].includes(order.status)}
                 canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
                 labels={{
                     backToList: t('sales.btn.backToList', $localeStore),

@@ -545,13 +545,12 @@
                     </div>
                     <div class="w-28">
                         <NumberStepper
-                            value={manualQuantity ?? 1}
+                            bind:value={manualQuantity}
                             min={1}
                             step={1}
                             decimalPlaces={0}
                             size="sm"
                             placeholder="数量"
-                            onchange={(v) => manualQuantity = v ?? 1}
                         />
                     </div>
                     <button 
