@@ -63,12 +63,20 @@
     // 物品搜索 URL
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
     
+    // 物品缓存，用于快速查找
+    let itemCache = $state<Map<number, Item>>(new Map());
+    
     // 处理 fetch 返回的数据
     function handleItemFetch(json: unknown) {
         const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
+        // 缓存物品信息
+        items.forEach((item: Item) => {
+            itemCache.set(item.id, item);
+        });
         return items.map((item: Item) => ({
             value: item.id,
-            label: `${item.SKU} - ${item.name}`
+            label: `${item.SKU} - ${item.name}`,
+            item: item  // 保存完整物品信息供后续使用
         }));
     }
 
@@ -197,8 +205,16 @@
     
     // 手动添加商品到包裹
     async function addManualItem() {
-        if (!manualSku.trim() || !manualProductName.trim()) {
-            error = '请选择商品';
+        const sku = manualSku?.trim() || '';
+        const productName = manualProductName?.trim() || '';
+        
+        if (!sku) {
+            error = '请选择或输入SKU';
+            setTimeout(() => error = '', 2000);
+            return;
+        }
+        if (!productName) {
+            error = '请输入商品名称';
             setTimeout(() => error = '', 2000);
             return;
         }
@@ -209,7 +225,7 @@
         }
         
         // 检查是否已存在相同SKU
-        if (packagePreviewItems.find(p => p.sku === manualSku.trim())) {
+        if (packagePreviewItems.find(p => p.sku === sku)) {
             error = '该SKU已在包裹明细中';
             setTimeout(() => error = '', 2000);
             return;
@@ -220,8 +236,8 @@
             shipmentItemId: 0,  // 手动添加的没有关联的shipment_item
             shipmentId: 0, 
             shipmentNo: '-',  // 手动添加的显示为‘-’
-            sku: manualSku.trim(), 
-            productName: manualProductName.trim(), 
+            sku: sku, 
+            productName: productName, 
             quantity: manualQuantity, 
             maxQuantity: manualQuantity 
         }];
@@ -234,7 +250,15 @@
     }
     
     // 处理物品选择
-    async function handleItemSelect(selectedValue: unknown) {
+    function handleItemSelect(selectedValue: unknown) {
+        // 如果选择为空（清除选择）
+        if (selectedValue === null || selectedValue === undefined || selectedValue === '') {
+            manualSku = '';
+            manualProductName = '';
+            selectedItemId = null;
+            return;
+        }
+        
         let selectedId: number | null = null;
         
         if (typeof selectedValue === 'number') {
@@ -242,27 +266,53 @@
         } else if (typeof selectedValue === 'string') {
             selectedId = parseInt(selectedValue, 10);
         } else if (selectedValue && typeof selectedValue === 'object') {
-            const val = (selectedValue as Record<string, unknown>).value;
-            if (typeof val === 'number') {
-                selectedId = val;
-            } else if (typeof val === 'string') {
-                selectedId = parseInt(val, 10);
+            const obj = selectedValue as Record<string, unknown>;
+            // 如果有完整的物品信息直接使用
+            if (obj.item && typeof obj.item === 'object') {
+                const item = obj.item as Item;
+                manualSku = item.SKU || '';
+                manualProductName = item.name || '';
+                selectedItemId = item.id;
+                return;
             }
+            // 否则尝试获取 value
+            if (typeof obj.value === 'number') {
+                selectedId = obj.value;
+            } else if (typeof obj.value === 'string') {
+                selectedId = parseInt(obj.value, 10);
+            }
+        }
+        
+        // 如果无法解析出有效ID，则清空
+        if (!selectedId || isNaN(selectedId)) {
+            manualSku = '';
+            manualProductName = '';
+            selectedItemId = null;
+            return;
         }
         
         selectedItemId = selectedId;
         
-        if (selectedId) {
-            try {
-                const item = await itemAPI.get(selectedId);
+        // 从缓存中获取物品信息
+        if (itemCache.has(selectedId)) {
+            const item = itemCache.get(selectedId)!;
+            manualSku = item.SKU;
+            manualProductName = item.name;
+        } else {
+            // 如果缓存中没有，异步获取
+            itemAPI.get(selectedId).then(item => {
                 manualSku = item.SKU;
                 manualProductName = item.name;
-            } catch (err) {
+                itemCache.set(item.id, item);
+            }).catch(err => {
                 console.error('加载物品详情失败:', err);
-            }
-        } else {
-            manualSku = '';
-            manualProductName = '';
+                error = '加载物品详情失败';
+                setTimeout(() => error = '', 2000);
+                // 失败时清空
+                manualSku = '';
+                manualProductName = '';
+                selectedItemId = null;
+            });
         }
     }
 
@@ -454,8 +504,9 @@
                                         fetchCallback={handleItemFetch}
                                         valueField="value"
                                         labelField="label"
-                                        value={selectedItemId}
+                                        bind:value={selectedItemId}
                                         onChange={(val: unknown) => handleItemSelect(val)}
+                                        clearable={true}
                                     />
                                 </div>
                                 <div class="w-24">
@@ -545,8 +596,9 @@
                                     fetchCallback={handleItemFetch}
                                     valueField="value"
                                     labelField="label"
-                                    value={selectedItemId}
+                                    bind:value={selectedItemId}
                                     onChange={(val: unknown) => handleItemSelect(val)}
+                                    clearable={true}
                                 />
                             </div>
                             <div class="w-24">
