@@ -1,11 +1,14 @@
 <script lang="ts">
-    import { packageAPI, trackingNumberAPI, shipmentAPI } from '$lib/api';
-    import type { TrackingNumberBrief, ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem } from '$lib/shipmentTypes';
+    import { packageAPI, trackingNumberAPI, shipmentAPI, itemAPI } from '$lib/api';
+    import type { TrackingNumberBrief, ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest } from '$lib/shipmentTypes';
+    import type { Item } from '$lib';
     import { safeParseFloat, formatNumber } from '$lib/utils';
+    import { config } from '$lib/config';
     import { FormInput, FormSelect, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
+    import Svelecte from 'svelecte';
 
     interface Props {
         mode: 'create' | 'edit';
@@ -50,6 +53,24 @@
     let saving = $state(false);
     let error = $state('');
     let success = $state('');
+    
+    // 手动添加商品表单
+    let manualSku = $state('');
+    let manualProductName = $state('');
+    let manualQuantity = $state<number | null>(1);
+    let selectedItemId = $state<number | null>(null);
+    
+    // 物品搜索 URL
+    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
+    
+    // 处理 fetch 返回的数据
+    function handleItemFetch(json: unknown) {
+        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
+        return items.map((item: Item) => ({
+            value: item.id,
+            label: `${item.SKU} - ${item.name}`
+        }));
+    }
 
     // 计算属性
     const trackingOptions = $derived([{ value: '', label: '请选择快递单号' }, ...availableTrackingNumbers.map(t => ({ value: t.id.toString(), label: `${t.carrier_name} - ${t.tracking_no}` }))]);
@@ -116,11 +137,13 @@
                 packagePreviewItems = pkg.items.map(item => {
                     const shipmentId = item.shipment_item_detail?.shipment || 0;
                     const linkedShipment = linkedShipments.find(s => s.id === shipmentId);
+                    // 如果有 shipment_item 关联，则使用其ID；否则为0（手动添加的）
+                    const hasShipmentItem = item.shipment_item && item.shipment_item > 0;
                     return {
                         id: `existing-${item.id}`,
-                        shipmentItemId: item.shipment_item || 0,
+                        shipmentItemId: hasShipmentItem ? item.shipment_item! : 0,
                         shipmentId: shipmentId,
-                        shipmentNo: linkedShipment?.shipment_no || '-',
+                        shipmentNo: hasShipmentItem ? (linkedShipment?.shipment_no || '-') : '-',
                         sku: item.sku,
                         productName: item.product_name,
                         quantity: safeParseFloat(item.quantity),
@@ -143,7 +166,8 @@
     function removeShipmentDetail(shipmentId: number) { 
         selectedShipmentsDetail.delete(shipmentId); 
         selectedShipmentsDetail = new Map(selectedShipmentsDetail); 
-        packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId); 
+        // 只删除关联该发货单的明细，保留手动添加的商品（shipmentId 为 0 的）
+        packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId || item.shipmentId === 0); 
     }
 
     async function onShipmentToggle(shipmentId: number, checked: boolean) {
@@ -169,6 +193,77 @@
             quantity: maxQty, 
             maxQuantity: maxQty 
         }];
+    }
+    
+    // 手动添加商品到包裹
+    async function addManualItem() {
+        if (!manualSku.trim() || !manualProductName.trim()) {
+            error = '请选择商品';
+            setTimeout(() => error = '', 2000);
+            return;
+        }
+        if (!manualQuantity || manualQuantity < 1) {
+            error = '请输入有效的数量';
+            setTimeout(() => error = '', 2000);
+            return;
+        }
+        
+        // 检查是否已存在相同SKU
+        if (packagePreviewItems.find(p => p.sku === manualSku.trim())) {
+            error = '该SKU已在包裹明细中';
+            setTimeout(() => error = '', 2000);
+            return;
+        }
+        
+        packagePreviewItems = [...packagePreviewItems, { 
+            id: `manual-${Date.now()}`, 
+            shipmentItemId: 0,  // 手动添加的没有关联的shipment_item
+            shipmentId: 0, 
+            shipmentNo: '-',  // 手动添加的显示为‘-’
+            sku: manualSku.trim(), 
+            productName: manualProductName.trim(), 
+            quantity: manualQuantity, 
+            maxQuantity: manualQuantity 
+        }];
+        
+        // 清空表单
+        manualSku = '';
+        manualProductName = '';
+        manualQuantity = 1;
+        selectedItemId = null;
+    }
+    
+    // 处理物品选择
+    async function handleItemSelect(selectedValue: unknown) {
+        let selectedId: number | null = null;
+        
+        if (typeof selectedValue === 'number') {
+            selectedId = selectedValue;
+        } else if (typeof selectedValue === 'string') {
+            selectedId = parseInt(selectedValue, 10);
+        } else if (selectedValue && typeof selectedValue === 'object') {
+            const val = (selectedValue as Record<string, unknown>).value;
+            if (typeof val === 'number') {
+                selectedId = val;
+            } else if (typeof val === 'string') {
+                selectedId = parseInt(val, 10);
+            }
+        }
+        
+        selectedItemId = selectedId;
+        
+        if (selectedId) {
+            try {
+                const item = await itemAPI.get(selectedId);
+                manualSku = item.SKU;
+                manualProductName = item.name;
+            } catch (err) {
+                console.error('加载物品详情失败:', err);
+            }
+        } else {
+            manualSku = '';
+            manualProductName = '';
+        }
     }
 
     function removePreviewItem(id: string) { 
@@ -203,23 +298,42 @@
 
     async function handleSubmit() {
         if (!packageNo.trim()) { error = '请输入包裹编号'; return; }
-        if (selectedShipmentIds.length === 0) { error = '请至少选择一个发货单'; return; }
-        if (packagePreviewItems.length === 0 && mode === 'create') { error = '请至少添加一个商品到包裹'; return; }
+        if (selectedShipmentIds.length === 0 && mode === 'create') { error = '请至少选择一个发货单'; return; }
+        if (packagePreviewItems.length === 0) { error = '请至少添加一个商品到包裹'; return; }
 
         saving = true; error = ''; success = '';
         try {
-            // 使用第一个选中的发货单作为主关联
-            const primaryShipmentId = selectedShipmentIds[0];
-            const submitData = {
+            // 使用第一个选中的发货单作为主关联（如果有的话）
+            const primaryShipmentId = selectedShipmentIds.length > 0 ? selectedShipmentIds[0] : undefined;
+            
+            // 处理明细数据
+            const items = packagePreviewItems.map(item => {
+                if (item.shipmentItemId && item.shipmentItemId > 0) {
+                    // 关联发货单的明细
+                    return { shipment_item: item.shipmentItemId, quantity: item.quantity };
+                } else {
+                    // 手动添加的明细
+                    return { 
+                        sku: item.sku, 
+                        product_name: item.productName, 
+                        quantity: item.quantity 
+                    };
+                }
+            });
+            
+            const submitData: PackageCreateRequest = {
                 package_no: packageNo, 
                 sequence_no: 1,
-                weight: weight ?? undefined, length: length ?? undefined, 
-                width: width ?? undefined, height: height ?? undefined,
+                weight: weight ?? undefined, 
+                length: length ?? undefined, 
+                width: width ?? undefined, 
+                height: height ?? undefined,
                 tracking_number: trackingNumberId || undefined, 
                 notes: notes || undefined,
-                items: packagePreviewItems.map(item => ({ shipment_item: item.shipmentItemId, quantity: item.quantity })),
-                shipment_id: primaryShipmentId
+                items: items as PackageItemCreateRequest[],
+                ...(primaryShipmentId ? { shipment_id: primaryShipmentId } : {})
             };
+            
             let result: Package;
             if (mode === 'create') { 
                 result = await packageAPI.create(submitData); 
@@ -279,10 +393,10 @@
         </div>
 
         <!-- 双栏布局：使用通用组件 -->
-        {#if selectedShipmentIds.length > 0}
-            <div class="bg-gray-50 p-4 rounded-lg mb-4">
-                <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
-                
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
+            
+            {#if selectedShipmentIds.length > 0}
                 <DualSelectionPanel
                     availableTitle="📋 发货单明细"
                     availableSubtitle={`待添加: ${formatNumber(totalPending())}`}
@@ -325,10 +439,50 @@
                     {/snippet}
                     
                     {#snippet selected()}
+                        <!-- 手动添加商品表单 -->
+                        <div class="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
+                            <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品（不关联发货单）:</div>
+                            <div class="flex flex-wrap gap-2 items-end">
+                                <div class="flex-[2] min-w-[200px]">
+                                    <Svelecte
+                                        inputId="manual-item-select"
+                                        valueAsObject={false}
+                                        placeholder="搜索SKU或名称..."
+                                        searchable={true}
+                                        minQuery={1}
+                                        fetch={itemSearchUrl}
+                                        fetchCallback={handleItemFetch}
+                                        valueField="value"
+                                        labelField="label"
+                                        value={selectedItemId}
+                                        onChange={(val: unknown) => handleItemSelect(val)}
+                                    />
+                                </div>
+                                <div class="w-24">
+                                    <input 
+                                        type="number" 
+                                        placeholder="数量" 
+                                        bind:value={manualQuantity}
+                                        min="1"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <button 
+                                    type="button" 
+                                    class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                                    onclick={addManualItem}
+                                >
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+                        
                         {#if packagePreviewItems.length > 0}
                             <div class="flex justify-end gap-2 mb-2">
                                 <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={clearAllItems}>清空</button>
-                                <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={fillAllPending}>全部填充</button>
+                                {#if selectedShipmentIds.length > 0}
+                                    <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={fillAllPending}>全部填充</button>
+                                {/if}
                             </div>
                             <table class="w-full border-collapse text-sm">
                                 <thead>
@@ -371,8 +525,95 @@
                         {/if}
                     {/snippet}
                 </DualSelectionPanel>
-            </div>
-        {/if}
+            {:else}
+                <!-- 没有发货单时，只显示包裹内容和手动添加表单 -->
+                <div class="bg-white p-4 rounded border">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">📦 包裹内容 <span class="font-normal text-gray-500">({formatNumber(totalAdded())} 件)</span></h4>
+                    
+                    <!-- 手动添加商品表单 -->
+                    <div class="bg-blue-50 p-3 rounded-lg mb-3 border border-blue-200">
+                        <div class="text-xs text-blue-700 font-medium mb-2">直接添加商品:</div>
+                        <div class="flex flex-wrap gap-2 items-end">
+                            <div class="flex-[2] min-w-[200px]">
+                                <Svelecte
+                                    inputId="manual-item-select-no-shipment"
+                                    valueAsObject={false}
+                                    placeholder="搜索SKU或名称..."
+                                    searchable={true}
+                                    minQuery={1}
+                                    fetch={itemSearchUrl}
+                                    fetchCallback={handleItemFetch}
+                                    valueField="value"
+                                    labelField="label"
+                                    value={selectedItemId}
+                                    onChange={(val: unknown) => handleItemSelect(val)}
+                                />
+                            </div>
+                            <div class="w-24">
+                                <input 
+                                    type="number" 
+                                    placeholder="数量" 
+                                    bind:value={manualQuantity}
+                                    min="1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500"
+                                />
+                            </div>
+                            <button 
+                                type="button" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                                onclick={addManualItem}
+                            >
+                                添加
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {#if packagePreviewItems.length > 0}
+                        <div class="flex justify-end gap-2 mb-2">
+                            <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={clearAllItems}>清空</button>
+                        </div>
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">来源</th>
+                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
+                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品</th>
+                                    <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-24">数量</th>
+                                    <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {#each packagePreviewItems as item}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
+                                        <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
+                                        <td class="p-2 border-b border-gray-200">{item.productName}</td>
+                                        <td class="text-right p-2 border-b border-gray-200">
+                                            <NumberStepper
+                                                bind:value={item.quantity}
+                                                min={1}
+                                                step={1}
+                                                decimalPlaces={0}
+                                                size="sm"
+                                            />
+                                        </td>
+                                        <td class="text-center p-2 border-b border-gray-200">
+                                            <button type="button" class="px-2 py-1 bg-red-600 text-white rounded text-xs cursor-pointer" onclick={() => removePreviewItem(item.id)}>
+                                                删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    {:else}
+                        <div class="text-center p-12 text-gray-400 text-sm">
+                            <p>请使用上方表单添加商品</p>
+                        </div>
+                    {/if}
+                </div>
+            {/if}
+        </div>
 
         <!-- 备注 -->
         <div class="bg-gray-50 p-4 rounded-lg mb-4">
