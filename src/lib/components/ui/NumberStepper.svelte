@@ -17,7 +17,7 @@
     let {
         id,
         name,
-        value = $bindable(undefined as number | null | undefined),
+        value = $bindable<number | null | undefined>(undefined),
         min = 0,
         max,
         step = 1,

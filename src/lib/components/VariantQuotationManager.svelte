@@ -4,6 +4,7 @@
     import type { SupplierBrief, QuotationBrief, QuotationCreateRequest } from '$lib';
     import { NumberStepper, CurrencySelect } from '$lib/components/ui';
     import Svelecte from 'svelecte';
+    import { onMount } from 'svelte';
 
     interface Props {
         variants: ItemVariant[];
@@ -199,8 +200,8 @@
         label: `${s.name} (${s.code})`
     })));
 
-    // 初始化
-    $effect(() => {
+    // 修复：使用 onMount 替代 $effect 进行一次性初始化
+    onMount(() => {
         loadSuppliers();
     });
 

@@ -116,7 +116,7 @@
             min={1}
             step={1}
             decimalPlaces={0}
-            onchange={(v) => formData.quantity = v ?? 1}
+            onchange={(v) => formData.quantity = String(v ?? 1)}
         />
     </div>
 

@@ -614,7 +614,7 @@
                                             decimalPlaces={2}
                                             size="sm"
                                             placeholder="0.00"
-                                            onchange={(v) => line.price = v !== undefined ? v.toFixed(2) : ''}
+                                            onchange={(v) => line.price = v !== undefined && v !== null ? v.toFixed(2) : ''}
                                         />
                                     </td>
                                     <!-- 货币 -->

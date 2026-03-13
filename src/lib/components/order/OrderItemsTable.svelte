@@ -95,7 +95,8 @@
         noItems: '暂无明细',
     };
 
-    const l = { ...defaultLabels, ...labels };
+    // 使用 $derived 使标签对象具有响应性
+    const l = $derived({ ...defaultLabels, ...labels });
 
     function getShippedQty(item: OrderItem): number {
         return safeParseFloat(type === 'sales' ? item.quantity_shipped : item.quantity_received);

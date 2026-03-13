@@ -62,24 +62,32 @@
         is_variant_template: false
     });
     
-    // 当 initialData 变化时更新表单数据
+    // 标记是否已经初始化，避免重复设置
+    let initialized = $state(false);
+    
+    // 当 initialData 变化时更新表单数据（仅在未初始化时执行一次）
+    // 修复：使用 untrack 避免循环依赖，只在 initialData 变化时执行
     $effect(() => {
-        formData.SKU = initialData?.SKU || '';
-        formData.name = initialData?.name || '';
-        formData.name_en = initialData?.name_en || '';
-        formData.SKU_zite = initialData?.SKU_zite || '';
-        formData.SKU_A = initialData?.SKU_A || '';
-        formData.description = initialData?.description || '';
-        formData.image = initialData?.image || '';
-        formData.weight = initialData?.weight || '';
-        formData.p_volume = initialData?.p_volume || 0;
-        formData.s_volume = initialData?.s_volume || 0;
-        formData.b_Price = initialData?.b_Price || '';
-        formData.currency = initialData?.currency || 'CNY';
-        formData.in_fee = initialData?.in_fee || null;
-        formData.barcode = initialData?.barcode || '';
-        formData.category = initialData?.category || [];
-        formData.is_variant_template = initialData?.is_variant_template || false;
+        // 只在 mode 或 initialData 变化时执行初始化
+        if (!initialized && initialData) {
+            formData.SKU = initialData?.SKU || '';
+            formData.name = initialData?.name || '';
+            formData.name_en = initialData?.name_en || '';
+            formData.SKU_zite = initialData?.SKU_zite || '';
+            formData.SKU_A = initialData?.SKU_A || '';
+            formData.description = initialData?.description || '';
+            formData.image = initialData?.image || '';
+            formData.weight = initialData?.weight || '';
+            formData.p_volume = initialData?.p_volume || 0;
+            formData.s_volume = initialData?.s_volume || 0;
+            formData.b_Price = initialData?.b_Price || '';
+            formData.currency = initialData?.currency || 'CNY';
+            formData.in_fee = initialData?.in_fee || null;
+            formData.barcode = initialData?.barcode || '';
+            formData.category = initialData?.category || [];
+            formData.is_variant_template = initialData?.is_variant_template || false;
+            initialized = true;
+        }
     });
 
     let formLoading = $state(false);
@@ -88,22 +96,27 @@
     let previewUrl = $state<string>('');
     let imageUrlInput = $state<string>('');
 
-    const displayImageUrl = $derived(() => {
+    // 修复：displayImageUrl 应该是值而不是函数
+    const displayImageUrl = $derived((() => {
         if (previewUrl) return previewUrl;
         if (imageUrlInput) return imageUrlInput.startsWith('http') ? imageUrlInput : imageUrlInput;
         if (formData.image) return formData.image.startsWith('http') ? formData.image : formData.image;
         return '';
-    });
+    })());
 
+    // 当 formData.image 变化时更新 imageUrlInput
     $effect(() => {
-        if (formData.image && !imageUrlInput && !selectedFile) {
-            imageUrlInput = formData.image.startsWith('http') ? formData.image : formData.image;
+        const img = formData.image;
+        if (img && !imageUrlInput && !selectedFile) {
+            imageUrlInput = img.startsWith('http') ? img : img;
         }
     });
 
+    // 当 imageUrlInput 变化时更新 formData.image
     $effect(() => {
-        if (imageUrlInput && !selectedFile) {
-            formData.image = imageUrlInput;
+        const url = imageUrlInput;
+        if (url && !selectedFile) {
+            formData.image = url;
             previewUrl = '';
         }
     });
@@ -283,12 +296,12 @@
                     <div class="flex gap-2">
                         <input type="file" id="imageFile" accept="image/*" class="hidden" onchange={handleImageUpload} />
                         <button type="button" class="px-2 py-1 text-xs border border-blue-500 text-blue-500 rounded hover:bg-blue-500 hover:text-white transition-colors" onclick={() => document.getElementById('imageFile')?.click()}>选择</button>
-                        {#if displayImageUrl()}<button type="button" class="px-2 py-1 text-xs border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors" onclick={clearImage}>清除</button>{/if}
+                        {#if displayImageUrl}<button type="button" class="px-2 py-1 text-xs border border-red-500 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors" onclick={clearImage}>清除</button>{/if}
                     </div>
                 </div>
                 <div class="w-full h-[200px] border-2 border-dashed border-gray-300 rounded-lg overflow-hidden bg-gray-50 mb-2">
-                    {#if displayImageUrl()}
-                        <img src={displayImageUrl()} alt="商品图片预览" class="w-full h-full object-cover" onerror={handleImageError} />
+                    {#if displayImageUrl}
+                        <img src={displayImageUrl} alt="商品图片预览" class="w-full h-full object-cover" onerror={handleImageError} />
                         {#if imageError}<div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>图片加载失败</span></div>{/if}
                     {:else}
                         <div class="w-full h-full flex items-center justify-center text-gray-500 text-sm text-center px-1"><span>暂无图片</span></div>

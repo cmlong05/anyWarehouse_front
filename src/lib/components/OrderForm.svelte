@@ -60,8 +60,9 @@
         onCancel
     }: Props = $props();
     
-    // 使用 $derived 包裹 composable 调用以响应 props 变化
-    const orderForm = $derived(useOrderForm(partnerId, initialData));
+    // 直接使用 composable，不要用 $derived 包裹
+    // svelte-ignore state_referenced_locally
+    const orderForm = useOrderForm(partnerId, initialData);
     
     const {
         formData,
@@ -80,7 +81,7 @@
         updateItemField,
         setCurrentItemQuotation,
         prepareSubmitData,
-    } = $derived(orderForm);
+    } = orderForm;
 
     // Svelecte 选中值
     let selectedQuotation = $state<QuotationOption | undefined>(undefined);
@@ -89,7 +90,8 @@
     const addedSkus = $derived(new Set(formData.items.map(item => item.sku).filter(Boolean)));
     
     // 创建报价ID到报价对象的映射，用于查找货币单位
-    const quotationMap = $derived(() => {
+    // 修复：$derived 接收的是值，不是函数
+    const quotationMap = $derived((() => {
         const map = new Map<number, { currency?: string }>();
         quotationOptions.forEach(opt => {
             const q = opt.quotation as { id?: number; currency?: string };
@@ -98,20 +100,21 @@
             }
         });
         return map;
-    });
+    })());
     
     // 获取订单主要货币单位（根据第一个有报价的明细项）
-    const orderCurrency = $derived(() => {
+    // 修复：$derived 接收的是值，不是函数
+    const orderCurrency = $derived((() => {
         // 优先查找有数量的明细项对应的报价货币
         for (const item of formData.items) {
             if (item.quotation && item.quantity > 0) {
-                const q = quotationMap().get(item.quotation);
+                const q = quotationMap.get(item.quotation);
                 if (q?.currency) return q.currency;
             }
         }
         // 如果没有找到，返回默认值
         return 'CNY';
-    });
+    })());
     
     // 获取货币符号
     function getCurrencySymbol(currency: string): string {
@@ -143,25 +146,26 @@
     const quantityStep = 1;
     const quantityDecimals = 0;
 
-// --------------------------------------------------------
-// ensure that when initialData.items is populated (for example
-// after preload expansion) we copy those items into the underlying
-// formData.  useOrderForm only reads the initial data once, so
-// when the derived `initialData` value changes later we must
-// patch the state manually.  We only overwrite when the form
-// is still empty to avoid blowing away user edits.
-// --------------------------------------------------------
-$effect(() => {
-    if (initialData && Array.isArray(initialData.items) && initialData.items.length > 0) {
-        if (formData.items.length === 0) {
+    // --------------------------------------------------------
+    // ensure that when initialData.items is populated (for example
+    // after preload expansion) we copy those items into the underlying
+    // formData.  useOrderForm only reads the initial data once, so
+    // when the derived `initialData` value changes later we must
+    // patch the state manually.  We only overwrite when the form
+    // is still empty to avoid blowing away user edits.
+    // --------------------------------------------------------
+    // 修复：添加条件避免不必要的执行
+    $effect(() => {
+        const items = initialData?.items;
+        if (Array.isArray(items) && items.length > 0 && formData.items.length === 0) {
             // copy the array so that we don't hold a reference to the
             // original object; the objects themselves may carry the
             // isVariantChild/parentId flags which are important for
             // styling.
-            formData.items = initialData.items.map(i => ({ ...i }));
+            formData.items = items.map(i => ({ ...i }));
         }
-    }
-});
+    });
+
     function handleItemSelect(selected: QuotationOption | undefined) {
         selectedQuotation = selected;
         if (selected && 'quotation' in selected) {
@@ -584,7 +588,7 @@ $effect(() => {
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">
-                                    {getCurrencySymbol(item.quotation ? quotationMap().get(item.quotation)?.currency || 'CNY' : 'CNY')}{(item.quantity * Number(item.unit_price)).toFixed(2)}
+                                    {getCurrencySymbol(item.quotation ? quotationMap.get(item.quotation)?.currency || 'CNY' : 'CNY')}{(item.quantity * Number(item.unit_price)).toFixed(2)}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <button
@@ -613,7 +617,7 @@ $effect(() => {
                     <tfoot class="bg-gray-50 font-medium">
                         <tr>
                             <td colspan="5" class="px-4 py-3 text-right text-gray-700">小计:</td>
-                            <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency())}{subtotal.toFixed(2)}</td>
+                            <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency)}{subtotal.toFixed(2)}</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -681,23 +685,23 @@ $effect(() => {
             <div class="bg-gray-50 rounded-lg p-4 space-y-2 lg:col-span-1">
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">商品小计:</span>
-                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{subtotal.toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{subtotal.toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">税额:</span>
-                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{taxAmount.toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{taxAmount.toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">运费:</span>
-                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency())}{Number(formData.shipping_cost).toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{Number(formData.shipping_cost).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">折扣:</span>
-                    <span class="font-medium text-gray-900">-{getCurrencySymbol(orderCurrency())}{Number(formData.discount).toFixed(2)}</span>
+                    <span class="font-medium text-gray-900">-{getCurrencySymbol(orderCurrency)}{Number(formData.discount).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                     <span class="text-gray-900">订单总计:</span>
-                    <span class="text-blue-600">{getCurrencySymbol(orderCurrency())}{totalAmount.toFixed(2)}</span>
+                    <span class="text-blue-600">{getCurrencySymbol(orderCurrency)}{totalAmount.toFixed(2)}</span>
                 </div>
             </div>
         </div>
