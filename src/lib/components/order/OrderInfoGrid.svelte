@@ -52,7 +52,7 @@
                         {formatValue(item)}
                     </span>
                 {:else if item.href}
-                    <a href={item.href} class="font-medium text-gray-900 hover:text-blue-600 hover:underline">
+                    <a href={item.href} class="font-medium text-gray-900">
                         {formatValue(item)}
                     </a>
                 {:else}

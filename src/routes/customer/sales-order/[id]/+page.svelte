@@ -279,14 +279,14 @@
                         </h3>
                         <div class="flex flex-col gap-3">
                             {#each order.shipments as shipment}
-                                <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <a 
+                                    href="/customer/shipment/{shipment.id}" 
+                                    class="block border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 cursor-pointer transition-all"
+                                >
                                     <div class="flex justify-between items-center mb-2">
-                                        <a 
-                                            href="/customer/shipment/{shipment.id}" 
-                                            class="font-semibold text-blue-600 hover:underline"
-                                        >
+                                        <span class="font-medium text-gray-900">
                                             {shipment.shipment_no}
-                                        </a>
+                                        </span>
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
                                             {getShipmentStatusText(shipment.status, $localeStore)}
                                         </span>
@@ -295,7 +295,7 @@
                                         <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
                                         <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
                                     </div>
-                                </div>
+                                </a>
                             {/each}
                         </div>
                     </div>

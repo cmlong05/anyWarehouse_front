@@ -79,6 +79,8 @@
     }
     
     function handleWheel(e: WheelEvent) {
+        // 只有在编辑状态（聚焦）时才响应滚轮
+        if (!isEditing) return;
         e.preventDefault();
         if (disabled) return;
         if (e.deltaY < 0) {

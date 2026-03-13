@@ -267,14 +267,14 @@
             <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">关联订单</h2>
                 {#if shipment.order}
-                    <div class="border border-gray-200 rounded-lg p-4">
+                    <a 
+                        href="/customer/sales-order/{shipment.order}" 
+                        class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                    >
                         <div class="mb-2">
-                            <a 
-                                href="/customer/sales-order/{shipment.order}" 
-                                class="font-medium text-lg text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                            >
+                            <span class="font-medium text-lg text-gray-900">
                                 {shipment.order_detail?.order_number}
-                            </a>
+                            </span>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div><span class="text-gray-500">客户：</span><span class="text-gray-900">{shipment.order_detail?.customer_name}</span></div>
@@ -287,7 +287,7 @@
                                 <span class="text-gray-500">收货地址：</span><span class="text-gray-900">{shipment.order_detail.shipping_address}</span>
                             </div>
                         {/if}
-                    </div>
+                    </a>
                 {:else}
                     <p class="text-gray-400">未关联订单</p>
                 {/if}
