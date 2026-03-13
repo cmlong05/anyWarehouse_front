@@ -190,7 +190,7 @@
                             </td>
                             <td class="py-2 px-3 text-sm text-right">{formatNumber(item.quantity)}</td>
                             <td class="py-2 px-3 text-sm text-right">PCS</td>
-                            <td class="py-2 px-3 text-sm text-right">${parseFloat(item.unit_price).toFixed(4)}</td>
+                            <td class="py-2 px-3 text-sm text-right">${parseFloat(item.unit_price).toFixed(2)}</td>
                             <td class="py-2 px-3 text-sm text-right">${parseFloat(item.line_total).toFixed(2)}</td>
                         </tr>
                     {/each}

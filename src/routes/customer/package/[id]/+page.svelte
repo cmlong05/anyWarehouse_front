@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { packageAPI } from '$lib/api';
-    import { formatDate, formatNumber } from '$lib/utils';
+    import { formatDate, formatNumber, safeParseFloat } from '$lib/utils';
     import type { Package, PackageItem } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -15,7 +15,7 @@
     let deleting = $state(false);
 
     onMount(async () => {
-        const id = $page.params.id;
+        const id = page.params.id;
         if (!id) {
             goto('/customer/package');
             return;
@@ -41,7 +41,7 @@
     }
 
     function goToEdit() {
-        goto(`/customer/package/${$page.params.id}/edit`);
+        goto(`/customer/package/${page.params.id}/edit`);
     }
 
     function goToShipmentDetail(shipmentId: number) {
@@ -96,43 +96,95 @@
         getVariantParentInfo 
     } from '$lib/utils/variant';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+    import ChevronRight from 'lucide-svelte/icons/chevron-right';
 
     interface PackageItemWithVariant extends PackageItem {
         item_detail?: ItemDetail;
     }
 
-    // 重新排序和分组包裹明细：母版在前，变体子项紧随其后
-    function getGroupedPackageItems(items: PackageItemWithVariant[]): PackageItemWithVariant[] {
-        const result: PackageItemWithVariant[] = [];
+    // 分组类型
+    interface GroupedSection {
+        type: 'parent' | 'variant' | 'normal';
+        item: PackageItemWithVariant;
+    }
+
+    // 重新排序和分组包裹明细：母版作为行头，变体子项紧随其后
+    function getGroupedSections(items: PackageItemWithVariant[]): GroupedSection[] {
+        const result: GroupedSection[] = [];
         const processed = new Set<number>();
         
-        // 先处理所有非变体子项（母版或普通物品）
+        // 先找出所有变体子项并按母版分组
+        const variantsByParent = new Map<number, PackageItemWithVariant[]>();
+        const normalItems: PackageItemWithVariant[] = [];
+        
         for (const item of items) {
-            if (!isVariantChild(item)) {
-                result.push(item);
-                processed.add(item.id);
-                
-                // 找到该母版的所有变体子项并紧随添加
-                const parentId = item.item_detail?.id;
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
                 if (parentId) {
-                    for (const variant of items) {
-                        if (isVariantChild(variant) && getVariantParentId(variant) === parentId) {
-                            result.push(variant);
-                            processed.add(variant.id);
-                        }
+                    if (!variantsByParent.has(parentId)) {
+                        variantsByParent.set(parentId, []);
                     }
+                    variantsByParent.get(parentId)!.push(item);
+                } else {
+                    normalItems.push(item);
                 }
+            } else {
+                normalItems.push(item);
             }
         }
         
-        // 添加剩余的变体子项（孤儿变体，找不到母版的情况）
+        // 按原始顺序处理物品
         for (const item of items) {
-            if (!processed.has(item.id)) {
-                result.push(item);
+            if (processed.has(item.id)) continue;
+            
+            if (isVariantChild(item)) {
+                const parentId = getVariantParentId(item);
+                if (parentId && variantsByParent.has(parentId)) {
+                    const variants = variantsByParent.get(parentId)!;
+                    
+                    // 插入母版行（使用第一个变体的信息）
+                    const firstVariant = variants[0];
+                    const parentItemDetail = firstVariant.item_detail;
+                    const totalQuantity = variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0);
+                    result.push({
+                        type: 'parent',
+                        item: {
+                            ...firstVariant,
+                            id: parentId,
+                            sku: parentItemDetail?.parent_item_sku || '',
+                            product_name: parentItemDetail?.parent_item_name || '',
+                            quantity: totalQuantity.toString(),
+                            order_number: '',
+                        } as unknown as PackageItemWithVariant,
+                    });
+                    
+                    // 插入变体子项
+                    for (const variant of variants) {
+                        result.push({
+                            type: 'variant',
+                            item: variant,
+                        });
+                        processed.add(variant.id);
+                    }
+                }
+            } else {
+                result.push({ type: 'normal', item });
+                processed.add(item.id);
             }
         }
         
         return result;
+    }
+
+    // 获取行样式类
+    function getRowClass(section: GroupedSection): string {
+        if (section.type === 'variant') {
+            return 'bg-purple-50/50';
+        }
+        if (section.type === 'parent') {
+            return 'bg-gray-100 font-medium';
+        }
+        return 'hover:bg-gray-50';
     }
 </script>
 
@@ -293,27 +345,25 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold mb-4">包裹明细</h2>
                 {#if pkg.items && pkg.items.length > 0}
-                    {@const groupedItems = getGroupedPackageItems(pkg.items as PackageItemWithVariant[])}
+                    {@const groupedSections = getGroupedSections(pkg.items as PackageItemWithVariant[])}
                     <table class="table w-full">
                         <thead>
                             <tr class="bg-gray-50">
-                                <th class="text-left">SKU</th>
+                                <th class="text-left w-32">SKU</th>
                                 <th class="text-left">商品名称</th>
-                                <th class="text-right">数量</th>
-                                <th class="text-left">关联订单</th>
+                                <th class="text-right w-20">数量</th>
+                                <th class="text-right pl-8">关联订单</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {#each groupedItems as item}
-                                {@const isVariant = isVariantChild(item)}
-                                {@const variantAttrs = getVariantAttributes(item)}
-                                <tr class="{isVariant ? 'bg-purple-50/50' : 'hover:bg-gray-50'}">
-                                    <td class="font-mono {isVariant ? 'text-purple-600' : ''}">
-                                        {#if isVariant}
+                            {#each groupedSections as section}
+                                {@const item = section.item}
+                                {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
+                                <tr class={getRowClass(section)}>
+                                    <td class="font-mono w-32 {section.type === 'variant' ? 'text-purple-600' : ''}">
+                                        {#if section.type === 'variant'}
                                             <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                                </svg>
+                                                <ChevronRight class="w-4 h-4 text-purple-400 flex-shrink-0" />
                                                 <span>{item.sku}</span>
                                             </div>
                                         {:else}
@@ -321,25 +371,17 @@
                                         {/if}
                                     </td>
                                     <td>
-                                        {#if isVariant}
-                                            {@const parentInfo = getVariantParentInfo(item)}
-                                            <div class="flex flex-col gap-1">
-                                                {#if parentInfo}
-                                                    <span class="text-xs text-gray-500">
-                                                        母版: <span class="font-mono">{parentInfo.sku}</span> - {parentInfo.name}
-                                                    </span>
-                                                {/if}
-                                                <div class="flex items-center gap-2">
-                                                    <span>{item.product_name}</span>
-                                                    <VariantAttributeBadge attributes={variantAttrs} />
-                                                </div>
+                                        {#if section.type === 'variant'}
+                                            <div class="flex items-center gap-2 pl-4">
+                                                <span>{item.product_name}</span>
+                                                <VariantAttributeBadge attributes={variantAttrs} />
                                             </div>
                                         {:else}
                                             {item.product_name}
                                         {/if}
                                     </td>
-                                    <td class="text-right">{formatNumber(item.quantity)}</td>
-                                    <td class="text-sm text-gray-500">
+                                    <td class="text-right w-20">{formatNumber(item.quantity)}</td>
+                                    <td class="text-sm text-gray-500 pl-8 text-right">
                                         {#if item.order_number}
                                             {item.order_number}
                                         {:else}

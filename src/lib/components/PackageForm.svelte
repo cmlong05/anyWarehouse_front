@@ -110,6 +110,25 @@
             length = pkg.length ? safeParseFloat(pkg.length) : null; width = pkg.width ? safeParseFloat(pkg.width) : null;
             height = pkg.height ? safeParseFloat(pkg.height) : null; trackingNumberId = pkg.tracking_number || null;
             notes = pkg.notes || ''; existingItems = pkg.items || []; linkedShipments = pkg.shipments || [];
+            
+            // 将现有明细转换为编辑模式下的预览格式
+            if (pkg.items) {
+                packagePreviewItems = pkg.items.map(item => {
+                    const shipmentId = item.shipment_item_detail?.shipment || 0;
+                    const linkedShipment = linkedShipments.find(s => s.id === shipmentId);
+                    return {
+                        id: `existing-${item.id}`,
+                        shipmentItemId: item.shipment_item || 0,
+                        shipmentId: shipmentId,
+                        shipmentNo: linkedShipment?.shipment_no || '-',
+                        sku: item.sku,
+                        productName: item.product_name,
+                        quantity: safeParseFloat(item.quantity),
+                        maxQuantity: safeParseFloat(item.quantity)
+                    };
+                });
+            }
+            
             if (pkg.shipments) { for (const s of pkg.shipments) { selectedShipmentIds.push(s.id); await loadShipmentDetail(s.id); } }
         } catch (err: any) { error = err.message || '加载包裹失败'; }
     }
