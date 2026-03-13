@@ -4,32 +4,21 @@
 
     interface Props {
         items: ShipmentPlanItem[];
-        totalPlanned: number;
         onRemove: (id: string) => void;
         onClear: () => void;
         onFillAll: () => void;
     }
     
-    let { items, totalPlanned, onRemove, onClear, onFillAll }: Props = $props();
+    let { items, onRemove, onClear, onFillAll }: Props = $props();
 </script>
 
 <div class="p-2">
-    <div class="mb-4">
-        <h3 class="font-bold flex items-center justify-between">
-            <span>📝 发货计划明细</span>
-            {#if items.length > 0}
-                <span class="text-sm text-gray-500">
-                    已计划: <strong>{totalPlanned.toFixed(0)}</strong>
-                </span>
-            {/if}
-        </h3>
-        {#if items.length > 0}
-            <div class="flex justify-end gap-2 mt-2">
-                <button type="button" class="text-blue-600 hover:text-blue-800 text-sm" onclick={onFillAll}>填充最大</button>
-                <button type="button" class="text-red-600 hover:text-red-800 text-sm" onclick={onClear}>清空</button>
-            </div>
-        {/if}
-    </div>
+    {#if items.length > 0}
+        <div class="flex justify-end gap-2 mb-4">
+            <button type="button" class="text-blue-600 hover:text-blue-800 text-sm" onclick={onFillAll}>填充最大</button>
+            <button type="button" class="text-red-600 hover:text-red-800 text-sm" onclick={onClear}>清空</button>
+        </div>
+    {/if}
     
     {#if items.length === 0}
         <div class="text-center py-12 px-4 text-gray-400 text-sm">

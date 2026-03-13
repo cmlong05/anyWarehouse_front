@@ -268,13 +268,12 @@
                 <h2 class="text-lg font-bold text-gray-900 mb-4">关联订单</h2>
                 {#if shipment.order}
                     <div class="border border-gray-200 rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-medium text-lg text-gray-900">{shipment.order_detail?.order_number}</span>
+                        <div class="mb-2">
                             <a 
                                 href="/customer/sales-order/{shipment.order}" 
-                                class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                class="font-medium text-lg text-blue-600 hover:text-blue-800 hover:underline transition-colors"
                             >
-                                查看订单
+                                {shipment.order_detail?.order_number}
                             </a>
                         </div>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -346,7 +345,9 @@
                                             {formatNumber(pending)}
                                         </td>
                                         <td class="px-3 py-2.5 text-center">
-                                            {#if pending === 0}
+                                            {#if pending < 0}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">超额打包</span>
+                                            {:else if pending === 0}
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">已打包</span>
                                             {:else if packed > 0}
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">部分打包</span>

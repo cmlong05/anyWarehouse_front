@@ -57,8 +57,6 @@
                 {#snippet available()}
                     <OrderItemsList
                         items={form.displayableOrderItems}
-                        totalPending={form.totalPending}
-                        totalPrepared={form.totalPrepared}
                         onAdd={form.addItemToPlan}
                         onAddAll={form.addAllToPlan}
                     />
@@ -66,7 +64,6 @@
                 {#snippet selected()}
                     <PlanItemsList
                         items={form.planItems}
-                        totalPlanned={form.totalPlanned}
                         onRemove={form.removePlanItem}
                         onClear={form.clearAllPlan}
                         onFillAll={form.fillAllPending}

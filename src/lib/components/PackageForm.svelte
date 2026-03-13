@@ -317,10 +317,47 @@
     }
 
     function removePreviewItem(id: string) { 
+        const removedItem = packagePreviewItems.find(item => item.id === id);
+        
+        // 如果是关联发货单的商品，更新对应的 ShipmentItem 的 quantity_packed
+        if (removedItem && removedItem.shipmentItemId > 0 && removedItem.shipmentId > 0) {
+            const shipment = selectedShipmentsDetail.get(removedItem.shipmentId);
+            if (shipment && shipment.items) {
+                const shipmentItem = shipment.items.find(i => i.id === removedItem.shipmentItemId);
+                if (shipmentItem) {
+                    // 减少 quantity_packed
+                    const currentPacked = safeParseFloat(shipmentItem.quantity_packed, 0);
+                    const removedQty = removedItem.quantity;
+                    shipmentItem.quantity_packed = String(Math.max(0, currentPacked - removedQty));
+                    // 触发更新
+                    selectedShipmentsDetail = new Map(selectedShipmentsDetail);
+                }
+            }
+        }
+        
         packagePreviewItems = packagePreviewItems.filter(item => item.id !== id); 
     }
     
     function clearAllItems() {
+        // 恢复所有关联发货单的商品到可选列表
+        for (const item of packagePreviewItems) {
+            if (item.shipmentItemId > 0 && item.shipmentId > 0) {
+                const shipment = selectedShipmentsDetail.get(item.shipmentId);
+                if (shipment && shipment.items) {
+                    const shipmentItem = shipment.items.find(i => i.id === item.shipmentItemId);
+                    if (shipmentItem) {
+                        const currentPacked = safeParseFloat(shipmentItem.quantity_packed, 0);
+                        const removedQty = item.quantity;
+                        shipmentItem.quantity_packed = String(Math.max(0, currentPacked - removedQty));
+                    }
+                }
+            }
+        }
+        // 触发更新
+        if (packagePreviewItems.length > 0) {
+            selectedShipmentsDetail = new Map(selectedShipmentsDetail);
+        }
+        
         packagePreviewItems = [];
     }
     
