@@ -131,7 +131,7 @@
         value={inputValue}
         {min}
         {max}
-        {step}
+        step="any"
         {placeholder}
         {disabled}
         oninput={handleInput}

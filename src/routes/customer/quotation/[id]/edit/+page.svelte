@@ -2,12 +2,10 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import { customerQuotationAPI, customerAPI, itemAPI } from '$lib/api';
-    import type { CustomerBrief, Item, CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
-    import { config } from '$lib/config';
+    import { customerQuotationAPI } from '$lib/api';
+    import type { CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
-    import Svelecte from 'svelecte';
     import { CurrencySelect, NumberStepper } from '$lib/components/ui';
     
     // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况
@@ -17,7 +15,6 @@
     });
     
     let quotation = $state<CustomerQuotation | null>(null);
-    let customers = $state<CustomerBrief[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
@@ -35,29 +32,11 @@
         note: ''
     });
     
-    // 客户选项
-    const customerOptions = $derived(customers.map(c => ({
-        value: c.id,
-        label: `${c.code} - ${c.name}`
-    })));
-    
     // 计算总价
     let totalPrice = $derived(() => {
         const price = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
         return price;
     });
-    
-    // 构建物品搜索 URL
-    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
-    
-    // 处理 fetch 返回的数据
-    function handleItemFetch(json: unknown) {
-        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
-        return items.map((item: Item) => ({
-            value: item.id,
-            label: `${item.SKU} - ${item.name}`
-        }));
-    }
     
     async function loadData() {
         const quotationId = id();
@@ -67,13 +46,9 @@
         }
         
         try {
-            const [quotationData, customersData] = await Promise.all([
-                customerQuotationAPI.get(quotationId),
-                customerAPI.listBrief()
-            ]);
+            const quotationData = await customerQuotationAPI.get(quotationId);
             
             quotation = quotationData;
-            customers = customersData;
             
             // 填充表单数据
             formData = {
@@ -107,8 +82,8 @@
             return;
         }
         
-        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
-        if (!formData.price || priceNum <= 0) {
+        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string);
+        if (formData.price === '' || formData.price === null || formData.price === undefined || isNaN(priceNum) || priceNum < 0) {
             error = '请输入有效的价格';
             return;
         }
@@ -208,38 +183,54 @@
             <form id="quotationForm" onsubmit={handleSubmit} class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- 左侧：客户和物品选择 -->
                 <div class="lg:col-span-1 space-y-4">
-                    <!-- 客户选择 -->
+                    <!-- 客户信息（只读） -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                         <span class="block text-sm font-medium text-gray-700 mb-2">
-                            客户 <span class="text-red-500">*</span>
+                            客户
                         </span>
-                        <Svelecte
-                            options={customerOptions}
-                            bind:value={formData.customer}
-                            placeholder="选择客户..."
-                            searchable={true}
-                            required
-                            class="w-full"
-                        />
+                        {#if quotation?.customer_detail}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-sm font-semibold text-gray-900">{quotation.customer_detail.code}</div>
+                                <div class="text-sm text-gray-700 mt-0.5">{quotation.customer_detail.name}</div>
+                            </div>
+                        {:else if quotation?.customer}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-sm text-gray-700">客户 ID: {quotation.customer}</div>
+                            </div>
+                        {:else}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-sm text-gray-500">未关联客户</div>
+                            </div>
+                        {/if}
                     </div>
 
-                    <!-- 物品选择 -->
+                    <!-- 物品信息（只读） -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                         <span class="block text-sm font-medium text-gray-700 mb-2">
                             物品
                         </span>
-                        <Svelecte
-                            bind:value={formData.item}
-                            valueAsObject={false}
-                            placeholder="搜索SKU或名称..."
-                            searchable={true}
-                            minQuery={1}
-                            fetch={itemSearchUrl}
-                            fetchCallback={handleItemFetch}
-                            valueField="value"
-                            labelField="label"
-                            class="w-full"
-                        />
+                        {#if quotation?.item_detail}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-sm font-semibold text-gray-900">{quotation.item_detail.SKU}</span>
+                                    {#if (quotation.item_detail as any).is_variant}
+                                        <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">变体</span>
+                                    {/if}
+                                </div>
+                                <div class="text-sm text-gray-700">{quotation.item_detail.name}</div>
+                                {#if quotation.item_detail.name_en}
+                                    <div class="text-xs text-gray-500 mt-0.5">{quotation.item_detail.name_en}</div>
+                                {/if}
+                            </div>
+                        {:else if quotation?.item}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-sm text-gray-700">物品 ID: {quotation.item}</div>
+                            </div>
+                        {:else}
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="text-sm text-gray-500">未关联物品</div>
+                            </div>
+                        {/if}
                     </div>
 
                     {#if error}
@@ -271,7 +262,7 @@
                                     id="price"
                                     value={typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0}
                                     min={0}
-                                    step={0.4}
+                                    step={1}
                                     decimalPlaces={2}
                                     onchange={(v) => formData.price = v || 0}
                                 />
