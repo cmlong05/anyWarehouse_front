@@ -59,6 +59,7 @@
     let manualProductName = $state('');
     let manualQuantity = $state<number | null>(1);
     let selectedItemId = $state<number | null>(null);
+    let manualSelectedShipmentId = $state<number | null>(null); // 手动添加时选择的发货单
     
     // 物品搜索 URL
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
@@ -83,6 +84,17 @@
     // 计算属性
     const trackingOptions = $derived([{ value: '', label: '请选择快递单号' }, ...availableTrackingNumbers.map(t => ({ value: t.id.toString(), label: `${t.carrier_name} - ${t.tracking_no}` }))]);
     
+    // 手动添加时可选择的发货单选项
+    const manualShipmentOptions = $derived(
+        selectedShipmentIds.map(id => {
+            const shipment = availableShipments.find(s => s.id === id);
+            return {
+                value: id,
+                label: shipment ? shipment.shipment_no : `发货单 #${id}`
+            };
+        })
+    );
+    
     // 所有可选的商品（过滤掉已添加的）
     const availableItems = $derived(() => {
         const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem; maxQty: number}> = [];
@@ -92,7 +104,7 @@
                 const maxQty = safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed, 0);
                 // 过滤掉已添加的商品
                 const isAdded = packagePreviewItems.some(p => p.shipmentItemId === item.id);
-                if (maxQty > 0 && !isAdded) {
+                if (!isAdded) {
                     items.push({ shipmentId, shipmentNo: shipment.shipment_no, item, maxQty });
                 }
             }
@@ -230,12 +242,20 @@
             setTimeout(() => error = '', 2000);
             return;
         }
-        
+   
+        // 确定关联的发货单信息
+        const shipmentId = manualSelectedShipmentId || 0;
+        let shipmentNo = "-";
+        if (shipmentId > 0) {
+            const shipment = availableShipments.find(s => s.id === shipmentId);
+            shipmentNo = shipment ? shipment.shipment_no : `发货单 #${shipmentId}`;
+        }
+   
         packagePreviewItems = [...packagePreviewItems, { 
             id: `manual-${Date.now()}`, 
             shipmentItemId: 0,  // 手动添加的没有关联的shipment_item
-            shipmentId: 0, 
-            shipmentNo: '-',  // 手动添加的显示为‘-’
+            shipmentId: shipmentId, 
+            shipmentNo: shipmentNo,
             sku: sku, 
             productName: productName, 
             quantity: manualQuantity, 
@@ -247,6 +267,7 @@
         manualProductName = '';
         manualQuantity = 1;
         selectedItemId = null;
+        manualSelectedShipmentId = null;
     }
     
     // 处理物品选择
@@ -331,7 +352,7 @@
                     shipmentItem.quantity_packed = String(Math.max(0, currentPacked - removedQty));
                     // 触发更新
                     selectedShipmentsDetail = new Map(selectedShipmentsDetail);
-                }
+    }
             }
         }
         
@@ -551,6 +572,18 @@
                             decimalPlaces={0}
                             size="sm"
                             placeholder="数量"
+                        />
+                    </div>
+                    <div class="w-44">
+                        <Svelecte
+                            inputId="manual-shipment-select"
+                            placeholder="选择发货单（可选）"
+                            searchable={true}
+                            clearable={true}
+                            valueField="value"
+                            labelField="label"
+                            options={manualShipmentOptions}
+                            bind:value={manualSelectedShipmentId}
                         />
                     </div>
                     <button 

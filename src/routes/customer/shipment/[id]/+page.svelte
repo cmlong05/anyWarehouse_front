@@ -193,7 +193,7 @@
                     </button>
                 {/each}
                 
-                {#if shipmentDetail.shipment.status === 'draft' || shipmentDetail.shipment.status === 'confirmed'}
+                {#if shipmentDetail.shipment.status === 'draft' || shipmentDetail.shipment.status === 'synced'}
                     <button 
                         class="flex items-center p-2 text-gray-500 hover:text-blue-600 transition-colors"
                         onclick={shipmentDetail.goToEdit}

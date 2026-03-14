@@ -1,11 +1,40 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
+    import { onMount } from 'svelte';
     import ShipmentForm from '$lib/components/ShipmentForm.svelte';
+    import { shipmentAPI } from '$lib/api';
     import type { Shipment } from '$lib/shipmentTypes';
+    import Loading from '$lib/components/Loading.svelte';
 
     // 获取发货单ID
-    let shipmentId = $derived(parseInt($page.params.id || '0'));
+    let shipmentId = $derived(parseInt(page.params.id || '0'));
+    
+    // 检查状态
+    let checking = $state(true);
+    let checkError = $state('');
+
+    onMount(async () => {
+        if (!shipmentId) {
+            checking = false;
+            return;
+        }
+        
+        try {
+            const shipment = await shipmentAPI.get(shipmentId);
+            // 只有草稿或已同步状态可以编辑
+            const editableStatuses = ['draft', 'synced'];
+            if (!editableStatuses.includes(shipment.status)) {
+                // 不可编辑，重定向到详情页
+                goto(`/customer/shipment/${shipmentId}`, { replaceState: true });
+                return;
+            }
+            checking = false;
+        } catch (err: any) {
+            checkError = err.message || '加载发货单失败';
+            checking = false;
+        }
+    });
 
     function handleSuccess(shipment: Shipment) {
         setTimeout(() => {
@@ -32,7 +61,15 @@
         <h1 class="text-2xl font-bold">编辑发货单</h1>
     </div>
 
-    {#if shipmentId}
+    {#if checking}
+        <div class="flex justify-center py-12">
+            <Loading />
+        </div>
+    {:else if checkError}
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {checkError}
+        </div>
+    {:else if shipmentId}
         <div class="bg-white rounded-lg shadow p-6">
             <ShipmentForm 
                 mode="edit" 
@@ -42,8 +79,8 @@
             />
         </div>
     {:else}
-        <div class="flex justify-center py-12">
-            <span class="loading loading-spinner loading-lg"></span>
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            无效的发货单ID
         </div>
     {/if}
 </div>

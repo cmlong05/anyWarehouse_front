@@ -251,7 +251,6 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                 options.onSuccess?.(shipment);
             } else {
                 const data: any = {
-                    shipment_no: shipmentNo,
                     shipping_address: shippingAddress,
                     contact_person: contactPerson,
                     contact_phone: contactPhone,
@@ -261,7 +260,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     data.items = items;
                 }
                 
-                const shipment = await shipmentAPI.update(options.shipmentId!, data);
+                const shipment = await shipmentAPI.patch(options.shipmentId!, data);
                 success = '发货单更新成功';
                 options.onSuccess?.(shipment);
             }

@@ -4,7 +4,7 @@
 export type TrackingNumberStatus = 'unused' | 'reserved' | 'in_use' | 'delivered' | 'returned' | 'cancelled';
 
 /** 发货单状态 */
-export type ShipmentStatus = 'draft' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
+export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled' | 'split';
 
 /** 快递单号 */
 export interface TrackingNumber {
@@ -356,9 +356,11 @@ export interface ShipmentFilters {
 /** 发货状态选项 */
 export const SHIPMENT_STATUS_CHOICES: { value: ShipmentStatus; label: string }[] = [
     { value: 'draft', label: '草稿' },
+    { value: 'synced', label: '已同步' },
     { value: 'confirmed', label: '已确认' },
     { value: 'packed', label: '已打包' },
     { value: 'shipped', label: '已发货' },
     { value: 'delivered', label: '已签收' },
     { value: 'cancelled', label: '已取消' },
+    { value: 'split', label: '已拆单' },
 ];
