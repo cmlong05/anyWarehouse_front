@@ -4,7 +4,7 @@
 export type TrackingNumberStatus = 'unused' | 'reserved' | 'in_use' | 'delivered' | 'returned' | 'cancelled';
 
 /** 发货单状态 */
-export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled' | 'split';
+export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
 
 /** 快递单号 */
 export interface TrackingNumber {
@@ -315,13 +315,6 @@ export interface SyncItemsResponse {
     items: ShipmentItem[];
 }
 
-/** 拆单响应 */
-export interface SplitShipmentResponse {
-    status: string;
-    message: string;
-    new_shipment: Shipment;
-}
-
 /** 确认发货单请求 */
 export interface ShipmentConfirmRequest {
     confirmed_by?: string;
@@ -336,13 +329,6 @@ export interface ShipmentPackRequest {
 export interface ShipmentShipRequest {
     shipped_by?: string;
 }
-
-/** 拆单请求 */
-export interface ShipmentSplitRequest {
-    new_shipment_no?: string;
-    reason?: string;
-}
-
 
 /** 发货列表筛选器 */
 export interface ShipmentFilters {
@@ -362,5 +348,4 @@ export const SHIPMENT_STATUS_CHOICES: { value: ShipmentStatus; label: string }[]
     { value: 'shipped', label: '已发货' },
     { value: 'delivered', label: '已签收' },
     { value: 'cancelled', label: '已取消' },
-    { value: 'split', label: '已拆单' },
 ];

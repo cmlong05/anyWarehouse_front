@@ -34,7 +34,7 @@ export const shipmentTranslations = {
         'shipment.btn.ship': '发货',
         'shipment.btn.deliver': '签收',
         'shipment.btn.cancel': '取消',
-        'shipment.btn.split': '拆分',
+
         'shipment.btn.sync': '同步',
         'shipment.btn.save': '保存',
         'shipment.btn.cancelEdit': '取消',
@@ -138,7 +138,7 @@ export const shipmentTranslations = {
         'shipment.btn.ship': 'Ship',
         'shipment.btn.deliver': 'Deliver',
         'shipment.btn.cancel': 'Cancel',
-        'shipment.btn.split': 'Split',
+
         'shipment.btn.sync': 'Sync',
         'shipment.btn.save': 'Save',
         'shipment.btn.cancelEdit': 'Cancel',

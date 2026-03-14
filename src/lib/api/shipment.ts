@@ -14,9 +14,7 @@ import type {
     ShipmentConfirmRequest,
     ShipmentPackRequest,
     ShipmentShipRequest,
-    ShipmentSplitRequest,
     SyncItemsResponse,
-    SplitShipmentResponse,
     ShipmentFilters,
     ShipmentItem,
     ShipmentItemCreateRequest,
@@ -128,11 +126,6 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
     /** 同步发货明细 */
     async syncItems(id: number): Promise<SyncItemsResponse> {
         return this.client.post<SyncItemsResponse>(`${this.basePath}${id}/sync_items/`, {});
-    }
-
-    /** 拆单 */
-    async split(id: number, data?: ShipmentSplitRequest): Promise<SplitShipmentResponse> {
-        return this.client.post<SplitShipmentResponse>(`${this.basePath}${id}/split/`, data || {});
     }
 }
 

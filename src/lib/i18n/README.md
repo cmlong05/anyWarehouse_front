@@ -75,7 +75,6 @@ const actions = getShipmentActions('en');
 - `shipment.btn.ship`
 - `shipment.btn.deliver`
 - `shipment.btn.cancel`
-- `shipment.btn.split`
 - `shipment.btn.sync`
 - `shipment.btn.save`
 - `shipment.btn.cancelEdit`
