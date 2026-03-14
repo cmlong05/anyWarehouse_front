@@ -69,9 +69,6 @@
         errors,
         itemErrors,
         currentItem,
-        subtotal,
-        taxAmount,
-        totalAmount,
         priorityOptions,
         validate,
         validateItem,
@@ -82,6 +79,11 @@
         setCurrentItemQuotation,
         prepareSubmitData,
     } = orderForm;
+    
+    // 使用 $derived 包装计算属性，确保响应式更新
+    const subtotal = $derived(orderForm.subtotal);
+    const taxAmount = $derived(orderForm.taxAmount);
+    const totalAmount = $derived(orderForm.totalAmount);
 
     // Svelecte 选中值
     let selectedQuotation = $state<QuotationOption | undefined>(undefined);
@@ -616,7 +618,7 @@
                     </tbody>
                     <tfoot class="bg-gray-50 font-medium">
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-right text-gray-700">小计:</td>
+                            <td colspan="5" class="px-4 py-3 text-right text-gray-700">汇总:</td>
                             <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency)}{subtotal.toFixed(2)}</td>
                             <td></td>
                         </tr>
