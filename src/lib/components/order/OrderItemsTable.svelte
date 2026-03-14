@@ -150,7 +150,7 @@
                 if (parentId && variantsByParent.has(parentId)) {
                     const variants = variantsByParent.get(parentId)!;
                     
-                    // 插入母版行（使用第一个变体的信息）
+                    // 插入母版行（汇总所有变体的信息）
                     const firstVariant = variants[0];
                     result.push({
                         type: 'parent',
@@ -162,6 +162,7 @@
                             quantity: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0).toString(),
                             quantity_shipped: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_shipped), 0).toString(),
                             quantity_received: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_received), 0).toString(),
+                            quantity_pending: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_pending), 0).toString(),
                         } as OrderItem,
                     });
                     
