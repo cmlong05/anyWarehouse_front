@@ -62,9 +62,17 @@
         type: 'sales' | 'purchase';
         labels?: Labels;
         currency?: string;
+        /**
+         * 对单行执行“反向同步”（将订单数量减少到已发货数量）
+         */
+        onReverseSync?: (item: OrderItem) => Promise<void>;
+        /**
+         * 加载状态：key 为 SKU
+         */
+        reverseSyncLoading?: Record<string, boolean>;
     }
     
-    let { items, showPrices = true, type, labels = {}, currency = 'CNY' }: Props = $props();
+    let { items, showPrices = true, type, labels = {}, currency = 'CNY', onReverseSync, reverseSyncLoading = {} }: Props = $props();
     
     // 获取货币符号
     function getCurrencySymbol(curr: string): string {
@@ -218,6 +226,9 @@
                             <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.subtotal}</th>
                         {/if}
                         <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">{l.status}</th>
+                        {#if onReverseSync && type === 'sales'}
+                            <th class="p-3 text-center border-b border-gray-100 bg-gray-50 font-semibold">操作</th>
+                        {/if}
                     </tr>
                 </thead>
                 <tbody>
@@ -277,6 +288,28 @@
                                     <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
                                 {/if}
                             </td>
+                            {#if onReverseSync && type === 'sales'}
+                                <td class="p-3 text-center border-b border-gray-100">
+                                    {#if section.type !== 'parent' && shipped < safeParseFloat(item.quantity)}
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            onclick={() => onReverseSync(item)}
+                                            disabled={reverseSyncLoading[item.sku]}
+                                            title="将订单数量同步为已发货数量（只可减少）"
+                                        >
+                                            {#if reverseSyncLoading[item.sku]}
+                                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                </svg>
+                                            {:else}
+                                                ↩️ 反向同步
+                                            {/if}
+                                        </button>
+                                    {/if}
+                                </td>
+                            {/if}
                         </tr>
                     {/each}
                 </tbody>

@@ -124,7 +124,7 @@
         return classes[status] || 'bg-gray-100 text-gray-600';
     }
 
-    // 同步数量
+    // 同步数量（只增不减）
     let syncLoading = $state(false);
     let syncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
     let syncError = $state<string | null>(null);
@@ -144,6 +144,29 @@
             syncError = e instanceof Error ? e.message : '同步失败，请重试';
         } finally {
             syncLoading = false;
+        }
+    }
+
+    // 反向同步：按行减少订单数量
+    let reverseSyncLoading = $state<Record<string, boolean>>({});
+    let reverseSyncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
+    let reverseSyncError = $state<string | null>(null);
+
+    async function reverseSyncItem(item: { sku: string }) {
+        if (!orderId || reverseSyncLoading[item.sku]) return;
+        reverseSyncResult = null;
+        reverseSyncError = null;
+        reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: true };
+        try {
+            const result = await salesOrderAPI.syncQuantities(orderId, { allowDecrease: true, sku: item.sku });
+            reverseSyncResult = result;
+            if (result.updated_items.length > 0) {
+                await orderDetail.loadOrder();
+            }
+        } catch (e: unknown) {
+            reverseSyncError = e instanceof Error ? e.message : '同步失败，请重试';
+        } finally {
+            reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: false };
         }
     }
 </script>
@@ -275,7 +298,27 @@
                 pending: t('sales.table.pending', $localeStore),
                 noItems: t('sales.msg.noItems', $localeStore),
             }}
+            onReverseSync={reverseSyncItem}
+            reverseSyncLoading={reverseSyncLoading}
         />
+
+        {#if reverseSyncError}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                ⚠️ {reverseSyncError}
+            </div>
+        {/if}
+        {#if reverseSyncResult}
+            <div class="mb-4 p-3 rounded-lg text-sm {reverseSyncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
+                ✅ {reverseSyncResult.message}
+                {#if reverseSyncResult.updated_items.length > 0}
+                    <ul class="mt-2 space-y-1">
+                        {#each reverseSyncResult.updated_items as item}
+                            <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
+                        {/each}
+                    </ul>
+                {/if}
+            </div>
+        {/if}
         {/key}
 
         <!-- 生成发货单按钮 -->

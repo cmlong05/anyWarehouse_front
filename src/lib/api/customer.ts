@@ -147,13 +147,22 @@ export class SalesOrderAPI extends BaseOrderAPI<
         return this.client.post<SalesOrder>(`${this.basePath}${orderId}/ship/`, data);
     }
 
-    /** 根据发货单明细同步订单行数量（只增不减） */
-    async syncQuantities(orderId: number): Promise<{
+    /**
+     * 根据发货单明细同步订单行数量。
+     *
+     * @param orderId 订单ID
+     * @param options allowDecrease: 是否允许减少（仅当发货数量低于订单数量时才生效）
+     *                sku: 仅同步指定 SKU 的明细
+     */
+    async syncQuantities(orderId: number, options?: { allowDecrease?: boolean; sku?: string }): Promise<{
         status: string;
         message: string;
         updated_items: { sku: string; old_qty: string; new_qty: string }[];
     }> {
-        return this.client.post(`${this.basePath}${orderId}/sync_quantities/`, {});
+        const body: Record<string, any> = {};
+        if (options?.allowDecrease) body.allow_decrease = true;
+        if (options?.sku) body.sku = options.sku;
+        return this.client.post(`${this.basePath}${orderId}/sync_quantities/`, body);
     }
 
     /** 按客户统计 */
