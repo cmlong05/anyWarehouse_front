@@ -304,32 +304,34 @@
                         {#each (pkg.shipments || []) as shipment}
                             <a
                                 href="/customer/shipment/{shipment.id}"
-                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all text-gray-900 hover:text-gray-900 no-underline"
                             >
                                 <div class="mb-2">
                                     <span class="font-medium text-lg text-gray-900">
                                         {shipment.shipment_no}
                                     </span>
                                 </div>
-                                <div class="flex items-center gap-2 text-sm">
-                                    <span class="text-gray-500">状态：</span>
-                                    <span>
-                                        {#if shipment.status === 'draft'}
-                                            <span class="badge badge-ghost">草稿</span>
-                                        {:else if shipment.status === 'confirmed'}
-                                            <span class="badge badge-info">已确认</span>
-                                        {:else if shipment.status === 'packed'}
-                                            <span class="badge badge-primary">已打包</span>
-                                        {:else if shipment.status === 'shipped'}
-                                            <span class="badge badge-success">已发货</span>
-                                        {:else if shipment.status === 'delivered'}
-                                            <span class="badge badge-success">已签收</span>
-                                        {:else if shipment.status === 'cancelled'}
-                                            <span class="badge badge-error">已取消</span>
-                                        {:else}
-                                            <span class="badge">{shipment.status}</span>
-                                        {/if}
-                                    </span>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500">状态：</span>
+                                        <span class="text-gray-900">
+                                            {#if shipment.status === 'draft'}
+                                                <span class="badge badge-ghost">草稿</span>
+                                            {:else if shipment.status === 'confirmed'}
+                                                <span class="badge badge-info">已确认</span>
+                                            {:else if shipment.status === 'packed'}
+                                                <span class="badge badge-primary">已打包</span>
+                                            {:else if shipment.status === 'shipped'}
+                                                <span class="badge badge-success">已发货</span>
+                                            {:else if shipment.status === 'delivered'}
+                                                <span class="badge badge-success">已签收</span>
+                                            {:else if shipment.status === 'cancelled'}
+                                                <span class="badge badge-error">已取消</span>
+                                            {:else}
+                                                <span class="badge">{shipment.status}</span>
+                                            {/if}
+                                        </span>
+                                    </div>
                                 </div>
                             </a>
                         {/each}
