@@ -147,6 +147,15 @@ export class SalesOrderAPI extends BaseOrderAPI<
         return this.client.post<SalesOrder>(`${this.basePath}${orderId}/ship/`, data);
     }
 
+    /** 根据发货单明细同步订单行数量（只增不减） */
+    async syncQuantities(orderId: number): Promise<{
+        status: string;
+        message: string;
+        updated_items: { sku: string; old_qty: string; new_qty: string }[];
+    }> {
+        return this.client.post(`${this.basePath}${orderId}/sync_quantities/`, {});
+    }
+
     /** 按客户统计 */
     async getByCustomer(customerId: number): Promise<{
         total_orders: number;
