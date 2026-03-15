@@ -71,14 +71,20 @@
         
         // 创建数组副本，避免修改原配置
         const actions = [...(SHIPMENT_ACTIONS[status] || [])];
-        
-        // 非草稿状态添加取消按钮（除已完成和已取消外）
-        if (status !== 'draft' && status !== 'delivered' && status !== 'cancelled') {
-            actions.push({ action: 'cancel', label: '取消', variant: 'error', confirmMessage: '确认要取消此发货单？' });
-        }
-        
-        return actions;
+
+    // 非草稿状态添加取消按钮（除已完成和已取消外）
+    if (status !== 'draft' && status !== 'delivered' && status !== 'cancelled') {
+        actions.push({ action: 'cancel', label: '取消', variant: 'error', confirmMessage: '确认要取消此发货单？' });
     }
+
+    const pkgCount = shipmentDetail.shipment?.packages?.length || 0;
+    if (pkgCount === 0) {
+        // 无包裹时不展示“发货”操作按钮
+        return actions.filter(a => a.action !== 'ship');
+    }
+
+    return actions;
+}
 
     // 执行操作前确认
     async function handleAction(action: string, confirmMessage: string) {
@@ -183,13 +189,14 @@
         
         {#if shipmentDetail.shipment}
             <div class="flex gap-2 flex-wrap">
-                {#each getAvailableActions() as { action, label, variant, confirmMessage }}
+                {#each getAvailableActions() as act}
                     <button 
-                        class={getButtonClass(variant)}
-                        onclick={() => handleAction(action, confirmMessage)}
+                        class={getButtonClass(act.variant)}
+                        onclick={() => handleAction(act.action, act.confirmMessage)}
                         disabled={shipmentDetail.actionLoading}
+                        title={act.confirmMessage}
                     >
-                        {label}
+                        {act.label}
                     </button>
                 {/each}
                 
