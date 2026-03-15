@@ -44,10 +44,6 @@
         goto(`/customer/package/${page.params.id}/edit`);
     }
 
-    function goToShipmentDetail(shipmentId: number) {
-        goto(`/customer/shipment/${shipmentId}`);
-    }
-
     function confirmDelete() {
         showDeleteModal = true;
     }
@@ -303,13 +299,21 @@
             <!-- 关联发货单 -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold mb-4">关联发货单</h2>
-                {#if (pkg.shipments?.filter(s => s.status !== 'draft').length ?? 0) > 0}
+                {#if (pkg.shipments?.length ?? 0) > 0}
                     <div class="space-y-3">
-                        {#each (pkg.shipments || []).filter(s => s.status !== 'draft') as shipment}
-                            <div class="border rounded-lg p-4 flex items-center justify-between hover:bg-gray-50">
-                                <div>
-                                    <span class="font-medium">{shipment.shipment_no}</span>
-                                    <span class="ml-2 text-sm text-gray-500">
+                        {#each (pkg.shipments || []) as shipment}
+                            <a
+                                href="/customer/shipment/{shipment.id}"
+                                class="block border border-gray-200 rounded-lg p-4 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-all"
+                            >
+                                <div class="mb-2">
+                                    <span class="font-medium text-lg text-gray-900">
+                                        {shipment.shipment_no}
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="text-gray-500">状态：</span>
+                                    <span>
                                         {#if shipment.status === 'draft'}
                                             <span class="badge badge-ghost">草稿</span>
                                         {:else if shipment.status === 'confirmed'}
@@ -327,13 +331,7 @@
                                         {/if}
                                     </span>
                                 </div>
-                                <button 
-                                    class="btn btn-sm btn-outline"
-                                    onclick={() => goToShipmentDetail(shipment.id)}
-                                >
-                                    查看发货单
-                                </button>
-                            </div>
+                            </a>
                         {/each}
                     </div>
                 {:else}
