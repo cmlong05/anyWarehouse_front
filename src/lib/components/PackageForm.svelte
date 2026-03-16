@@ -34,13 +34,11 @@
     
     interface PackagePreviewItem {
         id: string;
-        shipmentItemId: number;
         shipmentId: number;
         shipmentNo: string;
         sku: string;
         productName: string;
         quantity: number;
-        maxQuantity: number;
     }
     let packagePreviewItems = $state<PackagePreviewItem[]>([]);
     let existingItems = $state<PackageItem[]>([]);
@@ -95,17 +93,16 @@
         })
     );
     
-    // 所有可选的商品（过滤掉已添加的）
+    // 所有可选的商品（来自已选发货单）
     const availableItems = $derived(() => {
-        const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem; maxQty: number}> = [];
+        const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem}> = [];
         for (const [shipmentId, shipment] of selectedShipmentsDetail) {
             if (!shipment.items) continue;
             for (const item of shipment.items) {
-                const maxQty = safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed, 0);
                 // 过滤掉已添加的商品
-                const isAdded = packagePreviewItems.some(p => p.shipmentItemId === item.id);
+                const isAdded = packagePreviewItems.some(p => p.sku === item.sku && p.shipmentId === shipmentId);
                 if (!isAdded) {
-                    items.push({ shipmentId, shipmentNo: shipment.shipment_no, item, maxQty });
+                    items.push({ shipmentId, shipmentNo: shipment.shipment_no, item });
                 }
             }
         }
@@ -114,7 +111,7 @@
     
     // 统计
     const totalPending = $derived(() => {
-        return availableItems().reduce((sum, { maxQty }) => sum + maxQty, 0);
+        return availableItems().length;
     });
     
     const totalAdded = $derived(() => {
@@ -155,19 +152,14 @@
             // 将现有明细转换为编辑模式下的预览格式
             if (pkg.items) {
                 packagePreviewItems = pkg.items.map(item => {
-                    const shipmentId = item.shipment_item_detail?.shipment || 0;
-                    const linkedShipment = linkedShipments.find(s => s.id === shipmentId);
-                    // 如果有 shipment_item 关联，则使用其ID；否则为0（手动添加的）
-                    const hasShipmentItem = item.shipment_item && item.shipment_item > 0;
+                    const linkedShipment = linkedShipments.find(s => s.id === item.shipment);
                     return {
                         id: `existing-${item.id}`,
-                        shipmentItemId: hasShipmentItem ? item.shipment_item! : 0,
-                        shipmentId: shipmentId,
-                        shipmentNo: hasShipmentItem ? (linkedShipment?.shipment_no || '-') : '-',
+                        shipmentId: item.shipment,
+                        shipmentNo: linkedShipment?.shipment_no || '-',
                         sku: item.sku,
                         productName: item.product_name,
-                        quantity: safeParseFloat(item.quantity),
-                        maxQuantity: safeParseFloat(item.quantity)
+                        quantity: safeParseFloat(item.quantity)
                     };
                 });
             }
@@ -195,23 +187,21 @@
         else { selectedShipmentIds = selectedShipmentIds.filter(id => id !== shipmentId); removeShipmentDetail(shipmentId); }
     }
 
-    function addItemToPreview(shipmentId: number, item: ShipmentItem, maxQty: number) {
+    function addItemToPreview(shipmentId: number, item: ShipmentItem) {
         const shipment = selectedShipmentsDetail.get(shipmentId); 
         if (!shipment) return;
-        if (packagePreviewItems.find(p => p.shipmentItemId === item.id)) { 
+        if (packagePreviewItems.find(p => p.sku === item.sku && p.shipmentId === shipmentId)) { 
             error = '该商品已在包裹明细中'; 
             setTimeout(() => error = '', 2000); 
             return; 
         }
         packagePreviewItems = [...packagePreviewItems, { 
             id: `${shipmentId}-${item.id}-${Date.now()}`, 
-            shipmentItemId: item.id, 
             shipmentId, 
             shipmentNo: shipment.shipment_no, 
             sku: item.sku, 
             productName: item.product_name, 
-            quantity: maxQty, 
-            maxQuantity: maxQty 
+            quantity: safeParseFloat(item.quantity)
         }];
     }
     
@@ -253,13 +243,11 @@
    
         packagePreviewItems = [...packagePreviewItems, { 
             id: `manual-${Date.now()}`, 
-            shipmentItemId: 0,  // 手动添加的没有关联的shipment_item
             shipmentId: shipmentId, 
             shipmentNo: shipmentNo,
             sku: sku, 
             productName: productName, 
-            quantity: manualQuantity, 
-            maxQuantity: manualQuantity 
+            quantity: manualQuantity
         }];
         
         // 清空表单
@@ -340,61 +328,25 @@
     function removePreviewItem(id: string) { 
         const removedItem = packagePreviewItems.find(item => item.id === id);
         
-        // 如果是关联发货单的商品，更新对应的 ShipmentItem 的 quantity_packed
-        if (removedItem && removedItem.shipmentItemId > 0 && removedItem.shipmentId > 0) {
-            const shipment = selectedShipmentsDetail.get(removedItem.shipmentId);
-            if (shipment && shipment.items) {
-                const shipmentItem = shipment.items.find(i => i.id === removedItem.shipmentItemId);
-                if (shipmentItem) {
-                    // 减少 quantity_packed
-                    const currentPacked = safeParseFloat(shipmentItem.quantity_packed, 0);
-                    const removedQty = removedItem.quantity;
-                    shipmentItem.quantity_packed = String(Math.max(0, currentPacked - removedQty));
-                    // 触发更新
-                    selectedShipmentsDetail = new Map(selectedShipmentsDetail);
-    }
-            }
-        }
-        
+        // 简化：直接删除，无需更新 quantity_packed
         packagePreviewItems = packagePreviewItems.filter(item => item.id !== id); 
     }
     
     function clearAllItems() {
-        // 恢复所有关联发货单的商品到可选列表
-        for (const item of packagePreviewItems) {
-            if (item.shipmentItemId > 0 && item.shipmentId > 0) {
-                const shipment = selectedShipmentsDetail.get(item.shipmentId);
-                if (shipment && shipment.items) {
-                    const shipmentItem = shipment.items.find(i => i.id === item.shipmentItemId);
-                    if (shipmentItem) {
-                        const currentPacked = safeParseFloat(shipmentItem.quantity_packed, 0);
-                        const removedQty = item.quantity;
-                        shipmentItem.quantity_packed = String(Math.max(0, currentPacked - removedQty));
-                    }
-                }
-            }
-        }
-        // 触发更新
-        if (packagePreviewItems.length > 0) {
-            selectedShipmentsDetail = new Map(selectedShipmentsDetail);
-        }
-        
         packagePreviewItems = [];
     }
     
     function fillAllPending() {
         const items = availableItems();
-        for (const { shipmentId, shipmentNo, item, maxQty } of items) {
-            if (!packagePreviewItems.find(p => p.shipmentItemId === item.id)) {
+        for (const { shipmentId, shipmentNo, item } of items) {
+            if (!packagePreviewItems.find(p => p.sku === item.sku && p.shipmentId === shipmentId)) {
                 packagePreviewItems = [...packagePreviewItems, {
                     id: `${shipmentId}-${item.id}-${Date.now()}`,
-                    shipmentItemId: item.id,
                     shipmentId,
                     shipmentNo,
                     sku: item.sku,
                     productName: item.product_name,
-                    quantity: maxQty,
-                    maxQuantity: maxQty
+                    quantity: safeParseFloat(item.quantity)
                 }];
             }
         }
@@ -414,20 +366,13 @@
             // 使用第一个选中的发货单作为主关联（如果有的话）
             const primaryShipmentId = selectedShipmentIds.length > 0 ? selectedShipmentIds[0] : undefined;
             
-            // 处理明细数据
-            const items = packagePreviewItems.map(item => {
-                if (item.shipmentItemId && item.shipmentItemId > 0) {
-                    // 关联发货单的明细
-                    return { shipment_item: item.shipmentItemId, quantity: item.quantity };
-                } else {
-                    // 手动添加的明细
-                    return { 
-                        sku: item.sku, 
-                        product_name: item.productName, 
-                        quantity: item.quantity 
-                    };
-                }
-            });
+            // 处理明细数据：所有 PackageItem 现在都需要指定 shipment
+            const items = packagePreviewItems.map(item => ({
+                shipment: item.shipmentId,
+                sku: item.sku, 
+                product_name: item.productName, 
+                quantity: item.quantity
+            }));
             
             const submitData: PackageCreateRequest = {
                 package_no: packageNo, 
@@ -616,14 +561,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {#each availableItems() as { shipmentId, shipmentNo, item, maxQty }}
+                                    {#each availableItems() as { shipmentId, shipmentNo, item }}
                                         <tr class="hover:bg-gray-50">
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{shipmentNo}</td>
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
                                             <td class="p-2 border-b border-gray-200">{item.product_name}</td>
-                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{formatNumber(maxQty)}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{formatNumber(item.quantity)}</td>
                                             <td class="text-center p-2 border-b border-gray-200">
-                                                <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700 transition-colors" onclick={() => addItemToPreview(shipmentId, item, maxQty)}>
+                                                <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700 transition-colors" onclick={() => addItemToPreview(shipmentId, item)}>
                                                     添加
                                                 </button>
                                             </td>

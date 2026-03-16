@@ -107,8 +107,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     const orderItem = availableOrderItems.find(oi => oi.sku === item.sku);
                     const qty = safeParseFloat(item.quantity);
                     const qtyShipped = safeParseFloat(item.quantity_shipped);
-                    const qtyPacked = safeParseFloat(item.quantity_packed);
-                    const editableQty = qty - qtyShipped - qtyPacked;
+                    const editableQty = qty - qtyShipped;  // 不再需要 quantity_packed
                     
                     return {
                         id: `plan_${item.id}_${Date.now()}`,

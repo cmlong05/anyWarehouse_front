@@ -58,7 +58,6 @@ export interface ShipmentItem {
     quantity: string;
     product_name: string;
     item?: number;
-    quantity_packed: string;
     quantity_pending?: string;
     quantity_shipped?: string;  // 已发货数量（从订单同步）
     notes?: string;
@@ -160,28 +159,38 @@ export interface ShipmentOrderInfo {
 export interface PackageItem {
     id: number;
     package: number;
-    shipment_item?: number;  // 可选，关联计划明细
-    shipment_item_detail?: ShipmentItem;
-    order?: number;
-    order_number?: string;
+    shipment: number;  // 所属发货单
+    shipment_detail?: {
+        id: number;
+        shipment_no: string;
+        status: ShipmentStatus;
+    };
     sku: string;
     quantity: string;
     product_name: string;
     item?: number;
+    order_detail?: {
+        id: number;
+        order_number: string;
+        customer_id?: number;
+        customer_name?: string;
+        contact_person?: string;
+        contact_phone?: string;
+        shipping_address?: string;
+        total_amount?: string;
+        currency?: string;
+    };
     notes?: string;
     item_detail?: ItemDetail;
     created_at: string;
     updated_at: string;
 }
 
-/** 创建包裹明细请求（支持两种模式） */
+/** 创建包裹明细请求 */
 export interface PackageItemCreateRequest {
-    // 模式1：按计划装箱（关联 ShipmentItem）
-    shipment_item?: number;
-    // 模式2：直接装箱（独立记录）
-    order?: number;
-    sku?: string;
-    quantity?: number;
+    shipment: number;  // 发货单 ID (必填)
+    sku: string;  // SKU (必填)
+    quantity: number;  // 数量 (必填)
     product_name?: string;
     item?: number;
     notes?: string;

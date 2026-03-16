@@ -382,8 +382,8 @@
                                     </td>
                                     <td class="text-right w-20">{formatNumber(item.quantity)}</td>
                                     <td class="text-sm text-gray-500 pl-8 text-right">
-                                        {#if item.order_number}
-                                            {item.order_number}
+                                        {#if item.order_detail?.order_number}
+                                            {item.order_detail.order_number}
                                         {:else}
                                             -
                                         {/if}
