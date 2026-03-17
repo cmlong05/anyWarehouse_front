@@ -146,6 +146,7 @@
                             sku: firstVariant.item_detail?.parent_item_sku || '',
                             product_name: firstVariant.item_detail?.parent_item_name || '',
                             quantity: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0).toString(),
+                            quantity_packed: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_packed ?? 0), 0).toString(),
                         } as ShipmentItem,
                     });
                     
@@ -328,7 +329,8 @@
                                 {#each sections as section}
                                     {@const item = section.item}
                                     {@const qty = safeParseFloat(item.quantity)}
-                                    {@const pending = qty}
+                                    {@const packed = safeParseFloat(item.quantity_packed || 0)}
+                                    {@const pending = qty - packed}
                                     {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                                     <tr class="{section.type === 'variant' ? 'bg-purple-50/50' : section.type === 'parent' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'} transition-colors">
                                         <td class="px-3 py-2.5 font-mono text-xs {section.type === 'variant' ? 'text-purple-600' : 'text-gray-600'}">
@@ -353,14 +355,21 @@
                                             {/if}
                                         </td>
                                         <td class="px-3 py-2.5 text-right font-medium text-gray-900">{formatNumber(qty)}</td>
+                                        <td class="px-3 py-2.5 text-right {packed > 0 ? 'text-green-600' : 'text-gray-400'}">
+                                            {formatNumber(packed)}
+                                        </td>
                                         <td class="px-3 py-2.5 text-right {pending > 0 ? 'text-red-600' : 'text-gray-400'}">
                                             {formatNumber(pending)}
                                         </td>
                                         <td class="px-3 py-2.5 text-center">
-                                            {#if pending === 0}
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">完整</span>
-                                            {:else if pending > 0}
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">待装箱</span>
+                                            {#if pending < 0}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">超额打包</span>
+                                            {:else if pending === 0}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">已打包</span>
+                                            {:else if packed > 0}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">部分打包</span>
+                                            {:else}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">待打包</span>
                                             {/if}
                                         </td>
                                     </tr>
@@ -408,6 +417,11 @@
                                     <div class="flex items-center gap-2">
                                         <span class="font-medium text-gray-900">{pkg.package_no}</span>
                                         <span class="text-gray-400 text-sm">序号 #{pkg.sequence_no}</span>
+                                        {#if pkg.status === 'sealed'}
+                                            <span class="text-gray-500">已封箱</span>
+                                        {:else}
+                                            <span class="text-red-500">待装箱</span>
+                                        {/if}
                                     </div>
                                     {#if pkg.tracking_number_detail}
                                         <div class="text-right">

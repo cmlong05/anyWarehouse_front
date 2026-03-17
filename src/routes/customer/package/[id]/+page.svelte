@@ -66,6 +66,26 @@
         }
     }
 
+    let sealing = $state(false);
+
+    async function toggleSeal() {
+        if (!pkg) return;
+        try {
+            sealing = true;
+            error = '';
+            if (pkg.status === 'sealed') {
+                await packageAPI.unseal(pkg.id);
+            } else {
+                await packageAPI.seal(pkg.id);
+            }
+            await loadPackage(pkg.id);
+        } catch (err: any) {
+            error = err.message || '操作失败';
+        } finally {
+            sealing = false;
+        }
+    }
+
     // 全局键盘事件处理
     $effect(() => {
         if (showDeleteModal) {
@@ -199,6 +219,19 @@
             <h1 class="text-2xl font-bold">包裹详情</h1>
         </div>
         <div class="flex gap-2">
+            <button
+                class="btn {pkg?.status === 'sealed' ? 'btn-warning' : 'btn-success'} btn-outline"
+                onclick={toggleSeal}
+                disabled={sealing}
+            >
+                {#if sealing}
+                    <span class="loading loading-spinner loading-xs"></span>
+                {:else if pkg?.status === 'sealed'}
+                    开箱
+                {:else}
+                    封箱
+                {/if}
+            </button>
             <button class="btn btn-outline" onclick={goToEdit}>编辑</button>
             <button class="btn btn-error btn-outline" onclick={confirmDelete}>删除</button>
         </div>
@@ -219,6 +252,16 @@
                     <div>
                         <span class="text-gray-500 text-sm">包裹编号</span>
                         <p class="font-medium">{pkg.package_no}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-sm">状态</span>
+                        <p>
+                            {#if pkg.status === 'sealed'}
+                                <span class="badge badge-success">已封箱</span>
+                            {:else}
+                                <span class="badge badge-warning">待装箱</span>
+                            {/if}
+                        </p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">序号</span>

@@ -56,6 +56,7 @@ export interface ShipmentItem {
     order_number?: string;
     sku: string;
     quantity: string;
+    quantity_packed?: string;  // 已打包数量
     product_name: string;
     item?: number;
     quantity_pending?: string;
@@ -192,6 +193,7 @@ export interface PackageShipmentBrief {
 export interface Package {
     id: number;
     package_no: string;
+    status: 'pending' | 'sealed';
     sequence_no: number;
     tracking_number?: number;
     tracking_number_detail?: TrackingNumberBrief;
@@ -225,6 +227,7 @@ export interface PackageShipment {
 export interface PackageBrief {
     id: number;
     package_no: string;
+    status: 'pending' | 'sealed';
     sequence_no: number;
     weight?: string;
     length?: string;

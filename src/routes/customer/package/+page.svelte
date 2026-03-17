@@ -185,6 +185,7 @@
                 <thead>
                     <tr class="bg-gray-100">
                         <th class="px-4 py-3 text-left">包裹编号</th>
+                        <th class="px-4 py-3 text-left">状态</th>
                         <th class="px-4 py-3 text-left">序号</th>
                         <th class="px-4 py-3 text-left">快递信息</th>
                         <th class="px-4 py-3 text-left">关联发货单</th>
@@ -200,6 +201,13 @@
                     {#each packages as pkg}
                         <tr class="hover:bg-blue-50 cursor-pointer" onclick={() => goToDetail(pkg.id)}>
                             <td class="px-4 py-3 font-medium">{pkg.package_no}</td>
+                            <td class="px-4 py-3">
+                                {#if pkg.status === 'sealed'}
+                                    <span class="badge badge-success badge-sm">已封箱</span>
+                                {:else}
+                                    <span class="badge badge-warning badge-sm">待装箱</span>
+                                {/if}
+                            </td>
                             <td class="px-4 py-3">#{pkg.sequence_no}</td>
                             <td class="px-4 py-3">
                                 {#if pkg.tracking_number_detail}

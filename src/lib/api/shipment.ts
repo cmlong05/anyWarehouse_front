@@ -185,6 +185,16 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
     async addToShipment(packageId: number, shipmentId: number): Promise<{ status: string; message: string }> {
         return this.client.post<{ status: string; message: string }>(`${this.basePath}${packageId}/add_to_shipment/`, { shipment_id: shipmentId });
     }
+
+    /** 封箱 */
+    async seal(packageId: number): Promise<{ status: string; message: string }> {
+        return this.client.post<{ status: string; message: string }>(`${this.basePath}${packageId}/seal/`, {});
+    }
+
+    /** 开箱 */
+    async unseal(packageId: number): Promise<{ status: string; message: string }> {
+        return this.client.post<{ status: string; message: string }>(`${this.basePath}${packageId}/unseal/`, {});
+    }
 }
 
 // ========== Shipment Item API ==========
