@@ -37,6 +37,7 @@
         { key: 'shipment_no', title: '发货批次号' },
         { key: 'status', title: '状态', width: '100px' },
         { key: 'order', title: '关联订单' },
+        { key: 'customer', title: '所属客户' },
         { key: 'contact', title: '收货人/电话' },
         { key: 'packages', title: '包裹数', align: 'center' as const, width: '80px' },
         { key: 'created_at', title: '创建时间', width: '150px' },
@@ -220,10 +221,13 @@
                 </span>
             {:else if column.key === 'order'}
                 {#if item.order_detail}
-                    <div>
-                        <div class="font-medium">{item.order_detail.order_number}</div>
-                        <div class="text-sm text-gray-500">{item.order_detail.customer_name}</div>
-                    </div>
+                    <div class="font-medium">{item.order_detail.order_number}</div>
+                {:else}
+                    <span class="text-gray-400">-</span>
+                {/if}
+            {:else if column.key === 'customer'}
+                {#if item.order_detail?.customer_name}
+                    <span>{item.order_detail.customer_name}</span>
                 {:else}
                     <span class="text-gray-400">-</span>
                 {/if}
@@ -238,7 +242,7 @@
                 {/if}
             {:else if column.key === 'packages'}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-gray-300 text-gray-600">
-                    {item.packages?.length || 0}
+                    {item.total_packages ?? 0}
                 </span>
             {:else if column.key === 'created_at'}
                 <span class="text-sm">{formatDate(item.created_at)}</span>
