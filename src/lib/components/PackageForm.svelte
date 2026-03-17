@@ -34,7 +34,7 @@
     
     interface PackagePreviewItem {
         id: string;
-        shipmentId: number;
+        shipmentId: number | null;
         shipmentNo: string;
         sku: string;
         productName: string;

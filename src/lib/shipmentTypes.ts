@@ -159,27 +159,12 @@ export interface ShipmentOrderInfo {
 export interface PackageItem {
     id: number;
     package: number;
-    shipment: number;  // 所属发货单
-    shipment_detail?: {
-        id: number;
-        shipment_no: string;
-        status: ShipmentStatus;
-    };
+    shipment: number | null;  // 所属发货单
+    shipment_no?: string | null;  // 发货单编号
     sku: string;
     quantity: string;
     product_name: string;
     item?: number;
-    order_detail?: {
-        id: number;
-        order_number: string;
-        customer_id?: number;
-        customer_name?: string;
-        contact_person?: string;
-        contact_phone?: string;
-        shipping_address?: string;
-        total_amount?: string;
-        currency?: string;
-    };
     notes?: string;
     item_detail?: ItemDetail;
     created_at: string;

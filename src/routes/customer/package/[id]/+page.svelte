@@ -352,7 +352,7 @@
                                 <th class="text-left w-32">SKU</th>
                                 <th class="text-left">商品名称</th>
                                 <th class="text-right w-20">数量</th>
-                                <th class="text-right pl-8">关联订单</th>
+                                <th class="text-right pl-8">关联发货单</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -382,11 +382,7 @@
                                     </td>
                                     <td class="text-right w-20">{formatNumber(item.quantity)}</td>
                                     <td class="text-sm text-gray-500 pl-8 text-right">
-                                        {#if item.order_detail?.order_number}
-                                            {item.order_detail.order_number}
-                                        {:else}
-                                            -
-                                        {/if}
+                                        {item.shipment_no || '-'}
                                     </td>
                                 </tr>
                             {/each}
