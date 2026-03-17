@@ -92,21 +92,28 @@
             </div>
             
             {#if showResults && searchResults.length > 0}
-                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-96 overflow-y-auto z-50">
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl max-h-96 overflow-y-auto z-50">
                     {#each searchResults as item}
-                        <button class="flex flex-col w-full px-4 py-3 text-left bg-transparent border-0 border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 last:border-b-0" onclick={() => handleSelect(item)}>
-                            <div class="flex items-center gap-3">
-                                <span class="font-mono font-semibold text-blue-500 text-sm whitespace-nowrap">{item.SKU}</span>
-                                <span class="font-medium text-gray-800">{item.name}</span>
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <div
+                            class="flex flex-col w-full px-4 py-3 text-left bg-white border-l-4 border-l-transparent border-b border-b-gray-100 cursor-pointer transition-all hover:bg-gray-100 hover:border-l-gray-400 last:border-b-0"
+                            onclick={() => handleSelect(item)}
+                            onkeydown={(e) => { if (e.key === 'Enter') handleSelect(item); }}
+                            role="button"
+                            tabindex="0"
+                        >
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-semibold bg-gray-200 text-gray-700 px-1.5 py-0.5 whitespace-nowrap">{item.SKU}</span>
+                                <span class="font-semibold text-gray-900">{item.name}</span>
                             </div>
                             {#if item.description}
-                                <span class="text-sm text-gray-400 mt-1 overflow-hidden text-ellipsis whitespace-nowrap">{item.description}</span>
+                                <span class="text-sm text-gray-500 mt-1 line-clamp-2">{item.description}</span>
                             {/if}
-                        </button>
+                        </div>
                     {/each}
                 </div>
             {:else if showResults && !isSearching && searchQuery}
-                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl z-50">
                     <div class="p-4 text-center text-gray-400">未找到匹配的商品</div>
                 </div>
             {/if}

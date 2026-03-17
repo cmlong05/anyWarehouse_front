@@ -10,6 +10,7 @@
     // 安全获取 items 数组
     let items = $derived(data?.items ?? []);
     let searchQuery = $state('');
+    let searchDebounce = $state<ReturnType<typeof setTimeout> | null>(null);
     
     // 当 data.searchQuery 变化时更新
     $effect(() => {
@@ -28,13 +29,16 @@
     
     // 实时搜索（URL 参数方式，刷新保留状态）
     function handleSearch() {
-        const params = new URLSearchParams(page.url.searchParams);
-        if (searchQuery.trim()) {
-            params.set('search', searchQuery.trim());
-        } else {
-            params.delete('search');
-        }
-        goto(`?${params.toString()}`, { keepFocus: true });
+        if (searchDebounce) clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            const params = new URLSearchParams(page.url.searchParams);
+            if (searchQuery.trim()) {
+                params.set('search', searchQuery.trim());
+            } else {
+                params.delete('search');
+            }
+            goto(`?${params.toString()}`, { keepFocus: true });
+        }, 300);
     }
     
     function clearSearch() {
@@ -139,7 +143,7 @@
             name="search"
             value={searchQuery}
             placeholder="搜索 SKU 或品项名称..."
-            onchange={(v) => { searchQuery = v; handleSearch(); }}
+            oninput={(v) => { searchQuery = v; handleSearch(); }}
         />
         {#if searchQuery}
             <button 
