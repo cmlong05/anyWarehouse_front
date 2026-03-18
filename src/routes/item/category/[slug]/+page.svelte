@@ -1,11 +1,25 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
+    import { goto, invalidateAll } from '$app/navigation';
+    import { ApiClient } from '$lib/api/client';
+    import BulkEditTable from '$lib/components/BulkEditTable.svelte';
     import type { CategoryData } from '$lib';
     
     let { data } = $props<{ category_details: CategoryData }>();
     
+    const apiClient = new ApiClient();
+    
     // 选中的物品 IDs
     let selectedItems = $state<Set<number>>(new Set());
+    let showBulkEditModal = $state(false);
+
+    const selectedItemIds = $derived(Array.from(selectedItems).join(','));
+    const customerQuotationHref = $derived(`/customer/quotation/add?item_ids=${selectedItemIds}`);
+    const supplierQuotationHref = $derived(`/supplier/quotation/add?item_ids=${selectedItemIds}`);
+    
+    // 获取已选物品的详细信息（用于表格显示）
+    const selectedItemDetails = $derived(
+        data.category_details.items.filter((item: { id: number; SKU: string; name: string }) => selectedItems.has(item.id))
+    );
     
     // 切换选中状态
     function toggleSelection(itemId: number, event: Event) {
@@ -31,29 +45,22 @@
         }
     }
     
-    // 跳转到客户报价页面
-    function goToCustomerQuotation() {
-        if (selectedItems.size === 0) {
-            alert('请先选择至少一个物品');
-            return;
-        }
-        const itemIds = Array.from(selectedItems).join(',');
-        goto(`/customer/quotation/add?item_ids=${itemIds}`);
-    }
-    
-    // 跳转到供应商报价页面
-    function goToSupplierQuotation() {
-        if (selectedItems.size === 0) {
-            alert('请先选择至少一个物品');
-            return;
-        }
-        const itemIds = Array.from(selectedItems).join(',');
-        goto(`/supplier/quotation/add?item_ids=${itemIds}`);
+    // 打开批量编辑模态框
+    function openBulkEdit() {
+        showBulkEditModal = true;
     }
     
     // 清空选择
     function clearSelection() {
         selectedItems = new Set();
+    }
+    
+    // 处理批量编辑成功
+    async function handleBulkEditSuccess() {
+        showBulkEditModal = false;
+        selectedItems = new Set();
+        // 刷新页面数据
+        await invalidateAll();
     }
 </script>
 
@@ -89,30 +96,33 @@
                 <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-3">
                         <h2 class="text-lg font-semibold text-gray-900">物品</h2>
-                        {#if selectedItems.size > 0}
-                            <span class="text-sm text-blue-600 font-medium">已选 {selectedItems.size} 个</span>
-                        {/if}
                     </div>
                     <div class="flex items-center gap-2">
                         {#if selectedItems.size > 0}
                             <button 
-                                class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
-                                onclick={goToCustomerQuotation}
-                            >
-                                客户报价 ({selectedItems.size})
-                            </button>
-                            <button 
-                                class="px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors"
-                                onclick={goToSupplierQuotation}
-                            >
-                                供应商报价 ({selectedItems.size})
-                            </button>
-                            <button 
-                                class="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+                                class="text-sm text-gray-400 hover:text-gray-600 transition-colors"
                                 onclick={clearSelection}
                             >
                                 清空
                             </button>
+                            <button 
+                                class="text-sm text-purple-600 hover:text-purple-800 transition-colors"
+                                onclick={openBulkEdit}
+                            >
+                                编辑
+                            </button>
+                            <a 
+                                href={supplierQuotationHref}
+                                class="text-sm text-amber-600 hover:text-amber-800 transition-colors"
+                            >
+                                供应商报价
+                            </a>
+                            <a 
+                                href={customerQuotationHref}
+                                class="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                            >
+                                向客户报价
+                            </a>
                         {/if}
                         <a 
                             href="/item/add?category={data.category_details.category.id}" 
@@ -131,9 +141,11 @@
                                 checked={data.category_details.items.length > 0 && selectedItems.size === data.category_details.items.length}
                                 indeterminate={selectedItems.size > 0 && selectedItems.size < data.category_details.items.length}
                                 onchange={toggleSelectAll}
-                                class="w-4 h-4 rounded border-gray-300 bg-white text-white accent-blue-600 focus:ring-blue-500"
+                                class="w-4 h-4 accent-gray-800 opacity-40 cursor-pointer"
                             />
-                            <span class="text-xs font-medium text-gray-500">全选</span>
+                            {#if selectedItems.size > 0}
+                                <span class="text-sm text-blue-600 font-medium">已选 {selectedItems.size} 个</span>
+                            {/if}
                         </div>
                     {/if}
                     {#each data.category_details.items as { id, SKU, name }}
@@ -142,10 +154,10 @@
                                 type="checkbox" 
                                 checked={selectedItems.has(id)}
                                 onchange={(e) => toggleSelection(id, e)}
-                                class="w-4 h-4 rounded border-gray-300 bg-white text-white accent-blue-600 focus:ring-blue-500"
+                                class="w-4 h-4 accent-gray-800 opacity-40 cursor-pointer"
                             />
                             <a href="/item/{id}" class="flex-1 flex items-center gap-4 group-hover:text-blue-600">
-                                <span class="font-mono text-sm font-medium text-blue-600 group-hover:text-blue-700">{SKU}</span>
+                                <span class="font-mono text-sm font-medium text-purple-600">{SKU}</span>
                                 <span class="text-gray-700 text-sm">{name}</span>
                             </a>
                         </div>
@@ -207,3 +219,12 @@
         </div>
     </div>
 </div>
+
+<!-- 批量编辑表格 -->
+<BulkEditTable
+    isOpen={showBulkEditModal}
+    selectedItems={selectedItemDetails}
+    {apiClient}
+    onclose={() => showBulkEditModal = false}
+    onsuccess={handleBulkEditSuccess}
+/>
