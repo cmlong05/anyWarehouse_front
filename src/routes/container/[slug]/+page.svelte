@@ -36,7 +36,8 @@
     const descendantColumns = [
         { key: 'fastCode', title: '容器编码', width: '120px' },
         { key: 'mark', title: '描述' },
-        { key: 'usage', title: '容量占用', width: '150px', align: 'center' as const },
+        { key: 'usage', title: '容量占用', width: '110px', align: 'right' as const, cellClass: '!px-0', headerClass: '!px-0' },
+        { key: 'capacity', title: '容量', width: '90px', align: 'right' as const, cellClass: '!px-0', headerClass: '!px-0' },
     ];
     
     const storageColumns = [
@@ -129,9 +130,6 @@
                                 style="width: {usagePercent}%"
                             ></div>
                         </div>
-                        <div class="text-right mt-2 text-sm text-gray-600">
-                            {usagePercent}% 已占用
-                        </div>
                     </div>
                     
                     <!-- 详细参数 -->
@@ -166,6 +164,7 @@
                     <DataTable
                         data={descendants.map(d => ({
                             ...d,
+                            capacity: d.base_volume,
                             usage: `${formatNumber(d.available_volume)} / ${formatNumber(d.base_volume)}`
                         }))}
                         columns={descendantColumns}
@@ -177,16 +176,15 @@
                                 <a href="/container/{item.fastCode}" class="text-blue-600 hover:text-blue-800 font-medium">
                                     {item.fastCode}
                                 </a>
+                            {:else if column.key === 'capacity'}
+                                <span class="font-mono text-sm text-gray-900">{formatNumber(item.capacity)}</span>
                             {:else if column.key === 'usage'}
-                                <div class="text-sm">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
-                                                class="h-full bg-green-500"
-                                                style="width: {item.base_volume > 0 ? Math.round((item.available_volume / item.base_volume) * 100) : 0}%"
-                                            ></div>
-                                        </div>
-                                        <span class="text-gray-600">{item.usage}</span>
+                                <div class="text-sm flex justify-end">
+                                    <div class="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                        <div 
+                                            class="h-full bg-green-500"
+                                            style="width: {item.base_volume > 0 ? Math.round((item.available_volume / item.base_volume) * 100) : 0}%"
+                                        ></div>
                                     </div>
                                 </div>
                             {:else}

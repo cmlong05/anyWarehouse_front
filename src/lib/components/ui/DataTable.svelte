@@ -11,6 +11,10 @@
         width?: string;
         align?: 'left' | 'center' | 'right';
         sortable?: boolean;
+        /** 额外的单元格 class，用于调整列间间距 */
+        cellClass?: string;
+        /** 额外的表头 class */
+        headerClass?: string;
     }
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,7 +102,8 @@
                                 'whitespace-nowrap',
                                 'text-gray-700',
                                 'font-semibold',
-                                column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
+                                column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
+                                column.headerClass ?? ''
                             ].join(' ')
                         }
                         style:width={column.width}
@@ -142,7 +147,8 @@
                                     [
                                         'px-4',
                                         'py-3',
-                                        column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'
+                                        column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
+                                        column.cellClass ?? ''
                                     ].join(' ')
                                 }
                             >
