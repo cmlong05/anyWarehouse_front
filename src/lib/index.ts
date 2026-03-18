@@ -780,6 +780,7 @@ export interface SalesOrder {
     tax_amount: string;
     shipping_cost: string;
     discount: string;
+    adjustment: string;
     total_amount: string;
     shipping_address: string;
     contact_person: string;
@@ -827,6 +828,7 @@ export interface SalesOrderCreateRequest {
     tax_rate?: number;
     shipping_cost?: number;
     discount?: number;
+    adjustment?: number;
     shipping_address?: string;
     contact_person?: string;
     contact_phone?: string;
@@ -844,6 +846,7 @@ export interface SalesOrderUpdateRequest {
     tax_rate?: number;
     shipping_cost?: number;
     discount?: number;
+    adjustment?: number;
     shipping_address?: string;
     contact_person?: string;
     contact_phone?: string;

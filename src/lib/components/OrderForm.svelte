@@ -683,7 +683,18 @@
                     disabled={loading}
                 />
             </div>
-            
+
+            <div class="space-y-1.5">
+                <label for="adjustment" class="text-sm font-medium text-gray-700">其他调整</label>
+                <NumberStepper
+                    bind:value={formData.adjustment}
+                    min={-999999}
+                    step={1}
+                    size="md"
+                    disabled={loading}
+                />
+            </div>
+
             <div class="bg-gray-50 rounded-lg p-4 space-y-2 lg:col-span-1">
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">商品小计:</span>
@@ -700,6 +711,10 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">折扣:</span>
                     <span class="font-medium text-gray-900">-{getCurrencySymbol(orderCurrency)}{Number(formData.discount).toFixed(2)}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">其他调整:</span>
+                    <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{Number(formData.adjustment).toFixed(2)}</span>
                 </div>
                 <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
                     <span class="text-gray-900">订单总计:</span>

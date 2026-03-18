@@ -21,6 +21,7 @@ export interface OrderFormData {
     tax_rate: number;
     shipping_cost: number;
     discount: number;
+    adjustment: number;
     shipping_address: string;
     contact_person: string;
     contact_phone: string;
@@ -65,6 +66,7 @@ export function useOrderForm(
         tax_rate: initialData?.tax_rate ?? 0,
         shipping_cost: initialData?.shipping_cost ?? 0,
         discount: initialData?.discount ?? 0,
+        adjustment: initialData?.adjustment ?? 0,
         shipping_address: initialData?.shipping_address ?? '',
         contact_person: initialData?.contact_person ?? '',
         contact_phone: initialData?.contact_phone ?? '',
@@ -93,7 +95,7 @@ export function useOrderForm(
     let taxAmount = $derived(subtotal * (Number(formData.tax_rate) / 100));
 
     let totalAmount = $derived(
-        subtotal + taxAmount + Number(formData.shipping_cost) - Number(formData.discount)
+        subtotal + taxAmount + Number(formData.shipping_cost) - Number(formData.discount) + Number(formData.adjustment)
     );
 
     // 优先级选项
@@ -309,6 +311,7 @@ export function useOrderForm(
             tax_rate: Number(formData.tax_rate) || 0,
             shipping_cost: Number(formData.shipping_cost) || 0,
             discount: Number(formData.discount) || 0,
+            adjustment: Number(formData.adjustment) || 0,
             items
         };
     }

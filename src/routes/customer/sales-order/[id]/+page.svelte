@@ -72,6 +72,7 @@
                 tax_rate: safeParseFloat(order.tax_rate),
                 shipping_cost: safeParseFloat(order.shipping_cost),
                 discount: safeParseFloat(order.discount),
+                adjustment: safeParseFloat(order.adjustment),
                 notes: `复制自订单 ${order.order_number}`,
                 internal_notes: '',
                 items: order.items?.map(item => ({
@@ -203,7 +204,7 @@
                 statusMap={SALES_STATUS_MAP}
                 transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
                 updating={orderDetail.updating}
-                canEdit={['draft', 'pending', 'confirmed', 'approved'].includes(order.status)}
+                canEdit={['draft', 'pending', 'confirmed', 'approved', 'partial'].includes(order.status)}
                 canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
                 labels={{
                     backToList: t('sales.btn.backToList', $localeStore),
@@ -262,6 +263,7 @@
                 { label: t('sales.field.taxAmount', $localeStore), value: order.tax_amount },
                 { label: t('sales.field.shippingCost', $localeStore), value: order.shipping_cost },
                 { label: t('sales.field.discount', $localeStore), value: order.discount, isNegative: true },
+                { label: t('sales.field.adjustment', $localeStore), value: order.adjustment, isNegative: safeParseFloat(order.adjustment) < 0 },
                 { label: t('sales.field.totalAmount', $localeStore), value: order.total_amount, isTotal: true },
             ]}
         />

@@ -11,6 +11,40 @@ export interface ApiError {
     code?: string;
 }
 
+/**
+ * 解析 DRF 错误响应为人类可读字符串
+ * 支持格式：
+ *   { detail: "msg" }
+ *   { field: ["msg1", "msg2"] }
+ *   { non_field_errors: ["msg"] }
+ *   { message: "msg" }
+ */
+function parseDrfError(data: any): string {
+    if (!data || typeof data !== 'object') return '';
+
+    // DRF 通用错误 / 自定义 exception_handler
+    if (typeof data.detail === 'string') return data.detail;
+
+    // 自定义 message 字段
+    if (typeof data.message === 'string') return data.message;
+
+    // 字段级别错误：拼接所有字段的错误信息
+    const messages: string[] = [];
+    for (const [key, value] of Object.entries(data)) {
+        if (Array.isArray(value)) {
+            const fieldMsgs = value.map((v: any) => (typeof v === 'string' ? v : JSON.stringify(v))).join('；');
+            if (key === 'non_field_errors') {
+                messages.push(fieldMsgs);
+            } else {
+                messages.push(`${key}: ${fieldMsgs}`);
+            }
+        } else if (typeof value === 'string') {
+            messages.push(`${key}: ${value}`);
+        }
+    }
+    return messages.join('\n');
+}
+
 export class ApiClient {
     private baseURL: string;
     private timeout: number;
@@ -54,7 +88,7 @@ export class ApiClient {
                 
                 try {
                     const errorData = await response.json();
-                    error.message = errorData.message || error.message;
+                    error.message = parseDrfError(errorData) || error.message;
                     error.code = errorData.code;
                 } catch {
                     // 如果无法解析错误响应，使用默认错误信息

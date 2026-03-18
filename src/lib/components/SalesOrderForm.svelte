@@ -262,6 +262,7 @@
         tax_rate: salesOrder?.tax_rate ? parseFloat(salesOrder.tax_rate) : 0,
         shipping_cost: salesOrder?.shipping_cost ? parseFloat(salesOrder.shipping_cost) : 0,
         discount: salesOrder?.discount ? parseFloat(salesOrder.discount) : 0,
+        adjustment: salesOrder?.adjustment ? parseFloat(salesOrder.adjustment) : 0,
         shipping_address: salesOrder?.shipping_address || undefined,
         contact_person: salesOrder?.contact_person || undefined,
         contact_phone: salesOrder?.contact_phone || undefined,

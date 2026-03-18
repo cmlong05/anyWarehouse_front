@@ -322,6 +322,7 @@
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 md:col-span-2">
             <h3 class="text-lg font-semibold text-gray-700 border-b-2 border-gray-300 pb-1 mb-3">商品描述</h3>
             <textarea id="description" name="description" bind:value={formData.description} rows={8} placeholder="商品描述信息" class="w-full px-3 py-2 border border-gray-300 rounded resize-y min-h-[80px] focus:border-blue-400 focus:outline-none"></textarea>
+            <div class="text-right text-xs text-gray-400 mt-1">{(formData.description || '').length} 字符</div>
         </div>
     </div>
 
