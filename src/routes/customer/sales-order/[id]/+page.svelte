@@ -2,8 +2,8 @@
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { salesOrderAPI } from '$lib/api';
-    import type { SalesOrder, SalesOrderItem } from '$lib';
+    import { customerAPI, salesOrderAPI } from '$lib/api';
+    import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
     import { safeParseFloat } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -44,8 +44,109 @@
         }
     });
 
+    let customerAddresses = $state<CustomerAddress[]>([]);
+    let shippingAddressesLoading = $state(false);
+
+    function normalizeAddressValue(value: string | null | undefined): string {
+        return (value || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function formatShippingAddress(address: CustomerAddress): string {
+        return normalizeAddressValue([
+            address.country,
+            address.province,
+            address.city,
+            address.district,
+            address.detail_address,
+            address.detail_address2,
+        ].filter(Boolean).join(' '));
+    }
+
+    function findMatchingShippingAddress(order: SalesOrder | null, addresses: CustomerAddress[]): CustomerAddress | null {
+        if (!order || addresses.length === 0) return null;
+
+        const normalizedOrderAddress = normalizeAddressValue(order.shipping_address);
+        const normalizedContactPerson = normalizeAddressValue(order.contact_person);
+        const normalizedContactPhone = normalizeAddressValue(order.contact_phone);
+
+        return (
+            addresses.find((address) =>
+                formatShippingAddress(address) === normalizedOrderAddress &&
+                normalizeAddressValue(address.contact_name) === normalizedContactPerson &&
+                normalizeAddressValue(address.phone) === normalizedContactPhone
+            ) ||
+            addresses.find((address) =>
+                formatShippingAddress(address) === normalizedOrderAddress &&
+                normalizeAddressValue(address.contact_name) === normalizedContactPerson
+            ) ||
+            addresses.find((address) => formatShippingAddress(address) === normalizedOrderAddress) ||
+            null
+        );
+    }
+
+    function getAddressStatusText(status: CustomerAddress['status'] | undefined): string {
+        if (!status) return '-';
+        if ($localeStore === 'en') {
+            return status === 'ACTIVE' ? 'Active' : 'Inactive';
+        }
+        return status === 'ACTIVE' ? '启用' : '停用';
+    }
+
+    const matchedShippingAddress = $derived(findMatchingShippingAddress(orderDetail.order, customerAddresses));
+
+    const shippingInfoItems = $derived.by(() => {
+        const order = orderDetail.order;
+        const matchedAddress = matchedShippingAddress;
+
+        if (!order) return [];
+
+        return [
+            { label: t('sales.field.shippingAddress', $localeStore), value: order.shipping_address },
+            { label: t('sales.field.contactPerson', $localeStore), value: order.contact_person },
+            { label: t('sales.field.contactPhone', $localeStore), value: order.contact_phone },
+            { label: t('sales.field.addressName', $localeStore), value: matchedAddress?.name },
+            { label: t('sales.field.defaultAddress', $localeStore), value: matchedAddress ? (matchedAddress.is_default ? t('sales.field.yes', $localeStore) : t('sales.field.no', $localeStore)) : undefined },
+            { label: t('sales.field.addressStatus', $localeStore), value: getAddressStatusText(matchedAddress?.status) },
+            { label: t('sales.field.addressEmail', $localeStore), value: matchedAddress?.email },
+            { label: t('sales.field.country', $localeStore), value: matchedAddress?.country },
+            { label: t('sales.field.province', $localeStore), value: matchedAddress?.province },
+            { label: t('sales.field.city', $localeStore), value: matchedAddress?.city },
+            { label: t('sales.field.district', $localeStore), value: matchedAddress?.district },
+            { label: t('sales.field.addressLine1', $localeStore), value: matchedAddress?.detail_address },
+            { label: t('sales.field.addressLine2', $localeStore), value: matchedAddress?.detail_address2 },
+            { label: t('sales.field.postalCode', $localeStore), value: matchedAddress?.postal_code },
+            { label: t('sales.field.addressRemark', $localeStore), value: matchedAddress?.remark },
+            { label: t('sales.field.paymentTerms', $localeStore), value: order.payment_terms },
+        ];
+    });
+
     onMount(() => {
         orderDetail.loadOrder();
+    });
+
+    $effect(() => {
+        const order = orderDetail.order;
+
+        if (!order?.customer) {
+            customerAddresses = [];
+            return;
+        }
+
+        shippingAddressesLoading = true;
+
+        void customerAPI.getAddresses(order.customer)
+            .then((addresses) => {
+                if (orderDetail.order?.id !== order.id) return;
+                customerAddresses = addresses;
+            })
+            .catch(() => {
+                if (orderDetail.order?.id !== order.id) return;
+                customerAddresses = [];
+            })
+            .finally(() => {
+                if (orderDetail.order?.id !== order.id) return;
+                shippingAddressesLoading = false;
+            });
     });
 
     // 编辑订单
@@ -271,13 +372,13 @@
         <!-- 收货信息 -->
         <OrderInfoGrid
             title={t('sales.shipping.title', $localeStore)}
-            items={[
-                { label: t('sales.field.shippingAddress', $localeStore), value: order.shipping_address },
-                { label: t('sales.field.contactPerson', $localeStore), value: order.contact_person },
-                { label: t('sales.field.contactPhone', $localeStore), value: order.contact_phone },
-                { label: t('sales.field.paymentTerms', $localeStore), value: order.payment_terms },
-            ]}
+            items={shippingInfoItems}
         />
+        {#if !shippingAddressesLoading && customerAddresses.length > 0 && !matchedShippingAddress}
+            <p class="mb-6 -mt-2 text-sm text-amber-700">
+                {$localeStore === 'en' ? 'This order keeps a shipping snapshot, so some structured address fields could not be matched from the customer address book.' : '该订单保存的是收货快照，部分结构化地址字段未能从客户地址簿中匹配。'}
+            </p>
+        {/if}
         {/key}
 
         <!-- 订单明细 - 占据整行 -->
