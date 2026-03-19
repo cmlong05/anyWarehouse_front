@@ -40,6 +40,13 @@
 				{ href: '/customer/package', label: '包裹管理' },
 				{ href: '/customer/shipment/tracking-number', label: '快递单号' }
 			]
+		},
+		{
+			href: '/settings/pi',
+			label: '系统设置',
+			children: [
+				{ href: '/settings/pi', label: 'PI 默认设置' }
+			]
 		}
 	];
 	

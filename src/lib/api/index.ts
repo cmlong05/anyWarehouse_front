@@ -68,3 +68,12 @@ export {
     shipmentItemAPI,
     packageItemAPI,
 } from './shipment';
+
+// 导出系统设置 API
+export {
+    SystemSettingAPI,
+    systemSettingAPI,
+    type SystemSettingResponse,
+    type PIDefaults,
+    type SystemSettingUpdateRequest,
+} from './settings';

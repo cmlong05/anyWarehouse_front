@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { salesOrderAPI } from '$lib/api';
+    import { salesOrderAPI, systemSettingAPI } from '$lib/api';
     import type { SalesOrder } from '$lib';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -14,7 +14,7 @@
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    // 可编辑的 PI 信息（纯前端）
+    // 可编辑的 PI 信息（默认值来自后端系统设置）
     let piDate = $state('');
     let validUntil = $state('');
     let paymentTerms = $state('T/T 30% deposit, 70% before shipment');
@@ -28,9 +28,23 @@
         piDate = today.toISOString().split('T')[0];
         const nextMonth = new Date(today.setMonth(today.getMonth() + 1));
         validUntil = nextMonth.toISOString().split('T')[0];
-        
+
+        await loadPIDefaults();
         await loadOrder();
     });
+
+    async function loadPIDefaults() {
+        try {
+            const defaults = await systemSettingAPI.getPIDefaults();
+            companyName = defaults.company_name || companyName;
+            companyAddress = defaults.company_address || companyAddress;
+            paymentTerms = defaults.payment_terms || paymentTerms;
+            deliveryTerms = defaults.delivery_terms || deliveryTerms;
+            notes = defaults.notes || notes;
+        } catch {
+            // 读取默认值失败时，使用页面内置默认值
+        }
+    }
 
     async function loadOrder() {
         loading = true;
@@ -80,6 +94,9 @@
                 <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600" onclick={goBack}>
                     ← 返回
                 </button>
+                <a href="/settings/pi" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                    ⚙️ PI 默认设置
+                </a>
                 <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={printPI}>
                     🖨️ 打印
                 </button>
