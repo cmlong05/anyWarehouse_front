@@ -73,7 +73,8 @@ export class CustomerAddressAPI extends BaseAPI<CustomerAddress, CustomerAddress
         if (params?.customer_id) queryParams.customer_id = params.customer_id.toString();
         if (params?.status) queryParams.status = params.status;
         if (params?.is_default !== undefined) queryParams.is_default = String(params.is_default);
-        return this.client.get<CustomerAddress[]>(this.basePath, queryParams);
+        const result = await this.client.get<CustomerAddress[] | PaginatedResponse<CustomerAddress>>(this.basePath, queryParams);
+        return Array.isArray(result) ? result : result.results ?? [];
     }
 }
 

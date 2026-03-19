@@ -8,6 +8,9 @@
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import { PartnerDetailHeader, PartnerInfoCard, OrdersSection, QuotationsSection } from '$lib/components/partner';
+    import CustomerAddressManager from '$lib/components/CustomerAddressManager.svelte';
+    import { customerAddressAPI } from '$lib/api';
+    import type { CustomerAddress } from '$lib';
     
     interface Props {
         data: { customer: Customer };
@@ -28,6 +31,17 @@
     // 初始化 - 在 $effect 中调用以确保响应性
     $effect(() => {
         partnerDetail.init(data.customer);
+    });
+
+    // 地址管理
+    let addresses = $state<CustomerAddress[]>([]);
+
+    $effect(() => {
+        if (data.customer.id) {
+            customerAddressAPI.listAddresses({ customer_id: data.customer.id })
+                .then(list => addresses = list)
+                .catch(() => {});
+        }
     });
     
     function getOrderStatusClass(status: string): string {
@@ -111,13 +125,13 @@
                 ]}
             />
             
-            <PartnerInfoCard
-                title="地址信息"
-                items={[
-                    { label: '主地址', value: partnerDetail.partner?.address || '' },
-                    { label: '地址数量', value: `${partnerDetail.partner?.address_count || 0} 个` },
-                ]}
-            />
+            <!-- 地址信息卡片：内嵌地址管理 -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200">
+                <CustomerAddressManager
+                    customerId={partnerDetail.partner?.id || 0}
+                    bind:addresses
+                />
+            </div>
             
             <PartnerInfoCard
                 title="其他信息"
