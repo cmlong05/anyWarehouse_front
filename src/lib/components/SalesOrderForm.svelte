@@ -7,12 +7,13 @@
         SalesOrderCreateRequest,
         CustomerQuotationBrief,
         Customer,
-        OrderFormItem
+        OrderFormItem,
+        CustomerAddress
     } from '$lib';
     import type { ItemVariant } from '$lib/types/variant';
     import { buildVariantAttributes } from '$lib/utils/variant';
     import OrderForm from './OrderForm.svelte';
-    import { customerAPI } from '$lib/api';
+    import { customerAPI, customerAddressAPI } from '$lib/api';
     import { config } from '$lib/config';
     import { onMount } from 'svelte';
     
@@ -43,6 +44,8 @@
     // 客户报价列表
     let quotations = $state<CustomerQuotationBrief[]>([]);
     let loadingQuotations = $state(false);
+    let shippingAddresses = $state<CustomerAddress[]>([]);
+    let loadingShippingAddresses = $state(true);
     // 预加载并展开变体的订单项
     let expandedPreloadItems = $state<OrderFormItem[] | undefined>(undefined);
     // 标记是否已经处理过预加载数据（防止重复处理）
@@ -83,6 +86,28 @@
         } finally {
             loadingQuotations = false;
         }
+    }
+
+    async function loadShippingAddresses() {
+        loadingShippingAddresses = true;
+        try {
+            shippingAddresses = await customerAddressAPI.listAddresses({
+                customer_id: customerId,
+                status: 'ACTIVE'
+            });
+        } catch (err) {
+            console.error('加载客户地址失败:', err);
+            shippingAddresses = [];
+        } finally {
+            loadingShippingAddresses = false;
+        }
+    }
+
+    function getDefaultShippingAddressId(addresses: CustomerAddress[]): number | null {
+        if (addresses.length === 0) return null;
+
+        const defaultAddress = addresses.find((addr) => addr.is_default);
+        return defaultAddress?.id ?? addresses[0]?.id ?? null;
     }
     
     // 获取物品的变体列表
@@ -241,6 +266,7 @@
     
     onMount(() => {
         loadQuotations();
+        loadShippingAddresses();
     });
     
     // whenever quotations or preloadItems update we need to expand
@@ -291,6 +317,18 @@
             notes: ''
         })) || [],
     });
+
+    const hasInitialShippingSnapshot = $derived(
+        Boolean(
+            salesOrder?.shipping_address ||
+            salesOrder?.contact_person ||
+            salesOrder?.contact_phone
+        )
+    );
+
+    const initialShippingAddressId = $derived(
+        hasInitialShippingSnapshot ? null : getDefaultShippingAddressId(shippingAddresses)
+    );
     
     // 标签配置
     const labels = {
@@ -311,14 +349,18 @@
     }
 </script>
 
-<OrderForm
-    type="sales"
-    partnerId={customerId}
-    partnerName={customer?.name || '加载中...'}
-    {initialData}
-    {quotationOptions}
-    {loadingQuotations}
-    {labels}
+    <OrderForm
+        type="sales"
+        partnerId={customerId}
+        partnerName={customer?.name || '加载中...'}
+        {initialData}
+        {shippingAddresses}
+        {loadingShippingAddresses}
+        enableShippingAddressSelection={true}
+        {initialShippingAddressId}
+        {quotationOptions}
+        {loadingQuotations}
+        {labels}
     {loading}
     {submitLabel}
     onSubmit={handleSubmit}

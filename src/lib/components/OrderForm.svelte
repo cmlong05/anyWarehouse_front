@@ -4,6 +4,7 @@
      * 支持采购订单和销售订单
      */
     import type { OrderFormData, OrderFormItem } from '$lib/composables/useOrderForm.svelte';
+    import type { CustomerAddress } from '$lib';
     import { useOrderForm } from '$lib/composables/useOrderForm.svelte';
     import Svelecte from 'svelecte';
     import { NumberStepper } from './ui';
@@ -18,6 +19,12 @@
         value: number;
         label: string;
         quotation: unknown;
+    }
+
+    interface ShippingAddressOption {
+        value: number;
+        label: string;
+        address: CustomerAddress;
     }
     
     interface Labels {
@@ -37,6 +44,10 @@
         partnerId: number;
         partnerName?: string;
         initialData?: Partial<OrderFormData>;
+        shippingAddresses?: CustomerAddress[];
+        loadingShippingAddresses?: boolean;
+        enableShippingAddressSelection?: boolean;
+        initialShippingAddressId?: number | null;
         quotationOptions: QuotationOption[];
         loadingQuotations?: boolean;
         labels: Labels;
@@ -51,6 +62,10 @@
         partnerId,
         partnerName = '加载中...',
         initialData = {},
+        shippingAddresses = [],
+        loadingShippingAddresses = false,
+        enableShippingAddressSelection = false,
+        initialShippingAddressId = null,
         quotationOptions,
         loadingQuotations = false,
         labels,
@@ -117,6 +132,25 @@
         // 如果没有找到，返回默认值
         return 'CNY';
     })());
+
+    let selectedShippingAddressId = $state<number | ''>('');
+    let selectedShippingOption = $state<ShippingAddressOption | undefined>(undefined);
+    let hasAppliedInitialShippingAddress = $state(false);
+
+    const shippingAddressOptions = $derived(
+        shippingAddresses.map((address) => ({
+            value: address.id,
+            label: address.name,
+            address
+        }))
+    );
+
+    const selectedShippingAddress = $derived(
+        shippingAddresses.find((addr) => addr.id === selectedShippingAddressId) ?? null
+    );
+    const showManualShippingFields = $derived(
+        !(type === 'sales' && enableShippingAddressSelection)
+    );
     
     // 获取货币符号
     function getCurrencySymbol(currency: string): string {
@@ -128,6 +162,35 @@
             'JPY': '¥',
         };
         return symbols[currency] || currency + ' ';
+    }
+
+    function formatShippingAddress(address: CustomerAddress): string {
+        return [
+            address.country,
+            address.province,
+            address.city,
+            address.district,
+            address.detail_address,
+            address.detail_address2,
+        ].filter(Boolean).join(' ');
+    }
+
+    function applyShippingAddress(address: CustomerAddress) {
+        formData.shipping_address = formatShippingAddress(address);
+        formData.contact_person = address.contact_name || '';
+        formData.contact_phone = address.phone || '';
+    }
+
+    function handleShippingAddressSelect(option: ShippingAddressOption | undefined) {
+        selectedShippingOption = option;
+
+        if (!option) {
+            selectedShippingAddressId = '';
+            return;
+        }
+
+        selectedShippingAddressId = option.value;
+        applyShippingAddress(option.address);
     }
     
     // 过滤掉已存在的 SKU
@@ -166,6 +229,24 @@
             // styling.
             formData.items = items.map(i => ({ ...i }));
         }
+    });
+
+    $effect(() => {
+        if (!enableShippingAddressSelection || type !== 'sales') return;
+        if (hasAppliedInitialShippingAddress) return;
+        if (!initialShippingAddressId) return;
+
+        const address = shippingAddresses.find((addr) => addr.id === initialShippingAddressId);
+        if (!address) return;
+
+        selectedShippingAddressId = address.id;
+        selectedShippingOption = {
+            value: address.id,
+            label: address.name,
+            address
+        };
+        applyShippingAddress(address);
+        hasAppliedInitialShippingAddress = true;
     });
 
     function handleItemSelect(selected: QuotationOption | undefined) {
@@ -390,41 +471,137 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="md:col-span-2 space-y-1.5">
-                <label for="shipping_address" class="text-sm font-medium text-gray-700">{labels.shipping}地址</label>
-                <input
-                    type="text"
-                    id="shipping_address"
-                    bind:value={formData.shipping_address}
-                    placeholder="请输入{labels.shipping}地址"
-                    disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                />
-            </div>
-            
-            <div class="space-y-1.5">
-                <label for="contact_person" class="text-sm font-medium text-gray-700">{labels.shipping}联系人</label>
-                <input
-                    type="text"
-                    id="contact_person"
-                    bind:value={formData.contact_person}
-                    placeholder="请输入联系人"
-                    disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                />
-            </div>
-            
-            <div class="space-y-1.5">
-                <label for="contact_phone" class="text-sm font-medium text-gray-700">{labels.shipping}电话</label>
-                <input
-                    type="tel"
-                    id="contact_phone"
-                    bind:value={formData.contact_phone}
-                    placeholder="请输入联系电话"
-                    disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
-                />
-            </div>
+            {#if type === 'sales' && enableShippingAddressSelection}
+                <div class="md:col-span-2 space-y-1.5">
+                    <label for="shipping_address_selector" class="text-sm font-medium text-gray-700">选择地址</label>
+                    {#key selectedShippingOption}
+                        <Svelecte
+                            inputId="shipping_address_selector"
+                            options={shippingAddressOptions}
+                            value={selectedShippingOption}
+                            valueAsObject={true}
+                            placeholder="请选择地址"
+                            searchable={true}
+                            clearable={false}
+                            disabled={loading || loadingShippingAddresses}
+                            onChange={handleShippingAddressSelect}
+                        />
+                    {/key}
+
+                    {#if loadingShippingAddresses}
+                        <p class="text-xs text-gray-500">正在加载客户地址...</p>
+                    {:else if shippingAddresses.length === 0}
+                        <p class="text-xs text-amber-600">该客户暂无可用地址。</p>
+                    {:else}
+                        <p class="text-xs text-gray-500">选择地址后会自动带入订单收货快照，下方只展示所选地址信息。</p>
+                    {/if}
+                </div>
+
+                {#if selectedShippingAddress}
+                    <div class="md:col-span-2 rounded-lg border border-green-200 bg-green-50/60 px-4 py-3 text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-gray-700">
+                            <div>
+                                <span class="text-gray-500">地址名称：</span>
+                                <span>{selectedShippingAddress.name || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">默认地址：</span>
+                                <span>{selectedShippingAddress.is_default ? '是' : '否'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">状态：</span>
+                                <span>{selectedShippingAddress.status === 'ACTIVE' ? '启用' : '停用'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">收件人：</span>
+                                <span>{selectedShippingAddress.contact_name || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">联系电话：</span>
+                                <span>{selectedShippingAddress.phone || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">邮箱：</span>
+                                <span>{selectedShippingAddress.email || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">国家：</span>
+                                <span>{selectedShippingAddress.country || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">州/省：</span>
+                                <span>{selectedShippingAddress.province || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">城市：</span>
+                                <span>{selectedShippingAddress.city || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">区/县：</span>
+                                <span>{selectedShippingAddress.district || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">地址1：</span>
+                                <span>{selectedShippingAddress.detail_address || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">地址2：</span>
+                                <span>{selectedShippingAddress.detail_address2 || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">邮编：</span>
+                                <span>{selectedShippingAddress.postal_code || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">备注：</span>
+                                <span>{selectedShippingAddress.remark || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+            {/if}
+
+            {#if showManualShippingFields}
+                <div class="md:col-span-2 space-y-1.5">
+                    <label for="shipping_address" class="text-sm font-medium text-gray-700">{labels.shipping}地址</label>
+                    <input
+                        type="text"
+                        id="shipping_address"
+                        bind:value={formData.shipping_address}
+                        placeholder="请输入{labels.shipping}地址"
+                        disabled={loading}
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    />
+                </div>
+                
+                <div class="space-y-1.5">
+                    <label for="contact_person" class="text-sm font-medium text-gray-700">{labels.shipping}联系人</label>
+                    <input
+                        type="text"
+                        id="contact_person"
+                        bind:value={formData.contact_person}
+                        placeholder="请输入联系人"
+                        disabled={loading}
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    />
+                </div>
+                
+                <div class="space-y-1.5">
+                    <label for="contact_phone" class="text-sm font-medium text-gray-700">{labels.shipping}电话</label>
+                    <input
+                        type="tel"
+                        id="contact_phone"
+                        bind:value={formData.contact_phone}
+                        placeholder="请输入联系电话"
+                        disabled={loading}
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    />
+                </div>
+            {:else}
+                <input type="hidden" value={formData.shipping_address} />
+                <input type="hidden" value={formData.contact_person} />
+                <input type="hidden" value={formData.contact_phone} />
+            {/if}
         </div>
     </div>
     
