@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';
-    import type { Customer, CustomerFormData, CustomerQuotationBrief } from '$lib';
+    import type { Customer, CustomerQuotationBrief } from '$lib';
     import { usePartnerDetail, PARTNER_STATUS_LABELS, PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
     import CustomerForm from '$lib/components/CustomerForm.svelte';
     import Alert from '$lib/components/Alert.svelte';

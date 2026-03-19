@@ -2,21 +2,20 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { supplierAPI } from '$lib/api';
-    import type { Supplier, QuotationBrief } from '$lib';
+    import type { PurchaseOrderBrief, Supplier, QuotationBrief } from '$lib';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { PageContainer } from '$lib/components/layout';
-    import { PartnerDetailHeader, QuotationsSection } from '$lib/components/partner';
-    import { PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
-    
+    import { PartnerDetailHeader, OrdersSection, QuotationsSection } from '$lib/components/partner';
+
     let supplierId = $derived(parseInt(page.params.slug || '0'));
     
     let supplier = $state<Supplier | null>(null);
     let loading = $state(true);
     let quotations = $state<QuotationBrief[]>([]);
-    let recentOrders = $state<any[]>([]);
+    let recentOrders = $state<PurchaseOrderBrief[]>([]);
     let quotationsLoading = $state(true);
     let ordersLoading = $state(true);
     let error = $state('');
@@ -45,17 +44,18 @@
     function getStatusLabel(status: string): string {
         return statusLabels[status] || status;
     }
-    
-    // 获取货币符号
-    function getCurrencySymbol(currency: string | undefined): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
+
+    function getOrderStatusClass(status: string): string {
+        const map: Record<string, string> = {
+            draft: 'bg-gray-100 text-gray-700',
+            pending: 'bg-amber-100 text-amber-700',
+            approved: 'bg-blue-100 text-blue-700',
+            ordered: 'bg-emerald-100 text-emerald-700',
+            partial: 'bg-amber-100 text-amber-700',
+            received: 'bg-indigo-100 text-indigo-700',
+            cancelled: 'bg-red-100 text-red-700',
         };
-        return symbols[currency || 'CNY'] || '¥';
+        return map[status] || 'bg-gray-100 text-gray-700';
     }
     
     async function loadQuotations() {
@@ -141,19 +141,6 @@
         return new Date(dateStr).toLocaleString('zh-CN');
     }
     
-    function getOrderStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            'draft': 'bg-gray-100 text-gray-700',
-            'pending': 'bg-amber-100 text-amber-700',
-            'approved': 'bg-blue-100 text-blue-700',
-            'ordered': 'bg-emerald-100 text-emerald-700',
-            'partial': 'bg-amber-100 text-amber-700',
-            'received': 'bg-indigo-100 text-indigo-700',
-            'cancelled': 'bg-red-100 text-red-700',
-        };
-        return map[status] || 'bg-gray-100 text-gray-700';
-    }
-    
     $effect(() => {
         loadSupplier();
     });
@@ -236,48 +223,16 @@
         </div>
     </div>
     
-    <!-- 最近采购订单 -->
-    <div class="py-6 border-t border-gray-200">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">最近采购订单</h2>
-            <a href="/supplier/purchase-order?supplier_id={supplier!.id}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors">
-                查看全部
-            </a>
-        </div>
-        
-        {#if ordersLoading}
-            <Loading text="加载订单..." />
-        {:else if recentOrders.length === 0}
-            <div class="text-center py-6 text-gray-500 text-sm"><p>暂无采购订单</p></div>
-        {:else}
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">订单号</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">下单日期</th>
-                            <th class="px-4 py-3 text-left font-semibold text-gray-700 border-b border-gray-200">状态</th>
-                            <th class="px-4 py-3 text-right font-semibold text-gray-700 border-b border-gray-200">金额</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {#each recentOrders as order}
-                            <tr class="cursor-pointer hover:bg-gray-50 transition-colors" onclick={() => goto(`/supplier/purchase-order/${order.id}`)}>
-                                <td class="px-4 py-3 font-mono text-gray-600 border-b border-gray-200">{order.order_number}</td>
-                                <td class="px-4 py-3 text-gray-600 border-b border-gray-200">{order.order_date}</td>
-                                <td class="px-4 py-3 border-b border-gray-200">
-                                    <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {getOrderStatusClass(order.status)}">
-                                        {getStatusLabel(order.status)}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 font-mono text-right border-b border-gray-200">{getCurrencySymbol(order.currency)}{Number(order.total_amount).toFixed(2)}</td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                </table>
-            </div>
-        {/if}
-    </div>
+    <OrdersSection
+        title="最近采购订单"
+        orders={recentOrders}
+        loading={ordersLoading}
+        emptyText="暂无采购订单"
+        viewAllHref={`/supplier/purchase-order?supplier_id=${supplier!.id}`}
+        getStatusLabel={getStatusLabel}
+        getStatusClass={getOrderStatusClass}
+        onRowClick={(id) => goto(`/supplier/purchase-order/${id}`)}
+    />
     
     <!-- 采购报价记录 -->
     <QuotationsSection

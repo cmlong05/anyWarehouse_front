@@ -27,7 +27,12 @@
 <div class="py-6 border-t border-gray-200">
     <div class="flex justify-between items-center mb-6">
         <h2 class="m-0 text-xl text-gray-800">{title}</h2>
-        <a href={viewAllHref} class="px-3 py-1.5 rounded-md text-sm font-medium cursor-pointer no-underline inline-flex items-center bg-blue-500 text-white hover:bg-blue-600">查看全部</a>
+        <a 
+            href={viewAllHref} 
+            class="inline-flex items-center px-2.5 py-1 text-sm font-medium text-white bg-green-300 hover:bg-green-400 rounded-md transition-colors shadow-sm"
+        >
+            查看全部
+        </a>
     </div>
     
     {#if loading}
