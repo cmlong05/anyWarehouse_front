@@ -11,6 +11,7 @@
         value: string | number | null | undefined;
         format?: 'date' | 'priority' | 'default';
         href?: string;
+        separator?: boolean;
     }
 
     interface Props {
@@ -45,6 +46,9 @@
     <h2 class="text-lg font-medium text-gray-800 mb-4">{title}</h2>
     <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
         {#each items as item}
+            {#if item.separator}
+                <div class="col-span-full"></div>
+            {:else}
             <div class="flex flex-col">
                 <span class="text-sm text-gray-500 mb-1">{item.label}</span>
                 {#if item.format === 'priority'}
@@ -59,6 +63,7 @@
                     <span class="font-medium text-gray-900">{formatValue(item)}</span>
                 {/if}
             </div>
+            {/if}
         {/each}
     </div>
 </div>

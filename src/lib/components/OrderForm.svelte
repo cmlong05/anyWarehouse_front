@@ -140,7 +140,7 @@
     const shippingAddressOptions = $derived(
         shippingAddresses.map((address) => ({
             value: address.id,
-            label: address.name,
+            label: [address.contact_name, address.company, address.city].filter(Boolean).join(' · ') || '地址',
             address
         }))
     );
@@ -242,7 +242,7 @@
         selectedShippingAddressId = address.id;
         selectedShippingOption = {
             value: address.id,
-            label: address.name,
+            label: [address.contact_name, address.company, address.city].filter(Boolean).join(' · ') || '地址',
             address
         };
         applyShippingAddress(address);
@@ -501,10 +501,6 @@
                     <div class="md:col-span-2 rounded-lg border border-green-200 bg-green-50/60 px-4 py-3 text-sm">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-gray-700">
                             <div>
-                                <span class="text-gray-500">地址名称：</span>
-                                <span>{selectedShippingAddress.name || '-'}</span>
-                            </div>
-                            <div>
                                 <span class="text-gray-500">默认地址：</span>
                                 <span>{selectedShippingAddress.is_default ? '是' : '否'}</span>
                             </div>
@@ -517,8 +513,12 @@
                                 <span>{selectedShippingAddress.contact_name || '-'}</span>
                             </div>
                             <div>
-                                <span class="text-gray-500">联系电话：</span>
+                                <span class="text-gray-500">电话：</span>
                                 <span>{selectedShippingAddress.phone || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">手机：</span>
+                                <span>{selectedShippingAddress.mobile || '-'}</span>
                             </div>
                             <div>
                                 <span class="text-gray-500">邮箱：</span>

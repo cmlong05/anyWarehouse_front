@@ -16,9 +16,10 @@
     let error = $state('');
 
     const emptyForm = (): CustomerAddressFormData => ({
-        name: '',
+        company: '',
         contact_name: '',
         phone: '',
+        mobile: '',
         email: '',
         country: '',
         province: '',
@@ -43,9 +44,10 @@
 
     function startEdit(addr: CustomerAddress) {
         formData = {
-            name: addr.name,
+            company: addr.company || '',
             contact_name: addr.contact_name || '',
             phone: addr.phone || '',
+            mobile: addr.mobile || '',
             email: addr.email || '',
             country: addr.country || '',
             province: addr.province || '',
@@ -70,9 +72,6 @@
     }
 
     function validateForm(): string {
-        if (!formData.name.trim()) {
-            return '请填写地址名称，例如：公司地址、仓库地址';
-        }
         return '';
     }
 
@@ -156,7 +155,6 @@
             <div class="border rounded-lg p-3 {addr.is_default ? 'border-green-300 bg-green-50/30' : 'border-gray-200 bg-white'}">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-medium text-gray-800 text-sm">{addr.name}</span>
                         {#if addr.is_default}
                             <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">默认</span>
                         {/if}
@@ -173,10 +171,11 @@
                     </div>
                 </div>
                 <div class="mt-1.5 space-y-0.5 text-xs text-gray-600">
-                    {#if addr.contact_name || addr.phone}
+                    {#if addr.contact_name || addr.phone || addr.mobile}
                         <div class="flex items-center gap-2">
                             {#if addr.contact_name}<span>{addr.contact_name}</span>{/if}
                             {#if addr.phone}<span class="text-gray-400">{addr.phone}</span>{/if}
+                            {#if addr.mobile}<span class="text-gray-400">{addr.mobile}</span>{/if}
                         </div>
                     {/if}
                     {#if addr.email}
@@ -197,7 +196,7 @@
 <!-- 新增/编辑弹窗 -->
 {#if showModal}
     <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 bg-black/50 z-[1100] flex items-center justify-center p-4"
         role="dialog"
         aria-modal="true"
         tabindex="-1"
@@ -215,16 +214,20 @@
                 {/if}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label for="addr-name" class="block text-sm text-gray-600 mb-1">地址名称 <span class="text-red-500">*</span></label>
-                        <input id="addr-name" bind:value={formData.name} placeholder="如：公司地址、仓库" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
+                        <label for="addr-company" class="block text-sm text-gray-600 mb-1">公司名称</label>
+                        <input id="addr-company" bind:value={formData.company} placeholder="公司或单位名称" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
                     </div>
                     <div>
                         <label for="addr-contact" class="block text-sm text-gray-600 mb-1">收件人</label>
                         <input id="addr-contact" bind:value={formData.contact_name} placeholder="收件人姓名" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
                     </div>
                     <div>
-                        <label for="addr-phone" class="block text-sm text-gray-600 mb-1">联系电话</label>
+                        <label for="addr-phone" class="block text-sm text-gray-600 mb-1">电话</label>
                         <input id="addr-phone" bind:value={formData.phone} placeholder="联系电话" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label for="addr-mobile" class="block text-sm text-gray-600 mb-1">手机</label>
+                        <input id="addr-mobile" bind:value={formData.mobile} placeholder="手机号码" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
                     </div>
                     <div>
                         <label for="addr-email" class="block text-sm text-gray-600 mb-1">邮箱</label>
@@ -241,6 +244,10 @@
                     <div>
                         <label for="addr-city" class="block text-sm text-gray-600 mb-1">城市</label>
                         <input id="addr-city" bind:value={formData.city} placeholder="城市" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label for="addr-district" class="block text-sm text-gray-600 mb-1">区/县</label>
+                        <input id="addr-district" bind:value={formData.district} placeholder="区/县" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
                     </div>
                     <div>
                         <label for="addr-postal" class="block text-sm text-gray-600 mb-1">邮编</label>

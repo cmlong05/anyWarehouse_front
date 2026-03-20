@@ -6,6 +6,7 @@
     import type { Quotation } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
+    import EditButton from '$lib/components/EditButton.svelte';
     
     let quotation = $state<Quotation | null>(null);
     let loading = $state(true);
@@ -99,9 +100,10 @@
                 <button class="px-4 py-2 text-sm font-medium bg-blue-500 text-white border border-blue-500 hover:bg-blue-400 transition-colors" onclick={togglePreferred}>
                     {quotation.is_preferred ? '取消首选' : '设为首选'}
                 </button>
-                <button class="px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-400 transition-colors" onclick={editQuotation}>
-                    编辑
-                </button>
+                <EditButton
+                    onClick={editQuotation}
+                    action="edit"
+                />
                 <button class="px-4 py-2 text-sm font-medium bg-white text-red-500 border border-red-500 hover:bg-red-500 hover:text-white transition-colors" onclick={deleteQuotation}>
                     删除
                 </button>

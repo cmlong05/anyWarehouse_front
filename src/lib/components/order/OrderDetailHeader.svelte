@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { StatusConfig, StatusTransition } from '$lib/composables/useOrderDetail.svelte';
+    import EditButton from '$lib/components/EditButton.svelte';
 
     interface Labels {
         backToList?: string;
@@ -75,7 +76,10 @@
             <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-gray-500 text-white hover:bg-gray-600" onclick={onCopy}>{l.copyOrder}</button>
         {/if}
         {#if canEdit && onEdit}
-            <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-gray-500 text-white hover:bg-gray-600" onclick={onEdit}>{l.edit}</button>
+            <EditButton
+                onClick={onEdit}
+                action="edit"
+            />
         {/if}
         {#if canDelete && onDelete}
             <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700" onclick={onDelete}>{l.delete}</button>

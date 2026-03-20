@@ -4,12 +4,11 @@
     import { goto } from '$app/navigation';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { DataTable } from '$lib/components/ui';
+    import EditButton from '$lib/components/EditButton.svelte';
     import ChevronRight from 'lucide-svelte/icons/chevron-right';
     import Package from 'lucide-svelte/icons/package';
     import BoxIcon from 'lucide-svelte/icons/box';
-    import Edit from 'lucide-svelte/icons/edit';
-    import Plus from 'lucide-svelte/icons/plus';
-    
+
     interface Props {
         data: {
             containerRes: ContainerResponse;
@@ -66,20 +65,14 @@
 <PageContainer>
     <PageHeader title="容器详情">
         {#snippet actions()}
-            <button 
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors"
-                onclick={goToEdit}
-            >
-                <Edit class="h-4 w-4" />
-                <span>编辑</span>
-            </button>
-            <button 
-                class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-colors"
-                onclick={goToAddChild}
-            >
-                <Plus class="h-4 w-4" />
-                <span>添加子容器</span>
-            </button>
+            <EditButton
+                onClick={goToEdit}
+                action="edit"
+            />
+            <EditButton
+                onClick={goToAddChild}
+                action="add"
+            />
         {/snippet}
     </PageHeader>
     

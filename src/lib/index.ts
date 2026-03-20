@@ -588,9 +588,10 @@ export interface CustomerFormData {
 export interface CustomerAddress {
     id: number;
     customer: number;
-    name: string;
+    company?: string;
     contact_name?: string;
     phone?: string;
+    mobile?: string;
     email?: string;
     country?: string;
     province?: string;
@@ -608,9 +609,10 @@ export interface CustomerAddress {
 
 /** 客户地址表单数据 */
 export interface CustomerAddressFormData {
-    name: string;
+    company?: string;
     contact_name?: string;
     phone?: string;
+    mobile?: string;
     email?: string;
     country?: string;
     province?: string;

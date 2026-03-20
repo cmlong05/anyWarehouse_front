@@ -103,10 +103,9 @@
         return [
             { label: t('sales.field.contactPerson', $localeStore), value: order.contact_person },
             { label: t('sales.field.contactPhone', $localeStore), value: order.contact_phone },
-            { label: t('sales.field.addressName', $localeStore), value: matchedAddress?.name },
-            { label: t('sales.field.defaultAddress', $localeStore), value: matchedAddress ? (matchedAddress.is_default ? t('sales.field.yes', $localeStore) : t('sales.field.no', $localeStore)) : undefined },
-            { label: t('sales.field.addressStatus', $localeStore), value: getAddressStatusText(matchedAddress?.status) },
+            { label: t('sales.field.mobile', $localeStore), value: matchedAddress?.mobile },
             { label: t('sales.field.addressEmail', $localeStore), value: matchedAddress?.email },
+            { label: t('sales.field.company', $localeStore), value: matchedAddress?.company },
             { label: t('sales.field.country', $localeStore), value: matchedAddress?.country },
             { label: t('sales.field.province', $localeStore), value: matchedAddress?.province },
             { label: t('sales.field.city', $localeStore), value: matchedAddress?.city },
@@ -116,6 +115,15 @@
             { label: t('sales.field.postalCode', $localeStore), value: matchedAddress?.postal_code },
             { label: t('sales.field.addressRemark', $localeStore), value: matchedAddress?.remark },
             { label: t('sales.field.paymentTerms', $localeStore), value: order.payment_terms },
+        ];
+    });
+
+    const addressMetaItems = $derived.by(() => {
+        const matchedAddress = matchedShippingAddress;
+        if (!matchedAddress) return [];
+        return [
+            { label: t('sales.field.defaultAddress', $localeStore), value: matchedAddress.is_default ? t('sales.field.yes', $localeStore) : t('sales.field.no', $localeStore) },
+            { label: t('sales.field.addressStatus', $localeStore), value: getAddressStatusText(matchedAddress.status) },
         ];
     });
 
@@ -373,6 +381,16 @@
             title={t('sales.shipping.title', $localeStore)}
             items={shippingInfoItems}
         />
+        {#if addressMetaItems.length > 0}
+            <div class="bg-gray-50 rounded-lg px-6 py-4 mb-6 border border-gray-200 flex flex-wrap gap-6 text-sm">
+                {#each addressMetaItems as meta}
+                    <div class="flex flex-col">
+                        <span class="text-gray-400">{meta.label}</span>
+                        <span class="text-gray-600 font-medium">{meta.value}</span>
+                    </div>
+                {/each}
+            </div>
+        {/if}
         {#if !shippingAddressesLoading && customerAddresses.length > 0 && !matchedShippingAddress}
             <p class="mb-6 -mt-2 text-sm text-amber-700">
                 {$localeStore === 'en' ? 'This order keeps a shipping snapshot, so some structured address fields could not be matched from the customer address book.' : '该订单保存的是收货快照，部分结构化地址字段未能从客户地址簿中匹配。'}
