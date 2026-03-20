@@ -101,7 +101,6 @@
         if (!order) return [];
 
         return [
-            { label: t('sales.field.shippingAddress', $localeStore), value: order.shipping_address },
             { label: t('sales.field.contactPerson', $localeStore), value: order.contact_person },
             { label: t('sales.field.contactPhone', $localeStore), value: order.contact_phone },
             { label: t('sales.field.addressName', $localeStore), value: matchedAddress?.name },
