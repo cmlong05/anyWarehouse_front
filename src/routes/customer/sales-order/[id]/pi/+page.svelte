@@ -14,7 +14,7 @@
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    // 可编辑的 PI 信息（默认值来自后端系统设置）
+    // PI 信息默认值来自后端系统设置
     let piDate = $state('');
     let validUntil = $state('');
     let paymentTerms = $state('T/T 30% deposit, 70% before shipment');
@@ -100,41 +100,6 @@
                 <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={printPI}>
                     🖨️ 打印
                 </button>
-            </div>
-        </div>
-
-        <!-- 编辑区 -->
-        <div class="max-w-5xl mx-auto mb-4 bg-white p-4 rounded-lg shadow print:hidden">
-            <h3 class="font-semibold mb-3">PI 信息设置</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label for="companyName" class="block text-sm text-gray-600 mb-1">公司名称</label>
-                    <input id="companyName" type="text" class="w-full px-3 py-2 border rounded" bind:value={companyName} />
-                </div>
-                <div>
-                    <label for="companyAddress" class="block text-sm text-gray-600 mb-1">公司地址</label>
-                    <input id="companyAddress" type="text" class="w-full px-3 py-2 border rounded" bind:value={companyAddress} />
-                </div>
-                <div>
-                    <label for="piDate" class="block text-sm text-gray-600 mb-1">PI 日期</label>
-                    <input id="piDate" type="date" class="w-full px-3 py-2 border rounded" bind:value={piDate} />
-                </div>
-                <div>
-                    <label for="validUntil" class="block text-sm text-gray-600 mb-1">有效期至</label>
-                    <input id="validUntil" type="date" class="w-full px-3 py-2 border rounded" bind:value={validUntil} />
-                </div>
-                <div class="col-span-2">
-                    <label for="paymentTerms" class="block text-sm text-gray-600 mb-1">付款条款</label>
-                    <input id="paymentTerms" type="text" class="w-full px-3 py-2 border rounded" bind:value={paymentTerms} />
-                </div>
-                <div class="col-span-2">
-                    <label for="deliveryTerms" class="block text-sm text-gray-600 mb-1">交货条款</label>
-                    <input id="deliveryTerms" type="text" class="w-full px-3 py-2 border rounded" bind:value={deliveryTerms} />
-                </div>
-                <div class="col-span-2">
-                    <label for="notes" class="block text-sm text-gray-600 mb-1">备注</label>
-                    <textarea id="notes" class="w-full px-3 py-2 border rounded" rows="2" bind:value={notes}></textarea>
-                </div>
             </div>
         </div>
 
