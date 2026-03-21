@@ -789,6 +789,7 @@ export interface SalesOrder {
     tax_rate: string;
     tax_amount: string;
     shipping_cost: string;
+    payment_fee: string;
     discount: string;
     adjustment: string;
     total_amount: string;
@@ -837,6 +838,7 @@ export interface SalesOrderCreateRequest {
     expected_delivery?: string | null;
     tax_rate?: number;
     shipping_cost?: number;
+    payment_fee?: number;
     discount?: number;
     adjustment?: number;
     shipping_address?: string;
@@ -855,6 +857,7 @@ export interface SalesOrderUpdateRequest {
     expected_delivery?: string | null;
     tax_rate?: number;
     shipping_cost?: number;
+    payment_fee?: number;
     discount?: number;
     adjustment?: number;
     shipping_address?: string;

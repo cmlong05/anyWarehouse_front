@@ -26,6 +26,8 @@
         label: string;
         address: CustomerAddress;
     }
+
+    type ShippingAddressSelectValue = ShippingAddressOption | ShippingAddressOption[] | number | string | null | undefined;
     
     interface Labels {
         partner: string;
@@ -33,6 +35,7 @@
         orderSection: string;
         shippingSection: string;
         feesSection: string;
+        paymentFee?: string;
         itemsSection: string;
         notesSection: string;
         partnerVisibleNote: string;
@@ -137,10 +140,26 @@
     let selectedShippingOption = $state<ShippingAddressOption | undefined>(undefined);
     let hasAppliedInitialShippingAddress = $state(false);
 
+    function toDisplayText(value: unknown): string {
+        if (value === null || value === undefined) return '';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+        if (typeof value === 'object') {
+            const obj = value as Record<string, unknown>;
+            const preferred = obj.label ?? obj.name ?? obj.text ?? obj.value;
+            return toDisplayText(preferred);
+        }
+        return '';
+    }
+
     const shippingAddressOptions = $derived(
         shippingAddresses.map((address) => ({
             value: address.id,
-            label: [address.contact_name, address.company, address.city].filter(Boolean).join(' · ') || '地址',
+            label: [
+                toDisplayText(address.contact_name),
+                toDisplayText(address.company),
+                toDisplayText(address.city)
+            ].filter(Boolean).join(' · ') || '地址',
             address
         }))
     );
@@ -166,31 +185,90 @@
 
     function formatShippingAddress(address: CustomerAddress): string {
         return [
-            address.country,
-            address.province,
-            address.city,
-            address.district,
-            address.detail_address,
-            address.detail_address2,
+            toDisplayText(address.country),
+            toDisplayText(address.province),
+            toDisplayText(address.city),
+            toDisplayText(address.district),
+            toDisplayText(address.detail_address),
+            toDisplayText(address.detail_address2),
         ].filter(Boolean).join(' ');
     }
 
     function applyShippingAddress(address: CustomerAddress) {
         formData.shipping_address = formatShippingAddress(address);
-        formData.contact_person = address.contact_name || '';
-        formData.contact_phone = address.phone || '';
+        formData.contact_person = toDisplayText(address.contact_name);
+        formData.contact_phone = toDisplayText(address.phone) || toDisplayText(address.mobile);
     }
 
-    function handleShippingAddressSelect(option: ShippingAddressOption | undefined) {
-        selectedShippingOption = option;
+    function normalizeShippingAddressOption(value: ShippingAddressSelectValue): ShippingAddressOption | undefined {
+        if (!value) return undefined;
 
-        if (!option) {
+        const selected = Array.isArray(value) ? value[0] : value;
+        if (!selected) return undefined;
+
+        if (typeof selected === 'number' || typeof selected === 'string') {
+            const id = Number(selected);
+            const address = shippingAddresses.find((addr) => addr.id === id);
+            if (!address) return undefined;
+            return {
+                value: address.id,
+                label: [
+                    toDisplayText(address.contact_name),
+                    toDisplayText(address.company),
+                    toDisplayText(address.city)
+                ].filter(Boolean).join(' · ') || '地址',
+                address
+            };
+        }
+
+        if (typeof selected === 'object') {
+            const option = selected as Partial<ShippingAddressOption> & { value?: number | string };
+            const optionValue = option.value;
+            const normalizedValue = typeof optionValue === 'number' ? optionValue : Number(optionValue);
+            const address = option.address || shippingAddresses.find((addr) => addr.id === normalizedValue);
+            if (!address || Number.isNaN(normalizedValue)) return undefined;
+
+            return {
+                value: normalizedValue,
+                label: option.label || [
+                    toDisplayText(address.contact_name),
+                    toDisplayText(address.company),
+                    toDisplayText(address.city)
+                ].filter(Boolean).join(' · ') || '地址',
+                address
+            };
+        }
+
+        return undefined;
+    }
+
+    function handleShippingAddressSelect(option: ShippingAddressSelectValue) {
+        const normalizedOption = normalizeShippingAddressOption(option);
+        selectedShippingOption = normalizedOption;
+
+        if (!normalizedOption) {
             selectedShippingAddressId = '';
             return;
         }
 
-        selectedShippingAddressId = option.value;
-        applyShippingAddress(option.address);
+        selectedShippingAddressId = normalizedOption.value;
+        applyShippingAddress(normalizedOption.address);
+    }
+
+    function handleQuotationSelect(selected: QuotationOption | undefined) {
+        if (selected && 'quotation' in selected) {
+            const q = selected.quotation as { 
+                id: number; 
+                item?: number; 
+                sku?: string; 
+                item_name?: string; 
+                item_name_en?: string;
+                price: string;
+            };
+            setCurrentItemQuotation(q);
+        } else {
+            setCurrentItemQuotation(undefined);
+        }
     }
     
     // 过滤掉已存在的 SKU
@@ -251,19 +329,7 @@
 
     function handleItemSelect(selected: QuotationOption | undefined) {
         selectedQuotation = selected;
-        if (selected && 'quotation' in selected) {
-            const q = selected.quotation as { 
-                id: number; 
-                item?: number; 
-                sku?: string; 
-                item_name?: string; 
-                item_name_en?: string;
-                price: string;
-            };
-            setCurrentItemQuotation(q);
-        } else {
-            setCurrentItemQuotation(undefined);
-        }
+        handleQuotationSelect(selected);
     }
     
     // 获取物品的变体列表
@@ -478,6 +544,8 @@
                         <Svelecte
                             inputId="shipping_address_selector"
                             options={shippingAddressOptions}
+                            labelField="label"
+                            valueField="value"
                             value={selectedShippingOption}
                             valueAsObject={true}
                             placeholder="请选择地址"
@@ -849,6 +917,19 @@
                     disabled={loading}
                 />
             </div>
+
+            {#if type === 'sales'}
+                <div class="space-y-1.5">
+                    <label for="payment_fee" class="text-sm font-medium text-gray-700">{labels.paymentFee || '付款费用'}</label>
+                    <NumberStepper
+                        bind:value={formData.payment_fee}
+                        min={0}
+                        step={0.01}
+                        size="md"
+                        disabled={loading}
+                    />
+                </div>
+            {/if}
             
             <div class="space-y-1.5">
                 <label for="discount" class="text-sm font-medium text-gray-700">折扣</label>
@@ -885,6 +966,12 @@
                     <span class="text-gray-600">运费:</span>
                     <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{Number(formData.shipping_cost).toFixed(2)}</span>
                 </div>
+                {#if type === 'sales'}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{labels.paymentFee || '付款费用'}:</span>
+                        <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{Number(formData.payment_fee).toFixed(2)}</span>
+                    </div>
+                {/if}
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-600">折扣:</span>
                     <span class="font-medium text-gray-900">-{getCurrencySymbol(orderCurrency)}{Number(formData.discount).toFixed(2)}</span>

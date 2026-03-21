@@ -20,6 +20,7 @@ export interface OrderFormData {
     expected_delivery: string;
     tax_rate: number;
     shipping_cost: number;
+    payment_fee: number;
     discount: number;
     adjustment: number;
     shipping_address: string;
@@ -65,6 +66,7 @@ export function useOrderForm(
         expected_delivery: initialData?.expected_delivery ?? '',
         tax_rate: initialData?.tax_rate ?? 0,
         shipping_cost: initialData?.shipping_cost ?? 0,
+        payment_fee: initialData?.payment_fee ?? 0,
         discount: initialData?.discount ?? 0,
         adjustment: initialData?.adjustment ?? 0,
         shipping_address: initialData?.shipping_address ?? '',
@@ -95,7 +97,7 @@ export function useOrderForm(
     let taxAmount = $derived(subtotal * (Number(formData.tax_rate) / 100));
 
     let totalAmount = $derived(
-        subtotal + taxAmount + Number(formData.shipping_cost) - Number(formData.discount) + Number(formData.adjustment)
+        subtotal + taxAmount + Number(formData.shipping_cost) + Number(formData.payment_fee) - Number(formData.discount) + Number(formData.adjustment)
     );
 
     // 优先级选项
@@ -310,6 +312,7 @@ export function useOrderForm(
             internal_notes: formData.internal_notes || undefined,
             tax_rate: Number(formData.tax_rate) || 0,
             shipping_cost: Number(formData.shipping_cost) || 0,
+            ...(type === 'sales' ? { payment_fee: Number(formData.payment_fee) || 0 } : {}),
             discount: Number(formData.discount) || 0,
             adjustment: Number(formData.adjustment) || 0,
             items
