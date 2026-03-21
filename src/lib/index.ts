@@ -589,6 +589,7 @@ export interface CustomerAddress {
     id: number;
     customer: number;
     company?: string;
+    tax_number?: string;
     contact_name?: string;
     phone?: string;
     mobile?: string;
@@ -610,6 +611,7 @@ export interface CustomerAddress {
 /** 客户地址表单数据 */
 export interface CustomerAddressFormData {
     company?: string;
+    tax_number?: string;
     contact_name?: string;
     phone?: string;
     mobile?: string;

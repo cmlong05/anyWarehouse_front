@@ -164,6 +164,10 @@ export const customerAddressSchema = z.object({
     name: z.string()
         .min(1, '地址名称不能为空')
         .max(50, '地址名称不能超过50个字符'),
+    tax_number: z.string()
+        .max(50, '税号不能超过50个字符')
+        .optional()
+        .or(z.literal('')),
     contact_name: z.string()
         .max(50, '联系人不能超过50个字符')
         .optional()
@@ -231,6 +235,7 @@ export interface CustomerAddress {
     id: number;
     customer: number;
     name: string;
+    tax_number?: string;
     contact_name?: string;
     phone?: string;
     province?: string;

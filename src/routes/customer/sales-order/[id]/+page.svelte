@@ -106,6 +106,7 @@
             { label: t('sales.field.mobile', $localeStore), value: matchedAddress?.mobile },
             { label: t('sales.field.addressEmail', $localeStore), value: matchedAddress?.email },
             { label: t('sales.field.company', $localeStore), value: matchedAddress?.company },
+            { label: t('sales.field.taxNumber', $localeStore), value: matchedAddress?.tax_number },
             { label: t('sales.field.country', $localeStore), value: matchedAddress?.country },
             { label: t('sales.field.province', $localeStore), value: matchedAddress?.province },
             { label: t('sales.field.city', $localeStore), value: matchedAddress?.city },

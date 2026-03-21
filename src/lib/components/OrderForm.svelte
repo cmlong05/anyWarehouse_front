@@ -593,6 +593,10 @@
                                 <span>{selectedShippingAddress.email || '-'}</span>
                             </div>
                             <div>
+                                <span class="text-gray-500">税号：</span>
+                                <span>{selectedShippingAddress.tax_number || '-'}</span>
+                            </div>
+                            <div>
                                 <span class="text-gray-500">国家：</span>
                                 <span>{selectedShippingAddress.country || '-'}</span>
                             </div>

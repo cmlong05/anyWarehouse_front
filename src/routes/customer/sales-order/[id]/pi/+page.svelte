@@ -198,6 +198,12 @@
                             <span class="text-sm">${parseFloat(order.shipping_cost).toFixed(2)}</span>
                         </div>
                     {/if}
+                    {#if parseFloat(order.payment_fee) > 0}
+                        <div class="flex justify-between py-1 border-b border-gray-200">
+                            <span class="text-sm text-gray-600">Payment Fee:</span>
+                            <span class="text-sm">${parseFloat(order.payment_fee).toFixed(2)}</span>
+                        </div>
+                    {/if}
                     {#if parseFloat(order.discount) > 0}
                         <div class="flex justify-between py-1 border-b border-gray-200">
                             <span class="text-sm text-gray-600">Discount:</span>

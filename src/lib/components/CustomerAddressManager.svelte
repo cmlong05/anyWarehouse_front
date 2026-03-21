@@ -17,6 +17,7 @@
 
     const emptyForm = (): CustomerAddressFormData => ({
         company: '',
+        tax_number: '',
         contact_name: '',
         phone: '',
         mobile: '',
@@ -45,6 +46,7 @@
     function startEdit(addr: CustomerAddress) {
         formData = {
             company: addr.company || '',
+            tax_number: addr.tax_number || '',
             contact_name: addr.contact_name || '',
             phone: addr.phone || '',
             mobile: addr.mobile || '',
@@ -181,6 +183,9 @@
                     {#if addr.email}
                         <div class="text-gray-400">{addr.email}</div>
                     {/if}
+                    {#if addr.tax_number}
+                        <div class="text-gray-400">税号：{addr.tax_number}</div>
+                    {/if}
                     {#if formatAddress(addr)}
                         <div class="text-gray-700">{formatAddress(addr)}</div>
                     {/if}
@@ -220,6 +225,10 @@
                     <div>
                         <label for="addr-contact" class="block text-sm text-gray-600 mb-1">收件人</label>
                         <input id="addr-contact" bind:value={formData.contact_name} placeholder="收件人姓名" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
+                    </div>
+                    <div>
+                        <label for="addr-tax-number" class="block text-sm text-gray-600 mb-1">税号</label>
+                        <input id="addr-tax-number" bind:value={formData.tax_number} placeholder="纳税人识别号（可选）" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none" />
                     </div>
                     <div>
                         <label for="addr-phone" class="block text-sm text-gray-600 mb-1">电话</label>
