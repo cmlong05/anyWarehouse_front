@@ -1,7 +1,6 @@
 <script lang="ts">
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';
-    import type { BaseItem } from '$lib';
     import type { ComponentFormData } from '$lib/composables/useBOMManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
 
@@ -12,7 +11,7 @@
         loading: boolean;
         onAdd: (childItemId: number, data: ComponentFormData) => Promise<void>;
         onToggle: () => void;
-        onFilter: (results: (BaseItem & { id: number })[]) => { value: number; label: string }[];
+        onFilter: (results: unknown) => { value: number; label: string }[];
     }
     
     let { itemId, itemSKU, show, loading, onAdd, onToggle, onFilter }: Props = $props();

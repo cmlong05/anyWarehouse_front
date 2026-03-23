@@ -229,7 +229,7 @@
                 <a href="/item/category/{category.category.id}" class="hover:text-blue-600 transition-colors">{category.category.name}</a>
                 <span>/</span>
                 {#if catIndex === data.itemDetail.categories.length - 1}
-                    <span class="text-gray-900 font-medium font-mono">{data.itemDetail.item.SKU}</span>
+                    <span class="text-gray-900 font-medium font-mono">{data.itemDetail.item.id}</span>
                 {/if}
             </nav>
         {/each}

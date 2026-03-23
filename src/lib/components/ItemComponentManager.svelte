@@ -48,7 +48,8 @@
     }
 
     // 处理搜索结果过滤
-    function handleFilter(results: (BaseItem & { id: number })[]) {
+    function handleFilter(json: unknown) {
+        const results = Array.isArray(json) ? json : ((json as { results?: BaseItem[] })?.results || []);
         return bom.filterSearchResults(results);
     }
 
