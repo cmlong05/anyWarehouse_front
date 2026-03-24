@@ -22,6 +22,7 @@
     let notes = $state('');
     let companyName = $state('Your Company Name');
     let companyAddress = $state('');
+    const orderCurrency = $derived(order?.currency || 'CNY');
 
     onMount(async () => {
         const today = new Date();
@@ -63,9 +64,20 @@
         return new Date(dateStr).toLocaleDateString('zh-CN');
     }
 
+    function getCurrencySymbol(currency: string): string {
+        const symbols: Record<string, string> = {
+            CNY: '¥',
+            USD: '$',
+            EUR: '€',
+            GBP: '£',
+            JPY: '¥',
+        };
+        return symbols[currency] || `${currency} `;
+    }
+
     function formatCurrency(amount: string | number): string {
         const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-        return `USD ${num.toFixed(2)}`;
+        return `${getCurrencySymbol(orderCurrency)}${num.toFixed(2)}`;
     }
 
     function printPI() {
@@ -144,7 +156,7 @@
                         <span class="font-medium">{order.order_number}</span>
                         
                         <span class="text-gray-600 text-left">Currency:</span>
-                        <span class="font-medium">USD</span>
+                        <span class="font-medium">{orderCurrency}</span>
                     </div>
                 </div>
             </div>
@@ -172,8 +184,8 @@
                             </td>
                             <td class="py-2 px-3 text-sm text-right">{formatNumber(item.quantity)}</td>
                             <td class="py-2 px-3 text-sm text-right">PCS</td>
-                            <td class="py-2 px-3 text-sm text-right">${parseFloat(item.unit_price).toFixed(2)}</td>
-                            <td class="py-2 px-3 text-sm text-right">${parseFloat(item.line_total).toFixed(2)}</td>
+                            <td class="py-2 px-3 text-sm text-right">{formatCurrency(item.unit_price)}</td>
+                            <td class="py-2 px-3 text-sm text-right">{formatCurrency(item.line_total)}</td>
                         </tr>
                     {/each}
                 </tbody>
@@ -184,30 +196,30 @@
                 <div class="w-72">
                     <div class="flex justify-between py-1 border-b border-gray-200">
                         <span class="text-sm text-gray-600">Subtotal:</span>
-                        <span class="text-sm">${parseFloat(order.subtotal).toFixed(2)}</span>
+                        <span class="text-sm">{formatCurrency(order.subtotal)}</span>
                     </div>
                     {#if parseFloat(order.tax_amount) > 0}
                         <div class="flex justify-between py-1 border-b border-gray-200">
                             <span class="text-sm text-gray-600">Tax ({order.tax_rate}%):</span>
-                            <span class="text-sm">${parseFloat(order.tax_amount).toFixed(2)}</span>
+                            <span class="text-sm">{formatCurrency(order.tax_amount)}</span>
                         </div>
                     {/if}
                     {#if parseFloat(order.shipping_cost) > 0}
                         <div class="flex justify-between py-1 border-b border-gray-200">
                             <span class="text-sm text-gray-600">Shipping:</span>
-                            <span class="text-sm">${parseFloat(order.shipping_cost).toFixed(2)}</span>
+                            <span class="text-sm">{formatCurrency(order.shipping_cost)}</span>
                         </div>
                     {/if}
                     {#if parseFloat(order.payment_fee) > 0}
                         <div class="flex justify-between py-1 border-b border-gray-200">
                             <span class="text-sm text-gray-600">Payment Fee:</span>
-                            <span class="text-sm">${parseFloat(order.payment_fee).toFixed(2)}</span>
+                            <span class="text-sm">{formatCurrency(order.payment_fee)}</span>
                         </div>
                     {/if}
                     {#if parseFloat(order.discount) > 0}
                         <div class="flex justify-between py-1 border-b border-gray-200">
                             <span class="text-sm text-gray-600">Discount:</span>
-                            <span class="text-sm">-${parseFloat(order.discount).toFixed(2)}</span>
+                            <span class="text-sm">-{formatCurrency(order.discount)}</span>
                         </div>
                     {/if}
                     <div class="flex justify-between py-2 border-t-2 border-gray-800 mt-2">

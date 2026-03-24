@@ -137,7 +137,8 @@
     async function loadShipments() { 
         try { 
             const response = await shipmentAPI.list({ status: 'confirmed', page_size: 100 });
-            availableShipments = Array.isArray(response) ? response : (response.results || []);
+            const shipments = Array.isArray(response) ? response : (response.results || []);
+            availableShipments = shipments.filter((shipment) => shipment.order_detail?.customer_id);
         } catch {} 
     }
 

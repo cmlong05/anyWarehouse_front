@@ -121,6 +121,7 @@ export interface ShipmentBrief {
     id: number;
     shipment_no: string;
     status: ShipmentStatus;
+    order_detail?: ShipmentOrderInfo | null;
     total_packages: number;
     total_items: number;
     shipped_at?: string;
