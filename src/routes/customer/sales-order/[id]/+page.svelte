@@ -338,6 +338,14 @@
                 >
                     📄 打印 PI
                 </button>
+                <!-- 打印 Invoice 按钮 -->
+                <button
+                    type="button"
+                    class="py-2 px-4 text-sm font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                    onclick={() => goto(`/customer/sales-order/${order.id}/invoice`)}
+                >
+                    🧾 打印 Invoice
+                </button>
                 <LocaleSwitcher variant="button" />
             </div>
         </div>

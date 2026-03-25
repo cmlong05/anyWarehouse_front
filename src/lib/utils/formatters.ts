@@ -99,6 +99,30 @@ export function formatNumber(num: number | string | undefined | null, decimals: 
 }
 
 /**
+ * 根据货币代码返回货币符号
+ * 未知货币代码直接返回 "{code} "（带尾随空格），用于拼接金额
+ */
+export function getCurrencySymbol(currency: string | undefined | null): string {
+    const symbols: Record<string, string> = {
+        CNY: '¥',
+        USD: '$',
+        EUR: '€',
+        GBP: '£',
+        JPY: '¥',
+    };
+    const code = (currency || 'CNY').toUpperCase();
+    return symbols[code] ?? `${code} `;
+}
+
+/**
+ * 格式化货币金额（符号 + 两位小数）
+ */
+export function formatCurrencyAmount(amount: string | number, currency: string | undefined | null): string {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return `${getCurrencySymbol(currency)}${isNaN(num) ? '0.00' : num.toFixed(2)}`;
+}
+
+/**
  * 格式化百分比
  * @param value 数值
  * @param decimals 小数位数，默认 2

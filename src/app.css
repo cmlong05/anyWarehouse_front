@@ -65,6 +65,22 @@ body {
   color: var(--color-gray-800);
 }
 
+/* 打印全局样式 */
+@page {
+    margin: 1cm;
+}
+
+@media print {
+    nav,
+    .sticky {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+    }
+}
+
 /* 动画 */
 @keyframes spin {
   from { transform: rotate(0deg); }

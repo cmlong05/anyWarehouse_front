@@ -14,25 +14,22 @@
     let loading = $state(true);
     let error = $state<string | null>(null);
 
-    let piDate = $state('');
-    let validUntil = $state('');
+    let invoiceDate = $state('');
     let paymentTerms = $state('T/T 30% deposit, 70% before shipment');
     let deliveryTerms = $state('FOB Shenzhen');
     let notes = $state('');
     let companyName = $state('Your Company Name');
     let companyAddress = $state('');
 
+    const invoiceNo = $derived(order ? `INV-${order.order_number}` : '');
     const metaRows = $derived(order ? [
-        { label: 'Date:', value: formatDate(piDate) },
-        { label: 'Valid Until:', value: formatDate(validUntil) },
+        { label: 'Invoice No.:', value: invoiceNo },
+        { label: 'Date:', value: formatDate(invoiceDate) },
         { label: 'SO No.:', value: order.order_number },
     ] : []);
 
     onMount(async () => {
-        const today = new Date();
-        piDate = today.toISOString().split('T')[0];
-        const nextMonth = new Date(today.setMonth(today.getMonth() + 1));
-        validUntil = nextMonth.toISOString().split('T')[0];
+        invoiceDate = new Date().toISOString().split('T')[0];
 
         await loadDefaults();
         await loadOrder();
@@ -87,9 +84,9 @@
             {paymentTerms}
             {deliveryTerms}
             {notes}
-            title="PROFORMA INVOICE"
+            title="INVOICE"
             {metaRows}
-            showCustomerSignature={true}
+            showCustomerSignature={false}
             locale={$localeStore}
             onBack={() => goto(`/customer/sales-order/${orderId}`)}
             onPrint={() => window.print()}
