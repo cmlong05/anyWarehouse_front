@@ -34,8 +34,14 @@
         metaRows: MetaRow[];
         showCustomerSignature?: boolean;
         locale?: string;
-        onBack: () => void;
-        onPrint: () => void;
+        downloading?: boolean;
+        /** 文档主体的 DOM id，默认 'print-document' */
+        elementId?: string;
+        /** 是否显示工具栏（返回/打印/下载），离屏渲染时设为 false */
+        showToolbar?: boolean;
+        onBack?: () => void;
+        onPrint?: () => void;
+        onDownload?: () => void;
     }
 
     let {
@@ -49,8 +55,12 @@
         metaRows,
         showCustomerSignature = false,
         locale = 'zh',
+        downloading = false,
+        elementId = 'print-document',
+        showToolbar = true,
         onBack,
         onPrint,
+        onDownload,
     }: Props = $props();
 
     const currency = $derived(order.currency || 'CNY');
@@ -60,6 +70,7 @@
     }
 </script>
 
+{#if showToolbar}
 <!-- 工具栏（打印时隐藏） -->
 <div class="max-w-5xl mx-auto mb-4 flex justify-between items-center print:hidden">
     <div class="flex gap-2">
@@ -72,11 +83,27 @@
         <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={onPrint}>
             🖨️ 打印
         </button>
+        <button
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            onclick={onDownload}
+            disabled={downloading}
+        >
+            {#if downloading}
+                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                生成中...
+            {:else}
+                ⬇️ 下载 PDF
+            {/if}
+        </button>
     </div>
 </div>
+{/if}
 
 <!-- 文档主体 -->
-<div class="max-w-5xl mx-auto bg-white p-8 shadow-lg print:shadow-none print:p-0 print:max-w-full print:m-0">
+<div id={elementId} class="max-w-5xl mx-auto bg-white p-8 shadow-lg print:shadow-none print:p-0 print:max-w-full print:m-0">
     <!-- 头部：公司信息 + 文档标题 -->
     <div class="flex justify-between items-start mb-8 border-b-2 border-gray-800 pb-4">
         <div class="flex-1">
