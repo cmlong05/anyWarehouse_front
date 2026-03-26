@@ -23,11 +23,15 @@
     const ancestors = $derived(data.containerRes.ancestors);
     const siblings = $derived(data.containerRes.siblings);
     
-    // 控制子容器显示（默认隐藏空子容器）
-    let showDescendants = $state(false);
-    
+
     // 统计
-    const usagePercent = $derived(container.volume > 0 ? Math.round((container.a_volume / container.volume) * 100) : 0);
+    // a_volume = 可用容积（剩余空间）；occupiedVolume = 已占用容积
+    const occupiedVolume = $derived(container.volume - container.a_volume);
+    const remainingPercent = $derived(
+        container.volume > 0
+            ? Math.min(100, Math.max(0, Math.round((container.a_volume / container.volume) * 100)))
+            : 0
+    );
     const descendantCount = $derived(descendants.length);
     const storageCount = $derived(storages.length);
     
@@ -35,7 +39,7 @@
     const descendantColumns = [
         { key: 'fastCode', title: '容器编码', width: '120px' },
         { key: 'mark', title: '描述' },
-        { key: 'usage', title: '容量占用', width: '110px', align: 'right' as const, cellClass: '!px-0', headerClass: '!px-0' },
+        { key: 'usage', title: '剩余空间', width: '110px', align: 'right' as const, cellClass: '!px-0', headerClass: '!px-0' },
         { key: 'capacity', title: '容量', width: '90px', align: 'right' as const, cellClass: '!px-0', headerClass: '!px-0' },
     ];
     
@@ -112,15 +116,15 @@
                     <!-- 进度条 -->
                     <div>
                         <div class="flex justify-between mb-2">
-                            <span class="text-sm text-gray-600">当前占用</span>
+                            <span class="text-sm text-gray-600">剩余空间</span>
                             <span class="font-semibold text-gray-900">
                                 {formatNumber(container.a_volume)} / {formatNumber(container.volume)}
                             </span>
                         </div>
                         <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div 
-                                class="h-full bg-blue-600 transition-all"
-                                style="width: {usagePercent}%"
+                                class="h-full bg-green-500 transition-all"
+                                style="width: {remainingPercent}%"
                             ></div>
                         </div>
                     </div>
@@ -134,11 +138,11 @@
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">已占用</span>
-                                <span class="text-gray-900 font-mono">{formatNumber(container.a_volume)}</span>
+                                <span class="text-gray-900 font-mono">{formatNumber(occupiedVolume)}</span>
                             </div>
                             <div class="flex justify-between">
                                 <span class="text-gray-600">可用</span>
-                                <span class="text-gray-900 font-mono">{formatNumber(container.volume - container.a_volume)}</span>
+                                <span class="text-gray-900 font-mono">{formatNumber(container.a_volume)}</span>
                             </div>
                         </div>
                     </div>
@@ -176,7 +180,7 @@
                                     <div class="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                         <div 
                                             class="h-full bg-green-500"
-                                            style="width: {item.base_volume > 0 ? Math.round((item.available_volume / item.base_volume) * 100) : 0}%"
+                                            style="width: {item.base_volume > 0 ? Math.min(100, Math.max(0, Math.round((item.available_volume / item.base_volume) * 100))) : 0}%"
                                         ></div>
                                     </div>
                                 </div>
