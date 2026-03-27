@@ -160,7 +160,6 @@ export interface OrderSummary {
 export interface QuotationBase {
     id: number;
     item?: number;
-    sku?: string;
     price: string;
     currency: string;
     min_quantity: number;
@@ -176,7 +175,6 @@ export interface QuotationBase {
 /** 报价简要信息 */
 export interface QuotationBrief {
     id: number;
-    sku?: string;
     item_name?: string;
     price: string;
     currency: string;

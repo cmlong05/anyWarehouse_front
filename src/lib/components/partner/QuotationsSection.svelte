@@ -176,7 +176,7 @@
                                 {#each group.quotations as quotation}
                                     <tr class="bg-white">
                                         <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
-                                        <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                        <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                         <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
                                         <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
                                         <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
@@ -197,7 +197,7 @@
                         {#each independentQuotations as quotation}
                             <tr class="border-b border-gray-200">
                                 <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
-                                <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
@@ -216,7 +216,7 @@
                         <!-- 无变体时直接平铺显示 -->
                         {#each quotations as quotation}
                             <tr class="border-b border-gray-200">
-                                <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.sku || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>

@@ -66,7 +66,7 @@
     // 转换为Svelecte选项格式
     const quotationOptions = $derived(quotations.map(q => ({
         value: q.id,
-        label: `${q.sku || '-'} - ${q.item_name || '-'} (${getCurrencySymbol(q.currency)}${q.price})`,
+        label: `${q.item_sku || '-'} - ${q.item_name || '-'} (${getCurrencySymbol(q.currency)}${q.price})`,
         quotation: q
     })));
     
@@ -185,7 +185,7 @@
             const parentIdStr = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             
             // 获取母版信息
-            let parentSku = group.parentQuotation?.item_sku || group.parentQuotation?.sku || '-';
+            let parentSku = group.parentQuotation?.item_sku || '-';
             let parentName = group.parentQuotation?.item_name || '母版';
             let parentQuantity = group.parentItem?.quantity || 0;
             

@@ -37,7 +37,7 @@
     async function deleteQuotation() {
         if (!quotation) return;
         
-        if (!confirm(`确定要删除此报价吗？\n\n客户: ${quotation.customer_detail?.name}\n物品: ${quotation.item_detail?.SKU || quotation.sku}\n价格: ${quotation.price} ${quotation.currency}`)) {
+        if (!confirm(`确定要删除此报价吗？\n\n客户: ${quotation.customer_detail?.name}\n物品: ${quotation.item_detail?.SKU || '-'}\n价格: ${quotation.price} ${quotation.currency}`)) {
             return;
         }
         
@@ -55,7 +55,7 @@
 </script>
 
 <svelte:head>
-    <title>{quotation ? `报价详情 - ${quotation.item_detail?.SKU || quotation.sku}` : '报价详情'}</title>
+    <title>{quotation ? `报价详情 - ${quotation.item_detail?.SKU || '-'}` : '报价详情'}</title>
 </svelte:head>
 
 <PageContainer maxWidth="xl">
@@ -119,9 +119,9 @@
                         <span class="text-gray-500 text-sm">SKU</span>
                         <span class="font-medium">
                             {#if quotation.item}
-                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
+                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.item_detail?.SKU || '-'}</a>
                             {:else}
-                                <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.sku || '-'}</span>
+                                <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">-</span>
                             {/if}
                         </span>
                     </div>

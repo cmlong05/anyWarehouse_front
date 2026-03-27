@@ -250,7 +250,7 @@ export function useOrderForm(
     function setCurrentItemQuotation(quotation: { 
         id: number; 
         item?: number; 
-        sku?: string; 
+        item_sku?: string; 
         item_name?: string; 
         price: string;
     } | undefined) {
@@ -273,7 +273,7 @@ export function useOrderForm(
         Object.assign(currentItem, {
             quotation: quotation.id,
             item: quotation.item,
-            sku: quotation.sku || '',
+            sku: quotation.item_sku || '',
             item_name: quotation.item_name || '',
             unit_price: parseFloat(quotation.price) || 0
         });

@@ -265,7 +265,6 @@ export interface SupplierCreateRequest {
 export interface Quotation {
     id: number;
     item: number | null;
-    sku: string;
     supplier: number;
     supplier_detail?: SupplierBrief;
     item_detail?: BaseItem & { image?: string; weight?: string };
@@ -291,7 +290,6 @@ export interface QuotationBrief {
     item_sku: string;
     item_name: string;
     item_name_en?: string;
-    sku: string;
     price: string;
     currency: string;
     is_preferred: boolean;
@@ -632,7 +630,6 @@ export interface CustomerAddressFormData {
 export interface CustomerQuotation {
     id: number;
     item: number | null;
-    sku: string;
     customer: number;
     customer_detail?: CustomerBrief;
     item_detail?: BaseItem & { image?: string; weight?: string };
@@ -659,7 +656,6 @@ export interface CustomerQuotationBrief {
     item_sku: string;
     item_name: string;
     item_name_en?: string;
-    sku: string;
     price: string;
     currency: string;
     is_preferred: boolean;

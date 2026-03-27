@@ -130,9 +130,9 @@
             <div class="bg-white p-4">
                 <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">SKU</div>
                 {#if quotation.item}
-                    <a href="/item/{quotation.item}" class="text-base text-gray-600 hover:underline font-mono text-blue-500">{quotation.sku || quotation.item_detail?.SKU || '-'}</a>
+                    <a href="/item/{quotation.item}" class="text-base text-gray-600 hover:underline font-mono text-blue-500">{quotation.item_detail?.SKU || '-'}</a>
                 {:else}
-                    <span class="text-base text-gray-600 font-mono">{quotation.sku || '-'}</span>
+                    <span class="text-base text-gray-600 font-mono">-</span>
                 {/if}
             </div>
         </div>
