@@ -553,6 +553,7 @@ export interface Customer {
     address?: string;
     level: 'VIP' | 'NORMAL' | 'TEMP';
     status: 'ACTIVE' | 'INACTIVE';
+    currency: string;
     remark?: string;
     addresses?: CustomerAddress[];
     address_count?: number;
@@ -567,6 +568,7 @@ export interface CustomerBrief {
     name: string;
     level: 'VIP' | 'NORMAL' | 'TEMP';
     status: 'ACTIVE' | 'INACTIVE';
+    currency?: string;
 }
 
 /** 客户表单数据 */
@@ -579,6 +581,7 @@ export interface CustomerFormData {
     address?: string;
     level: 'VIP' | 'NORMAL' | 'TEMP';
     status: 'ACTIVE' | 'INACTIVE';
+    currency: string;
     remark?: string;
 }
 

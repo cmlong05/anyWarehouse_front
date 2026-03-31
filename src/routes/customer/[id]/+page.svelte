@@ -122,6 +122,7 @@
                     { label: '联系人', value: partnerDetail.partner?.contact_name || '' },
                     { label: '联系电话', value: partnerDetail.partner?.phone || '' },
                     { label: '电子邮箱', value: partnerDetail.partner?.email || '' },
+                    { label: '货币', value: partnerDetail.partner?.currency || 'USD' },
                 ]}
             />
             
@@ -161,6 +162,7 @@
             loading={partnerDetail.quotationsLoading}
             emptyText="暂无报价记录"
             addHref={`/customer/quotation/add?customer_id=${partnerDetail.partner?.id}`}
+            currency={partnerDetail.partner?.currency}
             quotationQuantities={partnerDetail.quotationQuantities}
             onQuantityChange={(id, value) => partnerDetail.quotationQuantities = { ...partnerDetail.quotationQuantities, [id]: value }}
             onRowClick={(id) => goto(`/customer/quotation/${id}`)}

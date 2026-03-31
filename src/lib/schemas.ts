@@ -158,6 +158,7 @@ export const supplierSchema = partySchema;
 export const customerSchema = partySchema.extend({
     level: z.enum(['VIP', 'NORMAL', 'TEMP']).default('NORMAL'),
     status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+    currency: z.string().min(1).max(3).default('USD'),
 });
 
 export const customerAddressSchema = z.object({

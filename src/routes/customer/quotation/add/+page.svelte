@@ -9,7 +9,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
-    import { CurrencySelect, NumberStepper } from '$lib/components/ui';
+    import { NumberStepper } from '$lib/components/ui';
     
     // 从URL获取预设的客户ID和物品IDs
     const presetCustomerId = $derived(() => {
@@ -34,6 +34,11 @@
     
     // 选中的客户
     let selectedCustomer = $state<number | null>(null);
+    
+    // 当前客户的货币（从 customers 列表中读取）
+    const customerCurrency = $derived(
+        customers.find(c => c.id === selectedCustomer)?.currency || 'USD'
+    );
     
     // 报价行数据
     interface QuotationLine {
@@ -64,16 +69,13 @@
     // 本地行ID计数器
     let lineIdCounter = 0;
     
-    // 默认货币，跟随第一行设置
-    let defaultCurrency = $state('CNY');
-    
-    // 创建新的报价行
+    // 创建新的报价行（货币从客户读取）
     function createEmptyLine(parentId?: number): QuotationLine {
         return {
             id: ++lineIdCounter,
             item: null,
             price: '',
-            currency: defaultCurrency,
+            currency: customerCurrency,
             min_quantity: 1,
             lead_time_days: null,
             note: '',
@@ -81,18 +83,6 @@
             isVariantChild: !!parentId,
             parentLineId: parentId,
         };
-    }
-    
-    // 处理货币变更，更新默认货币并在需要时同步所有行
-    function handleCurrencyChange(line: QuotationLine, newCurrency: string) {
-        line.currency = newCurrency;
-        const firstLine = quotationLines[0];
-        if (firstLine && line.id === firstLine.id) {
-            // 更新默认货币，后续新行会使用
-            defaultCurrency = newCurrency;
-            // 同步其它行的货币为当前第一行值
-            quotationLines = quotationLines.map(l => ({ ...l, currency: newCurrency }));
-        }
     }
     
     // 获取物品的变体列表
@@ -204,7 +194,7 @@
                         id: ++lineIdCounter,
                         item: variant.variant_item,
                         price: '',
-                        currency: defaultCurrency,
+                        currency: customerCurrency,
                         min_quantity: 1,
                         lead_time_days: null,
                         note: '',
@@ -293,7 +283,7 @@
                                     id: ++lineIdCounter,
                                     item: variant.variant_item,
                                     price: '',
-                                    currency: defaultCurrency,
+                                    currency: customerCurrency,
                                     min_quantity: 1,
                                     lead_time_days: null,
                                     note: '',
@@ -373,7 +363,7 @@
                     customer: selectedCustomer!,
                     item: line.item,
                     price: line.price,
-                    currency: line.currency,
+                    currency: customerCurrency,
                     min_quantity: line.min_quantity,
                     lead_time_days: line.lead_time_days,
                     note: line.note,
@@ -589,10 +579,9 @@
                                         />
                                     </td>
                                     <td class="px-3 py-3">
-                                        <CurrencySelect 
-                                            value={line.currency} 
-                                            onchange={(v) => handleCurrencyChange(line, v)}
-                                        />
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200">
+                                            {customerCurrency}
+                                        </span>
                                     </td>
                                     <td class="px-3 py-3">
                                         <NumberStepper

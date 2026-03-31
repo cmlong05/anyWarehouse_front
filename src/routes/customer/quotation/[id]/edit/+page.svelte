@@ -6,7 +6,7 @@
     import type { CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
-    import { CurrencySelect, NumberStepper } from '$lib/components/ui';
+    import { NumberStepper } from '$lib/components/ui';
     
     // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况
     const id = $derived(() => {
@@ -25,7 +25,7 @@
         customer: 0,
         item: null,
         price: '',
-        currency: 'CNY',
+        currency: 'USD',
         min_quantity: 1,
         lead_time_days: null,
         valid_from: null,
@@ -268,10 +268,12 @@
                                 />
                             </div>
 
-                            <!-- 货币 -->
+                            <!-- 货币（只读） -->
                             <div>
-                                <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">货币</label>
-                                <CurrencySelect bind:value={formData.currency} />
+                                <p class="block text-sm font-medium text-gray-700 mb-2">货币</p>
+                                <div class="flex items-center h-10 px-3 rounded-lg border border-gray-200 bg-gray-50">
+                                    <span class="text-sm font-semibold text-gray-700">{formData.currency || 'USD'}</span>
+                                </div>
                             </div>
 
                             <!-- 最小订购量 -->

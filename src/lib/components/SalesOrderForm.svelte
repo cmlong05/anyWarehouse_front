@@ -355,6 +355,7 @@
         type="sales"
         partnerId={customerId}
         partnerName={customer?.name || '加载中...'}
+        currency={customer?.currency || 'USD'}
         {initialData}
         {shippingAddresses}
         {loadingShippingAddresses}

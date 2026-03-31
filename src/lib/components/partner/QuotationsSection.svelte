@@ -33,14 +33,20 @@
         loading: boolean;
         emptyText: string;
         addHref: string;
+        currency?: string;
         quotationQuantities: Record<number, number | null>;
         onQuantityChange: (id: number, value: number | null) => void;
         onRowClick: (id: number) => void;
         onCreateOrder: () => void;
     }
     
-    let { title, quotations, loading, emptyText, addHref, quotationQuantities, onQuantityChange, onRowClick, onCreateOrder }: Props = $props();
+    let { title, quotations, loading, emptyText, addHref, currency, quotationQuantities, onQuantityChange, onRowClick, onCreateOrder }: Props = $props();
     
+    const CURRENCY_SYMBOLS: Record<string, string> = {
+        USD: '$', CNY: '¥', EUR: '€', GBP: '£', JPY: '¥', HKD: 'HK$', TWD: 'NT$'
+    };
+    const currencySymbol = $derived(currency ? (CURRENCY_SYMBOLS[currency] ?? currency) : '');
+
     // 按母版分组的报价
     let groupedQuotations = $state<GroupedQuotation[]>([]);
     let independentQuotations = $state<Quotation[]>([]);
@@ -142,8 +148,7 @@
                         {/if}
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
-                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价</th>
-                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">货币</th>
+                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价{currency ? `（${currency}）` : ''}</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
                     </tr>
                 </thead>
@@ -178,8 +183,7 @@
                                         <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
                                         <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                         <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                        <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
-                                        <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                        <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                         <td class="px-2 py-1.5 text-right">
                                             <NumberStepper
                                                 value={quotationQuantities[quotation.id] ?? undefined}
@@ -199,8 +203,7 @@
                                 <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
                                 <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
-                                <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-right">
                                     <NumberStepper
                                         value={quotationQuantities[quotation.id] ?? undefined}
@@ -218,8 +221,7 @@
                             <tr class="border-b border-gray-200">
                                 <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.price}</td>
-                                <td class="px-2 py-1.5 text-gray-600">{quotation.currency}</td>
+                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-right">
                                     <NumberStepper
                                         value={quotationQuantities[quotation.id] ?? undefined}

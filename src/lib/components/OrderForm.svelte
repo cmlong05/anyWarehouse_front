@@ -46,6 +46,8 @@
         type: OrderType;
         partnerId: number;
         partnerName?: string;
+        /** 合作伙伴货币，由调用方传入；未传时从报价推导（采购单兼容模式） */
+        currency?: string;
         initialData?: Partial<OrderFormData>;
         shippingAddresses?: CustomerAddress[];
         loadingShippingAddresses?: boolean;
@@ -64,6 +66,7 @@
         type,
         partnerId,
         partnerName = '加载中...',
+        currency = undefined,
         initialData = {},
         shippingAddresses = [],
         loadingShippingAddresses = false,
@@ -109,30 +112,17 @@
     // 获取已添加的 SKU 列表
     const addedSkus = $derived(new Set(formData.items.map(item => item.sku).filter(Boolean)));
     
-    // 创建报价ID到报价对象的映射，用于查找货币单位
-    // 修复：$derived 接收的是值，不是函数
-    const quotationMap = $derived((() => {
-        const map = new Map<number, { currency?: string }>();
-        quotationOptions.forEach(opt => {
-            const q = opt.quotation as { id?: number; currency?: string };
-            if (q?.id) {
-                map.set(q.id, q);
-            }
-        });
-        return map;
-    })());
-    
-    // 获取订单主要货币单位（根据第一个有报价的明细项）
-    // 修复：$derived 接收的是值，不是函数
+    // 订单货币：优先使用传入的合作伙伴货币（销售订单），否则从报价推导（采购订单兼容）
     const orderCurrency = $derived((() => {
-        // 优先查找有数量的明细项对应的报价货币
+        if (currency) return currency;
+        // 采购订单：从第一个有报价的明细推导
         for (const item of formData.items) {
-            if (item.quotation && item.quantity > 0) {
-                const q = quotationMap.get(item.quotation);
+            if (item.quotation) {
+                const opt = quotationOptions.find(o => o.value === item.quotation);
+                const q = opt?.quotation as { currency?: string } | undefined;
                 if (q?.currency) return q.currency;
             }
         }
-        // 如果没有找到，返回默认值
         return 'CNY';
     })());
 
@@ -839,7 +829,7 @@
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">
-                                    {getCurrencySymbol(item.quotation ? quotationMap.get(item.quotation)?.currency || 'CNY' : 'CNY')}{(item.quantity * Number(item.unit_price)).toFixed(2)}
+                                    {getCurrencySymbol(orderCurrency)}{(item.quantity * Number(item.unit_price)).toFixed(2)}
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <button

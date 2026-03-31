@@ -2,6 +2,7 @@
     import PartyForm from '$lib/components/partner/PartyForm.svelte';
     import { customerSchema, type CustomerFormData } from '$lib/schemas';
     import { FormSelect } from '$lib/components/ui';
+    import { CurrencySelect } from '$lib/components/ui';
 
     interface Props {
         onSubmit: (data: CustomerFormData) => void;
@@ -22,11 +23,13 @@
     // extras state
     let level: 'VIP' | 'NORMAL' | 'TEMP' = $state('NORMAL');
     let status: 'ACTIVE' | 'INACTIVE' = $state('ACTIVE');
+    let currency: string = $state('USD');
     
     // 当 initialData 变化时更新状态
     $effect(() => {
         level = initialData.level || 'NORMAL';
         status = initialData.status || 'ACTIVE';
+        currency = initialData.currency || 'USD';
     });
 
     // initialData without extras for PartyForm
@@ -34,6 +37,7 @@
     $effect(() => {
         delete cleanInitial.level;
         delete cleanInitial.status;
+        delete cleanInitial.currency;
     });
 
     const levelOptions = [
@@ -48,7 +52,7 @@
     ];
 
     function handlePartySubmit(data: any) {
-        onSubmit({ ...data, level, status } as CustomerFormData);
+        onSubmit({ ...data, level, status, currency } as CustomerFormData);
     }
 </script>
 
@@ -70,6 +74,11 @@
         disabled={loading}
         onchange={(v) => status = v as 'ACTIVE' | 'INACTIVE'}
     />
+
+    <div>
+        <label for="customer-currency" class="block text-sm font-medium text-gray-700 mb-1">货币</label>
+        <CurrencySelect id="customer-currency" value={currency} onchange={(v) => currency = v} />
+    </div>
 {/snippet}
 
 <PartyForm
