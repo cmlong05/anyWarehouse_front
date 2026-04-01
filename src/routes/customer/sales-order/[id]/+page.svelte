@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { onMount, tick } from 'svelte';
+    import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { customerAPI, salesOrderAPI, systemSettingAPI } from '$lib/api';
+    import { customerAPI, salesOrderAPI } from '$lib/api';
     import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
-    import { safeParseFloat, downloadElementAsPDF } from '$lib/utils';
+    import { safeParseFloat } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
-    import PrintOrderDocument from '$lib/components/PrintOrderDocument.svelte';
     import { LocaleSwitcher } from '$lib/components/shipment';
     import { 
         OrderDetailHeader, 
@@ -131,7 +130,6 @@
 
     onMount(() => {
         orderDetail.loadOrder();
-        loadDocDefaults();
     });
 
     $effect(() => {
@@ -284,66 +282,18 @@
     }
 
     // ── PDF 下载 ────────────────────────────────────────
-    let companyName = $state('Your Company Name');
-    let companyAddress = $state('');
-    let docPaymentTerms = $state('T/T 30% deposit, 70% before shipment');
-    let docDeliveryTerms = $state('FOB Shenzhen');
-    let docNotes = $state('');
     let piDownloading = $state(false);
     let invoiceDownloading = $state(false);
-    /** 当前正在渲染哪种文档（null = 不渲染离屏组件） */
-    let printType = $state<'pi' | 'invoice' | null>(null);
-
-    // 今天 / 下个月（用于 PI 有效期）
-    const todayStr = new Date().toISOString().split('T')[0];
-    const nextMonthDate = new Date();
-    nextMonthDate.setMonth(nextMonthDate.getMonth() + 1);
-    const nextMonthStr = nextMonthDate.toISOString().split('T')[0];
-
-    function fmtDateLocal(dateStr: string): string {
-        return new Date(dateStr).toLocaleDateString('zh-CN');
-    }
-
-    const piMetaRows = $derived(orderDetail.order ? [
-        { label: 'Date:', value: fmtDateLocal(todayStr) },
-        { label: 'Valid Until:', value: fmtDateLocal(nextMonthStr) },
-        { label: 'SO No.:', value: orderDetail.order.order_number },
-    ] : []);
-
-    const invoiceMetaRows = $derived(orderDetail.order ? [
-        { label: 'Invoice No.:', value: `INV-${orderDetail.order.order_number}` },
-        { label: 'Date:', value: fmtDateLocal(todayStr) },
-        { label: 'SO No.:', value: orderDetail.order.order_number },
-    ] : []);
-
-    async function loadDocDefaults() {
-        try {
-            const d = await systemSettingAPI.getPIDefaults();
-            companyName = d.company_name || companyName;
-            companyAddress = d.company_address || companyAddress;
-            docPaymentTerms = d.payment_terms || docPaymentTerms;
-            docDeliveryTerms = d.delivery_terms || docDeliveryTerms;
-            docNotes = d.notes || docNotes;
-        } catch {
-            // 使用内置默认值
-        }
-    }
 
     async function downloadPI() {
         if (piDownloading || !orderDetail.order) return;
         piDownloading = true;
-        printType = 'pi';
-        await tick();
         try {
-            await downloadElementAsPDF({
-                filename: `PROFORMA-INVOICE-${orderDetail.order.order_number}.pdf`,
-                elementId: 'offscreen-print-doc',
-            });
+            await salesOrderAPI.downloadPI(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
         } catch (e) {
             console.error('PDF 生成失败', e);
             alert('PDF 生成失败，请稍后重试。');
         } finally {
-            printType = null;
             piDownloading = false;
         }
     }
@@ -351,18 +301,12 @@
     async function downloadInvoice() {
         if (invoiceDownloading || !orderDetail.order) return;
         invoiceDownloading = true;
-        printType = 'invoice';
-        await tick();
         try {
-            await downloadElementAsPDF({
-                filename: `INVOICE-${orderDetail.order.order_number}.pdf`,
-                elementId: 'offscreen-print-doc',
-            });
+            await salesOrderAPI.downloadInvoice(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
         } catch (e) {
             console.error('PDF 生成失败', e);
             alert('PDF 生成失败，请稍后重试。');
         } finally {
-            printType = null;
             invoiceDownloading = false;
         }
     }
@@ -660,29 +604,6 @@
         {/if}
     {/if}
 </div>
-
-<!-- 离屏渲染区：用于 PDF 生成（不可见，不影响页面布局） -->
-{#if printType && orderDetail.order}
-    <div
-        aria-hidden="true"
-        style="position:fixed;left:-9999px;top:0;width:794px;background:white;z-index:-1"
-    >
-        <PrintOrderDocument
-            order={orderDetail.order}
-            {companyName}
-            companyAddress={companyAddress}
-            paymentTerms={docPaymentTerms}
-            deliveryTerms={docDeliveryTerms}
-            notes={docNotes}
-            title={printType === 'pi' ? 'PROFORMA INVOICE' : 'INVOICE'}
-            metaRows={printType === 'pi' ? piMetaRows : invoiceMetaRows}
-            showCustomerSignature={printType === 'pi'}
-            locale={$localeStore}
-            elementId="offscreen-print-doc"
-            showToolbar={false}
-        />
-    </div>
-{/if}
 
 <!-- 发货弹窗 -->
 <ShipReceiveModal

@@ -2,6 +2,7 @@
  * 客户相关 API
  */
 import { BaseAPI, BaseOrderAPI } from './base';
+import { config } from '$lib/config';
 import type { 
     Customer,
     CustomerBrief,
@@ -173,6 +174,29 @@ export class SalesOrderAPI extends BaseOrderAPI<
         total_amount: string;
     }> {
         return this.client.get(`${this.basePath}by_customer/`, { customer_id: customerId.toString() });
+    }
+
+    /** 下载 Proforma Invoice PDF（服务端生成，跨浏览器一致） */
+    async downloadPI(orderId: number, locale = 'en', orderNumber: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${orderId}/pi/?locale=${locale}`, `PROFORMA-INVOICE-${orderNumber}.pdf`);
+    }
+
+    /** 下载 Invoice PDF（服务端生成，跨浏览器一致） */
+    async downloadInvoice(orderId: number, locale = 'en', orderNumber: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${orderId}/invoice/?locale=${locale}`, `INVOICE-${orderNumber}.pdf`);
+    }
+
+    private async _downloadPDF(path: string, filename: string): Promise<void> {
+        const url = `${config.API_BASE_URL}${path}`;
+        const resp = await fetch(url, { credentials: 'include' });
+        if (!resp.ok) throw new Error(`PDF 生成失败: ${resp.statusText}`);
+        const blob = await resp.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
     }
 }
 
