@@ -32,7 +32,16 @@ function parseDrfError(data: any): string {
     const messages: string[] = [];
     for (const [key, value] of Object.entries(data)) {
         if (Array.isArray(value)) {
-            const fieldMsgs = value.map((v: any) => (typeof v === 'string' ? v : JSON.stringify(v))).join('；');
+            const fieldMsgs = value
+                .map((v: any) => {
+                    const s = typeof v === 'string' ? v : JSON.stringify(v);
+                    // 将 DRF UniqueTogetherValidator 英文报错翻译为友好中文
+                    if (s.includes('must make a unique set')) {
+                        return '该记录已存在，请勿重复提交';
+                    }
+                    return s;
+                })
+                .join('；');
             if (key === 'non_field_errors') {
                 messages.push(fieldMsgs);
             } else {

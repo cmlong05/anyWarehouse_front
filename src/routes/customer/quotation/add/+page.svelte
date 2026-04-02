@@ -2,408 +2,126 @@
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { customerQuotationAPI, customerAPI, itemAPI } from '$lib/api';
-    import type { CustomerBrief, Item, CustomerQuotationCreateRequest } from '$lib';
-    import type { ItemVariant } from '$lib/types/variant';
+    import { customerQuotationAPI, customerAPI } from '$lib/api';
+    import type { CustomerBrief, CustomerQuotationCreateRequest } from '$lib';
     import { config } from '$lib/config';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
     import { NumberStepper } from '$lib/components/ui';
-    
+    import { useQuotationLineForm } from '$lib/composables/useQuotationLineForm.svelte';
+
     // 从URL获取预设的客户ID和物品IDs
     const presetCustomerId = $derived(() => {
         const urlParams = new URLSearchParams(page.url.search);
         const customerId = urlParams.get('customer_id');
         return customerId ? parseInt(customerId) : null;
     });
-    
-    // 从URL获取预设的物品IDs（多个物品用逗号分隔）
+
     const presetItemIds = $derived(() => {
         const urlParams = new URLSearchParams(page.url.search);
         const itemIds = urlParams.get('item_ids');
         if (!itemIds) return [];
         return itemIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
     });
-    
+
     let customers = $state<CustomerBrief[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
     let success = $state('');
-    
-    // 选中的客户
+
     let selectedCustomer = $state<number | null>(null);
-    
-    // 当前客户的货币（从 customers 列表中读取）
+
+    // 客户货币：跟随选中客户，新报价行默认使用该货币
     const customerCurrency = $derived(
         customers.find(c => c.id === selectedCustomer)?.currency || 'USD'
     );
-    
-    // 报价行数据
-    interface QuotationLine {
-        id: number;
-        item: number | null;
-        price: string;
-        currency: string;
-        min_quantity: number;
-        lead_time_days: number | null;
-        note: string;
-        itemDetail?: Item | null;
-        isVariantChild?: boolean;
-        parentLineId?: number;
-        variantInfo?: ItemVariant;
-    }
-    
-    let quotationLines = $state<QuotationLine[]>([]);
-    
-    // 客户选项
+
     const customerOptions = $derived(customers.map(c => ({
         value: c.id,
         label: `${c.code} - ${c.name}`
     })));
-    
-    // 构建物品搜索 URL
+
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
-    
-    // 本地行ID计数器
-    let lineIdCounter = 0;
-    
-    // 创建新的报价行（货币从客户读取）
-    function createEmptyLine(parentId?: number): QuotationLine {
-        return {
-            id: ++lineIdCounter,
-            item: null,
-            price: '',
-            currency: customerCurrency,
-            min_quantity: 1,
-            lead_time_days: null,
-            note: '',
-            itemDetail: null,
-            isVariantChild: !!parentId,
-            parentLineId: parentId,
-        };
-    }
-    
-    // 获取物品的变体列表
-    async function fetchItemVariants(itemId: number): Promise<ItemVariant[]> {
-        try {
-            const response = await fetch(`${config.API_BASE_URL}/product/item/${itemId}/variants/`);
-            if (response.ok) {
-                const data = await response.json();
-                return data.variants || [];
-            }
-        } catch (err) {
-            // 获取变体列表失败
-        }
-        return [];
-    }
-    
-    // 检查是否为变体母版
-    function isVariantTemplate(item: Item): boolean {
-        const val = (item as unknown as Record<string, unknown>).is_variant_template;
-        if (val === true) return true;
-        if (typeof val === 'string' && val.toLowerCase() === 'true') return true;
-        if (val === 1 || val === '1') return true;
-        return false;
-    }
-    
-    // 处理 fetch 返回的数据
-    function handleItemFetch(json: unknown) {
-        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
-        return items.map((item: Item) => ({
-            value: item.id,
-            label: `${item.SKU} - ${item.name}`
-        }));
-    }
-    
-    // 处理 Svelecte 选择变化
-    function handleSelectChange(line: QuotationLine, selectedValue: unknown) {
-        // Svelecte 可能返回对象，需要提取 value
-        let selectedId: number | null = null;
-        
-        if (typeof selectedValue === 'number') {
-            selectedId = selectedValue;
-        } else if (typeof selectedValue === 'string') {
-            selectedId = parseInt(selectedValue, 10);
-        } else if (selectedValue && typeof selectedValue === 'object') {
-            // 尝试从对象中提取 value
-            const val = (selectedValue as Record<string, unknown>).value;
-            if (typeof val === 'number') {
-                selectedId = val;
-            } else if (typeof val === 'string') {
-                selectedId = parseInt(val, 10);
-            }
-        }
-        
-        handleItemSelect(line, selectedId);
-    }
-    
-    // 处理物品选择 - 选择物品时自动添加新行或展开变体
-    async function handleItemSelect(line: QuotationLine, selectedItemId: number | null) {
-        // 确保 ID 是数字
-        const itemId = typeof selectedItemId === 'number' ? selectedItemId : 
-                      typeof selectedItemId === 'string' ? parseInt(selectedItemId, 10) : null;
-        
-        if (!itemId || isNaN(itemId)) {
-            line.item = null;
-            line.itemDetail = null;
-            return;
-        }
-        
-        // 检查是否已存在相同的物品（不包括变体子项）
-        const duplicateLine = quotationLines.find(l => 
-            l.id !== line.id && 
-            !l.isVariantChild && 
-            l.item === itemId
-        );
-        if (duplicateLine) {
-            error = `物品已在第 ${quotationLines.indexOf(duplicateLine) + 1} 行添加，请勿重复添加`;
-            setTimeout(() => error = '', 3000);
-            // 清空选择
-            line.item = null;
-            return;
-        }
-        
-        // 更新当前行
-        const lineIndex = quotationLines.findIndex(l => l.id === line.id);
-        if (lineIndex === -1) return;
-        
-        // 加载物品详情
-        try {
-            const itemResponse = await itemAPI.get(itemId);
-            // unwrap wrapper object if present
-            const item = (itemResponse as any).item || itemResponse;
-            
-            // 创建更新后的行
-            const updatedLine = {
-                ...line,
-                item: itemId,
-                itemDetail: item,
-            };
-            
-            // 更新数组
-            quotationLines[lineIndex] = updatedLine;
-            quotationLines = [...quotationLines]; // 触发响应式更新
-            
-            // 如果是变体母版，展开所有子变体
-            if (isVariantTemplate(item)) {
-                const variants = await fetchItemVariants(itemId);
-                if (variants.length > 0) {
-                    const variantLines: QuotationLine[] = variants.map(variant => ({
-                        id: ++lineIdCounter,
-                        item: variant.variant_item,
-                        price: '',
-                        currency: customerCurrency,
-                        min_quantity: 1,
-                        lead_time_days: null,
-                        note: '',
-                        itemDetail: variant.variant_item_detail as unknown as Item,
-                        isVariantChild: true,
-                        parentLineId: line.id,
-                        variantInfo: variant,
-                    }));
-                    
-                    // 插入变体行到当前行后面
-                    const newLines = [
-                        ...quotationLines.slice(0, lineIndex + 1),
-                        ...variantLines,
-                        ...quotationLines.slice(lineIndex + 1)
-                    ];
-                    quotationLines = newLines;
-                }
-            }
-            
-            // 如果是最后一行且已选择了物品，自动添加新行
-            const lastLine = quotationLines[quotationLines.length - 1];
-            if (lastLine && lastLine.id === line.id && updatedLine.item) {
-                addLine();
-            }
-        } catch (err) {
-            line.itemDetail = null;
-        }
-    }
-    
-    // 添加新行
-    function addLine() {
-        quotationLines = [...quotationLines, createEmptyLine()];
-    }
-    
-    // 删除行（如果是母版，同时删除其所有变体子行）
-    function removeLine(lineId: number) {
-        const lineToRemove = quotationLines.find(l => l.id === lineId);
-        if (!lineToRemove) return;
-        
-        if (quotationLines.length <= 1) {
-            // 至少保留一行
-            quotationLines = [createEmptyLine()];
-            // 清空所有选择
-            return;
-        }
-        
-        // 如果是母版行，同时删除其所有变体子行
-        if (!lineToRemove.isVariantChild) {
-            quotationLines = quotationLines.filter(l => l.id !== lineId && l.parentLineId !== lineId);
-        } else {
-            quotationLines = quotationLines.filter(l => l.id !== lineId);
-        }
-        
-        // 清理完成
-    }
-    
-    // 加载初始数据
+
+    const form = useQuotationLineForm({
+        getCurrency: () => customerCurrency,
+        apiBaseUrl: config.API_BASE_URL,
+        onInlineError: (msg) => {
+            error = msg;
+            setTimeout(() => { error = ''; }, 3000);
+        },
+    });
+
     async function loadInitialData() {
         try {
             customers = await customerAPI.listBrief();
-            
+
             const customerId = presetCustomerId();
-            if (customerId) {
-                selectedCustomer = customerId;
-            }
-            
-            // 检查是否有预设的物品IDs
+            if (customerId) selectedCustomer = customerId;
+
             const itemIds = presetItemIds();
             if (itemIds.length > 0) {
-                // 加载预设的物品
-                for (const itemId of itemIds) {
-                    try {
-                        const itemResponse = await itemAPI.get(itemId);
-                        // API 可能返回 {item: {...}} 或直接的 item 对象
-                        const item = (itemResponse as unknown as { item?: Item }).item || itemResponse as Item;
-                        const line = createEmptyLine();
-                        line.item = itemId;
-                        line.itemDetail = item;
-                        quotationLines = [...quotationLines, line];
-                        
-                        // 如果是变体母版，展开所有子变体
-                        if (isVariantTemplate(item)) {
-                            const variants = await fetchItemVariants(itemId);
-                            if (variants.length > 0) {
-                                const variantLines: QuotationLine[] = variants.map(variant => ({
-                                    id: ++lineIdCounter,
-                                    item: variant.variant_item,
-                                    price: '',
-                                    currency: customerCurrency,
-                                    min_quantity: 1,
-                                    lead_time_days: null,
-                                    note: '',
-                                    itemDetail: variant.variant_item_detail as unknown as Item,
-                                    isVariantChild: true,
-                                    parentLineId: line.id,
-                                    variantInfo: variant,
-                                }));
-                                quotationLines = [...quotationLines, ...variantLines];
-                            }
-                        }
-                    } catch (e) {
-                        // 加载单个物品失败，跳过
-                    }
-                }
+                await form.loadPresetItems(itemIds);
             }
-            
-            // 如果没有物品，默认添加一行
-            if (quotationLines.length === 0) {
-                addLine();
-            }
-        } catch (err) {
+
+            if (form.quotationLines.length === 0) form.addLine();
+        } catch {
             error = '加载数据失败';
         }
     }
-    
-    // 验证表单
+
     function validateForm(): boolean {
         if (!selectedCustomer) {
             error = '请选择客户';
             return false;
         }
-        
-        // 过滤掉空行（没有选物品的）
-        const validLines = quotationLines.filter(l => l.item !== null);
-        
-        if (validLines.length === 0) {
-            error = '请至少添加一个物品的报价';
+        const result = form.validateLines();
+        if (!result.valid) {
+            error = result.error || '表单验证失败';
             return false;
         }
-        
-        // 验证每一行
-        for (let i = 0; i < validLines.length; i++) {
-            const line = validLines[i];
-            const rowNum = quotationLines.findIndex(l => l.id === line.id) + 1;
-            
-            if (!line.price || parseFloat(line.price) <= 0) {
-                error = `第 ${rowNum} 行的价格必须大于0`;
-                return false;
-            }
-        }
-        
         return true;
     }
-    
-    // 提交表单
+
     async function handleSubmit(e: Event) {
         e.preventDefault();
         error = '';
         success = '';
-        
-        if (!validateForm()) {
-            return;
-        }
-        
-        const validLines = quotationLines.filter(l => l.item !== null);
-        
+
+        if (!validateForm()) return;
+
         submitting = true;
-        let successCount = 0;
-        let failCount = 0;
-        const errors: string[] = [];
-        
-        // 逐个提交报价
-        for (const line of validLines) {
-            try {
-                const requestData: CustomerQuotationCreateRequest = {
-                    customer: selectedCustomer!,
-                    item: line.item,
-                    price: line.price,
-                    currency: customerCurrency,
-                    min_quantity: line.min_quantity,
-                    lead_time_days: line.lead_time_days,
-                    note: line.note,
-                };
-                
-                await customerQuotationAPI.create(requestData);
-                successCount++;
-            } catch (err) {
-                failCount++;
-                const rowNum = quotationLines.findIndex(l => l.id === line.id) + 1;
-                const itemName = line.itemDetail?.name || '未知物品';
-                errors.push(`第 ${rowNum} 行 (${itemName}): ${err instanceof Error ? err.message : '创建失败'}`);
-            }
-        }
-        
+        const { successCount, failCount, errors } = await form.submitLines(
+            (line) => ({
+                customer: selectedCustomer!,
+                item: line.item,
+                price: line.price,
+                currency: customerCurrency,
+                min_quantity: line.min_quantity,
+                lead_time_days: line.lead_time_days,
+                note: line.note,
+            } as CustomerQuotationCreateRequest),
+            (data) => customerQuotationAPI.create(data as CustomerQuotationCreateRequest)
+        );
         submitting = false;
-        
-        if (successCount > 0) {
-            success = `成功创建 ${successCount} 个报价`;
-        }
-        
+
+        if (successCount > 0) success = `成功创建 ${successCount} 个报价`;
+
         if (failCount > 0) {
-            error = `${failCount} 个报价创建失败:\n${errors.join('\n')}`;
+            error = errors.join('\n') || '创建失败';
         } else if (successCount > 0) {
-            // 全部成功，延迟跳转
-            setTimeout(() => {
-                goto(`/customer/${selectedCustomer}`);
-            }, 1500);
+            setTimeout(() => { goto(`/customer/${selectedCustomer}`); }, 1500);
         }
     }
-    
+
     function goBack() {
         const customerId = presetCustomerId();
-        if (customerId) {
-            goto(`/customer/${customerId}`);
-        } else {
-            goto('/customer');
-        }
+        if (customerId) goto(`/customer/${customerId}`);
+        else goto('/customer');
     }
-    
+
     onMount(async () => {
         await loadInitialData();
         loading = false;
@@ -482,13 +200,13 @@
                     <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">
                         报价列表
                         <span class="ml-2 text-xs font-normal text-gray-500">
-                            (共 {quotationLines.filter(l => l.item !== null).length} 个有效报价)
+                            (共 {form.quotationLines.filter(l => l.item !== null).length} 个有效报价)
                         </span>
                     </h2>
                     <button
                         type="button"
                         class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        onclick={() => addLine()}
+                        onclick={() => form.addLine()}
                     >
                         + 手动添加行
                     </button>
@@ -510,9 +228,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
-                            {#each quotationLines as line, index (line.id)}
-                                {@const parentIndex = line.parentLineId ? quotationLines.findIndex(l => l.id === line.parentLineId) + 1 : null}
-                                {@const siblingIndex = line.parentLineId ? quotationLines.filter(l => l.parentLineId === line.parentLineId).findIndex(l => l.id === line.id) + 1 : null}
+                            {#each form.quotationLines as line, index (line.id)}
+                                {@const parentIndex = line.parentLineId ? form.quotationLines.findIndex(l => l.id === line.parentLineId) + 1 : null}
+                                {@const siblingIndex = line.parentLineId ? form.quotationLines.filter(l => l.parentLineId === line.parentLineId).findIndex(l => l.id === line.id) + 1 : null}
                                 {@const displayIndex = line.isVariantChild && parentIndex ? `${parentIndex}-${siblingIndex}` : String(index + 1)}
                                 <tr class="{line.isVariantChild ? 'bg-purple-50/50' : 'hover:bg-gray-50'}">
                                     <td class="px-3 py-3 {line.isVariantChild ? 'text-purple-600' : 'text-gray-500'}">{displayIndex}</td>
@@ -548,10 +266,10 @@
                                                     searchable={true}
                                                     minQuery={1}
                                                     fetch={itemSearchUrl}
-                                                    fetchCallback={handleItemFetch}
+                                                    fetchCallback={form.handleItemFetch}
                                                     valueField="value"
                                                     labelField="label"
-                                                    onChange={(val: unknown) => handleSelectChange(line, val)}
+                                                    onChange={(val: unknown) => form.handleSelectChange(line, val)}
                                                 />
                                             {/if}
                                         {/if}
@@ -618,7 +336,7 @@
                                         <button
                                             type="button"
                                             class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
-                                            onclick={() => removeLine(line.id)}
+                                            onclick={() => form.removeLine(line.id)}
                                             title="删除此行"
                                             aria-label="删除此行"
                                         >
@@ -633,7 +351,7 @@
                     </table>
                 </div>
                 
-                {#if quotationLines.length === 0}
+                {#if form.quotationLines.length === 0}
                     <div class="text-center py-8 text-gray-500">
                         <p>暂无报价行，请选择物品或手动添加</p>
                     </div>
