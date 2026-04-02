@@ -12,7 +12,8 @@
         OrderInfoGrid, 
         OrderAmountGrid, 
         OrderItemsTable,
-        ShipReceiveModal 
+        ShipReceiveModal,
+        OrderNotesCard
     } from '$lib/components/order';
     import { 
         useOrderDetail, 
@@ -173,23 +174,7 @@
         {/if}
 
         <!-- 备注 -->
-        {#if order.notes || order.internal_notes}
-            <div class="bg-white rounded-lg p-6 mb-6 shadow-sm">
-                <h2 class="text-lg font-semibold mb-4">备注</h2>
-                {#if order.notes}
-                    <div class="bg-gray-50 p-4 rounded mb-3">
-                        <span class="text-xs text-gray-500 block mb-2">订单备注</span>
-                        <p class="text-gray-700 m-0">{order.notes}</p>
-                    </div>
-                {/if}
-                {#if order.internal_notes}
-                    <div class="bg-amber-100 p-4 rounded">
-                        <span class="text-xs text-gray-500 block mb-2">内部备注</span>
-                        <p class="text-gray-700 m-0">{order.internal_notes}</p>
-                    </div>
-                {/if}
-            </div>
-        {/if}
+        <OrderNotesCard notes={order.notes} internal_notes={order.internal_notes} />
     {/if}
 </div>
 

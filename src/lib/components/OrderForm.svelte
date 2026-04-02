@@ -1002,7 +1002,7 @@
                     placeholder="输入订单备注（{labels.partnerVisibleNote}）"
                     rows="2"
                     disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-none"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-y"
                 ></textarea>
             </div>
             
@@ -1014,7 +1014,7 @@
                     placeholder="输入内部备注（{labels.internalNote}）"
                     rows="2"
                     disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-none"
+                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-y"
                 ></textarea>
             </div>
         </div>

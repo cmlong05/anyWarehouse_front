@@ -13,7 +13,8 @@
         OrderInfoGrid, 
         OrderAmountGrid, 
         OrderItemsTable,
-        ShipReceiveModal 
+        ShipReceiveModal,
+        OrderNotesCard
     } from '$lib/components/order';
     import { 
         useOrderDetail, 
@@ -585,23 +586,13 @@
         {/if}
 
         <!-- 备注 -->
-        {#if order.notes || order.internal_notes}
-            <div class="bg-white rounded-lg p-6 shadow mb-6">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">{t('sales.notes.title', $localeStore)}</h2>
-                {#if order.notes}
-                    <div class="bg-gray-50 p-4 rounded-lg mb-3">
-                        <span class="text-sm text-gray-600 block mb-2">{t('sales.field.notes', $localeStore)}</span>
-                        <p class="text-gray-900">{order.notes}</p>
-                    </div>
-                {/if}
-                {#if order.internal_notes}
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                        <span class="text-sm text-gray-600 block mb-2">{t('sales.field.internalNotes', $localeStore)}</span>
-                        <p class="text-gray-900">{order.internal_notes}</p>
-                    </div>
-                {/if}
-            </div>
-        {/if}
+        <OrderNotesCard
+            notes={order.notes}
+            internal_notes={order.internal_notes}
+            title={t('sales.notes.title', $localeStore)}
+            notesLabel={t('sales.field.notes', $localeStore)}
+            internalNotesLabel={t('sales.field.internalNotes', $localeStore)}
+        />
     {/if}
 </div>
 
