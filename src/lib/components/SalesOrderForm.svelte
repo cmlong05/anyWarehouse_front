@@ -92,8 +92,7 @@
         loadingShippingAddresses = true;
         try {
             shippingAddresses = await customerAddressAPI.listAddresses({
-                customer_id: customerId,
-                status: 'ACTIVE'
+                customer_id: customerId
             });
         } catch (err) {
             console.error('加载客户地址失败:', err);
@@ -104,10 +103,11 @@
     }
 
     function getDefaultShippingAddressId(addresses: CustomerAddress[]): number | null {
-        if (addresses.length === 0) return null;
+        const activeAddresses = addresses.filter((addr) => addr.status === 'ACTIVE');
+        if (activeAddresses.length === 0) return null;
 
-        const defaultAddress = addresses.find((addr) => addr.is_default);
-        return defaultAddress?.id ?? addresses[0]?.id ?? null;
+        const defaultAddress = activeAddresses.find((addr) => addr.is_default);
+        return defaultAddress?.id ?? activeAddresses[0]?.id ?? null;
     }
     
     // 获取物品的变体列表

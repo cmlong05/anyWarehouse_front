@@ -25,6 +25,7 @@
         value: number;
         label: string;
         address: CustomerAddress;
+        disabled?: boolean;
     }
 
     type ShippingAddressSelectValue = ShippingAddressOption | ShippingAddressOption[] | number | string | null | undefined;
@@ -148,9 +149,11 @@
             label: [
                 toDisplayText(address.contact_name),
                 toDisplayText(address.company),
-                toDisplayText(address.city)
+                toDisplayText(address.city),
+                address.status !== 'ACTIVE' ? '未启用' : ''
             ].filter(Boolean).join(' · ') || '地址',
-            address
+            address,
+            disabled: address.status !== 'ACTIVE'
         }))
     );
 
@@ -206,9 +209,11 @@
                 label: [
                     toDisplayText(address.contact_name),
                     toDisplayText(address.company),
-                    toDisplayText(address.city)
+                    toDisplayText(address.city),
+                    address.status !== 'ACTIVE' ? '未启用' : ''
                 ].filter(Boolean).join(' · ') || '地址',
-                address
+                address,
+                disabled: address.status !== 'ACTIVE'
             };
         }
 
@@ -224,9 +229,11 @@
                 label: option.label || [
                     toDisplayText(address.contact_name),
                     toDisplayText(address.company),
-                    toDisplayText(address.city)
+                    toDisplayText(address.city),
+                    address.status !== 'ACTIVE' ? '未启用' : ''
                 ].filter(Boolean).join(' · ') || '地址',
-                address
+                address,
+                disabled: address.status !== 'ACTIVE'
             };
         }
 
@@ -238,6 +245,11 @@
         selectedShippingOption = normalizedOption;
 
         if (!normalizedOption) {
+            selectedShippingAddressId = '';
+            return;
+        }
+
+        if (normalizedOption.address.status !== 'ACTIVE') {
             selectedShippingAddressId = '';
             return;
         }
@@ -311,8 +323,14 @@
         selectedShippingAddressId = address.id;
         selectedShippingOption = {
             value: address.id,
-            label: [address.contact_name, address.company, address.city].filter(Boolean).join(' · ') || '地址',
-            address
+            label: [
+                address.contact_name,
+                address.company,
+                address.city,
+                address.status !== 'ACTIVE' ? '未启用' : ''
+            ].filter(Boolean).join(' · ') || '地址',
+            address,
+            disabled: address.status !== 'ACTIVE'
         };
         applyShippingAddress(address);
         hasAppliedInitialShippingAddress = true;
@@ -560,16 +578,12 @@
                     <div class="md:col-span-2 rounded-lg border border-green-200 bg-green-50/60 px-4 py-3 text-sm">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-gray-700">
                             <div>
-                                <span class="text-gray-500">默认地址：</span>
-                                <span>{selectedShippingAddress.is_default ? '是' : '否'}</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-500">状态：</span>
-                                <span>{selectedShippingAddress.status === 'ACTIVE' ? '启用' : '停用'}</span>
-                            </div>
-                            <div>
                                 <span class="text-gray-500">收件人：</span>
                                 <span>{selectedShippingAddress.contact_name || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">公司名称：</span>
+                                <span>{selectedShippingAddress.company || '-'}</span>
                             </div>
                             <div>
                                 <span class="text-gray-500">电话：</span>
@@ -615,7 +629,7 @@
                                 <span class="text-gray-500">邮编：</span>
                                 <span>{selectedShippingAddress.postal_code || '-'}</span>
                             </div>
-                            <div>
+                            <div class="md:col-span-2">
                                 <span class="text-gray-500">备注：</span>
                                 <span>{selectedShippingAddress.remark || '-'}</span>
                             </div>
