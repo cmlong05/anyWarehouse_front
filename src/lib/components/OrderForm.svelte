@@ -188,6 +188,7 @@
         formData.shipping_address = formatShippingAddress(address);
         formData.contact_person = toDisplayText(address.contact_name);
         formData.contact_phone = toDisplayText(address.phone) || toDisplayText(address.mobile);
+        formData.company_name = address.company || '';
     }
 
     function normalizeShippingAddressOption(value: ShippingAddressSelectValue): ShippingAddressOption | undefined {

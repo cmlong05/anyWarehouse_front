@@ -26,6 +26,7 @@ export interface OrderFormData {
     shipping_address: string;
     contact_person: string;
     contact_phone: string;
+    company_name: string;
     payment_terms: string;
     notes: string;
     internal_notes: string;
@@ -72,6 +73,7 @@ export function useOrderForm(
         shipping_address: initialData?.shipping_address ?? '',
         contact_person: initialData?.contact_person ?? '',
         contact_phone: initialData?.contact_phone ?? '',
+        company_name: initialData?.company_name ?? '',
         payment_terms: initialData?.payment_terms ?? '',
         notes: initialData?.notes ?? '',
         internal_notes: initialData?.internal_notes ?? '',
@@ -307,6 +309,7 @@ export function useOrderForm(
             shipping_address: formData.shipping_address || undefined,
             contact_person: formData.contact_person || undefined,
             contact_phone: formData.contact_phone || undefined,
+            company_name: formData.company_name || undefined,
             payment_terms: formData.payment_terms || undefined,
             notes: formData.notes || undefined,
             internal_notes: formData.internal_notes || undefined,

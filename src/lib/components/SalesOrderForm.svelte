@@ -293,6 +293,7 @@
         shipping_address: salesOrder?.shipping_address || undefined,
         contact_person: salesOrder?.contact_person || undefined,
         contact_phone: salesOrder?.contact_phone || undefined,
+        company_name: salesOrder?.company_name ?? '',
         payment_terms: salesOrder?.payment_terms || undefined,
         notes: salesOrder?.notes || undefined,
         internal_notes: salesOrder?.internal_notes || undefined,

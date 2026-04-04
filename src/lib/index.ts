@@ -797,6 +797,7 @@ export interface SalesOrder {
     shipping_address: string;
     contact_person: string;
     contact_phone: string;
+    company_name: string;
     payment_terms: string;
     payment_status: string;
     notes: string;
@@ -845,6 +846,7 @@ export interface SalesOrderCreateRequest {
     shipping_address?: string;
     contact_person?: string;
     contact_phone?: string;
+    company_name?: string;
     payment_terms?: string;
     notes?: string;
     internal_notes?: string;
@@ -864,6 +866,7 @@ export interface SalesOrderUpdateRequest {
     shipping_address?: string;
     contact_person?: string;
     contact_phone?: string;
+    company_name?: string;
     payment_terms?: string;
     notes?: string;
     internal_notes?: string;
