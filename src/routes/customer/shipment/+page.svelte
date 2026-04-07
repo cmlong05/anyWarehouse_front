@@ -7,6 +7,7 @@
     import { formatDate } from '$lib/utils';
     import type { Shipment, ShipmentFilters } from '$lib/shipmentTypes';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
+    import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import { DataTable, Pagination, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Alert from '$lib/components/Alert.svelte';
@@ -144,18 +145,6 @@
             deleting = false;
         }
     }
-
-    function getStatusBadgeClass(status: string): string {
-        const classes: Record<string, string> = {
-            draft: 'bg-gray-100 text-gray-600',
-            confirmed: 'bg-blue-100 text-blue-700',
-            packed: 'bg-yellow-100 text-yellow-700',
-            shipped: 'bg-green-100 text-green-700',
-            delivered: 'bg-indigo-100 text-indigo-700',
-            cancelled: 'bg-red-100 text-red-700',
-        };
-        return classes[status] || 'bg-gray-100 text-gray-600';
-    }
 </script>
 
 <svelte:head>
@@ -216,9 +205,7 @@
     >
         {#snippet cellRender({ item, column }: { item: Shipment; column: { key: string } })}
             {#if column.key === 'status'}
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getStatusBadgeClass(item.status)}">
-                    {SHIPMENT_STATUS_CHOICES.find(s => s.value === item.status)?.label || item.status}
-                </span>
+                <ShipmentStatusBadge status={item.status} />
             {:else if column.key === 'order'}
                 {#if item.order_detail}
                     <div class="font-medium">{item.order_detail.order_number}</div>

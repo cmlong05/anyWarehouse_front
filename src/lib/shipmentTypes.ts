@@ -1,7 +1,7 @@
 // ========== Shipment 发货管理相关接口 ==========
 
-/** 快递单号状态 */
-export type TrackingNumberStatus = 'unused' | 'in_use' | 'delivered' | 'returned' | 'cancelled';
+/** 物流状态 */
+export type LogisticsStatus = 'pending' | 'collected' | 'in_transit' | 'exception' | 'delivered' | 'returned' | 'cancelled';
 
 /** 发货单状态 */
 export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
@@ -12,7 +12,8 @@ export interface TrackingNumber {
     tracking_no: string;
     carrier_code: string;
     carrier_name: string;
-    status: TrackingNumberStatus;
+    logistics_status: LogisticsStatus;
+    is_linked: boolean;
     remark?: string;
     created_at: string;
     updated_at: string;
@@ -23,7 +24,11 @@ export interface TrackingNumberBrief {
     id: number;
     tracking_no: string;
     carrier_name: string;
-    status: TrackingNumberStatus;
+    carrier_code?: string;
+    logistics_status: LogisticsStatus;
+    is_linked: boolean;
+    remark?: string;
+    created_at?: string;
 }
 
 /** 创建快递单号请求 */
@@ -293,7 +298,8 @@ export interface TrackingNumberOrdersResponse {
     id: number;
     tracking_no: string;
     carrier_name: string;
-    status: TrackingNumberStatus;
+    logistics_status: LogisticsStatus;
+    is_linked: boolean;
     shipment_no?: string;
     orders: TrackingNumberOrderInfo[];
 }

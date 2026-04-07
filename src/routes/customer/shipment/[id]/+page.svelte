@@ -4,6 +4,7 @@
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
     import type { PackageItem } from '$lib/shipmentTypes';
+    import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { DeleteConfirmModal, LinkPackageModal, NewPackageModal } from '$lib/components/shipment';
@@ -23,18 +24,6 @@
 
     function getStatusText(status: string) {
         return SHIPMENT_STATUS_CHOICES.find(s => s.value === status)?.label || status;
-    }
-
-    function getStatusBadgeClass(status: string): string {
-        const classes: Record<string, string> = {
-            draft: 'bg-gray-100 text-gray-600',
-            confirmed: 'bg-blue-100 text-blue-700',
-            packed: 'bg-yellow-100 text-yellow-700',
-            shipped: 'bg-green-100 text-green-700',
-            delivered: 'bg-indigo-100 text-indigo-700',
-            cancelled: 'bg-red-100 text-red-700',
-        };
-        return classes[status] || 'bg-gray-100 text-gray-600';
     }
 
     // 获取货币符号
@@ -248,9 +237,7 @@
                     <div>
                         <span class="text-gray-500 text-sm block">状态</span>
                         <p class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusBadgeClass(shipment.status)}">
-                                {getStatusText(shipment.status)}
-                            </span>
+                            <ShipmentStatusBadge status={shipment.status} />
                         </p>
                     </div>
                     <div>

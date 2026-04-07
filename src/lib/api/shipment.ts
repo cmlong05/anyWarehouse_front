@@ -6,7 +6,7 @@ import type {
     TrackingNumber,
     TrackingNumberBrief,
     TrackingNumberCreateRequest,
-    TrackingNumberStatus,
+    LogisticsStatus,
     Shipment,
     ShipmentBrief,
     ShipmentCreateRequest,
@@ -34,9 +34,9 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
         super('/customer/tracking-numbers/');
     }
 
-    /** 按状态筛选 */
-    async listByStatus(status: TrackingNumberStatus): Promise<PaginatedResponse<TrackingNumber>> {
-        return this.list({ status });
+    /** 按物流状态筛选 */
+    async listByLogisticsStatus(status: LogisticsStatus): Promise<PaginatedResponse<TrackingNumber>> {
+        return this.list({ logistics_status: status });
     }
 
     /** 批量创建 */
@@ -44,15 +44,15 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
         return this.client.post<TrackingNumber[]>(`${this.basePath}batch_create/`, { items: data });
     }
 
-    /** 获取下一个可用单号 */
+    /** 获取下一个可用单号（未关联包裹的单号） */
     async getNextAvailable(carrierCode?: string): Promise<TrackingNumber | null> {
-        const params: Record<string, string> = { status: 'unused' };
+        const params: Record<string, string> = { logistics_status: 'pending' };
         if (carrierCode) params.carrier_code = carrierCode;
         const result = await this.list(params);
         return result.results[0] || null;
     }
 
-    /** 获取可用快递单号列表 */
+    /** 获取可用快递单号列表（未关联包裹且未作废） */
     async listAvailable(): Promise<TrackingNumberBrief[]> {
         return this.client.get<TrackingNumberBrief[]>(`${this.basePath}available/`);
     }
@@ -184,6 +184,10 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
     /** 开箱 */
     async unseal(packageId: number): Promise<{ status: string; message: string }> {
         return this.client.post<{ status: string; message: string }>(`${this.basePath}${packageId}/unseal/`, {});
+    }
+
+    async assignTracking(packageId: number, trackingNumberId: number | null): Promise<Package> {
+        return this.client.patch<Package>(`${this.basePath}${packageId}/`, { tracking_number: trackingNumberId });
     }
 }
 

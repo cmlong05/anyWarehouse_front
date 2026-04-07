@@ -15,13 +15,23 @@
     let success = '';
     
     // 筛选条件
-    let statusFilter = '';
+    let linkedFilter = '';      // 关联状态
+    let logisticsFilter = '';   // 物流状态
     
-    // 状态选项
-    const statusOptions = [
-        { value: '', label: '全部状态' },
-        { value: 'unused', label: '未使用' },
-        { value: 'in_use', label: '使用中' },
+    // 关联状态选项
+    const linkedOptions = [
+        { value: '', label: '全部' },
+        { value: 'false', label: '未关联' },
+        { value: 'true', label: '已关联' },
+    ];
+    
+    // 物流状态选项
+    const logisticsOptions = [
+        { value: '', label: '全部' },
+        { value: 'pending', label: '待揽收' },
+        { value: 'collected', label: '已揽收' },
+        { value: 'in_transit', label: '运输中' },
+        { value: 'exception', label: '异常' },
         { value: 'delivered', label: '已签收' },
         { value: 'returned', label: '已退回' },
         { value: 'cancelled', label: '已作废' },
@@ -49,11 +59,17 @@
         try {
             loading = true;
             error = '';
-            const params: { status?: string } = {};
-            if (statusFilter) params.status = statusFilter;
+            const params: Record<string, string> = {};
+            if (logisticsFilter) params.logistics_status = logisticsFilter;
             
             const response = await trackingNumberAPI.list(params);
-            trackingNumbers = response.results || [];
+            let results = response.results || [];
+            
+            // 关联状态在前端过滤（is_linked 是计算字段）
+            if (linkedFilter === 'true') results = results.filter(tn => tn.is_linked);
+            else if (linkedFilter === 'false') results = results.filter(tn => !tn.is_linked);
+            
+            trackingNumbers = results;
         } catch (err: any) {
             error = err.message || '加载快递单号失败';
         } finally {
@@ -132,24 +148,28 @@
         goto('/customer/shipment');
     }
 
-    function getStatusBadgeClass(status: string): string {
+    function getLogisticsBadgeClass(status: string): string {
         const classMap: Record<string, string> = {
-            'unused': 'bg-gray-100 text-gray-600',
-            'in_use': 'bg-blue-100 text-blue-700',
-            'delivered': 'bg-green-100 text-green-700',
-            'returned': 'bg-indigo-100 text-indigo-700',
-            'cancelled': 'bg-red-100 text-red-700',
+            'pending':    'bg-gray-100 text-gray-600',
+            'collected':  'bg-blue-100 text-blue-700',
+            'in_transit': 'bg-indigo-100 text-indigo-700',
+            'exception':  'bg-orange-100 text-orange-700',
+            'delivered':  'bg-green-100 text-green-700',
+            'returned':   'bg-yellow-100 text-yellow-700',
+            'cancelled':  'bg-red-100 text-red-700',
         };
         return classMap[status] || 'bg-gray-100 text-gray-600';
     }
 
-    function getStatusLabel(status: string): string {
+    function getLogisticsLabel(status: string): string {
         const labelMap: Record<string, string> = {
-            'unused': '未使用',
-            'in_use': '使用中',
-            'delivered': '已签收',
-            'returned': '已退回',
-            'cancelled': '已作废',
+            'pending':    '待揽收',
+            'collected':  '已揽收',
+            'in_transit': '运输中',
+            'exception':  '异常',
+            'delivered':  '已签收',
+            'returned':   '已退回',
+            'cancelled':  '已作废',
         };
         return labelMap[status] || status;
     }
@@ -197,15 +217,28 @@
     <!-- 筛选栏 -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
         <div class="flex flex-wrap gap-4 items-end">
-            <div class="w-full md:w-48">
-                <label class="block text-sm font-medium text-gray-700 mb-1" for="statusFilter">状态</label>
+            <div class="w-full md:w-36">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="linkedFilter">关联状态</label>
                 <select
-                    id="statusFilter"
+                    id="linkedFilter"
                     class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    bind:value={statusFilter}
+                    bind:value={linkedFilter}
                     on:change={loadTrackingNumbers}
                 >
-                    {#each statusOptions as option}
+                    {#each linkedOptions as option}
+                        <option value={option.value}>{option.label}</option>
+                    {/each}
+                </select>
+            </div>
+            <div class="w-full md:w-40">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="logisticsFilter">物流状态</label>
+                <select
+                    id="logisticsFilter"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    bind:value={logisticsFilter}
+                    on:change={loadTrackingNumbers}
+                >
+                    {#each logisticsOptions as option}
                         <option value={option.value}>{option.label}</option>
                     {/each}
                 </select>
@@ -246,7 +279,8 @@
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="px-4 py-3 text-left font-medium text-gray-600">快递单号</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">承运商</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">状态</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">关联状态</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">物流状态</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">备注</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">创建时间</th>
                         <th class="px-4 py-3 text-center font-medium text-gray-600">操作</th>
@@ -265,15 +299,22 @@
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getStatusBadgeClass(tn.status)}">
-                                    {getStatusLabel(tn.status)}
+                                {#if tn.is_linked}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">已关联</span>
+                                {:else}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">未关联</span>
+                                {/if}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getLogisticsBadgeClass(tn.logistics_status)}">
+                                    {getLogisticsLabel(tn.logistics_status)}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-gray-500">{tn.remark || '-'}</td>
                             <td class="px-4 py-3 text-gray-500 text-sm">{formatDate(tn.created_at)}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
-                                    {#if tn.status === 'unused'}
+                                    {#if !tn.is_linked && tn.logistics_status !== 'cancelled'}
                                         <button
                                             class="px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
                                             on:click={() => openEditModal(tn)}
