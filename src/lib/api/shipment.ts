@@ -56,16 +56,6 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
     async listAvailable(): Promise<TrackingNumberBrief[]> {
         return this.client.get<TrackingNumberBrief[]>(`${this.basePath}available/`);
     }
-
-    /** 预留快递单号 */
-    async reserve(id: number): Promise<{ status: string; message: string }> {
-        return this.client.post<{ status: string; message: string }>(`${this.basePath}${id}/reserve/`);
-    }
-
-    /** 释放快递单号 */
-    async release(id: number): Promise<{ status: string; message: string }> {
-        return this.client.post<{ status: string; message: string }>(`${this.basePath}${id}/release/`);
-    }
 }
 
 // ========== Shipment API ==========

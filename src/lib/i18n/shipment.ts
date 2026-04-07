@@ -86,7 +86,6 @@ export const shipmentTranslations = {
         'shipment.tracking.status': '状态',
         'shipment.tracking.status.available': '可用',
         'shipment.tracking.status.used': '已使用',
-        'shipment.tracking.status.reserved': '已预留',
 
         // 提示信息
         'shipment.msg.confirmDelete': '确定要删除此发货单吗？',
@@ -190,7 +189,6 @@ export const shipmentTranslations = {
         'shipment.tracking.status': 'Status',
         'shipment.tracking.status.available': 'Available',
         'shipment.tracking.status.used': 'Used',
-        'shipment.tracking.status.reserved': 'Reserved',
 
         // Messages
         'shipment.msg.confirmDelete': 'Are you sure you want to delete this shipment?',

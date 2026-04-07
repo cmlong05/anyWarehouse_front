@@ -1,7 +1,7 @@
 // ========== Shipment 发货管理相关接口 ==========
 
 /** 快递单号状态 */
-export type TrackingNumberStatus = 'unused' | 'reserved' | 'in_use' | 'delivered' | 'returned' | 'cancelled';
+export type TrackingNumberStatus = 'unused' | 'in_use' | 'delivered' | 'returned' | 'cancelled';
 
 /** 发货单状态 */
 export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled';

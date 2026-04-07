@@ -322,8 +322,6 @@
                             <p class="font-medium">
                                 {#if pkg.tracking_number_detail.status === 'unused'}
                                     <span class="badge badge-ghost">未使用</span>
-                                {:else if pkg.tracking_number_detail.status === 'reserved'}
-                                    <span class="badge badge-info">已预留</span>
                                 {:else if pkg.tracking_number_detail.status === 'in_use'}
                                     <span class="badge badge-primary">使用中</span>
                                 {:else if pkg.tracking_number_detail.status === 'delivered'}

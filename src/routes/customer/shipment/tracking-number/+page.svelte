@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { trackingNumberAPI } from '$lib/api';
+    import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
@@ -20,7 +21,6 @@
     const statusOptions = [
         { value: '', label: '全部状态' },
         { value: 'unused', label: '未使用' },
-        { value: 'reserved', label: '已预留' },
         { value: 'in_use', label: '使用中' },
         { value: 'delivered', label: '已签收' },
         { value: 'returned', label: '已退回' },
@@ -128,46 +128,24 @@
         }
     }
 
-    async function handleReserve(tn: TrackingNumber) {
-        try {
-            await trackingNumberAPI.reserve(tn.id);
-            success = '快递单号已预留';
-            await loadTrackingNumbers();
-        } catch (err: any) {
-            error = err.message || '操作失败';
-        }
-    }
-
-    async function handleRelease(tn: TrackingNumber) {
-        try {
-            await trackingNumberAPI.release(tn.id);
-            success = '快递单号已释放';
-            await loadTrackingNumbers();
-        } catch (err: any) {
-            error = err.message || '操作失败';
-        }
-    }
-
     function goBack() {
         goto('/customer/shipment');
     }
 
     function getStatusBadgeClass(status: string): string {
         const classMap: Record<string, string> = {
-            'unused': 'badge-ghost',
-            'reserved': 'badge-warning',
-            'in_use': 'badge-primary',
-            'delivered': 'badge-success',
-            'returned': 'badge-info',
-            'cancelled': 'badge-error',
+            'unused': 'bg-gray-100 text-gray-600',
+            'in_use': 'bg-blue-100 text-blue-700',
+            'delivered': 'bg-green-100 text-green-700',
+            'returned': 'bg-indigo-100 text-indigo-700',
+            'cancelled': 'bg-red-100 text-red-700',
         };
-        return classMap[status] || 'badge-ghost';
+        return classMap[status] || 'bg-gray-100 text-gray-600';
     }
 
     function getStatusLabel(status: string): string {
         const labelMap: Record<string, string> = {
             'unused': '未使用',
-            'reserved': '已预留',
             'in_use': '使用中',
             'delivered': '已签收',
             'returned': '已退回',
@@ -185,7 +163,11 @@
     <!-- 页面标题 -->
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
-            <button class="btn btn-ghost btn-sm" aria-label="返回" on:click={goBack}>
+            <button
+                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                aria-label="返回"
+                on:click={goBack}
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -195,7 +177,10 @@
                 <p class="text-gray-500 text-sm mt-1">管理快递单号池</p>
             </div>
         </div>
-        <button class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2" on:click={openCreateModal}>
+        <button
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
+            on:click={openCreateModal}
+        >
             <Plus class="h-5 w-5 flex-shrink-0" />
             <span>新建单号</span>
         </button>
@@ -211,25 +196,29 @@
 
     <!-- 筛选栏 -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
-        <div class="flex flex-wrap gap-4">
-            <div class="form-control w-full md:w-48">
-                <label class="label" for="statusFilter">
-                    <span class="label-text">状态</span>
-                </label>
-                <select id="statusFilter" class="select select-bordered" bind:value={statusFilter} on:change={loadTrackingNumbers}>
+        <div class="flex flex-wrap gap-4 items-end">
+            <div class="w-full md:w-48">
+                <label class="block text-sm font-medium text-gray-700 mb-1" for="statusFilter">状态</label>
+                <select
+                    id="statusFilter"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    bind:value={statusFilter}
+                    on:change={loadTrackingNumbers}
+                >
                     {#each statusOptions as option}
                         <option value={option.value}>{option.label}</option>
                     {/each}
                 </select>
             </div>
-            <div class="form-control flex-1 flex items-end">
-                <button class="btn btn-outline rounded-lg shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap flex items-center gap-2" on:click={loadTrackingNumbers}>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>刷新</span>
-                </button>
-            </div>
+            <button
+                class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+                on:click={loadTrackingNumbers}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>刷新</span>
+            </button>
         </div>
     </div>
 
@@ -238,77 +227,62 @@
         <Loading />
     {:else if trackingNumbers?.length === 0}
         <div class="bg-white rounded-lg shadow p-12 text-center">
-            <div class="text-gray-400 mb-4">
+            <div class="text-gray-300 mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-2">暂无快递单号</h3>
             <p class="text-gray-500 mb-4">点击上方按钮创建快递单号</p>
-            <button class="btn btn-primary rounded-lg shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap" on:click={openCreateModal}>新建单号</button>
+            <button
+                class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 transition-colors"
+                on:click={openCreateModal}
+            >新建单号</button>
         </div>
     {:else}
         <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="table table-zebra w-full">
+            <table class="w-full text-sm">
                 <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-4 py-3 text-left">快递单号</th>
-                        <th class="px-4 py-3 text-left">承运商</th>
-                        <th class="px-4 py-3 text-left">状态</th>
-                        <th class="px-4 py-3 text-left">备注</th>
-                        <th class="px-4 py-3 text-center">操作</th>
+                    <tr class="bg-gray-50 border-b border-gray-200">
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">快递单号</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">承运商</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">状态</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">备注</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">创建时间</th>
+                        <th class="px-4 py-3 text-center font-medium text-gray-600">操作</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     {#each trackingNumbers as tn}
-                        <tr class="hover:bg-blue-50">
-                            <td class="px-4 py-3 font-medium">{tn.tracking_no}</td>
+                        <tr class="hover:bg-blue-50 transition-colors">
+                            <td class="px-4 py-3 font-medium font-mono">{tn.tracking_no}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-col">
                                     <span>{tn.carrier_name}</span>
                                     {#if tn.carrier_code}
-                                        <span class="text-xs text-gray-500">{tn.carrier_code}</span>
+                                        <span class="text-xs text-gray-400">{tn.carrier_code}</span>
                                     {/if}
                                 </div>
                             </td>
                             <td class="px-4 py-3">
-                                <span class="badge {getStatusBadgeClass(tn.status)} badge-sm">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getStatusBadgeClass(tn.status)}">
                                     {getStatusLabel(tn.status)}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">{tn.remark || '-'}</td>
+                            <td class="px-4 py-3 text-gray-500">{tn.remark || '-'}</td>
+                            <td class="px-4 py-3 text-gray-500 text-sm">{formatDate(tn.created_at)}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
-                                {#if tn.status === 'unused'}
-                                    <button 
-                                        class="btn btn-ghost btn-sm p-1"
-                                        on:click={() => handleReserve(tn)}
-                                    >
-                                        预留
-                                    </button>
-                                {/if}
-                                {#if tn.status === 'reserved'}
-                                    <button 
-                                        class="btn btn-ghost btn-sm p-1"
-                                        on:click={() => handleRelease(tn)}
-                                    >
-                                        释放
-                                    </button>
-                                {/if}
-                                {#if tn.status === 'unused' || tn.status === 'reserved'}
-                                    <button 
-                                        class="btn btn-ghost btn-sm p-1"
-                                        on:click={() => openEditModal(tn)}
-                                    >
-                                        编辑
-                                    </button>
-                                    <button 
-                                        class="btn btn-ghost btn-sm p-1 text-error"
-                                        on:click={() => confirmDelete(tn)}
-                                    >
-                                        删除
-                                    </button>
-                                {/if}
+                                    {#if tn.status === 'unused'}
+                                        <button
+                                            class="px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                            on:click={() => openEditModal(tn)}
+                                        >编辑</button>
+                                        <button
+                                            class="px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+                                            on:click={() => confirmDelete(tn)}
+                                        >删除</button>
+                                    {/if}
                                 </div>
                             </td>
                         </tr>
@@ -321,19 +295,36 @@
 
 <!-- 表单模态框 -->
 {#if showFormModal}
-    <div class="modal modal-open">
-        <div class="modal-box max-w-lg">
-            <h3 class="font-bold text-lg mb-4">{editingId ? '编辑快递单号' : '新建快递单号'}</h3>
-            
-            <div class="space-y-4">
-                <div class="form-control">
-                    <label class="label" for="trackingNo">
-                        <span class="label-text">快递单号 <span class="text-error">*</span></span>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div 
+        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        on:click|self={() => showFormModal = false}
+        on:keydown={(e) => e.key === 'Escape' && (showFormModal = false)}
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-[90%]">
+            <!-- 标题栏 -->
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
+                <h3 class="text-gray-900 text-lg font-semibold">{editingId ? '编辑快递单号' : '新建快递单号'}</h3>
+                <button 
+                    class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
+                    on:click={() => showFormModal = false}
+                    aria-label="关闭"
+                >×</button>
+            </div>
+
+            <!-- 表单内容 -->
+            <div class="px-6 py-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="trackingNo">
+                        快递单号 <span class="text-red-500">*</span>
                     </label>
                     <input 
                         id="trackingNo"
                         type="text" 
-                        class="input input-bordered" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
                         bind:value={formData.tracking_no}
                         placeholder="输入快递单号"
                         disabled={!!editingId}
@@ -341,48 +332,56 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="form-control">
-                        <label class="label" for="carrierName">
-                            <span class="label-text">承运商名称 <span class="text-error">*</span></span>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="carrierName">
+                            承运商名称 <span class="text-red-500">*</span>
                         </label>
                         <input 
                             id="carrierName"
                             type="text" 
-                            class="input input-bordered" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             bind:value={formData.carrier_name}
                             placeholder="如：顺丰速运"
                         />
                     </div>
-                    <div class="form-control">
-                        <label class="label" for="carrierCode">
-                            <span class="label-text">承运商代码</span>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="carrierCode">
+                            承运商代码
                         </label>
                         <input 
                             id="carrierCode"
                             type="text" 
-                            class="input input-bordered" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             bind:value={formData.carrier_code}
                             placeholder="如：sf"
                         />
                     </div>
                 </div>
 
-                <div class="form-control">
-                    <label class="label" for="remark">
-                        <span class="label-text">备注</span>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="remark">
+                        备注
                     </label>
                     <textarea 
                         id="remark"
-                        class="textarea textarea-bordered" 
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        rows="3"
                         bind:value={formData.remark}
                         placeholder="输入备注信息"
                     ></textarea>
                 </div>
             </div>
 
-            <div class="modal-action">
-                <button class="btn btn-ghost" on:click={() => showFormModal = false}>取消</button>
-                <button class="btn btn-primary" on:click={handleSubmit}>保存</button>
+            <!-- 底部按钮 -->
+            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                <button 
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+                    on:click={() => showFormModal = false}
+                >取消</button>
+                <button 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors text-sm"
+                    on:click={handleSubmit}
+                >保存</button>
             </div>
         </div>
     </div>
