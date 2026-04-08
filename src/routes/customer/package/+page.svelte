@@ -2,13 +2,13 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { packageAPI } from '$lib/api';
-    import { formatDate, formatNumber } from '$lib/utils';
-    import type { PackageBrief } from '$lib/shipmentTypes';
+    import { formatDate, formatNumber, safeParseFloat } from '$lib/utils';
+    import type { Package } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import Plus from 'lucide-svelte/icons/plus';
 
-    let packages = $state<PackageBrief[]>([]);
+    let packages = $state<Package[]>([]);
     let loading = $state(true);
     let error = $state('');
     let searchQuery = $state('');
@@ -70,15 +70,31 @@
         loadPackages();
     }
 
-    function getShipmentInfo(pkg: PackageBrief): string {
+    function getShipmentInfo(pkg: Package): string {
         if (!pkg.shipments || pkg.shipments.length === 0) {
             return '未关联发货单';
         }
         return pkg.shipments.map(s => s.shipment_no).join(', ');
     }
 
+    function formatCompactNumber(value: string | number | undefined | null, decimals = 3): string {
+        const num = safeParseFloat(value, NaN);
+        if (Number.isNaN(num)) return '-';
+        return formatNumber(num, decimals).replace(/\.0+$|(?<=\.\d*[1-9])0+$/, '');
+    }
+
+    function getDisplayWeight(pkg: Package): string {
+        const manualWeight = safeParseFloat(pkg.weight, 0);
+        return manualWeight > 0 ? `${manualWeight.toFixed(3)} kg` : '-';
+    }
+
+    function getDisplayVolume(pkg: Package): string {
+        const volume = safeParseFloat(pkg.volume, 0);
+        return volume > 0 ? formatCompactNumber(pkg.volume) : '-';
+    }
+
     // 删除相关函数
-    function confirmDelete(pkg: PackageBrief, e: Event) {
+    function confirmDelete(pkg: Package, e: Event) {
         e.stopPropagation();
         deleteId = pkg.id;
         deletePackageNo = pkg.package_no;
@@ -226,14 +242,8 @@
                             </td>
                             <td class="px-4 py-3 text-right">{pkg.items?.length || 0}</td>
                             <td class="px-4 py-3 text-right">{formatNumber(pkg.total_quantity)}</td>
-                            <td class="px-4 py-3 text-right">
-                                {pkg.weight ? `${parseFloat(pkg.weight).toFixed(3)} kg` : '-'}
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                {pkg.length && pkg.width && pkg.height 
-                                    ? `${pkg.length}×${pkg.width}×${pkg.height} cm` 
-                                    : '-'}
-                            </td>
+                            <td class="px-4 py-3 text-right">{getDisplayWeight(pkg)}</td>
+                            <td class="px-4 py-3 text-right">{getDisplayVolume(pkg)}</td>
                             <td class="px-4 py-3 text-sm text-gray-500">{formatDate(pkg.created_at)}</td>
                             <td class="px-4 py-3 text-center">
                                 <button 

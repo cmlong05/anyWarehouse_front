@@ -262,6 +262,28 @@
         }
         return 'hover:bg-gray-50';
     }
+
+    function formatCompactNumber(value: string | number | undefined | null, decimals = 3): string {
+        const num = safeParseFloat(value, NaN);
+        if (Number.isNaN(num)) return '-';
+        return formatNumber(num, decimals).replace(/\.0+$|(?<=\.\d*[1-9])0+$/, '');
+    }
+
+    function getDisplayWeight(pkg: Package): string {
+        const manualWeight = safeParseFloat(pkg.weight, 0);
+        return manualWeight > 0 ? `${manualWeight.toFixed(3)} kg` : '-';
+    }
+
+    function getDisplayVolume(pkg: Package): string {
+        const volume = safeParseFloat(pkg.volume, 0);
+        return volume > 0 ? formatCompactNumber(pkg.volume) : '-';
+    }
+
+    function getDisplayDimensions(pkg: Package): string {
+        return pkg.length && pkg.width && pkg.height
+            ? `${pkg.length}×${pkg.width}×${pkg.height} cm`
+            : '-';
+    }
 </script>
 
 <svelte:head>
@@ -333,15 +355,15 @@
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">重量</span>
-                        <p class="font-medium">{pkg.weight ? `${parseFloat(pkg.weight).toFixed(3)} kg` : '-'}</p>
+                        <p class="font-medium">{getDisplayWeight(pkg)}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">体积</span>
-                        <p class="font-medium">
-                            {pkg.length && pkg.width && pkg.height 
-                                ? `${pkg.length}×${pkg.width}×${pkg.height} cm` 
-                                : '-'}
-                        </p>
+                        <p class="font-medium">{getDisplayVolume(pkg)}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 text-sm">尺寸</span>
+                        <p class="font-medium">{getDisplayDimensions(pkg)}</p>
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm">创建时间</span>

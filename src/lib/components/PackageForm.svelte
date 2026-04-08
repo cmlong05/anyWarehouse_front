@@ -36,6 +36,7 @@
         id: string;
         shipmentId: number | null;
         shipmentNo: string;
+        itemId: number | null;
         sku: string;
         productName: string;
         quantity: number;
@@ -100,7 +101,7 @@
             if (!shipment.items) continue;
             for (const item of shipment.items) {
                 // 过滤掉已添加的商品
-                const isAdded = packagePreviewItems.some(p => p.sku === item.sku && p.shipmentId === shipmentId);
+                const isAdded = packagePreviewItems.some(p => p.itemId === item.item && p.shipmentId === shipmentId);
                 if (!isAdded) {
                     items.push({ shipmentId, shipmentNo: shipment.shipment_no, item });
                 }
@@ -158,6 +159,7 @@
                         id: `existing-${item.id}`,
                         shipmentId: item.shipment,
                         shipmentNo: linkedShipment?.shipment_no || '-',
+                        itemId: item.item,
                         sku: item.sku,
                         productName: item.product_name,
                         quantity: safeParseFloat(item.quantity)
@@ -179,8 +181,8 @@
     function removeShipmentDetail(shipmentId: number) { 
         selectedShipmentsDetail.delete(shipmentId); 
         selectedShipmentsDetail = new Map(selectedShipmentsDetail); 
-        // 只删除关联该发货单的明细，保留手动添加的商品（shipmentId 为 0 的）
-        packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId || item.shipmentId === 0); 
+        // 只删除关联该发货单的明细
+        packagePreviewItems = packagePreviewItems.filter(item => item.shipmentId !== shipmentId); 
     }
 
     async function onShipmentToggle(shipmentId: number, checked: boolean) {
@@ -191,7 +193,12 @@
     function addItemToPreview(shipmentId: number, item: ShipmentItem) {
         const shipment = selectedShipmentsDetail.get(shipmentId); 
         if (!shipment) return;
-        if (packagePreviewItems.find(p => p.sku === item.sku && p.shipmentId === shipmentId)) { 
+        if (!item.item) {
+            error = `发货单明细 ${item.sku} 未关联物品，无法加入包裹`;
+            setTimeout(() => error = '', 2500);
+            return;
+        }
+        if (packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) { 
             error = '该商品已在包裹明细中'; 
             setTimeout(() => error = '', 2000); 
             return; 
@@ -200,6 +207,7 @@
             id: `${shipmentId}-${item.id}-${Date.now()}`, 
             shipmentId, 
             shipmentNo: shipment.shipment_no, 
+            itemId: item.item,
             sku: item.sku, 
             productName: item.product_name, 
             quantity: safeParseFloat(item.quantity)
@@ -208,14 +216,15 @@
     
     // 手动添加商品到包裹
     async function addManualItem() {
-        const sku = manualSku?.trim() || '';
-        const productName = manualProductName?.trim() || '';
-        
-        if (!sku) {
-            error = '请选择或输入SKU';
+        if (!selectedItemId) {
+            error = '请选择物品';
             setTimeout(() => error = '', 2000);
             return;
         }
+
+        const sku = manualSku?.trim() || '';
+        const productName = manualProductName?.trim() || '';
+
         if (!productName) {
             error = '请输入商品名称';
             setTimeout(() => error = '', 2000);
@@ -227,25 +236,28 @@
             return;
         }
         
-        // 检查是否已存在相同SKU
-        if (packagePreviewItems.find(p => p.sku === sku)) {
-            error = '该SKU已在包裹明细中';
+        if (!manualSelectedShipmentId) {
+            error = '请选择发货单';
             setTimeout(() => error = '', 2000);
             return;
         }
-   
-        // 确定关联的发货单信息
-        const shipmentId = manualSelectedShipmentId || 0;
+
+        const shipmentId = manualSelectedShipmentId;
         let shipmentNo = "-";
-        if (shipmentId > 0) {
-            const shipment = availableShipments.find(s => s.id === shipmentId);
-            shipmentNo = shipment ? shipment.shipment_no : `发货单 #${shipmentId}`;
+        const shipment = availableShipments.find(s => s.id === shipmentId);
+        shipmentNo = shipment ? shipment.shipment_no : `发货单 #${shipmentId}`;
+
+        if (packagePreviewItems.find(p => p.itemId === selectedItemId && p.shipmentId === shipmentId)) {
+            error = '该商品已在包裹明细中';
+            setTimeout(() => error = '', 2000);
+            return;
         }
    
         packagePreviewItems = [...packagePreviewItems, { 
             id: `manual-${Date.now()}`, 
             shipmentId: shipmentId, 
             shipmentNo: shipmentNo,
+            itemId: selectedItemId,
             sku: sku, 
             productName: productName, 
             quantity: manualQuantity
@@ -340,11 +352,13 @@
     function fillAllPending() {
         const items = availableItems();
         for (const { shipmentId, shipmentNo, item } of items) {
-            if (!packagePreviewItems.find(p => p.sku === item.sku && p.shipmentId === shipmentId)) {
+            if (!item.item) continue;
+            if (!packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) {
                 packagePreviewItems = [...packagePreviewItems, {
                     id: `${shipmentId}-${item.id}-${Date.now()}`,
                     shipmentId,
                     shipmentNo,
+                    itemId: item.item,
                     sku: item.sku,
                     productName: item.product_name,
                     quantity: safeParseFloat(item.quantity)
@@ -361,6 +375,7 @@
         if (!packageNo.trim()) { error = '请输入包裹编号'; return; }
         if (selectedShipmentIds.length === 0 && mode === 'create') { error = '请至少选择一个发货单'; return; }
         if (packagePreviewItems.length === 0) { error = '请至少添加一个商品到包裹'; return; }
+        if (packagePreviewItems.some(item => !item.itemId || !item.shipmentId)) { error = '包裹明细必须同时关联发货单和物品'; return; }
 
         saving = true; error = ''; success = '';
         try {
@@ -369,9 +384,8 @@
             
             // 处理明细数据：所有 PackageItem 现在都需要指定 shipment
             const items = packagePreviewItems.map(item => ({
-                shipment: item.shipmentId,
-                sku: item.sku, 
-                product_name: item.productName, 
+                shipment: item.shipmentId!,
+                item: item.itemId!,
                 quantity: item.quantity
             }));
             
@@ -523,7 +537,7 @@
                     <div class="w-44">
                         <Svelecte
                             inputId="manual-shipment-select"
-                            placeholder="选择发货单（可选）"
+                            placeholder="选择发货单"
                             searchable={true}
                             clearable={true}
                             valueField="value"

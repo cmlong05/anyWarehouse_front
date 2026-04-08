@@ -171,7 +171,7 @@ export interface PackageItem {
     sku: string;
     quantity: string;
     product_name: string;
-    item?: number;
+    item: number;
     notes?: string;
     item_detail?: ItemDetail;
     created_at: string;
@@ -181,10 +181,8 @@ export interface PackageItem {
 /** 创建包裹明细请求 */
 export interface PackageItemCreateRequest {
     shipment: number;  // 发货单 ID (必填)
-    sku: string;  // SKU (必填)
+    item: number;  // 物品 ID (必填)
     quantity: number;  // 数量 (必填)
-    product_name?: string;
-    item?: number;
     notes?: string;
 }
 
@@ -204,6 +202,9 @@ export interface Package {
     tracking_number?: number;
     tracking_number_detail?: TrackingNumberBrief;
     weight?: string;
+    volume?: string;
+    estimated_weight?: string;
+    estimated_volume?: string;
     length?: string;
     width?: string;
     height?: string;
@@ -236,6 +237,9 @@ export interface PackageBrief {
     status: 'pending' | 'sealed';
     sequence_no: number;
     weight?: string;
+    volume?: string;
+    estimated_weight?: string;
+    estimated_volume?: string;
     length?: string;
     width?: string;
     height?: string;
