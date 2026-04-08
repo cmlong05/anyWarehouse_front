@@ -155,55 +155,53 @@
 
     <!-- 筛选区域 -->
     <FilterPanel onReset={orderList.resetFilters}>
-        <div class="flex flex-wrap items-end gap-4">
-            <FormSelect
-                label="供应商"
-                name="supplier"
-                options={supplierOptions}
-                value={orderList.filters.supplier_id || ''}
-                onchange={(v) => { orderList.filters.supplier_id = v; orderList.applyFilters(); }}
-            />
-            
-            <FormSelect
-                label="状态"
-                name="status"
-                options={ORDER_STATUS_OPTIONS.purchase}
-                value={orderList.filters.status || ''}
-                onchange={(v) => { orderList.filters.status = v; orderList.applyFilters(); }}
-            />
-            
-            <FormSelect
-                label="优先级"
-                name="priority"
-                options={PRIORITY_OPTIONS}
-                value={orderList.filters.priority || ''}
-                onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                label="订单号"
-                name="order_number"
-                value={orderList.filters.order_number || ''}
-                placeholder="搜索订单号"
-                onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                type="date"
-                label="下单日期从"
-                name="date_from"
-                value={orderList.filters.date_from || ''}
-                onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                type="date"
-                label="到"
-                name="date_to"
-                value={orderList.filters.date_to || ''}
-                onchange={(v) => { orderList.filters.date_to = v; orderList.applyFilters(); }}
-            />
-        </div>
+        <FormSelect
+            label="供应商"
+            name="supplier"
+            options={supplierOptions}
+            value={orderList.filters.supplier_id || ''}
+            onchange={(v) => { orderList.filters.supplier_id = v; orderList.applyFilters(); }}
+        />
+        
+        <FormSelect
+            label="状态"
+            name="status"
+            options={ORDER_STATUS_OPTIONS.purchase}
+            value={orderList.filters.status || ''}
+            onchange={(v) => { orderList.filters.status = v; orderList.applyFilters(); }}
+        />
+        
+        <FormSelect
+            label="优先级"
+            name="priority"
+            options={PRIORITY_OPTIONS}
+            value={orderList.filters.priority || ''}
+            onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            label="订单号"
+            name="order_number"
+            value={orderList.filters.order_number || ''}
+            placeholder="搜索订单号"
+            onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            type="date"
+            label="下单日期从"
+            name="date_from"
+            value={orderList.filters.date_from || ''}
+            onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            type="date"
+            label="到"
+            name="date_to"
+            value={orderList.filters.date_to || ''}
+            onchange={(v) => { orderList.filters.date_to = v; orderList.applyFilters(); }}
+        />
     </FilterPanel>
 
     <!-- 数据表格 -->

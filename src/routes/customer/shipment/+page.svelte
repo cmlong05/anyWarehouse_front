@@ -170,29 +170,27 @@
 
     <!-- 筛选器 -->
     <FilterPanel onReset={clearFilters} onApply={applyFilters}>
-        <div class="flex flex-wrap gap-4 w-full">
-            <FormInput
-                label="搜索"
-                name="search"
-                value={filters.search || ''}
-                placeholder="发货批次号/收货人"
-                onchange={(v) => filters.search = v}
-            />
-            <FormSelect
-                label="状态"
-                name="status"
-                options={statusOptions}
-                value={filters.status || ''}
-                onchange={(v) => filters.status = v}
-            />
-            <FormSelect
-                label="排序"
-                name="ordering"
-                options={orderingOptions}
-                value={filters.ordering || ''}
-                onchange={(v) => filters.ordering = v}
-            />
-        </div>
+        <FormInput
+            label="搜索"
+            name="search"
+            value={filters.search || ''}
+            placeholder="发货批次号/收货人"
+            onchange={(v) => filters.search = v}
+        />
+        <FormSelect
+            label="状态"
+            name="status"
+            options={statusOptions}
+            value={filters.status || ''}
+            onchange={(v) => filters.status = v}
+        />
+        <FormSelect
+            label="排序"
+            name="ordering"
+            options={orderingOptions}
+            value={filters.ordering || ''}
+            onchange={(v) => filters.ordering = v}
+        />
     </FilterPanel>
 
     <DataTable

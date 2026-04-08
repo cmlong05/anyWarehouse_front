@@ -200,55 +200,53 @@
 
     <!-- 筛选区域 -->
     <FilterPanel onReset={orderList.resetFilters}>
-        <div class="flex flex-wrap items-end gap-4">
-            <FormSelect
-                label={t('sales.field.customer', $localeStore)}
-                name="customer"
-                options={customerOptions}
-                value={orderList.filters.customer_id || ''}
-                onchange={(v) => { orderList.filters.customer_id = v; orderList.applyFilters(); }}
-            />
-            
-            <FormSelect
-                label={t('sales.field.status', $localeStore)}
-                name="status"
-                options={ORDER_STATUS_OPTIONS.sales}
-                value={orderList.filters.status || ''}
-                onchange={(v) => { orderList.filters.status = v; orderList.applyFilters(); }}
-            />
-            
-            <FormSelect
-                label={t('sales.field.priority', $localeStore)}
-                name="priority"
-                options={PRIORITY_OPTIONS}
-                value={orderList.filters.priority || ''}
-                onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                label={t('sales.field.orderNumber', $localeStore)}
-                name="order_number"
-                value={orderList.filters.order_number || ''}
-                placeholder={$localeStore === 'zh' ? '搜索订单号' : 'Search order number'}
-                onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                type="date"
-                label={t('sales.field.orderDate', $localeStore)}
-                name="date_from"
-                value={orderList.filters.date_from || ''}
-                onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
-            />
-            
-            <FormInput
-                type="date"
-                label={$localeStore === 'zh' ? '到' : 'To'}
-                name="date_to"
-                value={orderList.filters.date_to || ''}
-                onchange={(v) => { orderList.filters.date_to = v; orderList.applyFilters(); }}
-            />
-        </div>
+        <FormSelect
+            label={t('sales.field.customer', $localeStore)}
+            name="customer"
+            options={customerOptions}
+            value={orderList.filters.customer_id || ''}
+            onchange={(v) => { orderList.filters.customer_id = v; orderList.applyFilters(); }}
+        />
+        
+        <FormSelect
+            label={t('sales.field.status', $localeStore)}
+            name="status"
+            options={ORDER_STATUS_OPTIONS.sales}
+            value={orderList.filters.status || ''}
+            onchange={(v) => { orderList.filters.status = v; orderList.applyFilters(); }}
+        />
+        
+        <FormSelect
+            label={t('sales.field.priority', $localeStore)}
+            name="priority"
+            options={PRIORITY_OPTIONS}
+            value={orderList.filters.priority || ''}
+            onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            label={t('sales.field.orderNumber', $localeStore)}
+            name="order_number"
+            value={orderList.filters.order_number || ''}
+            placeholder={$localeStore === 'zh' ? '搜索订单号' : 'Search order number'}
+            onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            type="date"
+            label={t('sales.field.orderDate', $localeStore)}
+            name="date_from"
+            value={orderList.filters.date_from || ''}
+            onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
+        />
+        
+        <FormInput
+            type="date"
+            label={$localeStore === 'zh' ? '到' : 'To'}
+            name="date_to"
+            value={orderList.filters.date_to || ''}
+            onchange={(v) => { orderList.filters.date_to = v; orderList.applyFilters(); }}
+        />
     </FilterPanel>
 
     <!-- 数据表格 -->

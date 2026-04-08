@@ -112,31 +112,29 @@
     
     <!-- 筛选区域 -->
     <FilterPanel onReset={resetFilters}>
-        <div class="flex flex-wrap items-end gap-4">
-            <FormInput
-                label="搜索"
-                name="search"
-                value={searchQuery}
-                placeholder="搜索客户编号、名称、联系人..."
-                onchange={(v) => { searchQuery = v; loadCustomers(); }}
-            />
-            
-            <FormSelect
-                label="等级"
-                name="level"
-                options={levelOptions}
-                value={levelFilter}
-                onchange={(v) => { levelFilter = v; loadCustomers(); }}
-            />
-            
-            <FormSelect
-                label="状态"
-                name="status"
-                options={statusOptions}
-                value={statusFilter}
-                onchange={(v) => { statusFilter = v; loadCustomers(); }}
-            />
-        </div>
+        <FormInput
+            label="搜索"
+            name="search"
+            value={searchQuery}
+            placeholder="搜索客户编号、名称、联系人..."
+            onchange={(v) => { searchQuery = v; loadCustomers(); }}
+        />
+        
+        <FormSelect
+            label="等级"
+            name="level"
+            options={levelOptions}
+            value={levelFilter}
+            onchange={(v) => { levelFilter = v; loadCustomers(); }}
+        />
+        
+        <FormSelect
+            label="状态"
+            name="status"
+            options={statusOptions}
+            value={statusFilter}
+            onchange={(v) => { statusFilter = v; loadCustomers(); }}
+        />
     </FilterPanel>
     
     {#if !loading && customers.length === 0}
