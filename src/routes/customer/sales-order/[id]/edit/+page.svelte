@@ -49,11 +49,13 @@
         error = '';
         
         try {
-            await salesOrderAPI.update(orderId, data);
+            // 编辑接口不接受 customer 字段（仅创建时需要）
+            const { customer: _customer, ...updatePayload } = data as SalesOrderUpdateRequest & { customer?: number };
+            await salesOrderAPI.update(orderId, updatePayload);
             // 更新成功后跳转到订单详情页
             goto(`/customer/sales-order/${orderId}`);
-        } catch (err) {
-            error = err instanceof Error ? err.message : '更新销售订单失败';
+        } catch (err: any) {
+            error = err?.message || (err instanceof Error ? err.message : '更新销售订单失败');
             submitting = false;
         }
     }
