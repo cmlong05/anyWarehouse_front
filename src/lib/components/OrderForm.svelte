@@ -263,10 +263,12 @@
             const q = selected.quotation as { 
                 id: number; 
                 item?: number; 
-                sku?: string; 
+                item_sku?: string; 
                 item_name?: string; 
                 item_name_en?: string;
                 price: string;
+                item_is_variant_template?: boolean;
+                is_variant_template?: boolean;
             };
             setCurrentItemQuotation(q);
         } else {
@@ -277,8 +279,8 @@
     // 过滤掉已存在的 SKU
     const filteredQuotationOptions = $derived(
         quotationOptions.filter(opt => {
-            const q = opt.quotation as { sku?: string };
-            return !addedSkus.has(q.sku);
+            const q = opt.quotation as { item_sku?: string };
+            return !addedSkus.has(q.item_sku);
         })
     );
 

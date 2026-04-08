@@ -40,7 +40,7 @@ export const PARTNER_LEVEL_LABELS: Record<string, string> = {
     'C': 'C级供应商',
 };
 
-export function usePartnerDetail<T extends { id: number; name: string; level: string; status: string }, Q extends { id: number; item?: number | null; sku?: string | null; item_name?: string | null; price?: string | null; currency?: string | null }, O extends { id: number; order_number?: string | null; order_date?: string | null; status?: string | null; total_amount?: string | null }>(
+export function usePartnerDetail<T extends { id: number; name: string; level: string; status: string }, Q extends { id: number; item?: number | null; item_sku?: string | null; item_name?: string | null; price?: string | null; currency?: string | null }, O extends { id: number; order_number?: string | null; order_date?: string | null; status?: string | null; total_amount?: string | null }>(
     options: PartnerDetailOptions<T, Q, O>
 ) {
     let partner = $state<T>(null as unknown as T);
@@ -136,7 +136,7 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
             .map(q => ({
                 quotation_id: q.id,
                 item: q.item,
-                sku: q.sku,
+                sku: q.item_sku,
                 item_name: q.item_name,
                 quantity: quotationQuantities[q.id],
                 unit_price: parseFloat(q.price || '0')
@@ -145,8 +145,8 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
         // 收集所有可用的报价信息（包括未选中的变体，用于创建订单时显示真实报价）
         const allQuotationPrices: Record<string, { price: number; currency: string; item: number | null }> = {};
         quotations.forEach(q => {
-            if (q.sku) {
-                allQuotationPrices[q.sku] = {
+            if (q.item_sku) {
+                allQuotationPrices[q.item_sku] = {
                     price: parseFloat(q.price || '0'),
                     currency: q.currency || 'CNY',
                     item: q.item ?? null
