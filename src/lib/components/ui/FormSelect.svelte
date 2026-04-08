@@ -38,7 +38,7 @@
         class: className = '',
         options,
         value,
-        placeholder = '请选择',
+        placeholder = '',
         disabled = false,
         onchange
     }: Props = $props();
