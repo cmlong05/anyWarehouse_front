@@ -507,8 +507,8 @@
             <!-- 手动添加商品表单 - 独立一行 -->
             <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
                 <div class="text-xs text-blue-700 font-medium mb-2">添加商品:</div>
-                <div class="flex flex-wrap gap-2 items-end">
-                    <div class="flex-[2] min-w-[200px]">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <div class="flex-[2] min-w-[200px]" style="--sv-min-height: 40px;">
                         <Svelecte
                             inputId="manual-item-select"
                             valueAsObject={false}
@@ -524,17 +524,17 @@
                             clearable={true}
                         />
                     </div>
-                    <div class="w-28">
+                    <div class="w-38">
                         <NumberStepper
                             bind:value={manualQuantity}
                             min={1}
                             step={1}
                             decimalPlaces={0}
-                            size="sm"
+                            size="lg"
                             placeholder="数量"
                         />
                     </div>
-                    <div class="w-44">
+                    <div class="w-50" style="--sv-min-height: 40px;">
                         <Svelecte
                             inputId="manual-shipment-select"
                             placeholder="选择发货单"
@@ -548,7 +548,7 @@
                     </div>
                     <button 
                         type="button" 
-                        class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                        class="h-10 px-4 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
                         onclick={addManualItem}
                     >
                         添加
