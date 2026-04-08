@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { CustomerAddress, CustomerAddressFormData } from '$lib';
     import { customerAddressAPI } from '$lib/api';
+    import AddressCard from '$lib/components/customer/AddressCard.svelte';
 
     interface Props {
         customerId: number;
@@ -129,11 +130,6 @@
             error = err?.message || '加载失败';
         }
     }
-
-    function formatAddress(addr: CustomerAddress): string {
-        return [addr.country, addr.province, addr.city, addr.district, addr.detail_address, addr.detail_address2]
-            .filter(Boolean).join(' ');
-    }
 </script>
 
 <!-- 地址信息标题 + 新增按钮 -->
@@ -154,46 +150,12 @@
 {:else}
     <div class="space-y-2">
         {#each addresses as addr (addr.id)}
-            <div class="border rounded-lg p-3 {addr.is_default ? 'border-green-300 bg-green-50/30' : 'border-gray-200 bg-white'}">
-                <div class="flex items-start justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        {#if addr.is_default}
-                            <span class="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">默认</span>
-                        {/if}
-                        {#if addr.status === 'INACTIVE'}
-                            <span class="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-xs rounded">停用</span>
-                        {/if}
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        {#if !addr.is_default}
-                            <button onclick={() => handleSetDefault(addr)} class="text-xs text-blue-500 hover:text-blue-700">设为默认</button>
-                        {/if}
-                        <button onclick={() => startEdit(addr)} class="text-xs text-gray-500 hover:text-gray-700">编辑</button>
-                        <button onclick={() => handleDelete(addr.id)} class="text-xs text-red-400 hover:text-red-600">删除</button>
-                    </div>
-                </div>
-                <div class="mt-1.5 space-y-0.5 text-xs text-gray-600">
-                    {#if addr.contact_name || addr.phone || addr.mobile}
-                        <div class="flex items-center gap-2">
-                            {#if addr.contact_name}<span>{addr.contact_name}</span>{/if}
-                            {#if addr.phone}<span class="text-gray-400">{addr.phone}</span>{/if}
-                            {#if addr.mobile}<span class="text-gray-400">{addr.mobile}</span>{/if}
-                        </div>
-                    {/if}
-                    {#if addr.email}
-                        <div class="text-gray-400">{addr.email}</div>
-                    {/if}
-                    {#if addr.tax_number}
-                        <div class="text-gray-400">税号：{addr.tax_number}</div>
-                    {/if}
-                    {#if formatAddress(addr)}
-                        <div class="text-gray-700">{formatAddress(addr)}</div>
-                    {/if}
-                    {#if addr.postal_code}
-                        <div class="text-gray-400">邮编：{addr.postal_code}</div>
-                    {/if}
-                </div>
-            </div>
+            <AddressCard
+                {addr}
+                onSetDefault={handleSetDefault}
+                onEdit={startEdit}
+                onDelete={handleDelete}
+            />
         {/each}
     </div>
 {/if}
