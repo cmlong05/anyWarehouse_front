@@ -69,11 +69,11 @@
     function getPriorityClass(priority: string): string {
         const classes: Record<string, string> = {
             low: 'bg-gray-100 text-gray-600',
-            normal: 'bg-blue-100 text-blue-700',
+            normal: '',
             high: 'bg-orange-100 text-orange-700',
             urgent: 'bg-red-100 text-red-700',
         };
-        return classes[priority] || 'bg-gray-100 text-gray-600';
+        return classes[priority] ?? 'bg-gray-100 text-gray-600';
     }
 
     // 状态标签
@@ -281,9 +281,13 @@
                         {getStatusLabel(value as string)}
                     </span>
                 {:else if column.key === 'priority'}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPriorityClass(value as string)}">
-                        {getPriorityLabel(value as string)}
-                    </span>
+                    {#if getPriorityClass(value as string)}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPriorityClass(value as string)}">
+                            {getPriorityLabel(value as string)}
+                        </span>
+                    {:else}
+                        <span class="text-xs text-gray-600">{getPriorityLabel(value as string)}</span>
+                    {/if}
                 {:else if column.key === 'expected_delivery'}
                     <span class="text-gray-500">{value || '-'}</span>
                 {:else if column.key === 'total_amount'}
