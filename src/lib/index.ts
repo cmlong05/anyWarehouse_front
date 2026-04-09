@@ -276,6 +276,7 @@ export interface Quotation {
     valid_until: string | null;
     is_preferred: boolean;
     note: string;
+    partner_sku?: string;
     created_at: string;
     updated_at: string;
     total_cost?: string;
@@ -292,8 +293,10 @@ export interface QuotationBrief {
     item_name_en?: string;
     price: string;
     currency: string;
-    is_preferred: boolean;
     min_quantity?: number;
+    lead_time_days?: number | null;
+    is_preferred: boolean;
+    partner_sku?: string;
     // 变体相关字段
     is_variant_template?: boolean;
     is_variant?: boolean;
@@ -314,6 +317,7 @@ export interface QuotationCreateRequest {
     valid_until?: string | null;
     note?: string | null;
     is_preferred?: boolean;
+    partner_sku?: string;
 }
 
 /** 供应商及其报价 */
@@ -644,6 +648,7 @@ export interface CustomerQuotation {
     valid_until: string | null;
     is_preferred: boolean;
     note: string;
+    partner_sku?: string;
     created_at: string;
     updated_at: string;
     total_price?: string;
@@ -662,6 +667,7 @@ export interface CustomerQuotationBrief {
     price: string;
     currency: string;
     is_preferred: boolean;
+    partner_sku?: string;
     // 变体相关字段
     is_variant_template?: boolean;
     is_variant?: boolean;
@@ -680,6 +686,7 @@ export interface CustomerQuotationCreateRequest {
     lead_time_days?: number | null;
     valid_from?: string | null;
     note?: string;
+    partner_sku?: string;
 }
 
 /** 客户及其报价 */

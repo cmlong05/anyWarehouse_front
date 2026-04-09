@@ -33,7 +33,8 @@
         valid_from: null,
         valid_until: null,
         is_preferred: false,
-        note: ''
+        note: '',
+        partner_sku: ''
     });
     
     // 供应商选项
@@ -79,7 +80,8 @@
                 valid_from: quotationData.valid_from,
                 valid_until: quotationData.valid_until,
                 is_preferred: quotationData.is_preferred,
-                note: quotationData.note || ''
+                note: quotationData.note || '',
+                partner_sku: quotationData.partner_sku || ''
             }),
             onSuccess: ({ quotation: quotationData, formData: nextFormData, extraData: supplierData }) => {
                 quotation = quotationData;
@@ -288,6 +290,17 @@
                 </div>
             </div>
             
+            <div class="mb-4">
+                <label for="partner_sku" class="block mb-1 font-medium">合作方SKU</label>
+                <input
+                    type="text"
+                    id="partner_sku"
+                    bind:value={formData.partner_sku}
+                    placeholder="供应商自己的物品编码（可选）"
+                    class="w-full p-2 border border-gray-300 rounded text-base"
+                />
+            </div>
+
             <div class="mb-4">
                 <label for="note" class="block mb-1 font-medium">备注</label>
                 <textarea 

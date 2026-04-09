@@ -19,6 +19,7 @@ export interface QuotationLine {
     min_quantity: number;
     lead_time_days: number | null;
     note: string;
+    partner_sku: string;
     itemDetail?: Item | null;
     isVariantChild?: boolean;
     parentLineId?: number;
@@ -47,6 +48,7 @@ export function useQuotationLineForm(options: UseQuotationLineFormOptions) {
             min_quantity: 1,
             lead_time_days: null,
             note: '',
+            partner_sku: '',
             itemDetail: null,
             isVariantChild: !!parentId,
             parentLineId: parentId,
@@ -148,6 +150,7 @@ export function useQuotationLineForm(options: UseQuotationLineFormOptions) {
                         min_quantity: 1,
                         lead_time_days: null,
                         note: '',
+                        partner_sku: '',
                         itemDetail: variant.variant_item_detail as unknown as Item,
                         isVariantChild: true,
                         parentLineId: line.id,
@@ -215,6 +218,7 @@ export function useQuotationLineForm(options: UseQuotationLineFormOptions) {
                             min_quantity: 1,
                             lead_time_days: null,
                             note: '',
+                            partner_sku: '',
                             itemDetail: variant.variant_item_detail as unknown as Item,
                             isVariantChild: true,
                             parentLineId: line.id,

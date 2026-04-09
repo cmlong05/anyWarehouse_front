@@ -66,6 +66,7 @@
                     <th class="px-3 py-3 text-center font-medium text-gray-700 w-20">货币</th>
                     <th class="px-3 py-3 text-center font-medium text-gray-700 w-20">MOQ</th>
                     <th class="px-3 py-3 text-center font-medium text-gray-700 w-24">交货周期</th>
+                    <th class="px-3 py-3 text-left font-medium text-gray-700 w-[100px]">合作方SKU</th>
                     <th class="px-3 py-3 text-left font-medium text-gray-700 w-[100px]">备注</th>
                     <th class="px-3 py-3 text-center font-medium text-gray-700 w-16">操作</th>
                 </tr>
@@ -172,6 +173,15 @@
                                 size="sm"
                                 placeholder="天数"
                                 onchange={(v) => line.lead_time_days = v ?? null}
+                            />
+                        </td>
+
+                        <td class="px-3 py-3">
+                            <input
+                                type="text"
+                                bind:value={line.partner_sku}
+                                placeholder="Partner"
+                                class="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
                             />
                         </td>
 

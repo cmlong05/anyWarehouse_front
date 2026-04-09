@@ -180,6 +180,13 @@
             </div>
         </div>
         
+        {#if quotation.partner_sku}
+            <div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">合作方SKU</h3>
+                <p class="font-mono text-gray-800">{quotation.partner_sku}</p>
+            </div>
+        {/if}
+
         {#if quotation.note}
             <div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
                 <h3 class="text-lg font-semibold text-gray-700 mb-4">备注</h3>

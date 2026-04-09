@@ -212,6 +212,16 @@
         </div>
 
         <!-- 备注 -->
+        {#if quotation.partner_sku}
+            <div class="bg-white border border-gray-200 mb-4">
+                <div class="text-sm font-semibold text-gray-700 px-6 py-3 bg-gray-50 border-b border-gray-100">合作方SKU</div>
+                <div class="p-4 text-sm font-mono text-gray-700">
+                    {quotation.partner_sku}
+                </div>
+            </div>
+        {/if}
+
+        <!-- 备注 -->
         {#if quotation.note}
             <div class="bg-white border border-gray-200 mb-4">
                 <div class="text-sm font-semibold text-gray-700 px-6 py-3 bg-gray-50 border-b border-gray-100">备注</div>

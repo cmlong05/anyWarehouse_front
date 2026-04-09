@@ -102,6 +102,7 @@
                 min_quantity: line.min_quantity,
                 lead_time_days: line.lead_time_days,
                 note: line.note,
+                partner_sku: line.partner_sku || undefined,
             } as CustomerQuotationCreateRequest),
             (data) => customerQuotationAPI.create(data as CustomerQuotationCreateRequest)
         );

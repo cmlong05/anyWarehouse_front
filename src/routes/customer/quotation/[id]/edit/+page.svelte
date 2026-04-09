@@ -29,7 +29,8 @@
         min_quantity: 1,
         lead_time_days: null,
         valid_from: null,
-        note: ''
+        note: '',
+        partner_sku: ''
     });
     
     // 计算总价
@@ -50,7 +51,8 @@
                 min_quantity: quotationData.min_quantity,
                 lead_time_days: quotationData.lead_time_days,
                 valid_from: quotationData.valid_from,
-                note: quotationData.note
+                note: quotationData.note,
+                partner_sku: quotationData.partner_sku || ''
             }),
             onSuccess: ({ quotation: quotationData, formData: nextFormData }) => {
                 quotation = quotationData;
@@ -344,6 +346,18 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
+                        </div>
+
+                        <!-- 合作方SKU -->
+                        <div>
+                            <label for="partner_sku" class="block text-sm font-medium text-gray-700 mb-2">合作方SKU</label>
+                            <input
+                                type="text"
+                                id="partner_sku"
+                                bind:value={formData.partner_sku}
+                                placeholder="客户自己的物品编码（可选）"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
                         </div>
 
                         <!-- 备注 -->
