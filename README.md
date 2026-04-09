@@ -51,3 +51,5 @@ bun run check:watch  # 持续监控
 - 已统一使用 Bun 包管理与运行时（`packageManager` 字段已指向 Bun）。
 - 不再提交 `yarn.lock` / `package-lock.json`，只保留 `bun.lock` 以保证可重复安装。
 - 脚本使用 `bun x` 前缀保证调用本地依赖的可执行文件。
+
+- 
