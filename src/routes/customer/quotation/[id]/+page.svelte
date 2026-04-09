@@ -7,6 +7,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import QuotationDetailBody from '$lib/components/QuotationDetailBody.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<CustomerQuotation | null>(null);
@@ -95,108 +96,28 @@
             {/snippet}
         </PageHeader>
         
-        <div class="grid gap-6 mb-6 md:grid-cols-1" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-            <div class="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">客户信息</h3>
-                <div class="flex flex-col gap-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">客户编号</span>
-                        <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.customer_detail?.code || '-'}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">客户名称</span>
-                        <span class="font-medium text-gray-900">
-                            <a href="/customer/{quotation.customer}" class="text-blue-500 hover:underline">{quotation.customer_detail?.name || '-'}</a>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">物品信息</h3>
-                <div class="flex flex-col gap-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">SKU</span>
-                        <span class="font-medium">
-                            {#if quotation.item}
-                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline font-mono bg-gray-100 px-2 py-1 rounded text-sm">{quotation.item_detail?.SKU || '-'}</a>
-                            {:else}
-                                <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">-</span>
-                            {/if}
-                        </span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">物品名称</span>
-                        <span class="font-medium text-gray-900">
-                            {#if quotation.item}
-                                <a href="/item/{quotation.item}" class="text-blue-500 hover:underline">{quotation.item_detail?.name || '-'}</a>
-                            {:else}
-                                {quotation.item_detail?.name || '-'}
-                            {/if}
-                        </span>
-                    </div>
-                    {#if quotation.item_detail?.weight}
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 text-sm">重量</span>
-                            <span class="font-medium">{quotation.item_detail.weight} g</span>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">价格信息</h3>
-                <div class="flex flex-col gap-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">单价</span>
-                        <span class="font-medium text-blue-500 text-lg">{quotation.price} {quotation.currency}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">最小订购量</span>
-                        <span class="font-medium">{quotation.min_quantity}</span>
-                    </div>
-                    {#if quotation.total_price}
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 text-sm">总价</span>
-                            <span class="font-medium text-blue-500 text-lg">{quotation.total_price} {quotation.currency}</span>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-lg border border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-100">其他信息</h3>
-                <div class="flex flex-col gap-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">交货周期</span>
-                        <span class="font-medium">{quotation.lead_time_days ? `${quotation.lead_time_days} 天` : '-'}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-500 text-sm">有效期开始</span>
-                        <span class="font-medium">{quotation.valid_from || '-'}</span>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-        
-        {#if quotation.partner_sku}
-            <div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">合作方SKU</h3>
-                <p class="font-mono text-gray-800">{quotation.partner_sku}</p>
-            </div>
-        {/if}
-
-        {#if quotation.note}
-            <div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">备注</h3>
-                <p class="text-gray-600 leading-relaxed whitespace-pre-wrap m-0">{quotation.note}</p>
-            </div>
-        {/if}
-        
-        <div class="text-gray-500 text-sm py-4 border-t border-gray-200">
-            <p class="my-1">创建时间: {new Date(quotation.created_at).toLocaleString()}</p>
-            <p class="my-1">更新时间: {new Date(quotation.updated_at).toLocaleString()}</p>
-        </div>
+        <QuotationDetailBody
+            partnerTitle="客户信息"
+            partnerCodeLabel="客户编号"
+            partnerCode={quotation.customer_detail?.code}
+            partnerName={quotation.customer_detail?.name}
+            partnerHref={`/customer/${quotation.customer}`}
+            itemId={quotation.item}
+            itemSku={quotation.item_detail?.SKU}
+            itemName={quotation.item_detail?.name}
+            itemWeight={quotation.item_detail?.weight}
+            price={quotation.price}
+            currency={quotation.currency}
+            minQuantity={quotation.min_quantity}
+            totalValue={quotation.total_price}
+            totalLabel="总价"
+            leadTimeDays={quotation.lead_time_days}
+            validFrom={quotation.valid_from}
+            validUntil={quotation.valid_until}
+            partnerSku={quotation.partner_sku}
+            note={quotation.note}
+            createdAt={quotation.created_at}
+            updatedAt={quotation.updated_at}
+        />
     {/if}
 </PageContainer>

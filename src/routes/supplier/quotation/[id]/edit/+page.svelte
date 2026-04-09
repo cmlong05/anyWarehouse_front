@@ -2,17 +2,16 @@
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { quotationAPI, supplierAPI } from '$lib/api';
-    import type { SupplierBrief, Item, Quotation, QuotationCreateRequest } from '$lib';
-    import { config } from '$lib/config';
+    import { quotationAPI } from '$lib/api';
+    import type { Quotation, QuotationCreateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
-    import Svelecte from 'svelecte';
+    import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
+    import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
     import {  NumberStepper } from '$lib/components/ui';
     import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
     let quotation = $state<Quotation | null>(null);
-    let suppliers = $state<SupplierBrief[]>([]);
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
@@ -37,39 +36,10 @@
         partner_sku: ''
     });
     
-    // 供应商选项
-    const supplierOptions = $derived(suppliers.map(s => ({
-        value: s.id,
-        label: s.name
-    })));
-    
-    // 当前选中物品的显示标签
-    let selectedItemLabel = $state('');
-
-    // 物品选项（用于回显当前值，避免远程搜索组件初始化时清空已选值）
-    const itemOptions = $derived(
-        formData.item && selectedItemLabel
-            ? [{ value: formData.item, label: selectedItemLabel }]
-            : []
-    );
-    
-    // 构建物品搜索 URL
-    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
-    
-    // 处理 fetch 返回的数据
-    function handleItemFetch(json: unknown) {
-        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
-        return items.map((item: Item) => ({
-            value: item.id,
-            label: `${item.SKU} - ${item.name}`
-        }));
-    }
-    
     async function loadData() {
-        await loadQuotationEditData<Quotation, QuotationCreateRequest, SupplierBrief[]>({
+        await loadQuotationEditData<Quotation, QuotationCreateRequest>({
             quotationId: id(),
             fetchQuotation: (quotationId) => quotationAPI.get(quotationId),
-            fetchExtraData: () => supplierAPI.listBrief(),
             mapToFormData: (quotationData) => ({
                 supplier: quotationData.supplier,
                 item: quotationData.item,
@@ -83,14 +53,9 @@
                 note: quotationData.note || '',
                 partner_sku: quotationData.partner_sku || ''
             }),
-            onSuccess: ({ quotation: quotationData, formData: nextFormData, extraData: supplierData }) => {
+            onSuccess: ({ quotation: quotationData, formData: nextFormData }) => {
                 quotation = quotationData;
                 formData = nextFormData;
-                suppliers = supplierData || [];
-
-                if (quotationData.item_detail) {
-                    selectedItemLabel = `${quotationData.item_detail.SKU} - ${quotationData.item_detail.name}`;
-                }
             },
             onError: (message) => {
                 error = message;
@@ -111,7 +76,8 @@
             formData,
             quotation,
             validate: ({ formData: currentFormData, quotation: currentQuotation }) => {
-                if (!currentFormData.supplier) {
+                const supplierId = currentQuotation?.supplier ?? currentFormData.supplier;
+                if (!supplierId) {
                     return '请选择供应商';
                 }
 
@@ -124,6 +90,8 @@
             },
             buildPayload: ({ formData: currentFormData, quotation: currentQuotation }) => ({
                 ...currentFormData,
+                // 编辑时固定关联，不允许变更供应商
+                supplier: currentQuotation?.supplier ?? currentFormData.supplier,
                 // Svelecte 远程模式下可能在未触发搜索时清空 value，回退到原始报价 item
                 item: currentFormData.item ?? currentQuotation?.item ?? null
             }),
@@ -157,169 +125,168 @@
     onMount(loadData);
 </script>
 
-<div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">编辑报价</h1>
-    
-    {#if loading}
-        <Loading text="加载中..." />
-    {:else if error && !quotation}
-        <Alert {error} />
-        <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors mt-4" onclick={() => goto('/supplier')}>
-            返回供应商列表
-        </button>
-    {:else}
-        <form onsubmit={handleSubmit} class="max-w-3xl">
-            {#if error}
-                <Alert {error} />
-            {/if}
-            {#if success}
-                <Alert error={success} variant="info" />
-            {/if}
-            
-            <div class="flex gap-4 mb-4 flex-wrap">
-                <div class="flex-1 min-w-52">
-                    <label for="supplier" class="block mb-1 font-medium">供应商 <span class="text-red-600">*</span></label>
-                    <Svelecte
-                        inputId="supplier"
-                        options={supplierOptions}
-                        bind:value={formData.supplier}
-                        placeholder="选择供应商..."
-                        searchable={true}
-                        required
-                    />
-                </div>
-                
-                <div class="flex-1 min-w-52">
-                    <label for="item" class="block mb-1 font-medium">物品 <span class="text-red-600">*</span></label>
-                    <Svelecte
-                        inputId="item"
-                        options={itemOptions}
-                        bind:value={formData.item}
-                        valueAsObject={false}
-                        placeholder="搜索SKU或名称..."
-                        searchable={true}
-                        minQuery={1}
-                        fetch={itemSearchUrl}
-                        fetchCallback={handleItemFetch}
-                        valueField="value"
-                        labelField="label"
+<div class="min-h-screen bg-gray-50">
+    <QuotationEditHeader
+        title="编辑供应商报价"
+        quotationId={quotation?.id}
+        {submitting}
+        onBack={goBack}
+    />
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        {#if loading}
+            <Loading text="加载中..." />
+        {:else if error && !quotation}
+            <Alert {error} />
+            <button class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors mt-4" onclick={() => goto('/supplier')}>
+                返回供应商列表
+            </button>
+        {:else}
+            <form id="quotationForm" onsubmit={handleSubmit} class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 space-y-4">
+                    <QuotationReadonlyInfoCards
+                        partnerLabel="供应商"
+                        partnerCode={quotation?.supplier_detail?.code}
+                        partnerName={quotation?.supplier_detail?.name}
+                        partnerId={quotation?.supplier}
+                        itemLabel="物品"
+                        itemSku={quotation?.item_detail?.SKU}
+                        itemName={quotation?.item_detail?.name}
+                        itemNameEn={quotation?.item_detail?.name_en}
+                        itemId={quotation?.item}
+                        itemIsVariant={(quotation?.item_detail as any)?.is_variant === true}
                     />
 
+                    {#if error}
+                        <Alert {error} />
+                    {/if}
+                    {#if success}
+                        <Alert error={success} variant="info" />
+                    {/if}
                 </div>
-            </div>
-            
-            <div class="flex gap-4 mb-4 flex-wrap">
-                <div class="flex-1 min-w-52">
-                    <label for="price" class="block mb-1 font-medium">单价 <span class="text-red-600">*</span></label>
-                    <NumberStepper
-                        id="price"
-                        value={formData.price ? Number(formData.price) : undefined}
-                        min={0}
-                        step={0.01}
-                        decimalPlaces={2}
-                        placeholder="0.00"
-                        onchange={(v) => formData.price = v !== undefined ? String(v) : ''}
-                    />
-                </div>
-                
-                <div class="flex-1 min-w-52">
-                    <label for="currency" class="block mb-1 font-medium">货币</label>
-                    <select id="currency" bind:value={formData.currency} class="w-full p-2 border border-gray-300 rounded text-base">
-                        <option value="CNY">CNY</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="JPY">JPY</option>
-                    </select>
-                </div>
-                
-                <div class="flex-1 min-w-52">
-                    <label for="min_quantity" class="block mb-1 font-medium">最小订购量 (MOQ)</label>
-                    <NumberStepper
-                        id="min_quantity"
-                        value={formData.min_quantity}
-                        min={1}
-                        step={1}
-                        decimalPlaces={0}
-                        onchange={(v) => formData.min_quantity = v ?? 1}
-                    />
-                </div>
-            </div>
-            
-            <div class="flex gap-4 mb-4 flex-wrap">
-                <div class="flex-1 min-w-52">
-                    <label for="lead_time_days" class="block mb-1 font-medium">交货周期(天)</label>
-                    <NumberStepper
-                        id="lead_time_days"
-                        value={formData.lead_time_days ?? undefined}
-                        min={1}
-                        step={1}
-                        decimalPlaces={0}
-                        placeholder="可选"
-                        onchange={(v) => formData.lead_time_days = v ?? null}
-                    />
-                </div>
-            </div>
-            
-            <div class="flex gap-4 mb-4 flex-wrap">
-                <div class="flex-1 min-w-52">
-                    <label for="valid_from" class="block mb-1 font-medium">有效期开始</label>
-                    <input 
-                        type="date" 
-                        id="valid_from"
-                        bind:value={formData.valid_from}
-                        class="w-full p-2 border border-gray-300 rounded text-base"
-                    />
-                </div>
-                
-                <div class="flex-1 min-w-52">
-                    <label for="valid_until" class="block mb-1 font-medium">有效期结束</label>
-                    <input 
-                        type="date" 
-                        id="valid_until"
-                        bind:value={formData.valid_until}
-                        class="w-full p-2 border border-gray-300 rounded text-base"
-                    />
-                </div>
-                
-                <div class="flex-1 min-w-52 flex items-end pb-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" bind:checked={formData.is_preferred} class="w-auto" />
-                        设为首选报价
-                    </label>
-                </div>
-            </div>
-            
-            <div class="mb-4">
-                <label for="partner_sku" class="block mb-1 font-medium">合作方SKU</label>
-                <input
-                    type="text"
-                    id="partner_sku"
-                    bind:value={formData.partner_sku}
-                    placeholder="供应商自己的物品编码（可选）"
-                    class="w-full p-2 border border-gray-300 rounded text-base"
-                />
-            </div>
 
-            <div class="mb-4">
-                <label for="note" class="block mb-1 font-medium">备注</label>
-                <textarea 
-                    id="note"
-                    rows="3"
-                    bind:value={formData.note}
-                    placeholder="可选"
-                    class="w-full p-2 border border-gray-300 rounded text-base resize-y"
-                ></textarea>
-            </div>
-            
-            <div class="flex gap-4 justify-end mt-8 pt-4 border-t border-gray-200">
-                <button type="button" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors" onclick={goBack}>
-                    取消
-                </button>
-                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed" disabled={submitting}>
-                    {submitting ? '保存中...' : '保存'}
-                </button>
-            </div>
-        </form>
-    {/if}
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            价格信息
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="price" class="block text-sm font-medium text-gray-700 mb-2">单价 <span class="text-red-500">*</span></label>
+                                <NumberStepper
+                                    id="price"
+                                    value={formData.price ? Number(formData.price) : undefined}
+                                    min={0}
+                                    step={0.01}
+                                    decimalPlaces={2}
+                                    placeholder="0.00"
+                                    onchange={(v) => formData.price = v !== undefined ? String(v) : ''}
+                                />
+                            </div>
+
+                            <div>
+                                <label for="currency" class="block text-sm font-medium text-gray-700 mb-2">货币</label>
+                                <select id="currency" bind:value={formData.currency} class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="CNY">CNY</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="JPY">JPY</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="min_quantity" class="block text-sm font-medium text-gray-700 mb-2">最小订购量 (MOQ)</label>
+                                <NumberStepper
+                                    id="min_quantity"
+                                    value={formData.min_quantity}
+                                    min={1}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    onchange={(v) => formData.min_quantity = v ?? 1}
+                                />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                            <div>
+                                <label for="lead_time_days" class="block text-sm font-medium text-gray-700 mb-2">交货周期 (天)</label>
+                                <NumberStepper
+                                    id="lead_time_days"
+                                    value={formData.lead_time_days ?? undefined}
+                                    min={1}
+                                    step={1}
+                                    decimalPlaces={0}
+                                    placeholder="可选"
+                                    onchange={(v) => formData.lead_time_days = v ?? null}
+                                />
+                            </div>
+                            <div>
+                                <label for="partner_sku" class="block text-sm font-medium text-gray-700 mb-2">合作方SKU</label>
+                                <input
+                                    type="text"
+                                    id="partner_sku"
+                                    bind:value={formData.partner_sku}
+                                    placeholder="供应商自己的物品编码（可选）"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            有效期和其他
+                        </h2>
+
+                        <div class="mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700">
+                                <input type="checkbox" bind:checked={formData.is_preferred} class="w-auto" />
+                                设为首选报价
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="valid_from" class="block text-sm font-medium text-gray-700 mb-2">有效期开始</label>
+                                <input
+                                    type="date"
+                                    id="valid_from"
+                                    bind:value={formData.valid_from}
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                            <div>
+                                <label for="valid_until" class="block text-sm font-medium text-gray-700 mb-2">有效期结束</label>
+                                <input
+                                    type="date"
+                                    id="valid_until"
+                                    bind:value={formData.valid_until}
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="note" class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+                            <textarea
+                                id="note"
+                                rows="3"
+                                bind:value={formData.note}
+                                placeholder="添加关于此报价的备注信息..."
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        {/if}
+    </div>
 </div>

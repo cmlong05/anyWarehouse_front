@@ -8,6 +8,7 @@
         sku?: string;
         item_sku?: string;
         item_name?: string;
+        partner_sku?: string;
         price?: string;
         currency?: string;
         // 变体相关字段
@@ -148,6 +149,7 @@
                         {/if}
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
+                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">合作方SKU</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价{currency ? `（${currency}）` : ''}</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
                     </tr>
@@ -183,6 +185,7 @@
                                         <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
                                         <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                         <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                        <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
                                         <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                         <td class="px-2 py-1.5 text-right">
                                             <NumberStepper
@@ -203,6 +206,7 @@
                                 <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
                                 <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-right">
                                     <NumberStepper
@@ -221,6 +225,7 @@
                             <tr class="border-b border-gray-200">
                                 <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
+                                <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
                                 <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
                                 <td class="px-2 py-1.5 text-right">
                                     <NumberStepper

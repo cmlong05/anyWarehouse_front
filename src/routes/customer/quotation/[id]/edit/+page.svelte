@@ -6,6 +6,8 @@
     import type { CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
+    import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
+    import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
     import { NumberStepper } from '$lib/components/ui';
     import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
@@ -118,60 +120,12 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <button
-                        onclick={goBack}
-                        class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        aria-label="返回"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                    </button>
-                    <div>
-                        <h1 class="text-xl font-bold text-gray-900">编辑客户报价</h1>
-                        {#if quotation}
-                            <p class="text-sm text-gray-500 mt-0.5">
-                                报价 ID: <span class="font-mono">{quotation.id}</span>
-                            </p>
-                        {/if}
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onclick={goBack}
-                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        取消
-                    </button>
-                    <button
-                        type="submit"
-                        form="quotationForm"
-                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                        disabled={submitting}
-                    >
-                        {#if submitting}
-                            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            保存中...
-                        {:else}
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            保存报价
-                        {/if}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <QuotationEditHeader
+        title="编辑客户报价"
+        quotationId={quotation?.id}
+        {submitting}
+        onBack={goBack}
+    />
 
     <div class="max-w-7xl mx-auto px-4 py-6">
         {#if loading}
@@ -180,55 +134,18 @@
             <form id="quotationForm" onsubmit={handleSubmit} class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- 左侧：客户和物品选择 -->
                 <div class="lg:col-span-1 space-y-4">
-                    <!-- 客户信息（只读） -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                        <span class="block text-sm font-medium text-gray-700 mb-2">
-                            客户
-                        </span>
-                        {#if quotation?.customer_detail}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="text-sm font-semibold text-gray-900">{quotation.customer_detail.code}</div>
-                                <div class="text-sm text-gray-700 mt-0.5">{quotation.customer_detail.name}</div>
-                            </div>
-                        {:else if quotation?.customer}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="text-sm text-gray-700">客户 ID: {quotation.customer}</div>
-                            </div>
-                        {:else}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="text-sm text-gray-500">未关联客户</div>
-                            </div>
-                        {/if}
-                    </div>
-
-                    <!-- 物品信息（只读） -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                        <span class="block text-sm font-medium text-gray-700 mb-2">
-                            物品
-                        </span>
-                        {#if quotation?.item_detail}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-sm font-semibold text-gray-900">{quotation.item_detail.SKU}</span>
-                                    {#if (quotation.item_detail as any).is_variant}
-                                        <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">变体</span>
-                                    {/if}
-                                </div>
-                                <div class="text-sm text-gray-700">{quotation.item_detail.name}</div>
-                                {#if quotation.item_detail.name_en}
-                                    <div class="text-xs text-gray-500 mt-0.5">{quotation.item_detail.name_en}</div>
-                                {/if}
-                            </div>
-                        {:else if quotation?.item}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="text-sm text-gray-700">物品 ID: {quotation.item}</div>
-                            </div>
-                        {:else}
-                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <div class="text-sm text-gray-500">未关联物品</div>
-                            </div>
-                        {/if}
-                    </div>
+                    <QuotationReadonlyInfoCards
+                        partnerLabel="客户"
+                        partnerCode={quotation?.customer_detail?.code}
+                        partnerName={quotation?.customer_detail?.name}
+                        partnerId={quotation?.customer}
+                        itemLabel="物品"
+                        itemSku={quotation?.item_detail?.SKU}
+                        itemName={quotation?.item_detail?.name}
+                        itemNameEn={quotation?.item_detail?.name_en}
+                        itemId={quotation?.item}
+                        itemIsVariant={(quotation?.item_detail as any)?.is_variant === true}
+                    />
 
                     {#if error}
                         <Alert {error} />
@@ -300,6 +217,16 @@
                                     onchange={(v) => formData.lead_time_days = v || 1}
                                 />
                             </div>
+                            <div>
+                                <label for="partner_sku" class="block text-sm font-medium text-gray-700 mb-2">合作方SKU</label>
+                                <input
+                                    type="text"
+                                    id="partner_sku"
+                                    bind:value={formData.partner_sku}
+                                    placeholder="客户自己的物品编码（可选）"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
                         </div>
 
                         <!-- 价格预览 -->
@@ -346,18 +273,6 @@
                                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
-                        </div>
-
-                        <!-- 合作方SKU -->
-                        <div>
-                            <label for="partner_sku" class="block text-sm font-medium text-gray-700 mb-2">合作方SKU</label>
-                            <input
-                                type="text"
-                                id="partner_sku"
-                                bind:value={formData.partner_sku}
-                                placeholder="客户自己的物品编码（可选）"
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
                         </div>
 
                         <!-- 备注 -->
