@@ -297,6 +297,7 @@ export interface QuotationBrief {
     lead_time_days?: number | null;
     is_preferred: boolean;
     partner_sku?: string;
+    note?: string;
     // 变体相关字段
     is_variant_template?: boolean;
     is_variant?: boolean;

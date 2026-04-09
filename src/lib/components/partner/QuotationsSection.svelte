@@ -1,36 +1,20 @@
 <script lang="ts">
-    import { NumberStepper } from '$lib/components/ui';
     import Loading from '$lib/components/Loading.svelte';
+    import QuotationRow from './QuotationRow.svelte';
+    import type { QuotationBrief } from '$lib';
 
-    interface Quotation {
-        id: number;
-        item?: number | null;
-        sku?: string;
-        item_sku?: string;
-        item_name?: string;
-        partner_sku?: string;
-        price?: string;
-        currency?: string;
-        // 变体相关字段
-        is_variant_template?: boolean;
-        is_variant?: boolean;
-        parent_item_id?: number | null;
-        parent_item_name?: string | null;
-        parent_item_sku?: string | null;
-    }
-    
     interface GroupedQuotation {
         parentId: number | null;
         parentName: string;
         parentSku: string;
         isTemplate: boolean;
-        quotations: Quotation[];
+        quotations: QuotationBrief[];
         expanded: boolean;
     }
     
     interface Props {
         title: string;
-        quotations: Quotation[];
+        quotations: QuotationBrief[];
         loading: boolean;
         emptyText: string;
         addHref: string;
@@ -50,13 +34,13 @@
 
     // 按母版分组的报价
     let groupedQuotations = $state<GroupedQuotation[]>([]);
-    let independentQuotations = $state<Quotation[]>([]);
+    let independentQuotations = $state<QuotationBrief[]>([]);
     let hasVariants = $state(false);
     
     // 将报价按母版分组
-    function groupQuotationsByParent(quotations: Quotation[]) {
+    function groupQuotationsByParent(quotations: QuotationBrief[]) {
         const groups = new Map<number | string, GroupedQuotation>();
-        const independent: Quotation[] = [];
+        const independent: QuotationBrief[] = [];
         let variantCount = 0;
         
         for (const q of quotations) {
@@ -181,62 +165,40 @@
                             <!-- 变体/报价详情行 -->
                             {#if group.expanded}
                                 {#each group.quotations as quotation}
-                                    <tr class="bg-white">
-                                        <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
-                                        <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
-                                        <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                        <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
-                                        <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
-                                        <td class="px-2 py-1.5 text-right">
-                                            <NumberStepper
-                                                value={quotationQuantities[quotation.id] ?? undefined}
-                                                step={1}
-                                                decimalPlaces={0}
-                                                size="sm"
-                                                onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
-                                            />
-                                        </td>
-                                    </tr>
+                                    <QuotationRow
+                                        quotation={quotation}
+                                        currencySymbol={currencySymbol}
+                                        quantity={quotationQuantities[quotation.id] ?? null}
+                                        onRowClick={onRowClick}
+                                        onQuantityChange={onQuantityChange}
+                                        showLeftBorder
+                                        skuCellClass="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline"
+                                    />
                                 {/each}
                             {/if}
                         {/each}
                         <!-- 独立物品直接平铺显示（不折叠） -->
                         {#each independentQuotations as quotation}
-                            <tr class="border-b border-gray-200">
-                                <td class="px-2 py-1.5 border-l-[3px] border-slate-200"></td>
-                                <td class="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
-                                <td class="px-2 py-1.5 text-right">
-                                    <NumberStepper
-                                        value={quotationQuantities[quotation.id] ?? undefined}
-                                        step={1}
-                                        decimalPlaces={0}
-                                        size="sm"
-                                        onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
-                                    />
-                                </td>
-                            </tr>
+                            <QuotationRow
+                                quotation={quotation}
+                                currencySymbol={currencySymbol}
+                                quantity={quotationQuantities[quotation.id] ?? null}
+                                onRowClick={onRowClick}
+                                onQuantityChange={onQuantityChange}
+                                showLeftBorder
+                                skuCellClass="px-2 py-1.5 pl-8 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline"
+                            />
                         {/each}
                     {:else}
                         <!-- 无变体时直接平铺显示 -->
                         {#each quotations as quotation}
-                            <tr class="border-b border-gray-200">
-                                <td class="px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline" onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600">{quotation.item_name || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
-                                <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
-                                <td class="px-2 py-1.5 text-right">
-                                    <NumberStepper
-                                        value={quotationQuantities[quotation.id] ?? undefined}
-                                        step={1}
-                                        decimalPlaces={0}
-                                        size="sm"
-                                        onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
-                                    />
-                                </td>
-                            </tr>
+                            <QuotationRow
+                                quotation={quotation}
+                                currencySymbol={currencySymbol}
+                                quantity={quotationQuantities[quotation.id] ?? null}
+                                onRowClick={onRowClick}
+                                onQuantityChange={onQuantityChange}
+                            />
                         {/each}
                     {/if}
                 </tbody>
