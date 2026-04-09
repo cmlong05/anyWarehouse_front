@@ -7,11 +7,11 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import { NumberStepper } from '$lib/components/ui';
+    import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
     // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况
     const id = $derived(() => {
-        const paramId = page.params.id;
-        return paramId ? parseInt(paramId) : 0;
+        return parseRouteId(page.params.id);
     });
     
     let quotation = $state<CustomerQuotation | null>(null);
@@ -39,65 +39,63 @@
     });
     
     async function loadData() {
-        const quotationId = id();
-        if (!quotationId) {
-            error = '无效的报价ID';
-            return;
-        }
-        
-        try {
-            const quotationData = await customerQuotationAPI.get(quotationId);
-            
-            quotation = quotationData;
-            
-            // 填充表单数据
-            formData = {
-                customer: quotation.customer,
-                item: quotation.item,
-                price: quotation.price,
-                currency: quotation.currency,
-                min_quantity: quotation.min_quantity,
-                lead_time_days: quotation.lead_time_days,
-                valid_from: quotation.valid_from,
-                note: quotation.note
-            };
-        } catch (err) {
-            error = err instanceof Error ? err.message : '加载数据失败';
-        }
+        await loadQuotationEditData<CustomerQuotation, CustomerQuotationCreateRequest>({
+            quotationId: id(),
+            fetchQuotation: (quotationId) => customerQuotationAPI.get(quotationId),
+            mapToFormData: (quotationData) => ({
+                customer: quotationData.customer,
+                item: quotationData.item,
+                price: quotationData.price,
+                currency: quotationData.currency,
+                min_quantity: quotationData.min_quantity,
+                lead_time_days: quotationData.lead_time_days,
+                valid_from: quotationData.valid_from,
+                note: quotationData.note
+            }),
+            onSuccess: ({ quotation: quotationData, formData: nextFormData }) => {
+                quotation = quotationData;
+                formData = nextFormData;
+            },
+            onError: (message) => {
+                error = message;
+            },
+            onLoadingChange: (value) => {
+                loading = value;
+            },
+            invalidIdMessage: '无效的报价ID',
+            loadFailedMessage: '加载数据失败',
+        });
     }
     
     async function handleSubmit(e: Event) {
         e.preventDefault();
-        error = '';
-        success = '';
-        
-        const quotationId = id();
-        if (!quotationId) {
-            error = '无效的报价ID';
-            return;
-        }
-        
-        if (!formData.customer) {
-            error = '请选择客户';
-            return;
-        }
-        
-        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string);
-        if (formData.price === '' || formData.price === null || formData.price === undefined || isNaN(priceNum) || priceNum < 0) {
-            error = '请输入有效的价格';
-            return;
-        }
-        
-        submitting = true;
-        try {
-            await customerQuotationAPI.update(quotationId, formData);
-            success = '报价更新成功';
-            setTimeout(() => goto(`/customer/quotation/${quotationId}`), 1000);
-        } catch (err) {
-            error = err instanceof Error ? err.message : '更新失败';
-        } finally {
-            submitting = false;
-        }
+
+        await submitQuotationEditData<CustomerQuotationCreateRequest, CustomerQuotation>({
+            quotationId: id(),
+            formData,
+            quotation,
+            validate: ({ formData: currentFormData }) => {
+                if (!currentFormData.customer) {
+                    return '请选择客户';
+                }
+                return validateQuotationPrice(currentFormData.price, { allowZero: true });
+            },
+            update: (quotationId, payload) => customerQuotationAPI.update(quotationId, payload),
+            onSubmittingChange: (value) => {
+                submitting = value;
+            },
+            onError: (message) => {
+                error = message;
+            },
+            onSuccess: (message) => {
+                success = message;
+            },
+            successMessage: '报价更新成功',
+            updateFailedMessage: '更新失败',
+            onAfterSuccess: () => {
+                setTimeout(() => goto(`/customer/quotation/${id()}`), 1000);
+            },
+        });
     }
     
     function goBack() {
@@ -114,10 +112,7 @@
         return parseFloat(price.toString()).toFixed(2);
     }
     
-    onMount(async () => {
-        await loadData();
-        loading = false;
-    });
+    onMount(loadData);
 </script>
 
 <div class="min-h-screen bg-gray-50">

@@ -2,13 +2,14 @@
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
-    import { quotationAPI, supplierAPI, itemAPI } from '$lib/api';
+    import { quotationAPI, supplierAPI } from '$lib/api';
     import type { SupplierBrief, Item, Quotation, QuotationCreateRequest } from '$lib';
     import { config } from '$lib/config';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
     import {  NumberStepper } from '$lib/components/ui';
+    import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
     let quotation = $state<Quotation | null>(null);
     let suppliers = $state<SupplierBrief[]>([]);
@@ -18,8 +19,7 @@
     let success = $state('');
     
     const id = $derived(() => {
-        const paramId = page.params.id;
-        return paramId ? parseInt(paramId) : 0;
+        return parseRouteId(page.params.id);
     });
     
     // 表单数据
@@ -44,6 +44,13 @@
     
     // 当前选中物品的显示标签
     let selectedItemLabel = $state('');
+
+    // 物品选项（用于回显当前值，避免远程搜索组件初始化时清空已选值）
+    const itemOptions = $derived(
+        formData.item && selectedItemLabel
+            ? [{ value: formData.item, label: selectedItemLabel }]
+            : []
+    );
     
     // 构建物品搜索 URL
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
@@ -58,25 +65,11 @@
     }
     
     async function loadData() {
-        const quotationId = id();
-        if (!quotationId) {
-            error = '无效的报价ID';
-            loading = false;
-            return;
-        }
-        
-        loading = true;
-        error = '';
-        try {
-            const [quotationData, supplierData] = await Promise.all([
-                quotationAPI.get(quotationId),
-                supplierAPI.listBrief()
-            ]);
-            quotation = quotationData;
-            suppliers = supplierData;
-            
-            // 填充表单
-            formData = {
+        await loadQuotationEditData<Quotation, QuotationCreateRequest, SupplierBrief[]>({
+            quotationId: id(),
+            fetchQuotation: (quotationId) => quotationAPI.get(quotationId),
+            fetchExtraData: () => supplierAPI.listBrief(),
+            mapToFormData: (quotationData) => ({
                 supplier: quotationData.supplier,
                 item: quotationData.item,
                 price: quotationData.price,
@@ -87,51 +80,67 @@
                 valid_until: quotationData.valid_until,
                 is_preferred: quotationData.is_preferred,
                 note: quotationData.note || ''
-            };
-            
-            // 设置当前物品显示标签
-            if (quotationData.item_detail) {
-                selectedItemLabel = `${quotationData.item_detail.SKU} - ${quotationData.item_detail.name}`;
-            }
-        } catch (err) {
-            error = err instanceof Error ? err.message : '加载失败';
-        } finally {
-            loading = false;
-        }
+            }),
+            onSuccess: ({ quotation: quotationData, formData: nextFormData, extraData: supplierData }) => {
+                quotation = quotationData;
+                formData = nextFormData;
+                suppliers = supplierData || [];
+
+                if (quotationData.item_detail) {
+                    selectedItemLabel = `${quotationData.item_detail.SKU} - ${quotationData.item_detail.name}`;
+                }
+            },
+            onError: (message) => {
+                error = message;
+            },
+            onLoadingChange: (value) => {
+                loading = value;
+            },
+            invalidIdMessage: '无效的报价ID',
+            loadFailedMessage: '加载失败',
+        });
     }
     
     async function handleSubmit(e: Event) {
         e.preventDefault();
-        error = '';
-        success = '';
-        
-        const quotationId = id();
-        if (!quotationId) {
-            error = '无效的报价ID';
-            return;
-        }
-        
-        if (!formData.supplier) {
-            error = '请选择供应商';
-            return;
-        }
-        
-        const priceNum = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
-        if (!formData.price || priceNum <= 0) {
-            error = '请输入有效的价格';
-            return;
-        }
-        
-        submitting = true;
-        try {
-            await quotationAPI.update(quotationId, formData);
-            success = '报价更新成功';
-            setTimeout(() => goto(`/supplier/quotation/${quotationId}`), 1000);
-        } catch (err) {
-            error = err instanceof Error ? err.message : '更新失败';
-        } finally {
-            submitting = false;
-        }
+
+        await submitQuotationEditData<QuotationCreateRequest, Quotation, QuotationCreateRequest>({
+            quotationId: id(),
+            formData,
+            quotation,
+            validate: ({ formData: currentFormData, quotation: currentQuotation }) => {
+                if (!currentFormData.supplier) {
+                    return '请选择供应商';
+                }
+
+                const itemId = currentFormData.item ?? currentQuotation?.item ?? null;
+                if (!itemId) {
+                    return '请选择物品';
+                }
+
+                return validateQuotationPrice(currentFormData.price, { allowZero: false });
+            },
+            buildPayload: ({ formData: currentFormData, quotation: currentQuotation }) => ({
+                ...currentFormData,
+                // Svelecte 远程模式下可能在未触发搜索时清空 value，回退到原始报价 item
+                item: currentFormData.item ?? currentQuotation?.item ?? null
+            }),
+            update: (quotationId, payload) => quotationAPI.update(quotationId, payload),
+            onSubmittingChange: (value) => {
+                submitting = value;
+            },
+            onError: (message) => {
+                error = message;
+            },
+            onSuccess: (message) => {
+                success = message;
+            },
+            successMessage: '报价更新成功',
+            updateFailedMessage: '更新失败',
+            onAfterSuccess: () => {
+                setTimeout(() => goto(`/supplier/quotation/${id()}`), 1000);
+            },
+        });
     }
     
     function goBack() {
@@ -179,9 +188,10 @@
                 </div>
                 
                 <div class="flex-1 min-w-52">
-                    <label for="item" class="block mb-1 font-medium">物品</label>
+                    <label for="item" class="block mb-1 font-medium">物品 <span class="text-red-600">*</span></label>
                     <Svelecte
                         inputId="item"
+                        options={itemOptions}
                         bind:value={formData.item}
                         valueAsObject={false}
                         placeholder="搜索SKU或名称..."
