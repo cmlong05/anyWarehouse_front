@@ -21,6 +21,11 @@
         supplier?: { id: number; name: string; contact_name?: string; phone?: string; email?: string; code?: string };
         preloadItems?: any[] | null;
         preloadQuotationPrices?: Record<string, { price: number; currency: string }> | null;
+        purchaseOrderDefaults?: {
+            shipping_address: string;
+            contact_person: string;
+            contact_phone: string;
+        } | null;
         onSubmit: (data: PurchaseOrderCreateRequest) => void;
         onCancel: () => void;
         submitLabel?: string;
@@ -33,6 +38,7 @@
         supplier,
         preloadItems,
         preloadQuotationPrices,
+        purchaseOrderDefaults,
         onSubmit, 
         onCancel, 
         submitLabel = '保存',
@@ -261,9 +267,9 @@
         tax_rate: purchaseOrder?.tax_rate ? parseFloat(purchaseOrder.tax_rate) : 0,
         shipping_cost: purchaseOrder?.shipping_cost ? parseFloat(purchaseOrder.shipping_cost) : 0,
         discount: purchaseOrder?.discount ? parseFloat(purchaseOrder.discount) : 0,
-        shipping_address: purchaseOrder?.shipping_address || undefined,
-        contact_person: purchaseOrder?.contact_person || undefined,
-        contact_phone: purchaseOrder?.contact_phone || undefined,
+        shipping_address: purchaseOrder?.shipping_address || purchaseOrderDefaults?.shipping_address || undefined,
+        contact_person: purchaseOrder?.contact_person || purchaseOrderDefaults?.contact_person || undefined,
+        contact_phone: purchaseOrder?.contact_phone || purchaseOrderDefaults?.contact_phone || undefined,
         payment_terms: purchaseOrder?.payment_terms || undefined,
         notes: purchaseOrder?.notes || undefined,
         internal_notes: purchaseOrder?.internal_notes || undefined,

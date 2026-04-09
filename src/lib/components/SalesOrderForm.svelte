@@ -328,8 +328,27 @@
         )
     );
 
+    // 尝试将订单的地址快照匹配到客户地址列表中的某一条
+    function findMatchingAddressId(addresses: CustomerAddress[]): number | null {
+        if (!salesOrder) return null;
+        const person = (salesOrder.contact_person || '').trim();
+        const phone = (salesOrder.contact_phone || '').trim();
+        if (!person && !phone) return null;
+
+        const match = addresses.find((addr) => {
+            const addrName = (addr.contact_name || '').trim();
+            const addrPhone = (addr.phone || addr.mobile || '').trim();
+            if (person && addrName && addrName !== person) return false;
+            if (phone && addrPhone && addrPhone !== phone) return false;
+            return Boolean(person || phone);
+        });
+        return match?.id ?? null;
+    }
+
     const initialShippingAddressId = $derived(
-        hasInitialShippingSnapshot ? null : getDefaultShippingAddressId(shippingAddresses)
+        hasInitialShippingSnapshot
+            ? findMatchingAddressId(shippingAddresses)
+            : getDefaultShippingAddressId(shippingAddresses)
     );
     
     // 标签配置

@@ -2,7 +2,7 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
-    import { purchaseOrderAPI, supplierAPI } from '$lib/api';
+    import { purchaseOrderAPI, supplierAPI, systemSettingAPI } from '$lib/api';
     import type { Supplier, PurchaseOrderCreateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
@@ -23,6 +23,11 @@
     let error = $state('');
     let preloadItems = $state<any[] | null>(null);
     let preloadQuotationPrices = $state<Record<string, { price: number; currency: string }> | null>(null);
+    let purchaseOrderDefaults = $state<{
+        shipping_address: string;
+        contact_person: string;
+        contact_phone: string;
+    } | null>(null);
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },
@@ -46,6 +51,31 @@
             error = err instanceof Error ? err.message : '加载供应商信息失败';
         } finally {
             loading = false;
+        }
+    }
+
+    async function loadPurchaseOrderDefaults() {
+        try {
+            const settings = await systemSettingAPI.get();
+            purchaseOrderDefaults = {
+                shipping_address: settings.purchase_order_shipping_address || '',
+                contact_person: settings.purchase_order_contact_person || '',
+                contact_phone: settings.purchase_order_contact_phone || '',
+            };
+            return;
+        } catch (err) {
+            console.warn('通过系统设置读取采购订单默认收货信息失败，尝试备用接口:', err);
+        }
+
+        try {
+            const defaults = await systemSettingAPI.getPIDefaults();
+            purchaseOrderDefaults = {
+                shipping_address: defaults.purchase_order_shipping_address || '',
+                contact_person: defaults.purchase_order_contact_person || '',
+                contact_phone: defaults.purchase_order_contact_phone || '',
+            };
+        } catch (err) {
+            console.error('加载采购订单默认收货信息失败:', err);
         }
     }
     
@@ -75,6 +105,7 @@
     
     onMount(() => {
         loadSupplier();
+        loadPurchaseOrderDefaults();
         
         // 检查是否有预加载的报价数据
         const preloadData = sessionStorage.getItem('purchase_order_preload_items');
@@ -136,6 +167,7 @@
                 supplier={supplier}
                 {preloadItems}
                 {preloadQuotationPrices}
+                purchaseOrderDefaults={purchaseOrderDefaults}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
                 submitLabel="创建订单"

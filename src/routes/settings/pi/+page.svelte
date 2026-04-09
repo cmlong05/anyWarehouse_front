@@ -69,7 +69,7 @@
 <div class="max-w-4xl mx-auto p-4 sm:p-6">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">PI 默认设置</h1>
-        <p class="text-sm text-gray-600 mt-1">用于销售订单 P/I 打印页的默认公司信息与条款</p>
+        <p class="text-sm text-gray-600 mt-1">用于销售订单 P/I 打印页的默认公司信息与条款。</p>
     </div>
 
     {#if loading}

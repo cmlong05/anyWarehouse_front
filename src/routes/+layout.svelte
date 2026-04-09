@@ -45,7 +45,8 @@
 			href: '/settings/pi',
 			label: '系统设置',
 			children: [
-				{ href: '/settings/pi', label: 'PI 默认设置' }
+				{ href: '/settings/pi', label: 'PI 默认设置' },
+				{ href: '/settings/address', label: '采购收货地址' }
 			]
 		}
 	];

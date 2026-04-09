@@ -315,6 +315,19 @@
     });
 
     $effect(() => {
+        if (!initialData) return;
+        if (!formData.shipping_address && initialData.shipping_address) {
+            formData.shipping_address = initialData.shipping_address;
+        }
+        if (!formData.contact_person && initialData.contact_person) {
+            formData.contact_person = initialData.contact_person;
+        }
+        if (!formData.contact_phone && initialData.contact_phone) {
+            formData.contact_phone = initialData.contact_phone;
+        }
+    });
+
+    $effect(() => {
         if (!enableShippingAddressSelection || type !== 'sales') return;
         if (hasAppliedInitialShippingAddress) return;
         if (!initialShippingAddressId) return;
@@ -635,6 +648,25 @@
                                 <span class="text-gray-500">备注：</span>
                                 <span>{selectedShippingAddress.remark || '-'}</span>
                             </div>
+                        </div>
+                    </div>
+                {:else if formData.contact_person || formData.shipping_address}
+                    <!-- 未匹配到地址记录时，显示订单已保存的地址快照（只读） -->
+                    <div class="md:col-span-2 rounded-lg border border-gray-200 bg-gray-50/60 px-4 py-3 text-sm">
+                        <p class="text-xs text-gray-400 mb-2">当前订单地址快照（未匹配到地址记录，可重新选择地址覆盖）</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-gray-700">
+                            {#if formData.contact_person}
+                                <div><span class="text-gray-500">收件人：</span><span>{formData.contact_person}</span></div>
+                            {/if}
+                            {#if formData.company_name}
+                                <div><span class="text-gray-500">公司名称：</span><span>{formData.company_name}</span></div>
+                            {/if}
+                            {#if formData.contact_phone}
+                                <div><span class="text-gray-500">电话：</span><span>{formData.contact_phone}</span></div>
+                            {/if}
+                            {#if formData.shipping_address}
+                                <div class="md:col-span-2"><span class="text-gray-500">地址：</span><span>{formData.shipping_address}</span></div>
+                            {/if}
                         </div>
                     </div>
                 {/if}

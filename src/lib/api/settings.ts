@@ -8,6 +8,9 @@ export interface SystemSettingResponse {
     pi_payment_terms: string;
     pi_delivery_terms: string;
     pi_notes: string;
+    purchase_order_shipping_address: string;
+    purchase_order_contact_person: string;
+    purchase_order_contact_phone: string;
     created_at: string;
     updated_at: string;
     updated_by_username: string | null;
@@ -19,6 +22,9 @@ export interface PIDefaults {
     payment_terms: string;
     delivery_terms: string;
     notes: string;
+    purchase_order_shipping_address: string;
+    purchase_order_contact_person: string;
+    purchase_order_contact_phone: string;
 }
 
 export interface SystemSettingUpdateRequest {
@@ -27,6 +33,9 @@ export interface SystemSettingUpdateRequest {
     pi_payment_terms?: string;
     pi_delivery_terms?: string;
     pi_notes?: string;
+    purchase_order_shipping_address?: string;
+    purchase_order_contact_person?: string;
+    purchase_order_contact_phone?: string;
 }
 
 export class SystemSettingAPI {
