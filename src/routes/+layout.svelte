@@ -56,8 +56,16 @@
 	let expandedMobileItems = $state<Set<number>>(new Set());
 	// 桌面端展开的下拉菜单索引
 	let openDropdownIndex = $state<number | null>(null);
+	// 下拉菜单的 fixed 定位坐标
+	let dropdownPos = $state<{ top: number; left: number }>({ top: 0, left: 0 });
 	// 关闭定时器 ID
 	let closeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	// 当前下拉菜单的子项（从 navItems 中派生）
+	let currentDropdownChildren = $derived(
+		openDropdownIndex !== null && navItems[openDropdownIndex]?.children
+			? navItems[openDropdownIndex].children!
+			: []
+	);
 	
 	function toggleMobileMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -77,8 +85,10 @@
 		mobileMenuOpen = false;
 	}
 	
-	function openDropdown(index: number) {
+	function openDropdown(index: number, triggerEl: HTMLElement) {
 		openDropdownIndex = index;
+		const rect = triggerEl.getBoundingClientRect();
+		dropdownPos = { top: rect.bottom, left: rect.left };
 	}
 	
 	function closeDropdown() {
@@ -100,7 +110,7 @@
 </script>
 
 <div class="relative">
-	<nav class="sticky top-0 z-[1000] bg-white border-b border-gray-200 shadow-sm">
+	<nav class="sticky top-0 z-[30] bg-white border-b border-gray-200 shadow-sm">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="flex justify-between h-10">
 				<!-- Logo / Brand -->
@@ -117,11 +127,10 @@
 					{#each navItems as item, index}
 						{#if item.children}
 							<!-- Desktop Dropdown -->
-							<div class="relative" role="group" onmouseenter={cancelCloseDropdown} onmouseleave={closeDropdown}>
+							<div class="relative" role="group" onmouseenter={(e) => { cancelCloseDropdown(); openDropdown(index, e.currentTarget as HTMLElement); }} onmouseleave={closeDropdown}>
 								<a 
 									href={item.href}
 									class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-blue-600 transition-colors"
-									onmouseenter={() => openDropdown(index)}
 									aria-expanded={openDropdownIndex === index}
 								>
 									{item.label}
@@ -129,21 +138,6 @@
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 									</svg>
 								</a>
-								{#if openDropdownIndex === index}
-									<!-- Dropdown Menu -->
-									<div 
-										class="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
-										style="z-index: 9999;"
-										role="menu"
-										tabindex="-1"
-									>
-										{#each item.children as child}
-											<a href={child.href} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
-												{child.label}
-											</a>
-										{/each}
-									</div>
-								{/if}
 							</div>
 						{:else}
 							<!-- Desktop Simple Link -->
@@ -224,8 +218,26 @@
 			</div>
 		{/if}
 	</nav>
-	
-	<main class="min-h-screen bg-gray-50 relative" style="z-index: 1;">
+
+	<!-- Dropdown portal: rendered outside nav to escape its stacking context -->
+	{#if openDropdownIndex !== null && currentDropdownChildren.length > 0}
+		<div 
+			class="fixed w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-[9999]"
+			style="top: {dropdownPos.top}px; left: {dropdownPos.left}px;"
+			role="menu"
+			tabindex="-1"
+			onmouseenter={cancelCloseDropdown}
+			onmouseleave={closeDropdown}
+		>
+			{#each currentDropdownChildren as child}
+				<a href={child.href} class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors">
+					{child.label}
+				</a>
+			{/each}
+		</div>
+	{/if}
+
+	<main class="min-h-screen bg-gray-50">
 		{@render children()}
 	</main>
 </div>
