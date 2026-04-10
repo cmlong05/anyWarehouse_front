@@ -8,7 +8,8 @@
     import Alert from '$lib/components/Alert.svelte';
     import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
     import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
-    import { NumberStepper } from '$lib/components/ui';
+    import QuotationPriceCard from '$lib/components/QuotationPriceCard.svelte';
+    import QuotationMetaCard from '$lib/components/QuotationMetaCard.svelte';
     import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
     // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况
@@ -33,12 +34,6 @@
         valid_from: null,
         note: '',
         partner_sku: ''
-    });
-    
-    // 计算总价
-    let totalPrice = $derived(() => {
-        const price = typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0;
-        return price;
     });
     
     async function loadData() {
@@ -111,11 +106,6 @@
         }
     }
     
-    function formatPrice(price: string | number | null): string {
-        if (!price) return '-';
-        return parseFloat(price.toString()).toFixed(2);
-    }
-    
     onMount(loadData);
 </script>
 
@@ -157,136 +147,30 @@
 
                 <!-- 右侧：价格信息 -->
                 <div class="lg:col-span-2 space-y-4">
-                    <!-- 主要价格信息 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            价格信息
-                        </h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- 单价 -->
-                            <div>
-                                <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
-                                    单价 <span class="text-red-500">*</span>
-                                </label>
-                                <NumberStepper
-                                    id="price"
-                                    value={typeof formData.price === 'number' ? formData.price : parseFloat(formData.price as string) || 0}
-                                    min={0}
-                                    step={1}
-                                    decimalPlaces={2}
-                                    onchange={(v) => formData.price = v || 0}
-                                />
-                            </div>
+                    <QuotationPriceCard
+                        price={formData.price}
+                        currency={formData.currency}
+                        minQuantity={formData.min_quantity}
+                        leadTimeDays={formData.lead_time_days}
+                        partnerSku={formData.partner_sku || ''}
+                        currencyEditable={false}
+                        priceStep={1}
+                        leadTimeOptional={false}
+                        partnerSkuPlaceholder="客户自己的物品编码（可选）"
+                        onPriceChange={(v) => formData.price = v || 0}
+                        onMinQuantityChange={(v) => formData.min_quantity = v || 1}
+                        onLeadTimeChange={(v) => formData.lead_time_days = v || 1}
+                        onPartnerSkuChange={(v) => formData.partner_sku = v}
+                    />
 
-                            <!-- 货币（只读） -->
-                            <div>
-                                <p class="block text-sm font-medium text-gray-700 mb-2">货币</p>
-                                <div class="flex items-center h-10 px-3 rounded-lg border border-gray-200 bg-gray-50">
-                                    <span class="text-sm font-semibold text-gray-700">{formData.currency || 'USD'}</span>
-                                </div>
-                            </div>
-
-                            <!-- 最小订购量 -->
-                            <div>
-                                <label for="moq" class="block text-sm font-medium text-gray-700 mb-2">最小订购量 (MOQ)</label>
-                                <NumberStepper
-                                    id="moq"
-                                    value={formData.min_quantity || 1}
-                                    min={1}
-                                    step={1}
-                                    decimalPlaces={0}
-                                    onchange={(v) => formData.min_quantity = v || 1}
-                                />
-                            </div>
-                        </div>
-
-                        <!-- 附加费用 -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                            <div>
-                                <label for="leadTime" class="block text-sm font-medium text-gray-700 mb-2">交货周期 (天)</label>
-                                <NumberStepper
-                                    id="leadTime"
-                                    value={formData.lead_time_days || 1}
-                                    min={1}
-                                    step={1}
-                                    decimalPlaces={0}
-                                    onchange={(v) => formData.lead_time_days = v || 1}
-                                />
-                            </div>
-                            <div>
-                                <label for="partner_sku" class="block text-sm font-medium text-gray-700 mb-2">合作方SKU</label>
-                                <input
-                                    type="text"
-                                    id="partner_sku"
-                                    bind:value={formData.partner_sku}
-                                    placeholder="客户自己的物品编码（可选）"
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- 价格预览 -->
-                        {#if formData.price}
-                            <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="text-sm text-green-700">单价</div>
-                                        <div class="text-2xl font-bold text-green-900">
-                                            ¥{formatPrice(totalPrice())}
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-sm text-green-700">预估单价</div>
-                                        <div class="text-lg font-semibold text-green-800">
-                                            {#if formData.min_quantity && formData.min_quantity > 1}
-                                                ¥{(totalPrice() / (formData.min_quantity || 1)).toFixed(2)}/件
-                                            {:else}
-                                                ¥{formatPrice(formData.price)}
-                                            {/if}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {/if}
-                    </div>
-
-                    <!-- 有效期和备注 -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            有效期和其他
-                        </h2>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="validFrom" class="block text-sm font-medium text-gray-700 mb-2">有效期开始</label>
-                                <input
-                                    id="validFrom"
-                                    type="date"
-                                    bind:value={formData.valid_from}
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- 备注 -->
-                        <div>
-                            <label for="note" class="block text-sm font-medium text-gray-700 mb-2">备注</label>
-                            <textarea
-                                id="note"
-                                bind:value={formData.note}
-                                rows="3"
-                                placeholder="添加关于此报价的备注信息..."
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
-                            ></textarea>
-                        </div>
-                    </div>
+                    <QuotationMetaCard
+                        validFrom={formData.valid_from || ''}
+                        note={formData.note || ''}
+                        showValidUntil={false}
+                        showPreferred={false}
+                        onValidFromChange={(v) => formData.valid_from = v || null}
+                        onNoteChange={(v) => formData.note = v}
+                    />
                 </div>
             </form>
         {/if}
