@@ -221,26 +221,39 @@ export function useOrderForm(
      */
     function updateItemField(index: number, field: keyof OrderFormItem, value: unknown) {
         if (field === 'quantity') {
-            const qty = Number(value) || 0;
-            if (qty <= 0) {
-                const item = formData.items[index];
-                if (item) {
-                    if (item.isVariantChild) {
-                        // simply remove the child row
-                        removeItem(index);
-                        return;
-                    }
-                    // parent template row has children?
-                    if (formData.items.some(i => i.parentId === item.id)) {
-                        formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
-                        return;
-                    }
-                    // normal item or orphan parent
-                    removeItem(index);
-                    return;
-                }
+            // 输入框在编辑过程中可能出现空值（例如 Backspace 清空），
+            // 这是中间态，不应触发行删除。
+            if (value === null || value === undefined || value === '') {
+                return;
             }
+
+            const qty = Number(value);
+            if (!Number.isFinite(qty)) {
+                return;
+            }
+
+            formData.items = formData.items.map((item, i) =>
+                i === index ? { ...item, quantity: qty } : item
+            );
+            return;
         }
+
+        if (field === 'unit_price') {
+            if (value === null || value === undefined || value === '') {
+                return;
+            }
+
+            const unitPrice = Number(value);
+            if (!Number.isFinite(unitPrice)) {
+                return;
+            }
+
+            formData.items = formData.items.map((item, i) =>
+                i === index ? { ...item, unit_price: unitPrice } : item
+            );
+            return;
+        }
+
         formData.items = formData.items.map((item, i) => 
             i === index ? { ...item, [field]: value } : item
         );

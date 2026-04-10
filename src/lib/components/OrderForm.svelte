@@ -864,7 +864,7 @@
                                         decimalPlaces={quantityDecimals}
                                         size="sm"
                                         disabled={loading}
-                                        onchange={(v) => updateItemField(index, 'quantity', v ?? 0)}
+                                        onchange={(v) => updateItemField(index, 'quantity', v)}
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right">
@@ -874,7 +874,7 @@
                                         step={0.01}
                                         size="sm"
                                         disabled={loading}
-                                        onchange={(v) => updateItemField(index, 'unit_price', v ?? 0)}
+                                        onchange={(v) => updateItemField(index, 'unit_price', v)}
                                     />
                                 </td>
                                 <td class="px-4 py-3 text-right font-medium text-gray-900">
