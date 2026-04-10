@@ -186,6 +186,11 @@ export class SalesOrderAPI extends BaseOrderAPI<
         await this._downloadPDF(`${this.basePath}${orderId}/invoice/?locale=${locale}`, `INVOICE-${orderNumber}.pdf`);
     }
 
+    /** 下载 SKU 对照表 PDF（服务端生成，跨浏览器一致） */
+    async downloadSkuReference(orderId: number, locale = 'en', orderNumber: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${orderId}/sku_reference/?locale=${locale}`, `SKU-REFERENCE-${orderNumber}.pdf`);
+    }
+
     private async _downloadPDF(path: string, filename: string): Promise<void> {
         const url = `${config.API_BASE_URL}${path}`;
         const resp = await fetch(url, { credentials: 'include' });

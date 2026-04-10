@@ -285,6 +285,7 @@
     // ── PDF 下载 ────────────────────────────────────────
     let piDownloading = $state(false);
     let invoiceDownloading = $state(false);
+    let skuReferenceDownloading = $state(false);
 
     async function downloadPI() {
         if (piDownloading || !orderDetail.order) return;
@@ -309,6 +310,19 @@
             alert('PDF 生成失败，请稍后重试。');
         } finally {
             invoiceDownloading = false;
+        }
+    }
+
+    async function downloadSkuReference() {
+        if (skuReferenceDownloading || !orderDetail.order) return;
+        skuReferenceDownloading = true;
+        try {
+            await salesOrderAPI.downloadSkuReference(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
+        } catch (e) {
+            console.error('SKU 对照表生成失败', e);
+            alert('SKU 对照表生成失败，请稍后重试。');
+        } finally {
+            skuReferenceDownloading = false;
         }
     }
 </script>
@@ -366,7 +380,7 @@
                     type="button"
                     class="py-2 px-4 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     onclick={downloadPI}
-                    disabled={piDownloading || invoiceDownloading}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
                 >
                     {#if piDownloading}
                         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -375,7 +389,7 @@
                         </svg>
                         生成中...
                     {:else}
-                        📄 下载 PI
+                        📄 PI
                     {/if}
                 </button>
                 <!-- 下载 Invoice 按钮 -->
@@ -383,7 +397,7 @@
                     type="button"
                     class="py-2 px-4 text-sm font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     onclick={downloadInvoice}
-                    disabled={piDownloading || invoiceDownloading}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
                 >
                     {#if invoiceDownloading}
                         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -392,7 +406,24 @@
                         </svg>
                         生成中...
                     {:else}
-                        🧾 下载 Invoice
+                        🧾 Invoice
+                    {/if}
+                </button>
+                <!-- 下载 SKU 对照表按钮 -->
+                <button
+                    type="button"
+                    class="py-2 px-4 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    onclick={downloadSkuReference}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
+                >
+                    {#if skuReferenceDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        🗂️ SKU表
                     {/if}
                 </button>
                 <LocaleSwitcher variant="button" />
