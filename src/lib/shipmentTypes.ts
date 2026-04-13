@@ -45,6 +45,7 @@ export interface ItemDetail {
     name: string;
     name_en?: string;
     SKU: string;
+    total_storage?: number;
     is_variant_template?: boolean;
     is_variant?: boolean;
     parent_item_id?: number | null;

@@ -153,6 +153,22 @@
         
         return result;
     }
+
+    function getCurrentStock(section: GroupedSection): number | null {
+        if (section.type === 'parent') {
+            const parentId = Math.abs(section.item.id);
+            const variants = shipmentDetail.shipment?.items?.filter(
+                (item) => getVariantParentId(item) === parentId
+            ) || [];
+
+            return variants.reduce(
+                (sum, item) => sum + (item.item_detail?.total_storage || 0),
+                0
+            );
+        }
+
+        return section.item.item_detail?.total_storage ?? null;
+    }
 </script>
 
 <svelte:head>
@@ -306,6 +322,7 @@
                                 <tr class="bg-gray-50">
                                     <th class="text-left px-3 py-2.5 font-medium text-gray-700">SKU</th>
                                     <th class="text-left px-3 py-2.5 font-medium text-gray-700">商品名称</th>
+                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">现有库存</th>
                                     <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">计划数量</th>
                                     <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">已打包</th>
                                     <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">待打包</th>
@@ -318,6 +335,7 @@
                                     {@const qty = safeParseFloat(item.quantity)}
                                     {@const packed = safeParseFloat(item.quantity_packed || 0)}
                                     {@const pending = qty - packed}
+                                    {@const currentStock = getCurrentStock(section)}
                                     {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                                     <tr class="{section.type === 'variant' ? 'bg-purple-50/50' : section.type === 'parent' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'} transition-colors">
                                         <td class="px-3 py-2.5 font-mono text-xs {section.type === 'variant' ? 'text-purple-600' : 'text-gray-600'}">
@@ -339,6 +357,13 @@
                                                 </div>
                                             {:else}
                                                 {item.product_name}
+                                            {/if}
+                                        </td>
+                                        <td class="px-3 py-2.5 text-right {currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
+                                            {#if currentStock !== null}
+                                                {formatNumber(currentStock)}
+                                            {:else}
+                                                -
                                             {/if}
                                         </td>
                                         <td class="px-3 py-2.5 text-right font-medium text-gray-900">{formatNumber(qty)}</td>
