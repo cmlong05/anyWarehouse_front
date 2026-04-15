@@ -241,6 +241,7 @@
         loading={quotationsLoading}
         emptyText="暂无报价记录"
         addHref={`/supplier/quotation/add?supplier_id=${supplier!.id}`}
+        currency={supplier?.currency}
         quotationQuantities={quotationQuantities}
         onQuantityChange={(id, value) => quotationQuantities[id] = value}
         onRowClick={(id) => goto(`/supplier/quotation/${id}`)}

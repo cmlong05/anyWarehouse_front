@@ -3,7 +3,7 @@
     import { supplierSchema, type SupplierFormData } from '$lib/schemas';
 
     interface Props {
-        supplier?: SupplierFormData;
+        supplier?: Partial<SupplierFormData>;
         onSubmit: (data: SupplierFormData) => void;
         onCancel: () => void;
         submitLabel?: string;
@@ -18,17 +18,35 @@
         loading = false
     }: Props = $props();
 
-    function handleSubmit(data: any) {
-        onSubmit(data as SupplierFormData);
+    import { CurrencySelect } from '$lib/components/ui';
+
+    let currency: string = $state('CNY');
+
+    $effect(() => {
+        currency = supplier?.currency || 'CNY';
+    });
+
+    const cleanInitial = $derived({ ...supplier });
+
+    function handlePartySubmit(data: any) {
+        onSubmit({ ...data, currency } as SupplierFormData);
     }
 </script>
 
+{#snippet extras()}
+    <div>
+        <label for="supplier-currency" class="block text-sm font-medium text-gray-700 mb-1">货币</label>
+        <CurrencySelect id="supplier-currency" value={currency} onchange={(v) => currency = v} />
+    </div>
+{/snippet}
+
 <PartyForm
-    {onSubmit}
+    onSubmit={handlePartySubmit}
     {onCancel}
-    initialData={supplier || {}}
+    initialData={cleanInitial}
     schema={supplierSchema}
     {submitLabel}
     {loading}
     showIsActive={true}
+    {extras}
 />

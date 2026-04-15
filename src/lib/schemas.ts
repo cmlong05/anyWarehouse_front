@@ -152,7 +152,10 @@ export const partySchema = z.object({
 });
 
 // 供应商使用基础 schema 即可
-export const supplierSchema = partySchema;
+// 供应商在基础之上扩展货币
+export const supplierSchema = partySchema.extend({
+    currency: z.string().min(1).max(3).default('CNY'),
+});
 
 // 客户在基础之上扩展等级和状态
 export const customerSchema = partySchema.extend({

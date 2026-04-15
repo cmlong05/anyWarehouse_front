@@ -34,8 +34,10 @@
 
     let selectedSupplier = $state<number | null>(null);
 
-    // 默认货币：跟随第一行，新行复用
-    let defaultCurrency = $state('CNY');
+    // 供应商货币：跟随选中供应商，新报价行默认使用该货币
+    const supplierCurrency = $derived(
+        suppliers.find(s => s.id === selectedSupplier)?.currency || 'CNY'
+    );
 
     const supplierOptions = $derived(suppliers.map(s => ({
         value: s.id,
@@ -45,7 +47,7 @@
     const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
 
     const form = useQuotationLineForm({
-        getCurrency: () => defaultCurrency,
+        getCurrency: () => supplierCurrency,
         apiBaseUrl: config.API_BASE_URL,
         onInlineError: (msg) => {
             error = msg;
@@ -53,15 +55,11 @@
         },
     });
 
-    // 货币变更：同步第一行货币作为后续新行默认值，并同步所有行
-    function handleCurrencyChange(line: ReturnType<typeof form.createEmptyLine>, newCurrency: string) {
-        line.currency = newCurrency;
-        const firstLine = form.quotationLines[0];
-        if (firstLine && line.id === firstLine.id) {
-            defaultCurrency = newCurrency;
-            form.quotationLines = form.quotationLines.map(l => ({ ...l, currency: newCurrency }));
-        }
-    }
+    // 切换供应商时，同步已有行的货币展示
+    $effect(() => {
+        const nextCurrency = supplierCurrency;
+        form.quotationLines = form.quotationLines.map(line => ({ ...line, currency: nextCurrency }));
+    });
 
     async function loadInitialData() {
         try {
@@ -112,7 +110,7 @@
                 supplier: selectedSupplier!,
                 item: line.item,
                 price: line.price,
-                currency: line.currency,
+                currency: supplierCurrency,
                 min_quantity: line.min_quantity,
                 lead_time_days: line.lead_time_days,
                 note: line.note,
@@ -212,8 +210,8 @@
             <QuotationLinesTable
                 {form}
                 {itemSearchUrl}
-                currencyMode="editable"
-                onCurrencyChange={handleCurrencyChange}
+                currencyMode="fixed"
+                fixedCurrency={supplierCurrency}
             />
             
             <!-- 操作按钮 -->

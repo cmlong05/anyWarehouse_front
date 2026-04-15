@@ -234,6 +234,7 @@ export interface Supplier {
     address: string;
     remark: string;
     is_active: boolean;
+    currency: string;
     date_added: string;
     created_at: string;
     updated_at: string;
@@ -247,6 +248,7 @@ export interface SupplierBrief {
     name: string;
     contact_name: string;
     phone: string;
+    currency?: string;
 }
 
 /** 创建/更新供应商请求 */
@@ -259,6 +261,7 @@ export interface SupplierCreateRequest {
     address?: string;
     remark?: string;
     is_active?: boolean;
+    currency?: string;
 }
 
 /** 报价 */
