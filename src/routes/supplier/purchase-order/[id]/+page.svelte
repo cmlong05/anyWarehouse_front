@@ -74,6 +74,35 @@
             orderDetail.changeStatus(action);
         }
     }
+
+    let poDownloading = $state(false);
+    let skuReferenceDownloading = $state(false);
+
+    async function downloadPO() {
+        if (poDownloading || !orderDetail.order) return;
+        poDownloading = true;
+        try {
+            await purchaseOrderAPI.downloadPO(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
+        } catch (e) {
+            console.error('采购单生成失败', e);
+            alert('采购单生成失败，请稍后重试。');
+        } finally {
+            poDownloading = false;
+        }
+    }
+
+    async function downloadSkuReference() {
+        if (skuReferenceDownloading || !orderDetail.order) return;
+        skuReferenceDownloading = true;
+        try {
+            await purchaseOrderAPI.downloadSkuReference(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
+        } catch (e) {
+            console.error('SKU 对照表生成失败', e);
+            alert('SKU 对照表生成失败，请稍后重试。');
+        } finally {
+            skuReferenceDownloading = false;
+        }
+    }
 </script>
 
 <div class="p-6 max-w-6xl mx-auto">
@@ -87,22 +116,59 @@
         </div>
     {:else if orderDetail.order}
         {@const order = orderDetail.order}
-        
-        <!-- 头部 -->
-        <OrderDetailHeader
-            title="采购订单详情"
-            orderNumber={order.order_number}
-            status={order.status}
-            statusMap={PURCHASE_STATUS_MAP}
-            transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
-            updating={orderDetail.updating}
-            canEdit={order.status === 'draft'}
-            canDelete={['draft', 'pending', 'approved'].includes(order.status)}
-            onBack={orderDetail.goBack}
-            onEdit={editOrder}
-            onDelete={orderDetail.deleteOrder}
-            onStatusChange={handleAction}
-        />
+
+        <div class="flex justify-between items-center mb-4 gap-4 flex-wrap">
+            <OrderDetailHeader
+                title="采购订单详情"
+                orderNumber={order.order_number}
+                status={order.status}
+                statusMap={PURCHASE_STATUS_MAP}
+                transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
+                updating={orderDetail.updating}
+                canEdit={order.status === 'draft'}
+                canDelete={['draft', 'pending', 'approved'].includes(order.status)}
+                onBack={orderDetail.goBack}
+                onEdit={editOrder}
+                onDelete={orderDetail.deleteOrder}
+                onStatusChange={handleAction}
+            />
+
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    class="py-2 px-4 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    onclick={downloadPO}
+                    disabled={poDownloading || skuReferenceDownloading}
+                >
+                    {#if poDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        📄 采购单
+                    {/if}
+                </button>
+
+                <button
+                    type="button"
+                    class="py-2 px-4 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    onclick={downloadSkuReference}
+                    disabled={poDownloading || skuReferenceDownloading}
+                >
+                    {#if skuReferenceDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        🗂️ SKU表
+                    {/if}
+                </button>
+            </div>
+        </div>
 
         <!-- 收货按钮（额外操作） -->
         {#if ['ordered', 'partial'].includes(order.status)}

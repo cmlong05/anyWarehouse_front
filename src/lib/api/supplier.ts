@@ -2,6 +2,7 @@
  * 供应商相关 API
  */
 import { BaseAPI, BaseOrderAPI } from './base';
+import { config } from '$lib/config';
 import type { 
     Supplier, 
     SupplierBrief, 
@@ -125,6 +126,29 @@ export class PurchaseOrderAPI extends BaseOrderAPI<
         total_amount: string;
     }> {
         return this.client.get(`${this.basePath}by_supplier/`, { supplier_id: supplierId.toString() });
+    }
+
+    /** 下载采购单 PDF（服务端生成，跨浏览器一致） */
+    async downloadPO(orderId: number, locale = 'zh-CN', orderNumber: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${orderId}/po/?locale=${locale}`, `PURCHASE-ORDER-${orderNumber}.pdf`);
+    }
+
+    /** 下载 SKU 对照表 PDF（服务端生成，跨浏览器一致） */
+    async downloadSkuReference(orderId: number, locale = 'zh-CN', orderNumber: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${orderId}/sku_reference/?locale=${locale}`, `SKU-REFERENCE-${orderNumber}.pdf`);
+    }
+
+    private async _downloadPDF(path: string, filename: string): Promise<void> {
+        const url = `${config.API_BASE_URL}${path}`;
+        const resp = await fetch(url, { credentials: 'include' });
+        if (!resp.ok) throw new Error(`PDF 生成失败: ${resp.statusText}`);
+        const blob = await resp.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
     }
 }
 
