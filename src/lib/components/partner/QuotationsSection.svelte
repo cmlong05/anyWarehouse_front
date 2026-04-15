@@ -134,6 +134,7 @@
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
                         <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">合作方SKU</th>
+                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">库存数量</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价{currency ? `（${currency}）` : ''}</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
                     </tr>
@@ -158,7 +159,7 @@
                                     {/if}
                                 </td>
                                 <td class="px-2 py-2 text-gray-600">{group.parentName}</td>
-                                <td class="px-2 py-2 text-right" colspan="3">
+                                <td class="px-2 py-2 text-right" colspan="4">
                                     <span class="text-xs text-gray-500">{group.quotations.length} 个报价</span>
                                 </td>
                             </tr>

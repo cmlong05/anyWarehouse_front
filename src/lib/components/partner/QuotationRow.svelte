@@ -24,6 +24,7 @@
         {/if}
     </td>
     <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
+    <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.item_total_storage ?? 0}</td>
     <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
     <td class="px-2 py-1.5 text-right">
         <NumberStepper
