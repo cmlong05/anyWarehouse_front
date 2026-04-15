@@ -725,6 +725,9 @@ export type SalesOrderStatus = 'draft' | 'pending' | 'approved' | 'confirmed' | 
 /** 销售订单优先级 */
 export type SalesOrderPriority = 'low' | 'normal' | 'high' | 'urgent';
 
+/** 销售订单收款状态 */
+export type SalesOrderPaymentStatus = 'unpaid' | 'partial' | 'paid';
+
 /** 销售订单明细 */
 export interface SalesOrderItem {
     id: number;
@@ -776,6 +779,37 @@ export interface ShipmentBrief {
     created_at: string;
 }
 
+/** 销售订单收款记录 */
+export interface SalesOrderPaymentRecord {
+    id: number;
+    sales_order: number;
+    received_date: string;
+    amount: string;
+    currency: string;
+    payment_method: string;
+    reference_number: string;
+    attachment?: string | null;
+    attachment_url?: string | null;
+    attachment_name?: string;
+    attachment_is_image?: boolean;
+    notes: string;
+    created_by?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 销售订单收款记录创建请求 */
+export interface SalesOrderPaymentRecordCreateRequest {
+    sales_order: number;
+    received_date: string;
+    amount: number;
+    currency?: string;
+    payment_method?: string;
+    reference_number?: string;
+    attachment?: File | null;
+    notes?: string;
+}
+
 /** 销售订单 */
 export interface SalesOrder {
     id: number;
@@ -807,11 +841,16 @@ export interface SalesOrder {
     contact_phone: string;
     company_name: string;
     payment_terms: string;
-    payment_status: string;
+    payment_status: SalesOrderPaymentStatus;
+    payment_status_display?: string;
+    received_amount?: string;
+    balance_due?: string;
+    payment_progress_percentage?: number;
     notes: string;
     internal_notes: string;
     items: SalesOrderItem[];
     shipments?: ShipmentBrief[];
+    payment_records?: SalesOrderPaymentRecord[];
     item_count?: number;
     total_quantity?: number;
     total_shipped?: number;
@@ -834,6 +873,7 @@ export interface SalesOrderBrief {
     order_date: string;
     expected_delivery: string | null;
     total_amount: string;
+    payment_status?: SalesOrderPaymentStatus;
     currency?: string;
     item_count: number;
     total_quantity?: number;

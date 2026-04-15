@@ -38,11 +38,13 @@ export {
     CustomerQuotationAPI,
     SalesOrderAPI,
     SalesOrderItemAPI,
+    SalesOrderPaymentRecordAPI,
     customerAPI,
     customerAddressAPI,
     customerQuotationAPI,
     salesOrderAPI,
     salesOrderItemAPI,
+    salesOrderPaymentRecordAPI,
 } from './customer';
 
 // 导出产品相关 API

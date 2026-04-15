@@ -19,6 +19,8 @@ import type {
     SalesOrderItem,
     SalesOrderStatistics,
     SalesOrderSummary,
+    SalesOrderPaymentRecord,
+    SalesOrderPaymentRecordCreateRequest,
     ShipOrderRequest,
     SalesOrderPriority,
 } from '$lib/index';
@@ -218,6 +220,47 @@ export class SalesOrderItemAPI extends BaseAPI<SalesOrderItem, unknown> {
     }
 }
 
+// ========== Sales Order Payment Record API ==========
+
+export class SalesOrderPaymentRecordAPI extends BaseAPI<
+    SalesOrderPaymentRecord,
+    SalesOrderPaymentRecordCreateRequest,
+    Partial<SalesOrderPaymentRecordCreateRequest>
+> {
+    constructor() {
+        super('/customer/sales-order-payment-records/');
+    }
+
+    async listByOrder(orderId: number): Promise<PaginatedResponse<SalesOrderPaymentRecord>> {
+        return this.client.get<PaginatedResponse<SalesOrderPaymentRecord>>(this.basePath, { sales_order: orderId.toString() });
+    }
+
+    async create(data: SalesOrderPaymentRecordCreateRequest): Promise<SalesOrderPaymentRecord> {
+        return this.client.post<SalesOrderPaymentRecord>(this.basePath, this.toFormData(data), true);
+    }
+
+    async update(id: number, data: Partial<SalesOrderPaymentRecordCreateRequest>): Promise<SalesOrderPaymentRecord> {
+        return this.client.put<SalesOrderPaymentRecord>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    }
+
+    async patch(id: number, data: Partial<SalesOrderPaymentRecordCreateRequest>): Promise<SalesOrderPaymentRecord> {
+        return this.client.patch<SalesOrderPaymentRecord>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    }
+
+    private toFormData(data: Partial<SalesOrderPaymentRecordCreateRequest>): FormData {
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === '') return;
+            if (key === 'attachment' && value instanceof File) {
+                formData.append(key, value);
+                return;
+            }
+            formData.append(key, String(value));
+        });
+        return formData;
+    }
+}
+
 // ========== 导出 API 实例 ==========
 
 export const customerAPI = new CustomerAPI();
@@ -225,3 +268,4 @@ export const customerAddressAPI = new CustomerAddressAPI();
 export const customerQuotationAPI = new CustomerQuotationAPI();
 export const salesOrderAPI = new SalesOrderAPI();
 export const salesOrderItemAPI = new SalesOrderItemAPI();
+export const salesOrderPaymentRecordAPI = new SalesOrderPaymentRecordAPI();
