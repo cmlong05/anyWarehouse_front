@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, untrack } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI, supplierAPI } from '$lib/api';
@@ -56,9 +56,12 @@
     });
 
     // 切换供应商时，同步已有行的货币展示
+    // 用 untrack 读取 form.quotationLines，避免读写同一状态导致无限循环
     $effect(() => {
         const nextCurrency = supplierCurrency;
-        form.quotationLines = form.quotationLines.map(line => ({ ...line, currency: nextCurrency }));
+        untrack(() => {
+            form.quotationLines = form.quotationLines.map(line => ({ ...line, currency: nextCurrency }));
+        });
     });
 
     async function loadInitialData() {
