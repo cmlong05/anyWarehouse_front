@@ -15,6 +15,7 @@
         name: string;
         name_en?: string;
         SKU: string;
+        total_storage?: number;
         is_variant_template?: boolean;
         is_variant?: boolean;
         parent_item_id?: number | null;
@@ -42,6 +43,7 @@
     interface Labels {
         title?: string;
         itemName?: string;
+        currentStock?: string;
         quantity?: string;
         shipped?: string;
         received?: string;
@@ -89,6 +91,7 @@
     const defaultLabels: Labels = {
         title: '订单明细',
         itemName: '物品名称',
+        currentStock: '现有库存',
         quantity: '数量',
         shipped: '已发货',
         received: '已到货',
@@ -116,6 +119,26 @@
 
     function isFullyProcessed(item: OrderItem): boolean {
         return type === 'sales' ? !!item.is_fully_shipped : !!item.is_fully_received;
+    }
+
+    function getCurrentStock(section: GroupedSection): number | null {
+        if (section.type === 'parent') {
+            const parentId = getVariantParentId(section.item);
+            if (!parentId) return null;
+
+            const variants = items.filter((item) => getVariantParentId(item) === parentId);
+            return variants.reduce((sum, item) => sum + (item.item_detail?.total_storage || 0), 0);
+        }
+
+        return section.item.item_detail?.total_storage ?? null;
+    }
+
+    function isStockInsufficient(section: GroupedSection): boolean {
+        const currentStock = getCurrentStock(section);
+        if (currentStock === null) return false;
+
+        const pending = getPendingQty(section.item);
+        return pending > 0 && currentStock < pending;
     }
 
     // 按母版分组物品
@@ -218,6 +241,9 @@
                         <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">#</th>
                         <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">SKU</th>
                         <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">{l.itemName}</th>
+                        {#if type === 'sales'}
+                            <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.currentStock}</th>
+                        {/if}
                         <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.quantity}</th>
                         <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{type === 'sales' ? l.shipped : l.received}</th>
                         <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{type === 'sales' ? l.pendingShip : l.pendingReceive}</th>
@@ -238,6 +264,8 @@
                         {@const pending = getPendingQty(item)}
                         {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                         {@const itemId = item.item_detail?.id}
+                        {@const currentStock = getCurrentStock(section)}
+                        {@const stockInsufficient = isStockInsufficient(section)}
                         <tr class={getRowClass(section)}>
                             <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'text-purple-600' : ''}">
                                 {#if section.type === 'variant'}
@@ -272,6 +300,15 @@
                                     {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
                                 {/if}
                             </td>
+                            {#if type === 'sales'}
+                                <td class="p-3 text-right border-b border-gray-100 {stockInsufficient ? 'text-red-600 font-semibold' : currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
+                                    {#if currentStock !== null}
+                                        {formatNumber(currentStock)}
+                                    {:else}
+                                        -
+                                    {/if}
+                                </td>
+                            {/if}
                             <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
                             <td class="p-3 text-right border-b border-gray-100">{formatNumber(shipped)}</td>
                             <td class="p-3 text-right border-b border-gray-100">{formatNumber(pending)}</td>

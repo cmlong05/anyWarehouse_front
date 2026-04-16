@@ -752,6 +752,7 @@
             labels={{
                 title: t('sales.items.title', $localeStore),
                 itemName: t('sales.table.itemName', $localeStore),
+                currentStock: $localeStore === 'en' ? 'Current Stock' : '现有库存',
                 quantity: t('sales.table.quantity', $localeStore),
                 shipped: t('sales.table.shipped', $localeStore),
                 pendingShip: t('sales.table.pendingShip', $localeStore),
