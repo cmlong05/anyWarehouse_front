@@ -36,6 +36,7 @@ export interface TrackingNumberCreateRequest {
     tracking_no: string;
     carrier_code?: string;
     carrier_name: string;
+    logistics_status?: LogisticsStatus;
     remark?: string;
 }
 

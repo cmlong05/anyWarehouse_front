@@ -3,7 +3,7 @@
     import { goto } from '$app/navigation';
     import { trackingNumberAPI } from '$lib/api';
     import { formatDate } from '$lib/utils';
-    import type { TrackingNumber } from '$lib/shipmentTypes';
+    import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -36,14 +36,24 @@
         { value: 'returned', label: '已退回' },
         { value: 'cancelled', label: '已作废' },
     ];
+
+    // 表单可选物流状态（不含“全部”）
+    const logisticsFormOptions = logisticsOptions.filter((option) => option.value !== '');
     
     // 新建/编辑模态框
     let showFormModal = false;
     let editingId: number | null = null;
-    let formData = {
+    let formData: {
+        tracking_no: string;
+        carrier_code: string;
+        carrier_name: string;
+        logistics_status: LogisticsStatus;
+        remark: string;
+    } = {
         tracking_no: '',
         carrier_code: '',
         carrier_name: '',
+        logistics_status: 'pending',
         remark: ''
     };
     
@@ -83,6 +93,7 @@
             tracking_no: '',
             carrier_code: '',
             carrier_name: '',
+            logistics_status: 'pending',
             remark: ''
         };
         showFormModal = true;
@@ -94,6 +105,7 @@
             tracking_no: tn.tracking_no,
             carrier_code: tn.carrier_code,
             carrier_name: tn.carrier_name,
+            logistics_status: tn.logistics_status,
             remark: tn.remark || ''
         };
         showFormModal = true;
@@ -314,11 +326,14 @@
                             <td class="px-4 py-3 text-gray-500 text-sm">{formatDate(tn.created_at)}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
-                                    {#if !tn.is_linked && tn.logistics_status !== 'cancelled'}
+                                    {#if tn.logistics_status !== 'cancelled'}
                                         <button
                                             class="px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
                                             on:click={() => openEditModal(tn)}
                                         >编辑</button>
+                                    {/if}
+
+                                    {#if !tn.is_linked && tn.logistics_status !== 'cancelled'}
                                         <button
                                             class="px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
                                             on:click={() => confirmDelete(tn)}
@@ -397,6 +412,21 @@
                             placeholder="如：sf"
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="logisticsStatus">
+                        物流状态 <span class="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="logisticsStatus"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        bind:value={formData.logistics_status}
+                    >
+                        {#each logisticsFormOptions as option}
+                            <option value={option.value}>{option.label}</option>
+                        {/each}
+                    </select>
                 </div>
 
                 <div>
