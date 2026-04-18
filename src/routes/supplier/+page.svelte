@@ -4,6 +4,7 @@
     import { supplierAPI } from '$lib/api';
     import type { Supplier } from '$lib';
     import { DataTable, FormInput } from '$lib/components/ui';
+    import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import Alert from '$lib/components/Alert.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
@@ -11,13 +12,19 @@
     let loading = $state(true);
     let error = $state('');
     let searchQuery = $state('');
+    let sortKey = $state<keyof Supplier>('code');
+    let sortDirection = $state<'asc' | 'desc'>('asc');
     
     // 表格列定义
     const columns = [
-        { key: 'code', title: '编号', width: '100px' },
-        { key: 'name', title: '供应商名称' },
-        { key: 'contact', title: '联系人' },
+        { key: 'code', title: '编号', width: '100px', sortable: true },
+        { key: 'name', title: '供应商名称', sortable: true },
+        { key: 'contact', title: '联系人', sortable: true },
     ];
+
+    const sortedSuppliers = $derived.by(() => {
+        return sortByKey(suppliers, sortKey, sortDirection);
+    });
     
     async function loadSuppliers() {
         loading = true;
@@ -43,6 +50,12 @@
     
     function viewDetail(supplier: Supplier) {
         goto(`/supplier/${supplier.id}`);
+    }
+
+    function toggleSort(key: keyof Supplier) {
+        const next = toggleSortKey(sortKey, sortDirection, key);
+        sortKey = next.sortKey;
+        sortDirection = next.sortDirection;
     }
     
     onMount(() => {
@@ -94,11 +107,14 @@
         </div>
     {:else}
         <DataTable
-            data={suppliers}
+            data={sortedSuppliers}
             {columns}
             {loading}
             clickable={true}
             onRowClick={viewDetail}
+            onHeaderClick={(key) => toggleSort(key as keyof Supplier)}
+            sortKey={sortKey as string}
+            {sortDirection}
             emptyText={searchQuery ? '没有找到匹配的供应商' : '暂无供应商'}
         >
             {#snippet cellRender({ column, value })}
@@ -111,7 +127,7 @@
         </DataTable>
         
         <div class="mt-4 text-gray-500 text-sm">
-            共 {suppliers.length} 个供应商
+            共 {sortedSuppliers.length} 个供应商
         </div>
     {/if}
 </PageContainer>

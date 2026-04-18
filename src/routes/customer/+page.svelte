@@ -4,6 +4,7 @@
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib/schemas';
     import { DataTable, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
+    import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import Alert from '$lib/components/Alert.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Plus from 'lucide-svelte/icons/plus';
@@ -41,22 +42,7 @@
     ];
 
     const sortedCustomers = $derived.by(() => {
-        const list = [...customers];
-        const direction = sortDirection === 'asc' ? 1 : -1;
-
-        return list.sort((a, b) => {
-            const rawA = a[sortKey] ?? '';
-            const rawB = b[sortKey] ?? '';
-
-            if (typeof rawA === 'number' && typeof rawB === 'number') {
-                return (rawA - rawB) * direction;
-            }
-
-            return String(rawA).localeCompare(String(rawB), 'zh-CN', {
-                numeric: true,
-                sensitivity: 'base'
-            }) * direction;
-        });
+        return sortByKey(customers, sortKey, sortDirection);
     });
     
     // 等级徽章样式
@@ -105,13 +91,9 @@
     }
 
     function toggleSort(key: keyof Customer) {
-        if (sortKey === key) {
-            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            return;
-        }
-
-        sortKey = key;
-        sortDirection = 'asc';
+        const next = toggleSortKey(sortKey, sortDirection, key);
+        sortKey = next.sortKey;
+        sortDirection = next.sortDirection;
     }
     
     onMount(() => {
@@ -199,29 +181,11 @@
             {loading}
             clickable={true}
             onRowClick={viewDetail}
+            onHeaderClick={(key) => toggleSort(key as keyof Customer)}
+            sortKey={sortKey as string}
+            {sortDirection}
             emptyText={searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}
         >
-            {#snippet headerCellRender({ column }: { column: { key: string; title: string; sortable?: boolean } })}
-                {#if column.sortable}
-                    <span
-                        role="button"
-                        tabindex="0"
-                        class="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 cursor-pointer select-none"
-                        onclick={() => toggleSort(column.key as keyof Customer)}
-                        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSort(column.key as keyof Customer)}
-                    >
-                        <span>{column.title}</span>
-                        {#if sortKey === (column.key as keyof Customer)}
-                            <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
-                        {:else}
-                            <span class="text-xs text-gray-300">↕</span>
-                        {/if}
-                    </span>
-                {:else}
-                    {column.title}
-                {/if}
-            {/snippet}
-
             {#snippet cellRender({ item, column, value }: { item: Customer; column: { key: string }; value: unknown })}
                 {#if column.key === 'code'}
                     <span class="font-mono text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{value}</span>

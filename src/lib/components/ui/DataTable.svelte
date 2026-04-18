@@ -32,6 +32,9 @@
         // 交互
         clickable?: boolean;
         onRowClick?: (item: T) => void;
+        onHeaderClick?: (columnKey: string) => void;
+        sortKey?: string;
+        sortDirection?: 'asc' | 'desc';
         
         // 自定义渲染
         cellRender?: Snippet<[{ item: T; column: Column; value: unknown }]>
@@ -50,6 +53,9 @@
         emptyText = '暂无数据',
         clickable = false,
         onRowClick,
+        onHeaderClick,
+        sortKey,
+        sortDirection = 'asc',
         cellRender,
         headerCellRender,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -110,6 +116,21 @@
                     >
                         {#if headerCellRender}
                             {@render headerCellRender({ column })}
+                        {:else if column.sortable && onHeaderClick}
+                            <span
+                                role="button"
+                                tabindex="0"
+                                class="flex items-center gap-1 w-full -mx-4 -my-3 px-4 py-3 text-gray-700 hover:text-gray-900 cursor-pointer select-none"
+                                onclick={() => onHeaderClick(column.key)}
+                                onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onHeaderClick(column.key)}
+                            >
+                                <span>{column.title}</span>
+                                {#if sortKey === column.key}
+                                    <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                                {:else}
+                                    <span class="text-xs text-gray-300">↕</span>
+                                {/if}
+                            </span>
                         {:else}
                             {column.title}
                         {/if}
