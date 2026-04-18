@@ -4,21 +4,40 @@
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
     import type { PackageItem } from '$lib/shipmentTypes';
+    import type { SalesOrder } from '$lib';
+    import { salesOrderAPI } from '$lib/api';
     import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { DeleteConfirmModal, LinkPackageModal, NewPackageModal } from '$lib/components/shipment';
+    import AddressInfo from '$lib/components/AddressInfo.svelte';
 
-    // 获取发货单ID
     let shipmentId = $derived(parseInt(page.params.id || '0'));
 
     // 使用共享逻辑
     const shipmentDetail = useShipmentDetail(() => shipmentId);
+    let orderDetail = $state<SalesOrder | null>(null);
+
+    async function loadOrderDetail(orderId: number) {
+        try {
+            orderDetail = await salesOrderAPI.get(orderId);
+        } catch (err) {
+            orderDetail = null;
+        }
+    }
 
     // 监听ID变化加载数据
     $effect(() => {
         if (shipmentId && !isNaN(shipmentId)) {
             shipmentDetail.loadShipment();
+        }
+    });
+
+    $effect(() => {
+        if (shipmentDetail.shipment?.order) {
+            loadOrderDetail(shipmentDetail.shipment.order);
+        } else {
+            orderDetail = null;
         }
     });
 
@@ -169,6 +188,11 @@
 
         return section.item.item_detail?.total_storage ?? null;
     }
+
+    function isStockInsufficient(currentStock: number | null, pending: number): boolean {
+        if (currentStock === null) return false;
+        return pending > 0 && currentStock < pending;
+    }
 </script>
 
 <svelte:head>
@@ -295,16 +319,19 @@
                                 {shipment.order_detail?.order_number}
                             </span>
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div><span class="text-gray-500">总金额：</span><span class="text-gray-900">{getCurrencySymbol(shipment.order_detail?.currency)}{shipment.order_detail?.total_amount}</span></div>
-                            <div><span class="text-gray-500">收货人：</span><span class="text-gray-900">{shipment.order_detail?.contact_person || '-'}</span></div>
-                            <div><span class="text-gray-500">电话：</span><span class="text-gray-900">{shipment.order_detail?.contact_phone || '-'}</span></div>
                         </div>
-                        {#if shipment.order_detail?.shipping_address}
-                            <div class="mt-2 text-sm">
-                                <span class="text-gray-500">收货地址：</span><span class="text-gray-900">{shipment.order_detail.shipping_address}</span>
-                            </div>
-                        {/if}
+                        <div class="mt-4">
+                            <AddressInfo
+                                title="📤 收货信息"
+                                contactPerson={orderDetail?.contact_person ?? shipment.order_detail?.contact_person}
+                                contactPhone={orderDetail?.contact_phone ?? shipment.order_detail?.contact_phone}
+                                companyName={orderDetail?.company_name}
+                                paymentTerms={orderDetail?.payment_terms}
+                                shippingAddress={orderDetail?.shipping_address ?? shipment.order_detail?.shipping_address}
+                            />
+                        </div>
                     </a>
                 {:else}
                     <p class="text-gray-400">未关联订单</p>
@@ -336,6 +363,7 @@
                                     {@const packed = safeParseFloat(item.quantity_packed || 0)}
                                     {@const pending = qty - packed}
                                     {@const currentStock = getCurrentStock(section)}
+                                    {@const stockInsufficient = isStockInsufficient(currentStock, pending)}
                                     {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
                                     <tr class="{section.type === 'variant' ? 'bg-purple-50/50' : section.type === 'parent' ? 'bg-gray-100 font-medium' : 'hover:bg-gray-50'} transition-colors">
                                         <td class="px-3 py-2.5 font-mono text-xs {section.type === 'variant' ? 'text-purple-600' : 'text-gray-600'}">
@@ -359,7 +387,7 @@
                                                 {item.product_name}
                                             {/if}
                                         </td>
-                                        <td class="px-3 py-2.5 text-right {currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
+                                        <td class="px-3 py-2.5 text-right {stockInsufficient ? 'text-red-600 font-semibold' : currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
                                             {#if currentStock !== null}
                                                 {formatNumber(currentStock)}
                                             {:else}

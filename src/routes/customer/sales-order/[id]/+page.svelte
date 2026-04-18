@@ -124,6 +124,23 @@
 
     const matchedShippingAddress = $derived(findMatchingShippingAddress(orderDetail.order, customerAddresses));
 
+    const orderItems = $derived.by(() => {
+        const order = orderDetail.order;
+        if (!order?.items) return [];
+
+        return order.items.map((item) => {
+            const shipped = safeParseFloat(item.quantity_shipped);
+            const prepared = safeParseFloat(item.quantity_prepared);
+            const pendingReal = safeParseFloat(item.quantity_pending_real);
+
+            return {
+                ...item,
+                quantity_shipped: shipped + prepared,
+                quantity_pending: pendingReal,
+            };
+        });
+    });
+
     const shippingInfoItems = $derived.by(() => {
         const order = orderDetail.order;
         const matchedAddress = matchedShippingAddress;
@@ -363,7 +380,7 @@
         }
     }
 
-    // 反向同步：按行减少订单数量
+    // 反向同步：按行由发货单推进订单数量
     let reverseSyncLoading = $state<Record<string, boolean>>({});
     let reverseSyncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
     let reverseSyncError = $state<string | null>(null);
@@ -374,7 +391,7 @@
         reverseSyncError = null;
         reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: true };
         try {
-            const result = await salesOrderAPI.syncQuantities(orderId, { allowDecrease: true, sku: item.sku });
+            const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku });
             reverseSyncResult = result;
             if (result.updated_items.length > 0) {
                 await orderDetail.loadOrder();
@@ -571,6 +588,135 @@
             ]}
         />
 
+        <!-- 订单明细 - 占据整行 -->
+        {#key $localeStore}
+        <OrderItemsTable 
+            items={orderItems} 
+            type="sales"
+            currency={order.currency || 'CNY'}
+            labels={{
+                title: t('sales.items.title', $localeStore),
+                itemName: t('sales.table.itemName', $localeStore),
+                currentStock: $localeStore === 'en' ? 'Current Stock' : '现有库存',
+                quantity: t('sales.table.quantity', $localeStore),
+                shipped: $localeStore === 'en' ? 'In Shipment Sheet' : '已建发货单',
+                pendingShip: $localeStore === 'en' ? 'Pending Shipment Sheet' : '待建发货单',
+                unitPrice: t('sales.table.unitPrice', $localeStore),
+                subtotal: t('sales.table.subtotal', $localeStore),
+                status: t('sales.table.status', $localeStore),
+                completed: t('sales.table.completed', $localeStore),
+                partial: t('sales.table.partial', $localeStore),
+                pending: t('sales.table.pending', $localeStore),
+                noItems: t('sales.msg.noItems', $localeStore),
+            }}
+            onReverseSync={reverseSyncItem}
+            reverseSyncLoading={reverseSyncLoading}
+        />
+
+        {#if reverseSyncError}
+            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                ⚠️ {reverseSyncError}
+            </div>
+        {/if}
+        {#if reverseSyncResult}
+            <div class="mb-4 p-3 rounded-lg text-sm {reverseSyncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
+                ✅ {reverseSyncResult.message}
+                {#if reverseSyncResult.updated_items.length > 0}
+                    <ul class="mt-2 space-y-1">
+                        {#each reverseSyncResult.updated_items as item}
+                            <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
+                        {/each}
+                    </ul>
+                {/if}
+            </div>
+        {/if}
+        {/key}
+
+        <!-- 生成发货单按钮 -->
+        {#if ['confirmed', 'partial'].includes(order.status)}
+            <div class="my-6">
+                {#key $localeStore}
+                <button
+                    type="button"
+                    class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
+                >
+                    +{t('sales.btn.generateShipment', $localeStore)}
+                </button>
+                {/key}
+            </div>
+        {/if}
+
+        <!-- 关联发货单 - 单独一行 -->
+        {#if order.shipments && order.shipments.length > 0}
+            <div class="bg-white rounded-lg p-6 shadow mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {t('sales.shipment.title', $localeStore)} ({order.shipments.length})
+                    </h3>
+                    <button
+                        type="button"
+                        class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onclick={syncQuantities}
+                        disabled={syncLoading}
+                        title="根据发货单明细汇总数量，向上对齐订单行的订购数量（只增不减）"
+                    >
+                        {#if syncLoading}
+                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            同步中...
+                        {:else}
+                            🔄 同步订单数量
+                        {/if}
+                    </button>
+                </div>
+
+                <!-- 同步结果反馈 -->
+                {#if syncError}
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                        ⚠️ {syncError}
+                    </div>
+                {/if}
+                {#if syncResult}
+                    <div class="mb-4 p-3 rounded-lg text-sm {syncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
+                        ✅ {syncResult.message}
+                        {#if syncResult.updated_items.length > 0}
+                            <ul class="mt-2 space-y-1">
+                                {#each syncResult.updated_items as item}
+                                    <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
+                                {/each}
+                            </ul>
+                        {/if}
+                    </div>
+                {/if}
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {#each order.shipments as shipment}
+                        <a 
+                            href="/customer/shipment/{shipment.id}" 
+                            class="block border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 cursor-pointer transition-all"
+                        >
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-gray-900">
+                                    {shipment.shipment_no}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
+                                    {getShipmentStatusText(shipment.status, $localeStore)}
+                                </span>
+                            </div>
+                            <div class="flex flex-col gap-1 text-sm text-gray-600">
+                                <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
+                                <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
+                            </div>
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+
+        <!-- 收款信息 -->
         <div class="bg-white rounded-lg p-6 shadow mb-6">
             <div class="flex flex-col gap-2 mb-4 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -744,141 +890,6 @@
         {/key}
 
         <!-- 订单明细 - 占据整行 -->
-        {#key $localeStore}
-        <OrderItemsTable 
-            items={order.items || []} 
-            type="sales"
-            currency={order.currency || 'CNY'}
-            labels={{
-                title: t('sales.items.title', $localeStore),
-                itemName: t('sales.table.itemName', $localeStore),
-                currentStock: $localeStore === 'en' ? 'Current Stock' : '现有库存',
-                quantity: t('sales.table.quantity', $localeStore),
-                shipped: t('sales.table.shipped', $localeStore),
-                pendingShip: t('sales.table.pendingShip', $localeStore),
-                unitPrice: t('sales.table.unitPrice', $localeStore),
-                subtotal: t('sales.table.subtotal', $localeStore),
-                status: t('sales.table.status', $localeStore),
-                completed: t('sales.table.completed', $localeStore),
-                partial: t('sales.table.partial', $localeStore),
-                pending: t('sales.table.pending', $localeStore),
-                noItems: t('sales.msg.noItems', $localeStore),
-            }}
-            onReverseSync={reverseSyncItem}
-            reverseSyncLoading={reverseSyncLoading}
-        />
-
-        {#if reverseSyncError}
-            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                ⚠️ {reverseSyncError}
-            </div>
-        {/if}
-        {#if reverseSyncResult}
-            <div class="mb-4 p-3 rounded-lg text-sm {reverseSyncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
-                ✅ {reverseSyncResult.message}
-                {#if reverseSyncResult.updated_items.length > 0}
-                    <ul class="mt-2 space-y-1">
-                        {#each reverseSyncResult.updated_items as item}
-                            <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
-                        {/each}
-                    </ul>
-                {/if}
-            </div>
-        {/if}
-        {/key}
-
-        <!-- 生成发货单按钮 -->
-        {#if ['confirmed', 'partial'].includes(order.status)}
-            <div class="my-6">
-                {#key $localeStore}
-                <button
-                    type="button"
-                    class="w-full py-3 px-4 text-base font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                    onclick={() => goto(`/customer/shipment/add?order_id=${order.id}`)}
-                >
-                    +{t('sales.btn.generateShipment', $localeStore)}
-                </button>
-                {/key}
-            </div>
-        {/if}
-
-        <!-- 关联发货单 - 单独一行 -->
-        {#if order.shipments && order.shipments.length > 0}
-            <div class="bg-white rounded-lg p-6 shadow mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">
-                        {t('sales.shipment.title', $localeStore)} ({order.shipments.length})
-                    </h3>
-                    <button
-                        type="button"
-                        class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        onclick={syncQuantities}
-                        disabled={syncLoading}
-                        title="根据发货单明细汇总数量，向上对齐订单行的订购数量（只增不减）"
-                    >
-                        {#if syncLoading}
-                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                            同步中...
-                        {:else}
-                            🔄 同步订单数量
-                        {/if}
-                    </button>
-                </div>
-
-                <!-- 同步结果反馈 -->
-                {#if syncError}
-                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                        ⚠️ {syncError}
-                    </div>
-                {/if}
-                {#if syncResult}
-                    <div class="mb-4 p-3 rounded-lg text-sm {syncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
-                        ✅ {syncResult.message}
-                        {#if syncResult.updated_items.length > 0}
-                            <ul class="mt-2 space-y-1">
-                                {#each syncResult.updated_items as item}
-                                    <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
-                                {/each}
-                            </ul>
-                        {/if}
-                    </div>
-                {/if}
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {#each order.shipments as shipment}
-                        <a 
-                            href="/customer/shipment/{shipment.id}" 
-                            class="block border border-gray-200 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 cursor-pointer transition-all"
-                        >
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium text-gray-900">
-                                    {shipment.shipment_no}
-                                </span>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
-                                    {getShipmentStatusText(shipment.status, $localeStore)}
-                                </span>
-                            </div>
-                            <div class="flex flex-col gap-1 text-sm text-gray-600">
-                                <span>{t('sales.shipment.packageCount', $localeStore)}: {shipment.total_packages}</span>
-                                <span>{new Date(shipment.created_at).toLocaleString($localeStore === 'zh' ? 'zh-CN' : 'en-US')}</span>
-                            </div>
-                        </a>
-                    {/each}
-                </div>
-            </div>
-        {/if}
-
-        <!-- 备注 -->
-        <OrderNotesCard
-            notes={order.notes}
-            internal_notes={order.internal_notes}
-            title={t('sales.notes.title', $localeStore)}
-            notesLabel={t('sales.field.notes', $localeStore)}
-            internalNotesLabel={t('sales.field.internalNotes', $localeStore)}
-        />
     {/if}
 </div>
 

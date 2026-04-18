@@ -327,13 +327,13 @@
                             </td>
                             {#if onReverseSync && type === 'sales'}
                                 <td class="p-3 text-center border-b border-gray-100">
-                                    {#if section.type !== 'parent' && shipped < safeParseFloat(item.quantity)}
+                                    {#if section.type !== 'parent' && shipped > safeParseFloat(item.quantity)}
                                         <button
                                             type="button"
                                             class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                             onclick={() => onReverseSync(item)}
                                             disabled={reverseSyncLoading[item.sku]}
-                                            title="将订单数量同步为已发货数量（只可减少）"
+                                            title="将订单数量同步为发货单数量（只可增大）"
                                         >
                                             {#if reverseSyncLoading[item.sku]}
                                                 <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

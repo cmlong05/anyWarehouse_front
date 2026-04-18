@@ -1,55 +1,58 @@
 <script lang="ts">
+    import AddressInfo from '$lib/components/AddressInfo.svelte';
+
     interface Props {
-        address: string;
-        contactPerson: string;
-        contactPhone: string;
+        address?: string;
+        contactPerson?: string;
+        contactPhone?: string;
+        companyName?: string;
+        paymentTerms?: string;
+        email?: string;
+        mobile?: string;
+        taxNumber?: string;
+        country?: string;
+        province?: string;
+        city?: string;
+        district?: string;
+        postalCode?: string;
+        detailAddress2?: string;
+        remark?: string;
     }
     
     let { 
         address = $bindable(), 
         contactPerson = $bindable(), 
-        contactPhone = $bindable() 
+        contactPhone = $bindable(),
+        companyName = $bindable(),
+        paymentTerms = $bindable(),
+        email = $bindable(),
+        mobile = $bindable(),
+        taxNumber = $bindable(),
+        country = $bindable(),
+        province = $bindable(),
+        city = $bindable(),
+        district = $bindable(),
+        postalCode = $bindable(),
+        detailAddress2 = $bindable(),
+        remark = $bindable(),
     }: Props = $props();
 </script>
 
-<div class="bg-gray-50 rounded-lg p-4">
-    <span class="text-sm text-gray-700 font-bold mb-2 block">📤 收货信息</span>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="mb-0">
-            <label class="block mb-1" for="shippingAddress">
-                <span class="text-xs text-gray-700">收货地址</span>
-            </label>
-            <input 
-                id="shippingAddress"
-                type="text" 
-                class="w-full py-1.5 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" 
-                bind:value={address}
-                placeholder="输入收货地址"
-            />
-        </div>
-        <div class="mb-0">
-            <label class="block mb-1" for="contactPerson">
-                <span class="text-xs text-gray-700">联系人</span>
-            </label>
-            <input 
-                id="contactPerson"
-                type="text" 
-                class="w-full py-1.5 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" 
-                bind:value={contactPerson}
-                placeholder="输入联系人"
-            />
-        </div>
-        <div class="mb-0">
-            <label class="block mb-1" for="contactPhone">
-                <span class="text-xs text-gray-700">联系电话</span>
-            </label>
-            <input 
-                id="contactPhone"
-                type="text" 
-                class="w-full py-1.5 px-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-blue-500" 
-                bind:value={contactPhone}
-                placeholder="输入联系电话"
-            />
-        </div>
-    </div>
-</div>
+<AddressInfo
+    title="📤 收货信息"
+    shippingAddress={address}
+    contactPerson={contactPerson}
+    contactPhone={contactPhone}
+    companyName={companyName}
+    paymentTerms={paymentTerms}
+    email={email}
+    mobile={mobile}
+    taxNumber={taxNumber}
+    country={country}
+    province={province}
+    city={city}
+    district={district}
+    postalCode={postalCode}
+    detailAddress2={detailAddress2}
+    remark={remark}
+/>

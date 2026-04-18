@@ -10,6 +10,17 @@
     }
     
     let { items, onRemove, onClear, onFillAll }: Props = $props();
+
+    function formatStock(stock: number | null): string {
+        return stock !== null ? stock.toFixed(0) : '-';
+    }
+
+    function getStockClass(stock: number | null, quantityPlan: number): string {
+        if (stock === null) return 'text-gray-400';
+        if (stock < quantityPlan) return 'text-red-600 font-semibold';
+        if (stock > 0) return 'text-blue-700 font-medium';
+        return 'text-gray-400';
+    }
 </script>
 
 <div class="p-2">
@@ -29,48 +40,48 @@
             <p class="text-sm mt-1">点击"添加"按钮将商品加入发货计划</p>
         </div>
     {:else}
-        <table class="w-full">
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-3 py-2 text-left font-semibold text-gray-700">SKU</th>
+                    <th class="px-3 py-2 text-left font-semibold text-gray-700">商品名称</th>
+                    <th class="px-3 py-2 text-right font-semibold text-gray-700">库存</th>
+                    <th class="px-3 py-2 text-right font-semibold text-gray-700">待建发货单</th>
+                    <th class="px-3 py-2 text-right font-semibold text-blue-700">本次计划</th>
+                    <th class="px-3 py-2 text-center font-semibold text-gray-700">操作</th>
+                </tr>
+            </thead>
             <tbody>
                 {#each items as item}
-                    <tr>
-                        <td class="py-2">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1 min-w-0">
-                                    <span class="font-mono text-xs text-gray-500">{item.sku}</span>
-                                    <div class="font-medium text-sm truncate">{item.itemName}</div>
-                                </div>
-                                <button 
-                                    type="button"
-                                    class="p-1 border-0 bg-transparent cursor-pointer text-red-600 hover:bg-gray-100 rounded"
-                                    onclick={() => onRemove(item.id)}
-                                    aria-label="移除商品"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                                <span>订购: {item.quantityOrdered.toFixed(0)}</span>
-                                <span>已发: {item.quantityShipped.toFixed(0)}</span>
-                                {#if item.quantityPrepared > 0}
-                                    <span class="text-amber-500">已预备: {item.quantityPrepared.toFixed(0)}</span>
-                                {/if}
-                                <span class="text-red-600">可发: {item.quantityPendingReal.toFixed(0)}</span>
-                            </div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <span class="text-xs text-gray-500">本次计划:</span>
+                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                        <td class="px-3 py-3 align-top font-mono text-xs text-gray-500">{item.sku}</td>
+                        <td class="px-3 py-3 align-top text-gray-900">{item.itemName}</td>
+                        <td class="px-3 py-3 align-top text-right {getStockClass(item.currentStock ?? null, item.quantityPlan)}">
+                            {formatStock(item.currentStock ?? null)}
+                        </td>
+                        <td class="px-3 py-3 align-top text-right text-gray-900 font-semibold">{item.quantityPendingReal.toFixed(0)}</td>
+                        <td class="px-3 py-3 align-top text-right">
+                            <div class="flex items-center justify-end gap-2">
                                 <NumberStepper
                                     bind:value={item.quantityPlan}
                                     step={1}
                                     decimalPlaces={0}
                                     size="sm"
                                 />
-                                <span class="text-xs text-gray-400">/ 建议最大 {item.quantityPendingReal.toFixed(0)}</span>
-                                {#if item.quantityPlan > item.quantityPendingReal}
-                                    <span class="text-xs text-amber-500" title="超过可发数量">⚠️ 超发</span>
-                                {/if}
                             </div>
+                            {#if item.quantityPlan > item.quantityPendingReal}
+                                <div class="mt-1 text-right text-xs text-amber-500">⚠️ 超发</div>
+                            {/if}
+                        </td>
+                        <td class="px-3 py-3 align-top text-center">
+                            <button
+                                type="button"
+                                class="text-red-600 hover:text-red-800 text-sm"
+                                onclick={() => onRemove(item.id)}
+                                aria-label="移除商品"
+                            >
+                                移除
+                            </button>
                         </td>
                     </tr>
                 {/each}

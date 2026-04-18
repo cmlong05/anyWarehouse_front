@@ -3,13 +3,29 @@
     import { safeParseFloat } from '$lib/utils';
     import Plus from 'lucide-svelte/icons/plus';
 
+    interface SalesOrderItemWithStock extends SalesOrderItem {
+        item_detail?: SalesOrderItem['item_detail'] & {
+            total_storage?: number;
+        };
+    }
+
     interface Props {
-        items: SalesOrderItem[];
-        onAdd: (item: SalesOrderItem) => void;
+        items: SalesOrderItemWithStock[];
+        onAdd: (item: SalesOrderItemWithStock) => void;
         onAddAll?: () => void;
     }
     
     let { items, onAdd, onAddAll }: Props = $props();
+
+    function getCurrentStock(item: SalesOrderItemWithStock): number | null {
+        const stock = item.item_detail?.total_storage;
+        return typeof stock === 'number' ? stock : null;
+    }
+
+    function isStockInsufficient(currentStock: number | null, pending: number): boolean {
+        if (currentStock === null) return false;
+        return pending > 0 && currentStock < pending;
+    }
 </script>
 
 <div class="p-2">
@@ -31,22 +47,28 @@
             <thead>
                 <tr>
                     <th class="text-left">SKU</th>
-                    <th class="text-left">商品名称</th>
-                    <th class="text-right w-16">订购</th>
-                    <th class="text-right w-16">已发</th>
-                    <th class="text-right w-16 text-red-600">待发</th>
+                    <th class="text-left">名称</th>
+                    <th class="text-right w-20">库存</th>
+                    <th class="text-right w-24">待建发货单</th>
                     <th class="text-center w-16">操作</th>
                 </tr>
             </thead>
             <tbody>
                 {#each items as item}
                     {@const pending = item.quantity_pending_real || 0}
+                    {@const currentStock = getCurrentStock(item)}
+                    {@const stockInsufficient = isStockInsufficient(currentStock, pending)}
                     <tr>
                         <td class="font-mono text-xs">{item.sku}</td>
                         <td>{item.item_name}</td>
-                        <td class="text-right">{safeParseFloat(item.quantity).toFixed(0)}</td>
-                        <td class="text-right text-gray-500">{safeParseFloat(item.quantity_shipped).toFixed(0)}</td>
-                        <td class="text-right font-bold text-red-600">{pending.toFixed(0)}</td>
+                        <td class="text-right {stockInsufficient ? 'text-red-600 font-semibold' : currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
+                            {#if currentStock !== null}
+                                {currentStock.toFixed(0)}
+                            {:else}
+                                -
+                            {/if}
+                        </td>
+                        <td class="text-right font-bold text-gray-900">{pending.toFixed(0)}</td>
                         <td class="text-center">
                             <button type="button" class="text-blue-600 hover:text-blue-800 text-sm" onclick={() => onAdd(item)}>添加</button>
                         </td>

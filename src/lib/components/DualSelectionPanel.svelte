@@ -10,6 +10,7 @@
         selectedEmptyText?: string;
         showAvailable?: boolean;
         showSelected?: boolean;
+        layout?: 'horizontal' | 'vertical';
         available?: Snippet;
         selected?: Snippet;
     }
@@ -23,12 +24,13 @@
         selectedEmptyText = '点击左侧"添加"按钮选择项目',
         showAvailable = true,
         showSelected = true,
+        layout = 'horizontal',
         available,
         selected
     }: Props = $props();
 </script>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 gap-6 {layout === 'horizontal' ? 'lg:grid-cols-2' : ''}">
     {#if showAvailable}
         <div class="bg-white rounded-lg p-4 border border-gray-200">
             <h4 class="flex justify-between items-center m-0 mb-4 text-base font-semibold text-gray-700 pb-3 border-b border-gray-200">

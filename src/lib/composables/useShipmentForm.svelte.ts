@@ -1,9 +1,8 @@
 /**
  * 发货单表单共享逻辑
  */
-import { shipmentAPI } from '$lib/api';
-import { salesOrderAPI } from '$lib/api';
-import type { SalesOrderBrief, SalesOrderItem } from '$lib/index';
+import { shipmentAPI, salesOrderAPI, customerAPI } from '$lib/api';
+import type { CustomerAddress, SalesOrderBrief, SalesOrderItem } from '$lib/index';
 import type { Shipment, ShipmentStatus, ShipmentCreateRequest } from '$lib/shipmentTypes';
 import { safeParseFloat } from '$lib/utils';
 
@@ -17,6 +16,7 @@ export interface ShipmentPlanItem {
     quantityPrepared: number;
     quantityPendingReal: number;
     quantityPlan: number;
+    currentStock?: number | null;
 }
 
 export interface UseShipmentFormOptions {
@@ -34,7 +34,22 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
     let contactPerson = $state('');
     let contactPhone = $state('');
     let notes = $state('');
+    let companyName = $state('');
+    let paymentTerms = $state('');
+    let email = $state('');
+    let mobile = $state('');
+    let taxNumber = $state('');
+    let country = $state('');
+    let province = $state('');
+    let city = $state('');
+    let district = $state('');
+    let postalCode = $state('');
+    let detailAddress2 = $state('');
+    let remark = $state('');
+    let customerAddresses = $state<CustomerAddress[]>([]);
+    let shippingAddressesLoading = $state(false);
     let selectedOrderId = $state<number | null>(null);
+    let orderLocked = $state(false);
 
     // 计划明细
     let planItems = $state<ShipmentPlanItem[]>([]);
@@ -58,7 +73,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
     async function init() {
         try {
             await loadOrders();
-            
+
+            orderLocked = options.mode === 'create' && options.initialOrderId != null;
             if (options.mode === 'edit' && options.shipmentId) {
                 await loadShipment(options.shipmentId);
             } else {
@@ -118,7 +134,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                         quantityShipped: Math.round(qtyShipped),
                         quantityPrepared: Math.round(safeParseFloat(orderItem?.quantity_prepared)),
                         quantityPendingReal: Math.round(editableQty > 0 ? editableQty : 0),
-                        quantityPlan: Math.round(editableQty > 0 ? editableQty : 0)
+                        quantityPlan: Math.round(editableQty > 0 ? editableQty : 0),
+                        currentStock: orderItem?.item_detail?.total_storage ?? null,
                     };
                 });
 
@@ -126,12 +143,108 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         }
     }
 
+    function getDefaultPlanQuantity(pendingReal: number, currentStock: number | null | undefined): number {
+        if (currentStock == null) {
+            return pendingReal;
+        }
+        return Math.min(pendingReal, Math.max(0, Math.round(currentStock)));
+    }
+
+    function normalizeAddressValue(value: string | null | undefined): string {
+        return (value || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function formatShippingAddress(address: string | null | undefined): string;
+    function formatShippingAddress(address: CustomerAddress): string;
+    function formatShippingAddress(address: string | CustomerAddress | null | undefined): string {
+        if (!address) return '';
+        if (typeof address === 'string') {
+            return normalizeAddressValue(address);
+        }
+
+        return normalizeAddressValue([
+            address.country,
+            address.province,
+            address.city,
+            address.district,
+            address.detail_address,
+            address.detail_address2,
+        ].filter(Boolean).join(' '));
+    }
+
+    function findMatchingShippingAddress(order: { shipping_address?: string; contact_person?: string; contact_phone?: string } | null, addresses: CustomerAddress[]): CustomerAddress | null {
+        if (!order || addresses.length === 0) return null;
+
+        const normalizedOrderAddress = normalizeAddressValue(order.shipping_address);
+        const normalizedContactPerson = normalizeAddressValue(order.contact_person);
+        const normalizedContactPhone = normalizeAddressValue(order.contact_phone);
+
+        return (
+            addresses.find((address) =>
+                formatShippingAddress(address) === normalizedOrderAddress &&
+                normalizeAddressValue(address.contact_name) === normalizedContactPerson &&
+                normalizeAddressValue(address.phone) === normalizedContactPhone
+            ) ||
+            addresses.find((address) =>
+                formatShippingAddress(address) === normalizedOrderAddress &&
+                normalizeAddressValue(address.contact_name) === normalizedContactPerson
+            ) ||
+            addresses.find((address) => formatShippingAddress(address) === normalizedOrderAddress) ||
+            null
+        );
+    }
+
+    async function loadCustomerAddresses(customerId: number) {
+        shippingAddressesLoading = true;
+        try {
+            customerAddresses = await customerAPI.getAddresses(customerId);
+        } catch (err: any) {
+            customerAddresses = [];
+        } finally {
+            shippingAddressesLoading = false;
+        }
+    }
+
     async function loadOrderItems(orderId: number) {
         const orderDetail = await salesOrderAPI.get(orderId);
-        
+
         if (!shippingAddress) shippingAddress = orderDetail.shipping_address || '';
         if (!contactPerson) contactPerson = orderDetail.contact_person || '';
         if (!contactPhone) contactPhone = orderDetail.contact_phone || '';
+        companyName = orderDetail.company_name || companyName;
+        paymentTerms = orderDetail.payment_terms || paymentTerms;
+
+        if (orderDetail.customer) {
+            await loadCustomerAddresses(orderDetail.customer);
+        } else {
+            customerAddresses = [];
+        }
+
+        const matchedAddress = findMatchingShippingAddress(orderDetail, customerAddresses);
+        if (matchedAddress) {
+            email = matchedAddress.email || '';
+            mobile = matchedAddress.mobile || '';
+            taxNumber = matchedAddress.tax_number || '';
+            country = matchedAddress.country || '';
+            province = matchedAddress.province || '';
+            city = matchedAddress.city || '';
+            district = matchedAddress.district || '';
+            postalCode = matchedAddress.postal_code || '';
+            detailAddress2 = matchedAddress.detail_address2 || '';
+            remark = matchedAddress.remark || '';
+            companyName = matchedAddress.company || companyName;
+        } else {
+            email = '';
+            mobile = '';
+            taxNumber = '';
+            country = '';
+            province = '';
+            city = '';
+            district = '';
+            postalCode = '';
+            detailAddress2 = '';
+            remark = '';
+        }
 
         availableOrderItems = orderDetail.items.map(item => ({
             ...item,
@@ -160,6 +273,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         if (alreadyAdded) return;
 
         const pendingReal = orderItem.quantity_pending_real || 0;
+        const currentStock = orderItem.item_detail?.total_storage ?? null;
+        const defaultPlanQty = getDefaultPlanQuantity(Math.round(pendingReal), currentStock);
         
         const planItem: ShipmentPlanItem = {
             id: `plan_${orderItem.id}_${Date.now()}`,
@@ -170,7 +285,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
             quantityShipped: Math.round(safeParseFloat(orderItem.quantity_shipped)),
             quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
             quantityPendingReal: Math.round(pendingReal),
-            quantityPlan: Math.round(pendingReal)
+            quantityPlan: defaultPlanQty,
+            currentStock,
         };
 
         planItems = [...planItems, planItem];
@@ -181,6 +297,9 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
             .filter(orderItem => !planItems.some(p => p.orderItemId === orderItem.id))
             .map(orderItem => {
                 const pendingReal = orderItem.quantity_pending_real || 0;
+                const currentStock = orderItem.item_detail?.total_storage ?? null;
+                const defaultPlanQty = getDefaultPlanQuantity(Math.round(pendingReal), currentStock);
+
                 return {
                     id: `plan_${orderItem.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                     orderItemId: orderItem.id,
@@ -190,7 +309,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     quantityShipped: Math.round(safeParseFloat(orderItem.quantity_shipped)),
                     quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
                     quantityPendingReal: Math.round(pendingReal),
-                    quantityPlan: Math.round(pendingReal)
+                    quantityPlan: defaultPlanQty,
+                    currentStock,
                 };
             });
         
@@ -208,7 +328,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
     function fillAllPending() {
         planItems = planItems.map(item => ({
             ...item,
-            quantityPlan: item.quantityPendingReal
+            quantityPlan: getDefaultPlanQuantity(item.quantityPendingReal, item.currentStock ?? null)
         }));
     }
 
@@ -282,10 +402,37 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         set contactPerson(value) { contactPerson = value; },
         get contactPhone() { return contactPhone; },
         set contactPhone(value) { contactPhone = value; },
+        get companyName() { return companyName; },
+        set companyName(value) { companyName = value; },
+        get paymentTerms() { return paymentTerms; },
+        set paymentTerms(value) { paymentTerms = value; },
+        get email() { return email; },
+        set email(value) { email = value; },
+        get mobile() { return mobile; },
+        set mobile(value) { mobile = value; },
+        get taxNumber() { return taxNumber; },
+        set taxNumber(value) { taxNumber = value; },
+        get country() { return country; },
+        set country(value) { country = value; },
+        get province() { return province; },
+        set province(value) { province = value; },
+        get city() { return city; },
+        set city(value) { city = value; },
+        get district() { return district; },
+        set district(value) { district = value; },
+        get postalCode() { return postalCode; },
+        set postalCode(value) { postalCode = value; },
+        get detailAddress2() { return detailAddress2; },
+        set detailAddress2(value) { detailAddress2 = value; },
+        get remark() { return remark; },
+        set remark(value) { remark = value; },
+        get customerAddresses() { return customerAddresses; },
+        get shippingAddressesLoading() { return shippingAddressesLoading; },
         get notes() { return notes; },
         set notes(value) { notes = value; },
         get selectedOrderId() { return selectedOrderId; },
         set selectedOrderId(value) { selectedOrderId = value; },
+        get orderLocked() { return orderLocked; },
         get planItems() { return planItems; },
         get availableOrderItems() { return availableOrderItems; },
         get availableOrders() { return availableOrders; },

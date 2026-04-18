@@ -737,7 +737,7 @@ export interface SalesOrderItem {
     id: number;
     line_number: number;
     item: number | null;
-    item_detail?: BaseItem & { image?: string; weight?: string };
+    item_detail?: BaseItem & { image?: string; weight?: string; total_storage?: number };
     sku: string;
     item_name: string;
     item_name_en?: string;

@@ -43,12 +43,13 @@
             bind:selectedOrderId={form.selectedOrderId}
             availableOrders={form.availableOrders}
             mode={form.mode}
+            orderLocked={form.orderLocked}
             onOrderSelect={form.onOrderSelect}
         />
 
         {#if form.selectedOrderId}
-            <!-- 双栏布局 -->
             <DualSelectionPanel
+                layout="vertical"
                 availableTitle="📋 订单明细"
                 availableSubtitle={`待发: ${form.totalPending.toFixed(0)}${form.totalPrepared > 0 ? ` (已预备: ${form.totalPrepared.toFixed(0)})` : ''}`}
                 selectedTitle="📝 发货计划明细"
@@ -77,6 +78,18 @@
             bind:address={form.shippingAddress}
             bind:contactPerson={form.contactPerson}
             bind:contactPhone={form.contactPhone}
+            companyName={form.companyName}
+            paymentTerms={form.paymentTerms}
+            email={form.email}
+            mobile={form.mobile}
+            taxNumber={form.taxNumber}
+            country={form.country}
+            province={form.province}
+            city={form.city}
+            district={form.district}
+            postalCode={form.postalCode}
+            detailAddress2={form.detailAddress2}
+            remark={form.remark}
         />
 
         <!-- 备注 -->
