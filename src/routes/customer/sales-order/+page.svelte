@@ -43,6 +43,7 @@
         { key: 'order_number', title: t('sales.field.orderNumber', $localeStore) },
         { key: 'customer_name', title: t('sales.field.customer', $localeStore) },
         { key: 'status', title: t('sales.field.status', $localeStore) },
+        { key: 'payment_status', title: $localeStore === 'zh' ? '付款状态' : 'Payment Status' },
         { key: 'priority', title: t('sales.field.priority', $localeStore) },
         { key: 'order_date', title: t('sales.field.orderDate', $localeStore) },
         { key: 'expected_delivery', title: t('sales.field.expectedDelivery', $localeStore) },
@@ -57,7 +58,7 @@
             pending: 'bg-yellow-100 text-yellow-700',
             approved: 'bg-blue-100 text-blue-700',
             confirmed: 'bg-indigo-100 text-indigo-700',
-            partial: 'bg-green-100 text-green-700',
+            partial: 'bg-amber-100 text-amber-700',
             shipped: 'bg-emerald-100 text-emerald-700',
             delivered: 'bg-purple-100 text-purple-700',
             cancelled: 'bg-red-100 text-red-700',
@@ -84,6 +85,26 @@
     // 优先级标签
     function getPriorityLabel(priority: string): string {
         return getPriorityText(priority, $localeStore);
+    }
+
+    // 付款状态标签
+    function getPaymentStatusLabel(status: string | undefined): string {
+        if ($localeStore === 'en') {
+            if (status === 'paid') return 'Paid';
+            if (status === 'partial') return 'Partially Paid';
+            return 'Unpaid';
+        }
+
+        if (status === 'paid') return '已收款';
+        if (status === 'partial') return '部分收款';
+        return '未收款';
+    }
+
+    // 付款状态徽章样式
+    function getPaymentStatusClass(status: string | undefined): string {
+        if (status === 'paid') return 'bg-green-100 text-green-700';
+        if (status === 'partial') return 'bg-amber-100 text-amber-700';
+        return 'bg-gray-100 text-gray-700';
     }
 
     // 加载客户列表
@@ -279,6 +300,10 @@
                 {:else if column.key === 'status'}
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusClass(value as string)}">
                         {getStatusLabel(value as string)}
+                    </span>
+                {:else if column.key === 'payment_status'}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPaymentStatusClass(value as string | undefined)}">
+                        {getPaymentStatusLabel(value as string | undefined)}
                     </span>
                 {:else if column.key === 'priority'}
                     {#if getPriorityClass(value as string)}
