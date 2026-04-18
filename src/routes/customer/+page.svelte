@@ -14,6 +14,8 @@
     let searchQuery = $state('');
     let levelFilter = $state('');
     let statusFilter = $state('');
+    let sortKey = $state<keyof Customer>('code');
+    let sortDirection = $state<'asc' | 'desc'>('asc');
     
     const levelOptions = [
         { value: '', label: '全部等级' },
@@ -30,13 +32,32 @@
     
     // 表格列定义
     const columns = [
-        { key: 'code', title: '客户编号', width: '120px' },
-        { key: 'name', title: '客户名称' },
-        { key: 'contact_name', title: '联系人' },
-        { key: 'phone', title: '电话' },
-        { key: 'level', title: '等级', width: '100px' },
-        { key: 'status', title: '状态', width: '100px' },
+        { key: 'code', title: '客户编号', width: '120px', sortable: true },
+        { key: 'name', title: '客户名称', sortable: true },
+        { key: 'contact_name', title: '联系人', sortable: true },
+        { key: 'phone', title: '电话', sortable: true },
+        { key: 'level', title: '等级', width: '100px', sortable: true },
+        { key: 'status', title: '状态', width: '100px', sortable: true },
     ];
+
+    const sortedCustomers = $derived.by(() => {
+        const list = [...customers];
+        const direction = sortDirection === 'asc' ? 1 : -1;
+
+        return list.sort((a, b) => {
+            const rawA = a[sortKey] ?? '';
+            const rawB = b[sortKey] ?? '';
+
+            if (typeof rawA === 'number' && typeof rawB === 'number') {
+                return (rawA - rawB) * direction;
+            }
+
+            return String(rawA).localeCompare(String(rawB), 'zh-CN', {
+                numeric: true,
+                sensitivity: 'base'
+            }) * direction;
+        });
+    });
     
     // 等级徽章样式
     function getLevelClass(level: string): string {
@@ -81,6 +102,16 @@
         levelFilter = '';
         statusFilter = '';
         loadCustomers();
+    }
+
+    function toggleSort(key: keyof Customer) {
+        if (sortKey === key) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            return;
+        }
+
+        sortKey = key;
+        sortDirection = 'asc';
     }
     
     onMount(() => {
@@ -163,13 +194,34 @@
         </div>
     {:else}
         <DataTable
-            data={customers}
+            data={sortedCustomers}
             {columns}
             {loading}
             clickable={true}
             onRowClick={viewDetail}
             emptyText={searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}
         >
+            {#snippet headerCellRender({ column }: { column: { key: string; title: string; sortable?: boolean } })}
+                {#if column.sortable}
+                    <span
+                        role="button"
+                        tabindex="0"
+                        class="inline-flex items-center gap-1 text-gray-700 hover:text-gray-900 cursor-pointer select-none"
+                        onclick={() => toggleSort(column.key as keyof Customer)}
+                        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSort(column.key as keyof Customer)}
+                    >
+                        <span>{column.title}</span>
+                        {#if sortKey === (column.key as keyof Customer)}
+                            <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
+                        {:else}
+                            <span class="text-xs text-gray-300">↕</span>
+                        {/if}
+                    </span>
+                {:else}
+                    {column.title}
+                {/if}
+            {/snippet}
+
             {#snippet cellRender({ item, column, value }: { item: Customer; column: { key: string }; value: unknown })}
                 {#if column.key === 'code'}
                     <span class="font-mono text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{value}</span>
@@ -192,7 +244,7 @@
         </DataTable>
         
         <div class="mt-4 text-sm text-gray-500">
-            共 {customers.length} 个客户
+            共 {sortedCustomers.length} 个客户
         </div>
     {/if}
 </PageContainer>
