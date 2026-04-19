@@ -40,6 +40,7 @@
         sku: string;
         productName: string;
         quantity: number;
+        pendingQuantity: number;
     }
     let packagePreviewItems = $state<PackagePreviewItem[]>([]);
     let existingItems = $state<PackageItem[]>([]);
@@ -87,9 +88,10 @@
     const manualShipmentOptions = $derived(
         selectedShipmentIds.map(id => {
             const shipment = availableShipments.find(s => s.id === id);
+            const customerName = shipment?.order_detail?.customer_name;
             return {
                 value: id,
-                label: shipment ? shipment.shipment_no : `发货单 #${id}`
+                label: shipment ? `${shipment.shipment_no}${customerName ? ` (${customerName})` : ''}` : `发货单 #${id}`
             };
         })
     );
@@ -118,6 +120,14 @@
     const totalAdded = $derived(() => {
         return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0);
     });
+
+    const invalidPreviewItems = $derived(() => {
+        return packagePreviewItems.filter(item => item.quantity > item.pendingQuantity);
+    });
+
+    function hasInvalidQuantities(): boolean {
+        return invalidPreviewItems().length > 0;
+    }
 
     $effect(() => { init(); });
 
@@ -162,7 +172,8 @@
                         itemId: item.item,
                         sku: item.sku,
                         productName: item.product_name,
-                        quantity: safeParseFloat(item.quantity)
+                        quantity: safeParseFloat(item.quantity),
+                        pendingQuantity: safeParseFloat(item.quantity)
                     };
                 });
             }
@@ -210,7 +221,8 @@
             itemId: item.item,
             sku: item.sku, 
             productName: item.product_name, 
-            quantity: safeParseFloat(item.quantity)
+            quantity: safeParseFloat(item.quantity),
+            pendingQuantity: safeParseFloat(item.quantity)
         }];
     }
     
@@ -260,7 +272,8 @@
             itemId: selectedItemId,
             sku: sku, 
             productName: productName, 
-            quantity: manualQuantity
+            quantity: manualQuantity,
+            pendingQuantity: manualQuantity
         }];
         
         // 清空表单
@@ -361,7 +374,8 @@
                     itemId: item.item,
                     sku: item.sku,
                     productName: item.product_name,
-                    quantity: safeParseFloat(item.quantity)
+                    quantity: safeParseFloat(item.quantity),
+                    pendingQuantity: safeParseFloat(item.quantity)
                 }];
             }
         }
@@ -408,8 +422,12 @@
                 
                 // 如果有多个发货单，逐个关联其他发货单
                 if (selectedShipmentIds.length > 1) {
+                    const itemShipmentIds = new Set(packagePreviewItems.map(item => item.shipmentId));
                     for (let i = 1; i < selectedShipmentIds.length; i++) {
-                        await packageAPI.addToShipment(result.id, selectedShipmentIds[i]);
+                        const shipmentId = selectedShipmentIds[i];
+                        if (!itemShipmentIds.has(shipmentId)) {
+                            await packageAPI.addToShipment(result.id, shipmentId);
+                        }
                     }
                 }
                 
@@ -492,9 +510,12 @@
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">关联发货单</h3>
             <div class="flex flex-col gap-2 max-h-[200px] overflow-y-auto border border-gray-300 rounded-lg p-2 bg-white">
                 {#each availableShipments as shipment}
-                    <label class="flex items-center gap-2 p-2 bg-gray-50 rounded cursor-pointer border border-transparent hover:bg-gray-200 hover:border-gray-400 transition-all duration-150">
+                    <label class="flex items-center gap-3 p-2 bg-gray-50 rounded cursor-pointer border border-transparent hover:bg-gray-200 hover:border-gray-400 transition-all duration-150">
                         <input type="checkbox" checked={selectedShipmentIds.includes(shipment.id)} onchange={(e) => onShipmentToggle(shipment.id, (e.target as HTMLInputElement).checked)} />
-                        <span>{shipment.shipment_no}</span>
+                        <span class="font-medium truncate">{shipment.shipment_no}</span>
+                        {#if shipment.order_detail?.customer_name}
+                            <span class="text-sm text-gray-500 truncate">-- {shipment.order_detail.customer_name}</span>
+                        {/if}
                     </label>
                 {/each}
             </div>
@@ -558,6 +579,7 @@
             
             {#if selectedShipmentIds.length > 0}
                 <DualSelectionPanel
+                    layout="vertical"
                     availableTitle="📋 发货单明细"
                     availableSubtitle={`待添加: ${formatNumber(totalPending())}`}
                     selectedTitle="📦 包裹内容"
@@ -612,16 +634,18 @@
                                         <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">发货单</th>
                                         <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
                                         <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品</th>
+                                        <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-20">待打包</th>
                                         <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-24">数量</th>
                                         <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {#each packagePreviewItems as item}
-                                        <tr class="hover:bg-gray-50">
+                                        <tr class="hover:bg-gray-50" class:bg-red-50={item.quantity > item.pendingQuantity}>
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
                                             <td class="p-2 border-b border-gray-200">{item.productName}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-gray-600">{formatNumber(item.pendingQuantity)}</td>
                                             <td class="text-right p-2 border-b border-gray-200">
                                                 <NumberStepper
                                                     bind:value={item.quantity}
@@ -640,6 +664,9 @@
                                     {/each}
                                 </tbody>
                             </table>
+                            {#if hasInvalidQuantities()}
+                                <div class="mt-3 text-sm text-red-600">部分商品数量超过待打包数量，请调整红色行的数量后再保存。</div>
+                            {/if}
                         {:else}
                             <div class="text-center p-12 text-gray-400 text-sm">
                                 <p>点击左侧"添加"按钮添加商品</p>
@@ -662,16 +689,18 @@
                                     <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">来源</th>
                                     <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
                                     <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品</th>
+                                    <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-20">待打包</th>
                                     <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-24">数量</th>
                                     <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {#each packagePreviewItems as item}
-                                    <tr class="hover:bg-gray-50">
+                                    <tr class="hover:bg-gray-50" class:bg-red-50={item.quantity > item.pendingQuantity}>
                                         <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
                                         <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
                                         <td class="p-2 border-b border-gray-200">{item.productName}</td>
+                                        <td class="text-right p-2 border-b border-gray-200 text-gray-600">{formatNumber(item.pendingQuantity)}</td>
                                         <td class="text-right p-2 border-b border-gray-200">
                                             <NumberStepper
                                                 bind:value={item.quantity}
@@ -690,6 +719,9 @@
                                 {/each}
                             </tbody>
                         </table>
+                        {#if hasInvalidQuantities()}
+                            <div class="mt-3 text-sm text-red-600">部分商品数量超过待打包数量，请调整红色行的数量后再保存。</div>
+                        {/if}
                     {:else}
                         <div class="text-center p-12 text-gray-400 text-sm">
                             <p>请使用上方表单添加商品</p>

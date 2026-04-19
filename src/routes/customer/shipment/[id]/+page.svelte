@@ -9,7 +9,7 @@
     import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
-    import { DeleteConfirmModal, LinkPackageModal, NewPackageModal } from '$lib/components/shipment';
+    import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
     import AddressInfo from '$lib/components/AddressInfo.svelte';
 
     let shipmentId = $derived(parseInt(page.params.id || '0'));
@@ -439,7 +439,7 @@
                         </button>
                         <button 
                             class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            onclick={() => shipmentDetail.openNewPackageModal()}
+                            onclick={() => window.location.href = `/customer/package/add?shipment_id=${shipmentDetail.shipment?.id || ''}`}
                         >
                             新建包裹
                         </button>
@@ -513,17 +513,6 @@
     onClose={() => { shipmentDetail.showLinkPackageModal = false; shipmentDetail.selectedPackageId = null; }}
     onLink={shipmentDetail.linkPackage}
     onSelect={(id) => shipmentDetail.selectedPackageId = id}
-/>
-
-<!-- 新建包裹弹窗 -->
-<NewPackageModal
-    show={shipmentDetail.showNewPackageModal}
-    shipmentId={shipmentDetail.shipment?.id || 0}
-    onClose={() => shipmentDetail.showNewPackageModal = false}
-    onSuccess={() => {
-        shipmentDetail.showNewPackageModal = false;
-        shipmentDetail.loadShipment();
-    }}
 />
 
 <style>

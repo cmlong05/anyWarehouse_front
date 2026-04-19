@@ -193,6 +193,7 @@ export interface PackageShipmentBrief {
     id: number;
     shipment_no: string;
     status: ShipmentStatus;
+    customer_name?: string;
 }
 
 /** 包裹 */

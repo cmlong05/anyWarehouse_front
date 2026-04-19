@@ -442,6 +442,10 @@
                                             <ShipmentStatusBadge status={shipment.status} />
                                         </span>
                                     </div>
+                                    <div>
+                                        <span class="text-gray-500">客户：</span>
+                                        <span class="text-gray-900">{shipment.customer_name || '-'}</span>
+                                    </div>
                                 </div>
                             </a>
                         {/each}
