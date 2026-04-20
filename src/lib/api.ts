@@ -62,8 +62,10 @@ export {
     TrackingNumberAPI,
     ShipmentAPI,
     PackageAPI,
+    ShipmentItemAPI,
     trackingNumberAPI,
     shipmentAPI,
+    shipmentItemAPI,
     packageAPI,
 } from './api/shipment';
 

@@ -130,6 +130,8 @@ export interface Shipment {
         total_amount?: string;
         currency?: string;
     };
+    is_synced?: boolean;
+    synced_at?: string;
     items?: ShipmentItem[];
     packages?: PackageBrief[];
     total_packages: number;

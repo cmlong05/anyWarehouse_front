@@ -18,17 +18,19 @@ export function getShipmentActions(locale: Locale = 'zh'): Record<string, Shipme
     return {
         draft: [
             { action: 'confirm', label: t('shipment.btn.confirm', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmConfirm', locale) || 'Confirm this shipment?' },
-            { action: 'sync', label: t('shipment.btn.sync', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
+            { action: 'sync', label: t('shipment.btn.syncPackage', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
         ],
         synced: [
             { action: 'confirm', label: t('shipment.btn.confirm', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmConfirm', locale) || 'Confirm this shipment?' },
-            { action: 'sync', label: t('shipment.btn.sync', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
+            { action: 'sync', label: t('shipment.btn.syncPackage', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
         ],
         confirmed: [
+            { action: 'sync', label: t('shipment.btn.sync', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
             { action: 'pack', label: t('shipment.btn.pack', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmPack', locale) || 'Confirm packing complete?' },
             { action: 'ship', label: t('shipment.btn.ship', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmShip', locale) || 'Confirm shipment?' },
         ],
         packed: [
+            { action: 'sync', label: t('shipment.btn.sync', locale), variant: 'outline', confirmMessage: t('shipment.msg.confirmSync', locale) || 'Sync items to packages?' },
             { action: 'ship', label: t('shipment.btn.ship', locale), variant: 'primary', confirmMessage: t('shipment.msg.confirmShip', locale) || 'Confirm shipment?' },
         ],
         shipped: [

@@ -3,9 +3,9 @@
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
-    import type { PackageItem } from '$lib/shipmentTypes';
+    import type { PackageItem, ShipmentItem } from '$lib/shipmentTypes';
     import type { SalesOrder } from '$lib';
-    import { salesOrderAPI } from '$lib/api';
+    import { salesOrderAPI, shipmentItemAPI } from '$lib/api';
     import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -23,6 +23,32 @@
             orderDetail = await salesOrderAPI.get(orderId);
         } catch (err) {
             orderDetail = null;
+        }
+    }
+
+    let lineSyncLoading = $state<Record<number, boolean>>({});
+    let lineSyncError = $state<string | null>(null);
+    let lineSyncMessage = $state<string | null>(null);
+
+    function canSyncLine(item: ShipmentItem): boolean {
+        const packed = safeParseFloat(item.quantity_packed || '0');
+        const planned = safeParseFloat(item.quantity);
+        return packed > 0 && packed !== planned;
+    }
+
+    async function syncShipmentItemRow(item: ShipmentItem) {
+        if (lineSyncLoading[item.id]) return;
+        lineSyncError = null;
+        lineSyncMessage = null;
+        lineSyncLoading = { ...lineSyncLoading, [item.id]: true };
+        try {
+            await shipmentItemAPI.sync(item.id);
+            await shipmentDetail.loadShipment();
+            lineSyncMessage = `SKU ${item.sku} 已同步`;
+        } catch (err: unknown) {
+            lineSyncError = err instanceof Error ? err.message : '同步失败，请重试';
+        } finally {
+            lineSyncLoading = { ...lineSyncLoading, [item.id]: false };
         }
     }
 
@@ -106,7 +132,6 @@
     }
 
     // 变体相关
-    import type { ShipmentItem } from '$lib/shipmentTypes';
     import { isVariantChild, getVariantParentId, getVariantAttributes } from '$lib/utils/variant';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
 
@@ -229,7 +254,7 @@
                     </button>
                 {/each}
                 
-                {#if shipmentDetail.shipment.status === 'draft' || shipmentDetail.shipment.status === 'synced'}
+                {#if ['draft', 'synced', 'confirmed'].includes(shipmentDetail.shipment.status)}
                     <button 
                         class="flex items-center p-2 text-gray-500 hover:text-blue-600 transition-colors"
                         onclick={shipmentDetail.goToEdit}
@@ -276,8 +301,11 @@
                     </div>
                     <div>
                         <span class="text-gray-500 text-sm block">状态</span>
-                        <p class="mt-1">
+                        <p class="mt-1 flex items-center gap-2">
                             <ShipmentStatusBadge status={shipment.status} />
+                            {#if shipment.is_synced}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">已同步</span>
+                            {/if}
                         </p>
                     </div>
                     <div>
@@ -341,6 +369,12 @@
             <!-- 发货计划明细 -->
             <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">发货计划明细</h2>
+                {#if lineSyncError}
+                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">⚠️ {lineSyncError}</div>
+                {/if}
+                {#if lineSyncMessage}
+                    <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ {lineSyncMessage}</div>
+                {/if}
                 {#if shipment.items?.length}
                     {@const sections = getGroupedSections(shipment.items)}
                     <div class="overflow-x-auto">
@@ -354,6 +388,7 @@
                                     <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">已打包</th>
                                     <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">待打包</th>
                                     <th class="text-center px-3 py-2.5 font-medium text-gray-700 w-20">状态</th>
+                                    <th class="text-center px-3 py-2.5 font-medium text-gray-700 w-24">操作</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -410,6 +445,26 @@
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">部分打包</span>
                                             {:else}
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">待打包</span>
+                                            {/if}
+                                        </td>
+                                        <td class="px-3 py-2.5 text-center">
+                                            {#if section.type !== 'parent' && canSyncLine(item)}
+                                                <button
+                                                    type="button"
+                                                    class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    onclick={() => syncShipmentItemRow(item)}
+                                                    disabled={lineSyncLoading[item.id]}
+                                                    title="按已封箱包裹数量同步此行计划数量"
+                                                >
+                                                    {#if lineSyncLoading[item.id]}
+                                                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                    {:else}
+                                                        🔄 同步
+                                                    {/if}
+                                                </button>
                                             {/if}
                                         </td>
                                     </tr>

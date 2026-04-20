@@ -202,6 +202,11 @@ export class ShipmentItemAPI extends BaseAPI<ShipmentItem, ShipmentItemCreateReq
     constructor() {
         super('/customer/shipment-items/');
     }
+
+    /** 同步单条发货明细计划数量 */
+    async sync(id: number): Promise<ShipmentItem> {
+        return this.client.post<ShipmentItem>(`${this.basePath}${id}/sync/`, {});
+    }
 }
 
 // ========== Package Item API ==========

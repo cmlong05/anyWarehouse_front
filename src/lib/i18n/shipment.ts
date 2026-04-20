@@ -36,6 +36,7 @@ export const shipmentTranslations = {
         'shipment.btn.cancel': '取消',
 
         'shipment.btn.sync': '同步',
+        'shipment.btn.syncPackage': '同步包裹数量',
         'shipment.btn.save': '保存',
         'shipment.btn.cancelEdit': '取消',
         'shipment.btn.back': '返回',
@@ -139,6 +140,7 @@ export const shipmentTranslations = {
         'shipment.btn.cancel': 'Cancel',
 
         'shipment.btn.sync': 'Sync',
+        'shipment.btn.syncPackage': 'Sync Package Qty',
         'shipment.btn.save': 'Save',
         'shipment.btn.cancelEdit': 'Cancel',
         'shipment.btn.back': 'Back',
