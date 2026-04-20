@@ -7,6 +7,7 @@
     import type { Package, PackageItem, TrackingNumberBrief } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
+    import PrintPackingList from '$lib/components/shipment/PrintPackingList.svelte';
 
     let pkg = $state<Package | null>(null);
     let loading = $state(true);
@@ -284,13 +285,19 @@
             ? `${pkg.length}×${pkg.width}×${pkg.height} cm`
             : '-';
     }
+
+    function printPackingList() {
+        window.print();
+    }
 </script>
 
 <svelte:head>
     <title>包裹详情 - {pkg?.package_no || '加载中...'} - AnyWarehouse</title>
 </svelte:head>
 
-<div class="container mx-auto px-4 py-6">
+<PrintPackingList {pkg} />
+
+<div class="container mx-auto px-4 py-6 no-print">
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
             <button class="btn btn-ghost btn-sm" onclick={goBack} aria-label="返回">
@@ -315,6 +322,7 @@
                 {/if}
             </button>
             <button class="btn btn-outline" onclick={goToEdit}>编辑</button>
+            <button class="btn btn-secondary btn-outline" onclick={printPackingList}>打印装箱单</button>
             <button class="btn btn-error btn-outline" onclick={confirmDelete}>删除</button>
         </div>
     </div>

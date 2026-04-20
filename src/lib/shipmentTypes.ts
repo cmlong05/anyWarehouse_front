@@ -176,6 +176,7 @@ export interface PackageItem {
     item: number;
     notes?: string;
     item_detail?: ItemDetail;
+    storage_locations?: string[];
     created_at: string;
     updated_at: string;
 }
