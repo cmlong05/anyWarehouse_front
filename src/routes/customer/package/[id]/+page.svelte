@@ -264,6 +264,16 @@
         return 'hover:bg-gray-50';
     }
 
+    function getItemDetailPath(item: PackageItemWithVariant): string | null {
+        if (item.item) {
+            return `/item/${item.item}`;
+        }
+        if (item.item_detail?.parent_item_id) {
+            return `/item/${item.item_detail.parent_item_id}`;
+        }
+        return null;
+    }
+
     function formatCompactNumber(value: string | number | undefined | null, decimals = 3): string {
         const num = safeParseFloat(value, NaN);
         if (Number.isNaN(num)) return '-';
@@ -473,6 +483,7 @@
                             <tr class="bg-gray-50">
                                 <th class="text-left w-32">SKU</th>
                                 <th class="text-left">商品名称</th>
+                                <th class="text-left w-44">存储位置</th>
                                 <th class="text-right w-20">数量</th>
                                 <th class="text-right pl-8">关联发货单</th>
                             </tr>
@@ -486,10 +497,18 @@
                                         {#if section.type === 'variant'}
                                             <div class="flex items-center gap-2">
                                                 <ChevronRight class="w-4 h-4 text-purple-400 flex-shrink-0" />
-                                                <span>{item.sku}</span>
+                                                {#if getItemDetailPath(item)}
+                                                    <a href={getItemDetailPath(item)} class="text-blue-600 hover:underline">{item.sku}</a>
+                                                {:else}
+                                                    <span>{item.sku}</span>
+                                                {/if}
                                             </div>
                                         {:else}
-                                            {item.sku}
+                                            {#if getItemDetailPath(item)}
+                                                <a href={getItemDetailPath(item)} class="text-blue-600 hover:underline">{item.sku}</a>
+                                            {:else}
+                                                {item.sku}
+                                            {/if}
                                         {/if}
                                     </td>
                                     <td>
@@ -502,6 +521,7 @@
                                             {item.product_name}
                                         {/if}
                                     </td>
+                                    <td class="text-left text-gray-600">{item.storage_locations?.join(', ') || '-'}</td>
                                     <td class="text-right w-20">{formatNumber(item.quantity)}</td>
                                     <td class="text-sm text-gray-500 pl-8 text-right">
                                         {item.shipment_no || '-'}
