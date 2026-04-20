@@ -1,0 +1,237 @@
+<script lang="ts">
+    import { createEventDispatcher } from 'svelte';
+    import { formatDate } from '$lib/utils';
+    import type { TrackingNumber } from '$lib/shipmentTypes';
+
+    export let isOpen = false;
+    export let trackingNumber: TrackingNumber | null = null;
+    export let syncing = false;
+
+    const dispatch = createEventDispatcher<{ close: void; sync: void }>();
+
+    function handleClose() {
+        dispatch('close');
+    }
+
+    function handleSync() {
+        dispatch('sync');
+    }
+
+    function getLogisticsBadgeClass(status: string): string {
+        const classMap: Record<string, string> = {
+            'pending':    'bg-gray-100 text-gray-600',
+            'collected':  'bg-blue-100 text-blue-700',
+            'in_transit': 'bg-indigo-100 text-indigo-700',
+            'exception':  'bg-orange-100 text-orange-700',
+            'delivered':  'bg-green-100 text-green-700',
+            'returned':   'bg-yellow-100 text-yellow-700',
+            'cancelled':  'bg-red-100 text-red-700',
+        };
+        return classMap[status] || 'bg-gray-100 text-gray-600';
+    }
+
+    function getLogisticsLabel(status: string): string {
+        const labelMap: Record<string, string> = {
+            'pending':    '待揽收',
+            'collected':  '已揽收',
+            'in_transit': '运输中',
+            'exception':  '异常',
+            'delivered':  '已签收',
+            'returned':   '已退回',
+            'cancelled':  '已作废',
+        };
+        return labelMap[status] || status;
+    }
+</script>
+
+{#if isOpen && trackingNumber}
+    <div
+        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        on:click|self={handleClose}
+        on:keydown={(e) => e.key === 'Escape' && handleClose()}
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-[90%] max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200 sticky top-0 bg-white">
+                <h3 class="text-gray-900 text-lg font-semibold">物流详情</h3>
+                <div class="flex items-center gap-2">
+                    {#if trackingNumber.logistics_status !== 'cancelled'}
+                        <button
+                            class="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            on:click={handleSync}
+                            disabled={syncing}
+                        >
+                            {syncing ? '同步中...' : '同步'}
+                        </button>
+                    {/if}
+                    <button
+                        class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
+                        on:click={handleClose}
+                        aria-label="关闭"
+                    >×</button>
+                </div>
+            </div>
+
+            <div class="px-6 py-5 space-y-5">
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3">基本信息</h4>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-gray-500">快递单号</span>
+                            <p class="font-mono font-medium text-gray-900 mt-0.5">{trackingNumber.tracking_no}</p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">承运商</span>
+                            <p class="font-medium text-gray-900 mt-0.5">
+                                {trackingNumber.carrier_name}
+                                {#if trackingNumber.carrier_code}
+                                    <span class="text-gray-400 text-xs">({trackingNumber.carrier_code})</span>
+                                {/if}
+                            </p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">物流状态</span>
+                            <p class="mt-0.5">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getLogisticsBadgeClass(trackingNumber.logistics_status)}">
+                                    {getLogisticsLabel(trackingNumber.logistics_status)}
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">最后同步</span>
+                            <p class="font-medium text-gray-900 mt-0.5">
+                                {trackingNumber.last_synced_at ? formatDate(trackingNumber.last_synced_at) : '-'}
+                            </p>
+                        </div>
+                    </div>
+                    {#if trackingNumber.remark}
+                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <span class="text-gray-500 text-sm">备注</span>
+                            <p class="text-gray-900 mt-1 text-sm">{trackingNumber.remark}</p>
+                        </div>
+                    {/if}
+                </div>
+
+                {#if trackingNumber.tracking_status_raw}
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3">当前状态</h4>
+                        <div class="grid grid-cols-1 gap-3 text-sm">
+                            {#if typeof trackingNumber.tracking_status_raw === 'string'}
+                                {@const statusData = JSON.parse(trackingNumber.tracking_status_raw)}
+                                <div>
+                                    <span class="text-gray-500">API 状态</span>
+                                    <p class="font-mono font-medium text-gray-900 mt-0.5">{statusData.status || '-'}</p>
+                                </div>
+                                {#if statusData.status_details}
+                                    <div>
+                                        <span class="text-gray-500">状态描述</span>
+                                        <p class="text-gray-900 mt-0.5">{statusData.status_details}</p>
+                                    </div>
+                                {/if}
+                                {#if statusData.status_date}
+                                    <div>
+                                        <span class="text-gray-500">状态时间</span>
+                                        <p class="font-medium text-gray-900 mt-0.5">{formatDate(statusData.status_date)}</p>
+                                    </div>
+                                {/if}
+                                {#if statusData.location}
+                                    <div>
+                                        <span class="text-gray-500">位置</span>
+                                        <p class="text-gray-900 mt-0.5">
+                                            {[
+                                                statusData.location.city,
+                                                statusData.location.state,
+                                                statusData.location.zip,
+                                                statusData.location.country
+                                            ].filter(Boolean).join(', ')}
+                                        </p>
+                                    </div>
+                                {/if}
+                            {:else}
+                                <div>
+                                    <span class="text-gray-500">API 状态</span>
+                                    <p class="font-mono font-medium text-gray-900 mt-0.5">{trackingNumber.tracking_status_raw.status || '-'}</p>
+                                </div>
+                                {#if trackingNumber.tracking_status_raw.status_details}
+                                    <div>
+                                        <span class="text-gray-500">状态描述</span>
+                                        <p class="text-gray-900 mt-0.5">{trackingNumber.tracking_status_raw.status_details}</p>
+                                    </div>
+                                {/if}
+                                {#if trackingNumber.tracking_status_raw.status_date}
+                                    <div>
+                                        <span class="text-gray-500">状态时间</span>
+                                        <p class="font-medium text-gray-900 mt-0.5">{formatDate(trackingNumber.tracking_status_raw.status_date)}</p>
+                                    </div>
+                                {/if}
+                                {#if trackingNumber.tracking_status_raw.location}
+                                    <div>
+                                        <span class="text-gray-500">位置</span>
+                                        <p class="text-gray-900 mt-0.5">
+                                            {[
+                                                trackingNumber.tracking_status_raw.location.city,
+                                                trackingNumber.tracking_status_raw.location.state,
+                                                trackingNumber.tracking_status_raw.location.zip,
+                                                trackingNumber.tracking_status_raw.location.country
+                                            ].filter(Boolean).join(', ')}
+                                        </p>
+                                    </div>
+                                {/if}
+                            {/if}
+                        </div>
+                    </div>
+                {/if}
+
+                {#if trackingNumber.tracking_events && trackingNumber.tracking_events.length > 0}
+                    <div class="border rounded-lg p-4 bg-gray-50">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-4">物流轨迹</h4>
+                        <div class="space-y-4">
+                            {#each trackingNumber.tracking_events as event, index}
+                                <div class="flex gap-3">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-3 h-3 bg-blue-600 rounded-full mt-1.5"></div>
+                                        {#if index < trackingNumber.tracking_events.length - 1}
+                                            <div class="w-0.5 h-8 bg-gray-300 my-1"></div>
+                                        {/if}
+                                    </div>
+                                    <div class="pb-4 flex-1">
+                                        <div class="flex justify-between items-start gap-2 mb-0.5">
+                                            <p class="font-medium text-gray-900 text-sm">{event.status_details || event.status || '未知状态'}</p>
+                                            {#if event.status_date}
+                                                <span class="text-gray-500 text-xs whitespace-nowrap">{formatDate(event.status_date)}</span>
+                                            {/if}
+                                        </div>
+                                        {#if event.location}
+                                            <p class="text-gray-600 text-sm">
+                                                📍 {typeof event.location === 'string'
+                                                    ? event.location
+                                                    : [event.location.city, event.location.state, event.location.zip, event.location.country].filter(Boolean).join(', ') || '地点未知'}
+                                            </p>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/each}
+                        </div>
+                    </div>
+                {:else if trackingNumber.tracking_status_raw}
+                    <div class="border rounded-lg p-4 bg-blue-50 text-blue-900 text-sm">
+                        <p>暂无轨迹历史，请稍后同步查询</p>
+                    </div>
+                {/if}
+
+                <div class="border-t pt-4">
+                    <p class="text-xs text-gray-500">💡 提示：点击上方"同步"按钮以获取最新的物流信息</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 sticky bottom-0 bg-white">
+                <button
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
+                    on:click={handleClose}
+                >关闭</button>
+            </div>
+        </div>
+    </div>
+{/if}

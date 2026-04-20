@@ -15,8 +15,35 @@ export interface TrackingNumber {
     logistics_status: LogisticsStatus;
     is_linked: boolean;
     remark?: string;
+    last_synced_at?: string;
+    tracking_events?: TrackingEvent[];
+    tracking_status_raw?: TrackingStatusRaw;
     created_at: string;
     updated_at: string;
+}
+
+/** 物流轨迹位置 */
+export interface TrackingLocation {
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+}
+
+/** 物流状态详情 */
+export interface TrackingStatusRaw {
+    status?: string;
+    status_details?: string;
+    status_date?: string;
+    location?: TrackingLocation;
+}
+
+/** 物流轨迹事件 */
+export interface TrackingEvent {
+    status: string;
+    status_details: string;
+    status_date: string;
+    location?: TrackingLocation | string;
 }
 
 /** 快递单号简要信息 */

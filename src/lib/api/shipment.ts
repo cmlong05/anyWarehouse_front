@@ -39,6 +39,11 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
         return this.list({ logistics_status: status });
     }
 
+    /** 手动触发单个快递单号物流同步 */
+    async sync(id: number): Promise<{ result: { status: string; message?: string }; tracking: TrackingNumber }> {
+        return this.client.post(`${this.basePath}${id}/sync/`, {});
+    }
+
     /** 批量创建 */
     async batchCreate(data: TrackingNumberCreateRequest[]): Promise<TrackingNumber[]> {
         return this.client.post<TrackingNumber[]>(`${this.basePath}batch_create/`, { items: data });

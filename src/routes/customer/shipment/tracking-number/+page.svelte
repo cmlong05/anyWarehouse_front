@@ -7,6 +7,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+    import TrackingNumberDetailModal from '$lib/components/shipment/TrackingNumberDetailModal.svelte';
     import Plus from 'lucide-svelte/icons/plus';
 
     let trackingNumbers: TrackingNumber[] = [];
@@ -60,6 +61,14 @@
     // 删除确认
     let showDeleteModal = false;
     let trackingNumberToDelete: TrackingNumber | null = null;
+
+    // 同步中的单号 id 集合
+    let syncingIds = new Set<number>();
+    let detailSyncing = false;
+
+    // 详情模态框
+    let showDetailModal = false;
+    let detailTrackingNumber: TrackingNumber | null = null;
 
     onMount(async () => {
         await loadTrackingNumbers();
@@ -160,6 +169,38 @@
         goto('/customer/shipment');
     }
 
+    async function handleSync(tn: TrackingNumber) {
+        syncingIds = new Set([...syncingIds, tn.id]);
+        try {
+            const response = await trackingNumberAPI.sync(tn.id);
+            success = response.result?.message || `${tn.tracking_no} 物流状态已同步`;
+            await loadTrackingNumbers();
+            if (detailTrackingNumber?.id === tn.id) {
+                detailTrackingNumber = response.tracking;
+            }
+        } catch (err: any) {
+            error = err.message || '同步失败';
+        } finally {
+            syncingIds.delete(tn.id);
+            syncingIds = new Set(syncingIds);
+        }
+    }
+
+    async function handleDetailSync() {
+        if (!detailTrackingNumber) return;
+        detailSyncing = true;
+        try {
+            const response = await trackingNumberAPI.sync(detailTrackingNumber.id);
+            success = response.result?.message || `${detailTrackingNumber.tracking_no} 物流状态已同步`;
+            detailTrackingNumber = response.tracking;
+            await loadTrackingNumbers();
+        } catch (err: any) {
+            error = err.message || '同步失败';
+        } finally {
+            detailSyncing = false;
+        }
+    }
+
     function getLogisticsBadgeClass(status: string): string {
         const classMap: Record<string, string> = {
             'pending':    'bg-gray-100 text-gray-600',
@@ -184,6 +225,11 @@
             'cancelled':  '已作废',
         };
         return labelMap[status] || status;
+    }
+
+    function openDetailModal(tn: TrackingNumber) {
+        detailTrackingNumber = tn;
+        showDetailModal = true;
     }
 </script>
 
@@ -294,13 +340,13 @@
                         <th class="px-4 py-3 text-left font-medium text-gray-600">关联状态</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">物流状态</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">备注</th>
-                        <th class="px-4 py-3 text-left font-medium text-gray-600">创建时间</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">最后同步</th>
                         <th class="px-4 py-3 text-center font-medium text-gray-600">操作</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
                     {#each trackingNumbers as tn}
-                        <tr class="hover:bg-blue-50 transition-colors">
+                        <tr class="cursor-pointer hover:bg-blue-50 transition-colors" on:click={() => openDetailModal(tn)}>
                             <td class="px-4 py-3 font-medium font-mono">{tn.tracking_no}</td>
                             <td class="px-4 py-3">
                                 <div class="flex flex-col">
@@ -323,20 +369,27 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-gray-500">{tn.remark || '-'}</td>
-                            <td class="px-4 py-3 text-gray-500 text-sm">{formatDate(tn.created_at)}</td>
+                            <td class="px-4 py-3 text-gray-400 text-xs">
+                                {tn.last_synced_at ? formatDate(tn.last_synced_at) : '-'}
+                            </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
                                     {#if tn.logistics_status !== 'cancelled'}
                                         <button
                                             class="px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                                            on:click={() => openEditModal(tn)}
+                                            on:click|stopPropagation={() => openEditModal(tn)}
                                         >编辑</button>
+                                        <button
+                                            class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-40"
+                                            disabled={syncingIds.has(tn.id)}
+                                            on:click|stopPropagation={() => handleSync(tn)}
+                                        >{syncingIds.has(tn.id) ? '同步中...' : '同步'}</button>
                                     {/if}
 
                                     {#if !tn.is_linked && tn.logistics_status !== 'cancelled'}
                                         <button
                                             class="px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
-                                            on:click={() => confirmDelete(tn)}
+                                            on:click|stopPropagation={() => confirmDelete(tn)}
                                         >删除</button>
                                     {/if}
                                 </div>
@@ -466,4 +519,12 @@
     confirmText="删除"
     onConfirm={handleDelete}
     onCancel={() => { showDeleteModal = false; trackingNumberToDelete = null; }}
+/>
+
+<TrackingNumberDetailModal
+    isOpen={showDetailModal}
+    trackingNumber={detailTrackingNumber}
+    syncing={detailSyncing}
+    on:close={() => showDetailModal = false}
+    on:sync={handleDetailSync}
 />
