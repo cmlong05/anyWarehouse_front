@@ -70,15 +70,13 @@
                         >
                             {syncing ? '同步中...' : '同步'}
                         </button>
-                        {#if !trackingNumber.shippo_registered}
-                            <button
-                                class="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-                                on:click={handleRegister}
-                                disabled={registering}
-                            >
-                                {registering ? '注册中...' : '注册'}
-                            </button>
-                        {/if}
+                        <button
+                            class="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                            on:click={handleRegister}
+                            disabled={registering}
+                        >
+                            {registering ? '注册中...' : (trackingNumber.shippo_registered ? '重新注册' : '注册')}
+                        </button>
                     {/if}
                     <button
                         class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
