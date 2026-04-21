@@ -66,6 +66,8 @@
     let syncingIds = new Set<number>();
     let detailSyncing = false;
     let detailRegistering = false;
+    let detailError = '';
+    let detailSuccess = '';
 
     // 详情模态框
     let showDetailModal = false;
@@ -117,6 +119,18 @@
             carrier_name: tn.carrier_name,
             logistics_status: tn.logistics_status,
             remark: tn.remark || ''
+        };
+        showFormModal = true;
+    }
+
+    function openCopyModal(tn: TrackingNumber) {
+        editingId = null;
+        formData = {
+            tracking_no: '',
+            carrier_code: tn.carrier_code,
+            carrier_name: tn.carrier_name,
+            logistics_status: 'pending',
+            remark: ''
         };
         showFormModal = true;
     }
@@ -190,13 +204,15 @@
     async function handleDetailRegister() {
         if (!detailTrackingNumber) return;
         detailRegistering = true;
+        detailError = '';
+        detailSuccess = '';
         try {
             const response = await trackingNumberAPI.register(detailTrackingNumber.id);
-            success = response.result?.message || `${detailTrackingNumber.tracking_no} 已注册到 Shippo`;
+            detailSuccess = response.result?.message || `${detailTrackingNumber.tracking_no} 已注册到 Shippo`;
             detailTrackingNumber = response.tracking;
             await loadTrackingNumbers();
         } catch (err: any) {
-            error = err.message || '注册失败';
+            detailError = err.message || '注册失败';
         } finally {
             detailRegistering = false;
         }
@@ -205,13 +221,15 @@
     async function handleDetailSync() {
         if (!detailTrackingNumber) return;
         detailSyncing = true;
+        detailError = '';
+        detailSuccess = '';
         try {
             const response = await trackingNumberAPI.sync(detailTrackingNumber.id);
-            success = response.result?.message || `${detailTrackingNumber.tracking_no} 物流状态已同步`;
+            detailSuccess = response.result?.message || `${detailTrackingNumber.tracking_no} 物流状态已同步`;
             detailTrackingNumber = response.tracking;
             await loadTrackingNumbers();
         } catch (err: any) {
-            error = err.message || '同步失败';
+            detailError = err.message || '同步失败';
         } finally {
             detailSyncing = false;
         }
@@ -245,6 +263,8 @@
 
     function openDetailModal(tn: TrackingNumber) {
         detailTrackingNumber = tn;
+        detailError = '';
+        detailSuccess = '';
         showDetailModal = true;
     }
 </script>
@@ -407,6 +427,10 @@
                                             on:click|stopPropagation={() => openEditModal(tn)}
                                         >编辑</button>
                                         <button
+                                            class="px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-50 rounded transition-colors"
+                                            on:click|stopPropagation={() => openCopyModal(tn)}
+                                        >复制</button>
+                                        <button
                                             class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-40"
                                             disabled={syncingIds.has(tn.id)}
                                             on:click|stopPropagation={() => handleSync(tn)}
@@ -553,7 +577,13 @@
     trackingNumber={detailTrackingNumber}
     syncing={detailSyncing}
     registering={detailRegistering}
-    on:close={() => showDetailModal = false}
+    error={detailError}
+    success={detailSuccess}
+    on:close={() => {
+        showDetailModal = false;
+        detailError = '';
+        detailSuccess = '';
+    }}
     on:sync={handleDetailSync}
     on:register={handleDetailRegister}
 />

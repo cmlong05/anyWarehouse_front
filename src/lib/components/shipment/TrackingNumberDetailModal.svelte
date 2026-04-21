@@ -2,11 +2,14 @@
     import { createEventDispatcher } from 'svelte';
     import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';
+    import Alert from '$lib/components/Alert.svelte';
 
     export let isOpen = false;
     export let trackingNumber: TrackingNumber | null = null;
     export let syncing = false;
     export let registering = false;
+    export let error: string | null = null;
+    export let success: string | null = null;
 
     const dispatch = createEventDispatcher<{ close: void; sync: void; register: void }>();
 
@@ -85,6 +88,16 @@
                     >×</button>
                 </div>
             </div>
+
+            {#if error}
+                <div class="px-6 py-4">
+                    <Alert error={error} variant="error" onDismiss={() => error = null} />
+                </div>
+            {:else if success}
+                <div class="px-6 py-4">
+                    <Alert error={success} variant="info" onDismiss={() => success = null} />
+                </div>
+            {/if}
 
             <div class="px-6 py-5 space-y-5">
                 <div class="border rounded-lg p-4 bg-gray-50">
