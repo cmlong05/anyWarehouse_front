@@ -669,6 +669,7 @@ export interface CustomerQuotationBrief {
     item_sku: string;
     item_name: string;
     item_name_en?: string;
+    item_total_storage?: number;
     price: string;
     currency: string;
     is_preferred: boolean;
