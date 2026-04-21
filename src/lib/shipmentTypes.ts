@@ -14,6 +14,7 @@ export interface TrackingNumber {
     carrier_name: string;
     logistics_status: LogisticsStatus;
     is_linked: boolean;
+    shippo_registered: boolean;
     remark?: string;
     last_synced_at?: string;
     tracking_events?: TrackingEvent[];
@@ -54,6 +55,7 @@ export interface TrackingNumberBrief {
     carrier_code?: string;
     logistics_status: LogisticsStatus;
     is_linked: boolean;
+    shippo_registered?: boolean;
     remark?: string;
     created_at?: string;
 }

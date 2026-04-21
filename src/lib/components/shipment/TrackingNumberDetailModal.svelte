@@ -6,8 +6,9 @@
     export let isOpen = false;
     export let trackingNumber: TrackingNumber | null = null;
     export let syncing = false;
+    export let registering = false;
 
-    const dispatch = createEventDispatcher<{ close: void; sync: void }>();
+    const dispatch = createEventDispatcher<{ close: void; sync: void; register: void }>();
 
     function handleClose() {
         dispatch('close');
@@ -15,6 +16,10 @@
 
     function handleSync() {
         dispatch('sync');
+    }
+
+    function handleRegister() {
+        dispatch('register');
     }
 
     function getLogisticsBadgeClass(status: string): string {
@@ -65,6 +70,15 @@
                         >
                             {syncing ? '同步中...' : '同步'}
                         </button>
+                        {#if !trackingNumber.shippo_registered}
+                            <button
+                                class="px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                                on:click={handleRegister}
+                                disabled={registering}
+                            >
+                                {registering ? '注册中...' : '注册'}
+                            </button>
+                        {/if}
                     {/if}
                     <button
                         class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
@@ -97,6 +111,16 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getLogisticsBadgeClass(trackingNumber.logistics_status)}">
                                     {getLogisticsLabel(trackingNumber.logistics_status)}
                                 </span>
+                            </p>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Shippo 注册</span>
+                            <p class="mt-0.5">
+                                {#if trackingNumber.shippo_registered}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">已注册</span>
+                                {:else}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">未注册</span>
+                                {/if}
                             </p>
                         </div>
                         <div>

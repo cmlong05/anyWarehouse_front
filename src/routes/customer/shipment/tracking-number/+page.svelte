@@ -65,6 +65,7 @@
     // 同步中的单号 id 集合
     let syncingIds = new Set<number>();
     let detailSyncing = false;
+    let detailRegistering = false;
 
     // 详情模态框
     let showDetailModal = false;
@@ -183,6 +184,21 @@
         } finally {
             syncingIds.delete(tn.id);
             syncingIds = new Set(syncingIds);
+        }
+    }
+
+    async function handleDetailRegister() {
+        if (!detailTrackingNumber) return;
+        detailRegistering = true;
+        try {
+            const response = await trackingNumberAPI.register(detailTrackingNumber.id);
+            success = response.result?.message || `${detailTrackingNumber.tracking_no} 已注册到 Shippo`;
+            detailTrackingNumber = response.tracking;
+            await loadTrackingNumbers();
+        } catch (err: any) {
+            error = err.message || '注册失败';
+        } finally {
+            detailRegistering = false;
         }
     }
 
@@ -338,6 +354,7 @@
                         <th class="px-4 py-3 text-left font-medium text-gray-600">快递单号</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">承运商</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">关联状态</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600">Shippo</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">物流状态</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">备注</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-600">最后同步</th>
@@ -362,6 +379,16 @@
                                 {:else}
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500">未关联</span>
                                 {/if}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span
+                                    class="inline-flex h-4 w-4 rounded-full"
+                                    class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_0%,_rgba(34,197,94,0)_70%)]={tn.shippo_registered}
+                                    class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_0%,_rgba(148,163,184,0)_70%)]={!tn.shippo_registered}
+                                    title={tn.shippo_registered ? '已注册' : '未注册'}
+                                >
+                                    <span class="sr-only">{tn.shippo_registered ? '已注册' : '未注册'}</span>
+                                </span>
                             </td>
                             <td class="px-4 py-3">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getLogisticsBadgeClass(tn.logistics_status)}">
@@ -525,6 +552,8 @@
     isOpen={showDetailModal}
     trackingNumber={detailTrackingNumber}
     syncing={detailSyncing}
+    registering={detailRegistering}
     on:close={() => showDetailModal = false}
     on:sync={handleDetailSync}
+    on:register={handleDetailRegister}
 />

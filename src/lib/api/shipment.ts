@@ -44,6 +44,11 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
         return this.client.post(`${this.basePath}${id}/sync/`, {});
     }
 
+    /** 手动触发单个快递单号向 Shippo 注册 */
+    async register(id: number): Promise<{ result: { status: string; message?: string }; tracking: TrackingNumber }> {
+        return this.client.post(`${this.basePath}${id}/register/`, {});
+    }
+
     /** 批量创建 */
     async batchCreate(data: TrackingNumberCreateRequest[]): Promise<TrackingNumber[]> {
         return this.client.post<TrackingNumber[]>(`${this.basePath}batch_create/`, { items: data });
