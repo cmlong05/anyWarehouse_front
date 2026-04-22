@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { browser } from '$app/environment';
+	import { config } from '$lib/config';
 	
 	let { children } = $props();
 	
@@ -61,6 +61,10 @@
 	let dropdownPos = $state<{ top: number; left: number }>({ top: 0, left: 0 });
 	// 关闭定时器 ID
 	let closeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	// 根据环境设置导航栏样式
+	const isDevEnvironment = config.ENVIRONMENT === 'development';
+	const navBackgroundColor = isDevEnvironment ? '#fee2e2' : '#ffffff';
+	const navBorderClass = isDevEnvironment ? 'border-red-300' : 'border-gray-200';
 	// 当前下拉菜单的子项（从 navItems 中派生）
 	let currentDropdownChildren = $derived(
 		openDropdownIndex !== null && navItems[openDropdownIndex]?.children
@@ -111,7 +115,10 @@
 </script>
 
 <div class="relative">
-	<nav class="sticky top-0 z-[30] bg-white border-b border-gray-200 shadow-sm">
+	<nav
+		class={`sticky top-0 z-[30] border-b shadow-sm ${navBorderClass}`}
+		style={`background-color: ${navBackgroundColor};`}
+	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="flex justify-between h-10">
 				<!-- Logo / Brand -->

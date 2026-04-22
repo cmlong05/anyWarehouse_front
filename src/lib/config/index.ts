@@ -9,7 +9,7 @@ const configSchema = z.object({
   IMAGE_BASE_URL: z.string().url('IMAGE_BASE_URL must be a valid URL').optional(),
   APP_NAME: z.string().min(1, 'APP_NAME cannot be empty'),
   DEBUG: z.boolean(),
-  NODE_ENV: z.enum(['development', 'production', 'test'])
+  ENVIRONMENT: z.enum(['development', 'production', 'test'])
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -38,7 +38,7 @@ function getConfig(): Config {
     IMAGE_BASE_URL: env.VITE_IMAGE_BASE_URL,
     APP_NAME: env.VITE_APP_NAME || 'AnyWarehouse',
     DEBUG: env.VITE_DEBUG === 'true',
-    NODE_ENV: env.NODE_ENV || 'development'
+    ENVIRONMENT: env.MODE || 'production'
   };
 
   // 使用 zod 验证配置
