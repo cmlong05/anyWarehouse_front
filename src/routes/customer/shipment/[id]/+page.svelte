@@ -11,8 +11,10 @@
     import Loading from '$lib/components/Loading.svelte';
     import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
     import AddressInfo from '$lib/components/AddressInfo.svelte';
+    import SkuTable from '$lib/components/SkuTable.svelte';
 
     let shipmentId = $derived(parseInt(page.params.id || '0'));
+    let showSkuTable = $state(false);
 
     // 使用共享逻辑
     const shipmentDetail = useShipmentDetail(() => shipmentId);
@@ -233,6 +235,9 @@
                 </button>
                 <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={printShipment}>
                     🖨️ 打印
+                </button>
+                <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50" onclick={() => showSkuTable = !showSkuTable}>
+                    {showSkuTable ? '隐藏 SKU 表' : '生成 SKU 表'}
                 </button>
             </div>
         </div>
@@ -480,6 +485,25 @@
                     <p class="text-gray-400">暂无发货计划明细</p>
                 {/if}
             </div>
+
+            {#if showSkuTable}
+                <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">发货单 SKU 表</h2>
+                        <button
+                            class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700"
+                            onclick={() => window.print()}
+                        >
+                            🖨️ 打印 SKU 表
+                        </button>
+                    </div>
+                    <SkuTable items={(shipment.items as ShipmentItem[]) || []} showActions={false} showStatus={true} />
+                    <div class="mt-4 flex gap-4 text-sm text-gray-600">
+                        <span>总计: <strong class="text-gray-900">{shipment.items?.length || 0}</strong> 种商品</span>
+                        <span>总数量: <strong class="text-gray-900">{formatNumber(shipment.items?.reduce((sum, i) => sum + safeParseFloat(i.quantity), 0) || 0)}</strong></span>
+                    </div>
+                </div>
+            {/if}
 
             <!-- 包裹列表 -->
             <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">

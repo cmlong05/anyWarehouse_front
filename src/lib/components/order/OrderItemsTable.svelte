@@ -279,16 +279,16 @@
                                     {item.line_number}
                                 {/if}
                             </td>
-                            <td class="p-3 text-left border-b border-gray-100 font-mono {section.type === 'variant' ? 'pl-4' : ''}">
+                            <td class="p-3 text-left border-b border-gray-100 font-mono">
                                 {#if itemId}
                                     <a href="/item/{itemId}" class="text-blue-600 hover:underline">{item.sku}</a>
                                 {:else}
                                     {item.sku}
                                 {/if}
                             </td>
-                            <td class="p-3 text-left border-b border-gray-100">
+                            <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'pl-4' : ''}">
                                 {#if section.type === 'variant'}
-                                    <div class="flex flex-col gap-1 pl-4">
+                                    <div class="flex flex-col gap-1">
                                         <div class="flex items-center gap-2">
                                             <span class="text-gray-900">
                                                 {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
