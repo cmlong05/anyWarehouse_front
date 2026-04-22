@@ -1,6 +1,7 @@
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { localeStore } from '$lib/i18n/sales';
+    import { sortByKey, toggleSortKey } from '$lib/utils/sort';
 
     import { 
         isVariantChild, 
@@ -58,6 +59,8 @@
         noItems?: string;
     }
 
+    type SortKey = keyof OrderItem | 'currentStock';
+
     interface Props {
         items: OrderItem[];
         showPrices?: boolean;
@@ -75,7 +78,50 @@
     }
     
     let { items, showPrices = true, type, labels = {}, currency = 'CNY', onReverseSync, reverseSyncLoading = {} }: Props = $props();
-    
+    let sortKey = $state<SortKey>('line_number');
+    let sortDirection = $state<'asc' | 'desc'>('asc');
+
+    function getSortIndicator(key: SortKey): string {
+        if (sortKey !== key) {
+            return '↕';
+        }
+        return sortDirection === 'asc' ? '▲' : '▼';
+    }
+
+    function toggleSort(key: SortKey) {
+        const next = toggleSortKey(sortKey, sortDirection, key);
+        sortKey = next.sortKey;
+        sortDirection = next.sortDirection;
+    }
+
+    function getOrderItemSortValue(item: OrderItem, key: SortKey): number | string {
+        if (key === 'currentStock') {
+            return item.item_detail?.total_storage ?? 0;
+        }
+        if (key === 'quantity' || key === 'quantity_shipped' || key === 'quantity_pending') {
+            return safeParseFloat(item[key] as string | number);
+        }
+        const rawValue = (item as unknown as Record<string, unknown>)[key as string];
+        return String(rawValue ?? '');
+    }
+
+    const sortedItems = $derived.by(() => {
+        const sorted = [...items];
+        sorted.sort((a, b) => {
+            const valueA = getOrderItemSortValue(a, sortKey);
+            const valueB = getOrderItemSortValue(b, sortKey);
+
+            if (typeof valueA === 'number' && typeof valueB === 'number') {
+                return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+            }
+            return String(valueA).localeCompare(String(valueB), 'zh-CN', {
+                numeric: true,
+                sensitivity: 'base'
+            }) * (sortDirection === 'asc' ? 1 : -1);
+        });
+        return sorted;
+    });
+
     // 获取货币符号
     function getCurrencySymbol(curr: string): string {
         const symbols: Record<string, string> = {
@@ -228,7 +274,7 @@
     }
 
     // 分组后的物品列表
-    let groupedSections = $derived(getGroupedSections(items));
+    let groupedSections = $derived(getGroupedSections(sortedItems));
 </script>
 
 <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -238,15 +284,71 @@
             <table class="w-full border-collapse text-sm">
                 <thead>
                     <tr>
-                        <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">#</th>
-                        <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">SKU</th>
-                        <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">{l.itemName}</th>
+                        <th
+                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('line_number')}
+                        >
+                            <span class="inline-flex items-center gap-1">
+                                #
+                                <span class="text-xs text-gray-500">{getSortIndicator('line_number')}</span>
+                            </span>
+                        </th>
+                        <th
+                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('sku')}
+                        >
+                            <span class="inline-flex items-center gap-1">
+                                SKU
+                                <span class="text-xs text-gray-500">{getSortIndicator('sku')}</span>
+                            </span>
+                        </th>
+                        <th
+                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('item_name')}
+                        >
+                            <span class="inline-flex items-center gap-1">
+                                {l.itemName}
+                                <span class="text-xs text-gray-500">{getSortIndicator('item_name')}</span>
+                            </span>
+                        </th>
                         {#if type === 'sales'}
-                            <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.currentStock}</th>
+                            <th
+                                class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                                onclick={() => toggleSort('currentStock')}
+                            >
+                                <span class="inline-flex items-center justify-end gap-1">
+                                    {l.currentStock}
+                                    <span class="text-xs text-gray-500">{getSortIndicator('currentStock')}</span>
+                                </span>
+                            </th>
                         {/if}
-                        <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.quantity}</th>
-                        <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{type === 'sales' ? l.shipped : l.received}</th>
-                        <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{type === 'sales' ? l.pendingShip : l.pendingReceive}</th>
+                        <th
+                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('quantity')}
+                        >
+                            <span class="inline-flex items-center justify-end gap-1">
+                                {l.quantity}
+                                <span class="text-xs text-gray-500">{getSortIndicator('quantity')}</span>
+                            </span>
+                        </th>
+                        <th
+                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('quantity_shipped')}
+                        >
+                            <span class="inline-flex items-center justify-end gap-1">
+                                {type === 'sales' ? l.shipped : l.received}
+                                <span class="text-xs text-gray-500">{getSortIndicator('quantity_shipped')}</span>
+                            </span>
+                        </th>
+                        <th
+                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
+                            onclick={() => toggleSort('quantity_pending')}
+                        >
+                            <span class="inline-flex items-center justify-end gap-1">
+                                {type === 'sales' ? l.pendingShip : l.pendingReceive}
+                                <span class="text-xs text-gray-500">{getSortIndicator('quantity_pending')}</span>
+                            </span>
+                        </th>
                         {#if showPrices}
                             <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.unitPrice}</th>
                             <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.subtotal}</th>
@@ -311,7 +413,7 @@
                             {/if}
                             <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
                             <td class="p-3 text-right border-b border-gray-100">{formatNumber(shipped)}</td>
-                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(pending)}</td>
+                            <td class="p-3 text-right border-b border-gray-100 {pending > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">{formatNumber(pending)}</td>
                             {#if showPrices}
                                 <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.unit_price).toFixed(2)}</td>
                                 <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.line_total).toFixed(2)}</td>
