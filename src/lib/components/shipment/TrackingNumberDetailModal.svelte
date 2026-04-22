@@ -50,6 +50,14 @@
         };
         return labelMap[status] || status;
     }
+
+    $: sortedTrackingEvents = trackingNumber?.tracking_events
+        ? [...trackingNumber.tracking_events].sort((a, b) => {
+            const aTime = Date.parse(a.status_date) || 0;
+            const bTime = Date.parse(b.status_date) || 0;
+            return bTime - aTime;
+        })
+        : [];
 </script>
 
 {#if isOpen && trackingNumber}
@@ -219,15 +227,15 @@
                     </div>
                 {/if}
 
-                {#if trackingNumber.tracking_events && trackingNumber.tracking_events.length > 0}
+                {#if sortedTrackingEvents && sortedTrackingEvents.length > 0}
                     <div class="border rounded-lg p-4 bg-gray-50">
                         <h4 class="text-sm font-semibold text-gray-900 mb-4">物流轨迹</h4>
                         <div class="space-y-4">
-                            {#each trackingNumber.tracking_events as event, index}
+                            {#each sortedTrackingEvents as event, index}
                                 <div class="flex gap-3">
                                     <div class="flex flex-col items-center">
                                         <div class="w-3 h-3 bg-blue-600 rounded-full mt-1.5"></div>
-                                        {#if index < trackingNumber.tracking_events.length - 1}
+                                        {#if index < sortedTrackingEvents.length - 1}
                                             <div class="w-0.5 h-8 bg-gray-300 my-1"></div>
                                         {/if}
                                     </div>
