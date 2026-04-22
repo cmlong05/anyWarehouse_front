@@ -62,8 +62,9 @@
     let showDeleteModal = false;
     let trackingNumberToDelete: TrackingNumber | null = null;
 
-    // 同步中的单号 id 集合
+    // 单条刷新中的 id 集合
     let syncingIds = new Set<number>();
+
     let detailSyncing = false;
     let detailRegistering = false;
     let detailError = '';
@@ -184,23 +185,6 @@
         goto('/customer/shipment');
     }
 
-    async function handleSync(tn: TrackingNumber) {
-        syncingIds = new Set([...syncingIds, tn.id]);
-        try {
-            const response = await trackingNumberAPI.sync(tn.id);
-            success = response.result?.message || `${tn.tracking_no} 物流状态已同步`;
-            await loadTrackingNumbers();
-            if (detailTrackingNumber?.id === tn.id) {
-                detailTrackingNumber = response.tracking;
-            }
-        } catch (err: any) {
-            error = err.message || '同步失败';
-        } finally {
-            syncingIds.delete(tn.id);
-            syncingIds = new Set(syncingIds);
-        }
-    }
-
     async function handleDetailRegister() {
         if (!detailTrackingNumber) return;
         detailRegistering = true;
@@ -215,6 +199,23 @@
             detailError = err.message || '注册失败';
         } finally {
             detailRegistering = false;
+        }
+    }
+
+    async function handleSync(tn: TrackingNumber) {
+        syncingIds = new Set([...syncingIds, tn.id]);
+        try {
+            const response = await trackingNumberAPI.sync(tn.id);
+            success = response.result?.message || `${tn.tracking_no} 物流状态已同步`;
+            await loadTrackingNumbers();
+            if (detailTrackingNumber?.id === tn.id) {
+                detailTrackingNumber = response.tracking;
+            }
+        } catch (err: any) {
+            error = err.message || '同步失败';
+        } finally {
+            syncingIds.delete(tn.id);
+            syncingIds = new Set(syncingIds);
         }
     }
 
@@ -291,13 +292,15 @@
                 <p class="text-gray-500 text-sm mt-1">管理快递单号池</p>
             </div>
         </div>
-        <button
-            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
-            on:click={openCreateModal}
-        >
-            <Plus class="h-5 w-5 flex-shrink-0" />
-            <span>新建单号</span>
-        </button>
+        <div class="flex items-center gap-3">
+            <button
+                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
+                on:click={openCreateModal}
+            >
+                <Plus class="h-5 w-5 flex-shrink-0" />
+                <span>新建单号</span>
+            </button>
+        </div>
     </div>
 
     <!-- 提示信息 -->
@@ -434,7 +437,7 @@
                                             class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-40"
                                             disabled={syncingIds.has(tn.id)}
                                             on:click|stopPropagation={() => handleSync(tn)}
-                                        >{syncingIds.has(tn.id) ? '同步中...' : '同步'}</button>
+                                        >{syncingIds.has(tn.id) ? '刷新中...' : '刷新'}</button>
                                     {/if}
 
                                     {#if !tn.is_linked && tn.logistics_status !== 'cancelled'}
