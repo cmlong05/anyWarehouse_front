@@ -11,5 +11,6 @@ export { default as NumberStepper } from './NumberStepper.svelte';
 export { default as CurrencySelect } from './CurrencySelect.svelte';
 
 export { default as DataTable } from './DataTable.svelte';
+export { default as SortableHeader } from './SortableHeader.svelte';
 export { default as Pagination } from './Pagination.svelte';
 export { default as FilterPanel } from './FilterPanel.svelte';

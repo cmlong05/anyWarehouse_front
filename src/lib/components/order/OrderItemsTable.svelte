@@ -10,6 +10,7 @@
         type VariantAttribute 
     } from '$lib/utils/variant';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+import DataTable from '$lib/components/ui/DataTable.svelte';
 
     interface ItemDetail {
         id: number;
@@ -57,6 +58,16 @@
         partial?: string;
         pending?: string;
         noItems?: string;
+    }
+
+    interface TableColumn {
+        key: string;
+        title: string;
+        width?: string;
+        align?: 'left' | 'center' | 'right';
+        sortable?: boolean;
+        cellClass?: string;
+        headerClass?: string;
     }
 
     type SortKey = keyof OrderItem | 'currentStock';
@@ -153,7 +164,7 @@
     };
 
     // 使用 $derived 使标签对象具有响应性
-    const l = $derived({ ...defaultLabels, ...labels });
+    const l = $derived({ ...defaultLabels, ...labels } as Required<Labels>);
 
     function getShippedQty(item: OrderItem): number {
         return safeParseFloat(type === 'sales' ? item.quantity_shipped : item.quantity_received);
@@ -273,6 +284,45 @@
         return isFullyProcessed(section.item) ? 'opacity-70' : '';
     }
 
+    const columns = $derived.by<TableColumn[]>(() => {
+        const cols: TableColumn[] = [
+            { key: 'line_number', title: '#', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'sku', title: 'SKU', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'font-mono' },
+            { key: 'item_name', title: l.itemName, sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+        ];
+
+        if (type === 'sales') {
+            cols.push({
+                key: 'currentStock',
+                title: l.currentStock,
+                sortable: true,
+                align: 'right',
+                headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer',
+            });
+        }
+
+        cols.push(
+            { key: 'quantity', title: l.quantity, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: type === 'sales' ? 'quantity_shipped' : 'quantity_received', title: type === 'sales' ? l.shipped : l.received, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'quantity_pending', title: type === 'sales' ? l.pendingShip : l.pendingReceive, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' }
+        );
+
+        if (showPrices) {
+            cols.push(
+                { key: 'unit_price', title: l.unitPrice, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' },
+                { key: 'line_total', title: l.subtotal, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' }
+            );
+        }
+
+        cols.push({ key: 'status', title: l.status, sortable: false, align: 'center', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' });
+
+        if (onReverseSync && type === 'sales') {
+            cols.push({ key: 'action', title: '', sortable: false, align: 'center', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' });
+        }
+
+        return cols;
+    });
+
     // 分组后的物品列表
     let groupedSections = $derived(getGroupedSections(sortedItems));
 </script>
@@ -281,178 +331,108 @@
     <h2 class="m-0 mb-4 text-lg text-gray-800">{l.title} ({items.length})</h2>
     {#if items.length > 0}
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse text-sm">
-                <thead>
-                    <tr>
-                        <th
-                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('line_number')}
-                        >
-                            <span class="inline-flex items-center gap-1">
-                                #
-                                <span class="text-xs text-gray-500">{getSortIndicator('line_number')}</span>
+            <DataTable
+                data={groupedSections}
+                {columns}
+                rowClass={getRowClass}
+                sortKey={sortKey as string}
+                sortDirection={sortDirection}
+                onHeaderClick={(key) => toggleSort(key as SortKey)}
+                clickable={false}
+                rowHover={false}
+                loading={false}
+                emptyText={l.noItems}
+                wrapperClass="bg-transparent shadow-none rounded-none"
+                tableClass="w-full border-collapse text-sm"
+            >
+                {#snippet cellRender({ item: section, column, value }: { item: GroupedSection; column: { key: string }; value: unknown })}
+                    {@const rowItem = section.item}
+                    {@const shipped = getShippedQty(rowItem)}
+                    {@const pending = getPendingQty(rowItem)}
+                    {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(rowItem) : []}
+                    {@const currentStock = getCurrentStock(section)}
+                    {@const stockInsufficient = isStockInsufficient(section)}
+
+                    {#if column.key === 'line_number'}
+                        {#if section.type === 'variant'}
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                                <span>{rowItem.line_number}</span>
+                            </div>
+                        {:else}
+                            {rowItem.line_number}
+                        {/if}
+                    {:else if column.key === 'sku'}
+                        {#if rowItem.item_detail?.id}
+                            <a href="/item/{rowItem.item_detail.id}" class="text-blue-600 hover:underline">{rowItem.sku}</a>
+                        {:else}
+                            {rowItem.sku}
+                        {/if}
+                    {:else if column.key === 'item_name'}
+                        {#if section.type === 'variant'}
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-900">{$localeStore === 'en' ? (rowItem.item_name_en ?? '') : rowItem.item_name}</span>
+                                    <VariantAttributeBadge attributes={variantAttrs} />
+                                </div>
+                            </div>
+                        {:else}
+                            {$localeStore === 'en' ? (rowItem.item_name_en ?? '') : rowItem.item_name}
+                        {/if}
+                    {:else if column.key === 'currentStock'}
+                        {#if currentStock !== null}
+                            <span class={stockInsufficient ? 'text-red-600 font-semibold' : currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}>
+                                {formatNumber(currentStock)}
                             </span>
-                        </th>
-                        <th
-                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('sku')}
-                        >
-                            <span class="inline-flex items-center gap-1">
-                                SKU
-                                <span class="text-xs text-gray-500">{getSortIndicator('sku')}</span>
-                            </span>
-                        </th>
-                        <th
-                            class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('item_name')}
-                        >
-                            <span class="inline-flex items-center gap-1">
-                                {l.itemName}
-                                <span class="text-xs text-gray-500">{getSortIndicator('item_name')}</span>
-                            </span>
-                        </th>
-                        {#if type === 'sales'}
-                            <th
-                                class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                                onclick={() => toggleSort('currentStock')}
+                        {:else}
+                            -
+                        {/if}
+                    {:else if column.key === 'quantity'}
+                        {formatNumber(rowItem.quantity)}
+                    {:else if column.key === 'quantity_shipped'}
+                        {formatNumber(shipped)}
+                    {:else if column.key === 'quantity_received'}
+                        {formatNumber(shipped)}
+                    {:else if column.key === 'quantity_pending'}
+                        <span class={pending > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}>{formatNumber(pending)}</span>
+                    {:else if column.key === 'unit_price'}
+                        {getCurrencySymbol(currency)}{safeParseFloat(rowItem.unit_price).toFixed(2)}
+                    {:else if column.key === 'line_total'}
+                        {getCurrencySymbol(currency)}{safeParseFloat(rowItem.line_total).toFixed(2)}
+                    {:else if column.key === 'status'}
+                        {#if isFullyProcessed(rowItem)}
+                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{l.completed}</span>
+                        {:else if shipped > 0}
+                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{l.partial}</span>
+                        {:else}
+                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
+                        {/if}
+                    {:else if column.key === 'action'}
+                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipped > safeParseFloat(rowItem.quantity)}
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onclick={() => onReverseSync(rowItem)}
+                                disabled={reverseSyncLoading[rowItem.sku]}
+                                title="将订单数量同步为发货单数量（只可增大）"
                             >
-                                <span class="inline-flex items-center justify-end gap-1">
-                                    {l.currentStock}
-                                    <span class="text-xs text-gray-500">{getSortIndicator('currentStock')}</span>
-                                </span>
-                            </th>
+                                {#if reverseSyncLoading[rowItem.sku]}
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                {:else}
+                                    ↩️ 反向同步
+                                {/if}
+                            </button>
                         {/if}
-                        <th
-                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('quantity')}
-                        >
-                            <span class="inline-flex items-center justify-end gap-1">
-                                {l.quantity}
-                                <span class="text-xs text-gray-500">{getSortIndicator('quantity')}</span>
-                            </span>
-                        </th>
-                        <th
-                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('quantity_shipped')}
-                        >
-                            <span class="inline-flex items-center justify-end gap-1">
-                                {type === 'sales' ? l.shipped : l.received}
-                                <span class="text-xs text-gray-500">{getSortIndicator('quantity_shipped')}</span>
-                            </span>
-                        </th>
-                        <th
-                            class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer"
-                            onclick={() => toggleSort('quantity_pending')}
-                        >
-                            <span class="inline-flex items-center justify-end gap-1">
-                                {type === 'sales' ? l.pendingShip : l.pendingReceive}
-                                <span class="text-xs text-gray-500">{getSortIndicator('quantity_pending')}</span>
-                            </span>
-                        </th>
-                        {#if showPrices}
-                            <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.unitPrice}</th>
-                            <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{l.subtotal}</th>
-                        {/if}
-                        <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">{l.status}</th>
-                        {#if onReverseSync && type === 'sales'}
-                            <th class="p-3 text-center border-b border-gray-100 bg-gray-50 font-semibold">操作</th>
-                        {/if}
-                    </tr>
-                </thead>
-                <tbody>
-                    {#each groupedSections as section}
-                        {@const item = section.item}
-                        {@const shipped = getShippedQty(item)}
-                        {@const pending = getPendingQty(item)}
-                        {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
-                        {@const itemId = item.item_detail?.id}
-                        {@const currentStock = getCurrentStock(section)}
-                        {@const stockInsufficient = isStockInsufficient(section)}
-                        <tr class={getRowClass(section)}>
-                            <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'text-purple-600' : ''}">
-                                {#if section.type === 'variant'}
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
-                                        <span>{item.line_number}</span>
-                                    </div>
-                                {:else}
-                                    {item.line_number}
-                                {/if}
-                            </td>
-                            <td class="p-3 text-left border-b border-gray-100 font-mono">
-                                {#if itemId}
-                                    <a href="/item/{itemId}" class="text-blue-600 hover:underline">{item.sku}</a>
-                                {:else}
-                                    {item.sku}
-                                {/if}
-                            </td>
-                            <td class="p-3 text-left border-b border-gray-100 {section.type === 'variant' ? 'pl-4' : ''}">
-                                {#if section.type === 'variant'}
-                                    <div class="flex flex-col gap-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-gray-900">
-                                                {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
-                                            </span>
-                                            <VariantAttributeBadge attributes={variantAttrs} />
-                                        </div>
-                                    </div>
-                                {:else}
-                                    {$localeStore === 'en' ? (item.item_name_en ?? '') : item.item_name}
-                                {/if}
-                            </td>
-                            {#if type === 'sales'}
-                                <td class="p-3 text-right border-b border-gray-100 {stockInsufficient ? 'text-red-600 font-semibold' : currentStock !== null && currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">
-                                    {#if currentStock !== null}
-                                        {formatNumber(currentStock)}
-                                    {:else}
-                                        -
-                                    {/if}
-                                </td>
-                            {/if}
-                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(item.quantity)}</td>
-                            <td class="p-3 text-right border-b border-gray-100">{formatNumber(shipped)}</td>
-                            <td class="p-3 text-right border-b border-gray-100 {pending > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}">{formatNumber(pending)}</td>
-                            {#if showPrices}
-                                <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.unit_price).toFixed(2)}</td>
-                                <td class="p-3 text-right border-b border-gray-100">{getCurrencySymbol(currency)}{safeParseFloat(item.line_total).toFixed(2)}</td>
-                            {/if}
-                            <td class="p-3 text-left border-b border-gray-100">
-                                {#if isFullyProcessed(item)}
-                                    <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{l.completed}</span>
-                                {:else if shipped > 0}
-                                    <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{l.partial}</span>
-                                {:else}
-                                    <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
-                                {/if}
-                            </td>
-                            {#if onReverseSync && type === 'sales'}
-                                <td class="p-3 text-center border-b border-gray-100">
-                                    {#if section.type !== 'parent' && shipped > safeParseFloat(item.quantity)}
-                                        <button
-                                            type="button"
-                                            class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                            onclick={() => onReverseSync(item)}
-                                            disabled={reverseSyncLoading[item.sku]}
-                                            title="将订单数量同步为发货单数量（只可增大）"
-                                        >
-                                            {#if reverseSyncLoading[item.sku]}
-                                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                                </svg>
-                                            {:else}
-                                                ↩️ 反向同步
-                                            {/if}
-                                        </button>
-                                    {/if}
-                                </td>
-                            {/if}
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
+                    {:else}
+                        -
+                    {/if}
+                {/snippet}
+            </DataTable>
         </div>
     {:else}
         <p class="text-gray-500 text-center p-8">{l.noItems}</p>

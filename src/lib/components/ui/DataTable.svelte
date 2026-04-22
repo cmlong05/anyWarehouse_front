@@ -4,6 +4,7 @@
      * 通用数据表格组件（使用 TailwindCSS）
      */
     import type { Snippet } from 'svelte';
+    import SortableHeader from './SortableHeader.svelte';
     
     interface Column {
         key: string;
@@ -39,9 +40,13 @@
         // 自定义渲染
         cellRender?: Snippet<[{ item: T; column: Column; value: unknown }]>
         headerCellRender?: Snippet<[{ column: Column }]>
+        rowClass?: (item: T) => string;
         
         // 样式
         class?: string;
+        wrapperClass?: string;
+        tableClass?: string;
+        rowHover?: boolean;
         zebra?: boolean;
         bordered?: boolean;
     }
@@ -58,8 +63,12 @@
         sortDirection = 'asc',
         cellRender,
         headerCellRender,
+        rowClass,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         class: className = '',
+        wrapperClass,
+        tableClass: tableClassName,
+        rowHover = true,
         zebra = true,
         bordered = true
     }: Props = $props();
@@ -76,6 +85,9 @@
     }
     
     function getContainerClasses() {
+        if (wrapperClass) {
+            return [wrapperClass, bordered ? 'shadow' : ''].filter(Boolean).join(' ');
+        }
         return [
             'overflow-x-auto',
             'bg-white',
@@ -87,9 +99,8 @@
 
     function getTableClasses() {
         return [
-            'w-full',
-            'border-collapse',
-            'text-sm',
+            tableClassName ?? 'w-full',
+            tableClassName ? '' : 'border-collapse text-sm',
             clickable ? 'cursor-pointer' : ''
         ].filter(Boolean).join(' ');
     }
@@ -100,41 +111,39 @@
         <thead>
             <tr>
                 {#each columns as column}
-                    <th
-                        class={
-                            [
-                                'px-4',
-                                'py-3',
-                                'whitespace-nowrap',
-                                'text-gray-700',
-                                'font-semibold',
-                                column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
-                                column.headerClass ?? ''
-                            ].join(' ')
-                        }
-                        style:width={column.width}
-                    >
-                        {#if headerCellRender}
-                            {@render headerCellRender({ column })}
-                        {:else if column.sortable && onHeaderClick}
-                            <span
-                                role="button"
-                                tabindex="0"
-                                class="flex items-center gap-1 w-full -mx-4 -my-3 px-4 py-3 text-gray-700 hover:text-gray-900 cursor-pointer select-none"
-                                onclick={() => onHeaderClick(column.key)}
-                                onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && onHeaderClick(column.key)}
-                            >
-                                <span>{column.title}</span>
-                                {#if sortKey === column.key}
-                                    <span class="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
-                                {:else}
-                                    <span class="text-xs text-gray-300">↕</span>
-                                {/if}
-                            </span>
-                        {:else}
-                            {column.title}
-                        {/if}
-                    </th>
+                    {#if column.sortable && onHeaderClick}
+                        <SortableHeader
+                            title={column.title}
+                            columnKey={column.key}
+                            sortable={true}
+                            sortKey={sortKey}
+                            sortDirection={sortDirection}
+                            align={column.align}
+                            width={column.width}
+                            headerClass={column.headerClass}
+                            onSort={onHeaderClick}
+                        />
+                    {:else}
+                        <th
+                            class={
+                                [
+                                    'p-3',
+                                    'whitespace-nowrap',
+                                    'text-gray-700',
+                                    'font-semibold',
+                                    column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
+                                    column.headerClass ?? ''
+                                ].join(' ')
+                            }
+                            style:width={column.width}
+                        >
+                            {#if headerCellRender}
+                                {@render headerCellRender({ column })}
+                            {:else}
+                                {column.title}
+                            {/if}
+                        </th>
+                    {/if}
                 {/each}
             </tr>
         </thead>
@@ -159,19 +168,24 @@
             {:else}
                 {#each data as item}
                     <tr
-                        class="hover:bg-gray-100"
+                        class={
+                            [
+                                'hover:bg-gray-100',
+                                rowClass ? rowClass(item) : ''
+                            ].filter(Boolean).join(' ')
+                        }
                         onclick={() => handleRowClick(item)}
                     >
                         {#each columns as column}
                             <td
                                 class={
                                     [
-                                        'px-4',
-                                        'py-3',
+                                        'p-3',
                                         column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
                                         column.cellClass ?? ''
                                     ].join(' ')
                                 }
+                                style:width={column.width}
                             >
                                 {#if cellRender}
                                     {@render cellRender({ item, column, value: getValue(item, column.key) })}
