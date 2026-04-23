@@ -119,6 +119,7 @@ export interface Item extends BaseItem  {
     category: number[];
     is_variant_template?: boolean;
     variant_attributes_config?: Record<string, string[]> | null;
+    inventory_checked_at?: string | null;
 }
 
 export interface ItemSet{

@@ -3,8 +3,7 @@
     import type { ItemSet, QuotationBrief } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
-    import { localeStore } from '$lib/i18n/sales';
-    import { formatNumber } from '$lib/utils';
+    import { formatDate, formatNumber } from '$lib/utils';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
     import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
     import { NumberStepper } from '$lib/components/ui';
@@ -32,13 +31,8 @@
     );
     let quantityValues = $state<Record<number, number>>({});
     let descriptionExpanded = $state(false);
+    let isInventoryChecking = $state(false);
 
-    // 获取首选供应商的报价
-    function getPreferredQuotation(): QuotationBrief | null {
-        return data.quotations.find((q: QuotationBrief) => 
-            q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
-        ) || null;
-    }
 
     // 计算显示价格（如果item的b_Price为空，则显示首选供应商报价）
     const displayPrice = $derived(() => {
@@ -161,6 +155,41 @@
     function getTotalStock(): number {
         return data.itemDetail.item.total_storage ?? 0;
     }
+
+    const handleInventoryCheck = async () => {
+        if (isInventoryChecking) {
+            return;
+        }
+        isInventoryChecking = true;
+        try {
+            const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemDetail.item.id}/`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ inventory_checked_at: new Date().toISOString() }),
+            });
+
+            if (response.ok) {
+                const updatedItem = await response.json();
+                data = {
+                    ...data,
+                    itemDetail: {
+                        ...data.itemDetail,
+                        item: {
+                            ...data.itemDetail.item,
+                            ...updatedItem,
+                        }
+                    }
+                };
+            } else {
+                alert('盘点失败，请稍后重试');
+            }
+        } catch (error) {
+            console.error('盘点错误:', error);
+            alert('网络错误，请检查网络连接');
+        } finally {
+            isInventoryChecking = false;
+        }
+    };
 
     const handleStorage = async (event: Event, storage: any) => {
         event.preventDefault();
@@ -475,16 +504,28 @@
                         <div class="space-y-4">
                             {#if !isVariantTemplate()}
                                 <!-- 普通Item库存管理 -->
-                                <div class="flex items-center justify-between">
-                                    <h2 class="text-lg font-semibold text-gray-900">库存分布</h2>
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-                                        onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
-                                    >
-                                        <Plus class="h-5 w-5" />
-                                        入库
-                                    </button>
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white font-medium rounded-lg shadow-md hover:bg-amber-600 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                                            onclick={handleInventoryCheck}
+                                            disabled={isInventoryChecking}
+                                        >
+                                            盘点
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                                            onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
+                                        >
+                                            <Plus class="h-5 w-5" />
+                                            入库
+                                        </button>
+                                    </div>
+                                    <div class="text-sm text-gray-500" title="最后盘点时间">
+                                        {data.itemDetail.item.inventory_checked_at ? formatDate(data.itemDetail.item.inventory_checked_at) : '未盘点'}
+                                    </div>
                                 </div>
                             {/if}
 
