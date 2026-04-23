@@ -27,8 +27,9 @@ export interface TrackingNumber {
 export interface TrackingNumberLinkedPackage {
     id: number;
     package_no: string;
-    status: string;
     sequence_no: number;
+    customer_id?: number;
+    customer_name?: string;
 }
 
 /** 物流轨迹位置 */

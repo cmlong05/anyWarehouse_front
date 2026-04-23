@@ -164,14 +164,21 @@
                             <div class="space-y-3 text-sm text-gray-900">
                                 {#each trackingNumber.linked_packages as pkg}
                                     <div class="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <div class="flex items-center justify-between gap-2">
-                                            <div>
-                                                <p class="font-medium">{pkg.package_no}</p>
-                                                <p class="text-xs text-gray-500">序号: {pkg.sequence_no}</p>
-                                            </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-                                                {pkg.status}
-                                            </span>
+                                        <div class="flex flex-wrap items-center gap-3">
+                                            <a href={`/customer/package/${pkg.id}`} class="font-medium text-blue-600 hover:underline">
+                                                {pkg.package_no}
+                                            </a>
+                                            {#if pkg.customer_name}
+                                                <span class="text-xs text-gray-500">
+                                                    {#if pkg.customer_id}
+                                                        <a href={`/customer/${pkg.customer_id}`} class="text-blue-600 hover:underline">
+                                                            {pkg.customer_name}
+                                                        </a>
+                                                    {:else}
+                                                        {pkg.customer_name}
+                                                    {/if}
+                                                </span>
+                                            {/if}
                                         </div>
                                     </div>
                                 {/each}
