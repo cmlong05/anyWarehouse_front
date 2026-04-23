@@ -505,6 +505,12 @@
                             {#if !isVariantTemplate()}
                                 <!-- 普通Item库存管理 -->
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <h2 class="text-lg font-semibold text-gray-900">库存分布</h2>
+                                        <span class="text-sm text-gray-500" title="最后盘点时间">
+                                            {data.itemDetail.item.inventory_checked_at ? formatDate(data.itemDetail.item.inventory_checked_at) : '未盘点'}
+                                        </span>
+                                    </div>
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <button
                                             type="button"
@@ -522,9 +528,6 @@
                                             <Plus class="h-5 w-5" />
                                             入库
                                         </button>
-                                    </div>
-                                    <div class="text-sm text-gray-500" title="最后盘点时间">
-                                        {data.itemDetail.item.inventory_checked_at ? formatDate(data.itemDetail.item.inventory_checked_at) : '未盘点'}
                                     </div>
                                 </div>
                             {/if}
