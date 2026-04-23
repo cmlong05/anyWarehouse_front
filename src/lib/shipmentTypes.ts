@@ -14,6 +14,7 @@ export interface TrackingNumber {
     carrier_name: string;
     logistics_status: LogisticsStatus;
     is_linked: boolean;
+    linked_packages?: TrackingNumberLinkedPackage[];
     shippo_registered: boolean;
     remark?: string;
     last_synced_at?: string;
@@ -21,6 +22,13 @@ export interface TrackingNumber {
     tracking_status_raw?: TrackingStatusRaw;
     created_at: string;
     updated_at: string;
+}
+
+export interface TrackingNumberLinkedPackage {
+    id: number;
+    package_no: string;
+    status: string;
+    sequence_no: number;
 }
 
 /** 物流轨迹位置 */

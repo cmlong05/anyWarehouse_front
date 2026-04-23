@@ -262,11 +262,16 @@
         return labelMap[status] || status;
     }
 
-    function openDetailModal(tn: TrackingNumber) {
-        detailTrackingNumber = tn;
+    async function openDetailModal(tn: TrackingNumber) {
         detailError = '';
         detailSuccess = '';
-        showDetailModal = true;
+        detailTrackingNumber = null;
+        try {
+            detailTrackingNumber = await trackingNumberAPI.get(tn.id);
+            showDetailModal = true;
+        } catch (err: any) {
+            error = err.message || '加载快递单号详情失败';
+        }
     }
 </script>
 
@@ -582,11 +587,11 @@
     registering={detailRegistering}
     error={detailError}
     success={detailSuccess}
-    on:close={() => {
+    onCloseCallback={() => {
         showDetailModal = false;
         detailError = '';
         detailSuccess = '';
     }}
-    on:sync={handleDetailSync}
-    on:register={handleDetailRegister}
+    onSyncCallback={handleDetailSync}
+    onRegisterCallback={handleDetailRegister}
 />
