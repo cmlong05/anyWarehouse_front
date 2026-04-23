@@ -2,6 +2,7 @@
  * 发货相关 API
  */
 import { BaseAPI } from './base';
+import { config } from '$lib/config';
 import type { 
     TrackingNumber,
     TrackingNumberBrief,
@@ -133,6 +134,24 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
     /** 同步发货明细 */
     async syncItems(id: number): Promise<SyncItemsResponse> {
         return this.client.post<SyncItemsResponse>(`${this.basePath}${id}/sync_items/`, {});
+    }
+
+    /** 下载 SKU 对照表 PDF（服务端生成，跨浏览器一致） */
+    async downloadSkuReference(id: number, locale = 'zh-CN', shipmentNo: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${id}/sku_reference/?locale=${locale}`, `SKU-REFERENCE-${shipmentNo}.pdf`);
+    }
+
+    private async _downloadPDF(path: string, filename: string): Promise<void> {
+        const url = `${config.API_BASE_URL}${path}`;
+        const resp = await fetch(url, { credentials: 'include' });
+        if (!resp.ok) throw new Error(`PDF 生成失败: ${resp.statusText}`);
+        const blob = await resp.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
     }
 }
 
