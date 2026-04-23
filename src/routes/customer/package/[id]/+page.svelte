@@ -99,6 +99,10 @@
         showTrackingModal = true;
         trackingModalError = '';
         selectedTrackingId = null;
+        manualTrackingNo = '';
+        manualTrackingInfo = null;
+        manualTrackingError = '';
+        manualTrackingConfirmed = false;
         trackingModalLoading = true;
         try {
             const data = await trackingNumberAPI.listAvailable();
@@ -114,10 +118,25 @@
         showTrackingModal = false;
         selectedTrackingId = null;
         trackingModalError = '';
+        manualTrackingNo = '';
+        manualTrackingInfo = null;
+        manualTrackingError = '';
+        manualTrackingConfirmed = false;
     }
+
+    let manualTrackingNo = $state('');
+    let manualTrackingLoading = $state(false);
+    let manualTrackingInfo = $state<TrackingNumberBrief | null>(null);
+    let manualTrackingError = $state('');
+    let manualTrackingConfirmed = $state(false);
 
     async function confirmAssignTracking() {
         if (!pkg || selectedTrackingId === null) return;
+        if (manualTrackingInfo?.is_linked && !manualTrackingConfirmed) {
+            manualTrackingError = '确认继续关联已关联的快递单号';
+            return;
+        }
+
         try {
             assigningTracking = true;
             trackingModalError = '';
@@ -128,6 +147,32 @@
             trackingModalError = err.message || '关联失败';
         } finally {
             assigningTracking = false;
+        }
+    }
+
+    async function lookupTrackingNumber() {
+        manualTrackingError = '';
+        manualTrackingInfo = null;
+        manualTrackingConfirmed = false;
+        if (!manualTrackingNo.trim()) {
+            manualTrackingError = '请输入快递单号';
+            return;
+        }
+        manualTrackingLoading = true;
+        try {
+            const tracking = await trackingNumberAPI.lookup(manualTrackingNo.trim());
+            manualTrackingInfo = tracking;
+            selectedTrackingId = tracking.id;
+            manualTrackingConfirmed = !tracking.is_linked;
+        } catch (err: any) {
+            if (err?.status === 404) {
+                manualTrackingError = '快递单号不存在';
+            } else {
+                manualTrackingError = err.message || '查询失败';
+            }
+            selectedTrackingId = null;
+        } finally {
+            manualTrackingLoading = false;
         }
     }
 
@@ -581,6 +626,55 @@
                 {#if trackingModalError}
                     <div class="mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{trackingModalError}</div>
                 {/if}
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label for="manual-tracking-input" class="block text-sm font-medium text-gray-700 mb-2">手动输入快递单号</label>
+                        <div class="flex gap-2">
+                            <input
+                                id="manual-tracking-input"
+                                type="text"
+                                class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
+                                placeholder="请输入快递单号"
+                                bind:value={manualTrackingNo}
+                                onkeydown={(e) => e.key === 'Enter' && lookupTrackingNumber()}
+                            />
+                            <button
+                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onclick={lookupTrackingNumber}
+                                disabled={manualTrackingLoading}
+                            >
+                                {manualTrackingLoading ? '查询中...' : '校验'}
+                            </button>
+                        </div>
+                        {#if manualTrackingError}
+                            <p class="mt-2 text-sm text-red-600">{manualTrackingError}</p>
+                        {/if}
+                        {#if manualTrackingInfo}
+                            <div class="mt-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
+                                <p class="font-medium text-sm">{manualTrackingInfo.tracking_no}</p>
+                                <p class="text-xs text-gray-500">{manualTrackingInfo.carrier_name} · {getLogisticsLabel(manualTrackingInfo.logistics_status)}</p>
+                                {#if manualTrackingInfo.is_linked}
+                                    <div class="mt-1 space-y-2">
+                                        <p class="text-xs text-yellow-600">该单号已被关联于其他包裹。</p>
+                                        {#if !manualTrackingConfirmed}
+                                            <button
+                                                class="px-3 py-1 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700"
+                                                onclick={() => {
+                                                    manualTrackingConfirmed = true;
+                                                    manualTrackingError = '';
+                                                }}
+                                            >
+                                                确认继续关联
+                                            </button>
+                                        {:else}
+                                            <p class="text-xs text-green-600">已确认继续关联该单号。</p>
+                                        {/if}
+                                    </div>
+                                {/if}
+                            </div>
+                        {/if}
+                    </div>
+                </div>
                 {#if trackingModalLoading}
                     <div class="flex justify-center py-8">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

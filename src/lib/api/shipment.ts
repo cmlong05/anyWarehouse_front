@@ -66,6 +66,13 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
     async listAvailable(): Promise<TrackingNumberBrief[]> {
         return this.client.get<TrackingNumberBrief[]>(`${this.basePath}available/`);
     }
+
+    /** 验证系统中是否存在手动输入的快递单号 */
+    async lookup(trackingNo: string): Promise<TrackingNumberBrief> {
+        return this.client.get<TrackingNumberBrief>(`${this.basePath}lookup-by-number/`, {
+            tracking_no: trackingNo,
+        });
+    }
 }
 
 // ========== Shipment API ==========
