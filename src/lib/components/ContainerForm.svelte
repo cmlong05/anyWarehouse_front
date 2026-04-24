@@ -65,6 +65,11 @@
         total_weight: 0,
         parent: null as string | null
     });
+
+    function generateBarcode() {
+        const alphabet = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    }
     
     // 当 initialData 变化时更新表单数据
     $effect(() => {
@@ -77,6 +82,10 @@
         formData.a_volume = initialData.a_volume || 0;
         formData.total_weight = initialData.total_weight || 0;
         formData.parent = getParentFastCode(initialData.parent);
+
+        if (mode === 'add' && !formData.barcode) {
+            formData.barcode = generateBarcode();
+        }
     });
 
     const getParentId = (parentFastCode: string | null): number | null => {
@@ -178,6 +187,7 @@
         name="barcode"
         value={formData.barcode}
         placeholder="扫描或输入条形码"
+        required
         oninput={(v) => formData.barcode = v}
     />
 
