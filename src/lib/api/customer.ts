@@ -139,6 +139,7 @@ export class SalesOrderAPI extends BaseOrderAPI<
         delivery_to?: string;
         min_amount?: number;
         max_amount?: number;
+        exclude_delivered_paid?: string;
         ordering?: string;
         page?: number;
         page_size?: number;

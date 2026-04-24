@@ -15,6 +15,7 @@
     // 客户列表
     let customers = $state<CustomerBrief[]>([]);
     let copyError = $state<string | null>(null);
+    let showDeliveredPaid = $state(false);
     
     // 使用 useOrderList composable
     const orderList = useOrderList<SalesOrderBrief>({
@@ -26,11 +27,36 @@
             order_number: '',
             date_from: '',
             date_to: '',
+            exclude_delivered_paid: '1',
         },
         filterMapping: {
             customer_id: 'customer_id',
         },
     });
+
+    function handleStatusChange(value: string) {
+        orderList.filters.status = value;
+        orderList.applyFilters();
+    }
+
+    function handleShowDeliveredPaidToggle(value: boolean) {
+        showDeliveredPaid = value;
+        const nextFilters = { ...orderList.filters };
+
+        if (showDeliveredPaid) {
+            delete nextFilters.exclude_delivered_paid;
+        } else {
+            nextFilters.exclude_delivered_paid = '1';
+        }
+
+        orderList.filters = nextFilters;
+        orderList.applyFilters();
+    }
+
+    function resetAllFilters() {
+        orderList.resetFilters();
+        showDeliveredPaid = false;
+    }
     
     // 客户选项
     const customerOptions = $derived([
@@ -43,11 +69,11 @@
         { key: 'order_number', title: t('sales.field.orderNumber', $localeStore) },
         { key: 'customer_name', title: t('sales.field.customer', $localeStore) },
         { key: 'status', title: t('sales.field.status', $localeStore) },
-        { key: 'payment_status', title: $localeStore === 'zh' ? '付款状态' : 'Payment Status' },
+        { key: 'payment_status', title: $localeStore === 'zh' ? '收款' : 'Payment Status' },
         { key: 'priority', title: t('sales.field.priority', $localeStore) },
         { key: 'order_date', title: t('sales.field.orderDate', $localeStore) },
         { key: 'expected_delivery', title: t('sales.field.expectedDelivery', $localeStore) },
-        { key: 'total_amount', title: t('sales.field.totalAmount', $localeStore), align: 'right' as const },
+        { key: 'total_amount', title: $localeStore === 'zh' ? '金额' : t('sales.field.totalAmount', $localeStore), align: 'right' as const },
         { key: 'item_count', title: t('sales.items.title', $localeStore), align: 'right' as const },
     ]);
 
@@ -220,7 +246,15 @@
     {/if}
 
     <!-- 筛选区域 -->
-    <FilterPanel onReset={orderList.resetFilters}>
+    <FilterPanel onReset={resetAllFilters}>
+        <FormSelect
+            label={t('sales.field.priority', $localeStore)}
+            name="priority"
+            options={PRIORITY_OPTIONS}
+            value={orderList.filters.priority || ''}
+            onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
+        />
+
         <FormSelect
             label={t('sales.field.customer', $localeStore)}
             name="customer"
@@ -234,16 +268,20 @@
             name="status"
             options={ORDER_STATUS_OPTIONS.sales}
             value={orderList.filters.status || ''}
-            onchange={(v) => { orderList.filters.status = v; orderList.applyFilters(); }}
+            onchange={(v) => handleStatusChange(v)}
         />
-        
-        <FormSelect
-            label={t('sales.field.priority', $localeStore)}
-            name="priority"
-            options={PRIORITY_OPTIONS}
-            value={orderList.filters.priority || ''}
-            onchange={(v) => { orderList.filters.priority = v; orderList.applyFilters(); }}
-        />
+
+        <div class="flex items-center gap-3 text-base text-gray-700">
+            <label class="inline-flex items-center gap-3 cursor-pointer px-2 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <input
+                    type="checkbox"
+                    checked={showDeliveredPaid}
+                    onchange={(event) => handleShowDeliveredPaidToggle((event.target as HTMLInputElement).checked)}
+                    class="h-5 w-5 text-blue-600 border-gray-300 rounded"
+                />
+                <span>{$localeStore === 'zh' ? '已交付收款' : 'Show Delivered + Paid'}</span>
+            </label>
+        </div>
         
         <FormInput
             label={t('sales.field.orderNumber', $localeStore)}
@@ -302,9 +340,13 @@
                         {getStatusLabel(value as string)}
                     </span>
                 {:else if column.key === 'payment_status'}
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPaymentStatusClass(value as string | undefined)}">
-                        {getPaymentStatusLabel(value as string | undefined)}
-                    </span>
+                    <span
+                        class="inline-flex h-4 w-4 rounded-full"
+                        class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
+                        class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
+                        class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
+                        title={value === 'paid' ? ($localeStore === 'zh' ? '已收款' : 'Paid') : value === 'partial' ? ($localeStore === 'zh' ? '部分收款' : 'Partially Paid') : ($localeStore === 'zh' ? '未收款' : 'Unpaid')}
+                    ></span>
                 {:else if column.key === 'priority'}
                     {#if getPriorityClass(value as string)}
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getPriorityClass(value as string)}">
