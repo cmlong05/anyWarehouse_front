@@ -5,6 +5,7 @@
     import { salesOrderAPI, customerAPI } from '$lib/api';
     import type { SalesOrderBrief, CustomerBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
+    import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { LocaleSwitcher } from '$lib/components/shipment';
@@ -64,18 +65,29 @@
         ...customers.map(c => ({ value: c.id.toString(), label: c.name }))
     ]);
     
+    let sortKey = $state<keyof SalesOrderBrief>('order_date');
+    let sortDirection = $state<'asc' | 'desc'>('desc');
+
     // 表格列定义
     const columns = $derived([
-        { key: 'order_number', title: t('sales.field.orderNumber', $localeStore) },
-        { key: 'customer_name', title: t('sales.field.customer', $localeStore) },
-        { key: 'status', title: t('sales.field.status', $localeStore) },
-        { key: 'payment_status', title: $localeStore === 'zh' ? '收款' : 'Payment Status' },
-        { key: 'priority', title: t('sales.field.priority', $localeStore) },
-        { key: 'order_date', title: t('sales.field.orderDate', $localeStore) },
-        { key: 'expected_delivery', title: t('sales.field.expectedDelivery', $localeStore) },
-        { key: 'total_amount', title: $localeStore === 'zh' ? '金额' : t('sales.field.totalAmount', $localeStore), align: 'right' as const },
-        { key: 'item_count', title: t('sales.items.title', $localeStore), align: 'right' as const },
+        { key: 'order_number', title: t('sales.field.orderNumber', $localeStore), sortable: true },
+        { key: 'customer_name', title: t('sales.field.customer', $localeStore), sortable: true },
+        { key: 'status', title: t('sales.field.status', $localeStore), sortable: true },
+        { key: 'payment_status', title: $localeStore === 'zh' ? '收款' : 'Payment Status', sortable: true },
+        { key: 'priority', title: t('sales.field.priority', $localeStore), sortable: true },
+        { key: 'order_date', title: t('sales.field.orderDate', $localeStore), sortable: true },
+        { key: 'expected_delivery', title: t('sales.field.expectedDelivery', $localeStore), sortable: true },
+        { key: 'total_amount', title: $localeStore === 'zh' ? '金额' : t('sales.field.totalAmount', $localeStore), align: 'right' as const, sortable: true },
+        { key: 'item_count', title: t('sales.items.title', $localeStore), align: 'right' as const, sortable: true },
     ]);
+
+    const sortedItems = $derived.by(() => sortByKey(orderList.items, sortKey, sortDirection));
+
+    function toggleSort(columnKey: string) {
+        const next = toggleSortKey(sortKey, sortDirection, columnKey as keyof SalesOrderBrief);
+        sortKey = next.sortKey;
+        sortDirection = next.sortDirection;
+    }
 
     // 状态徽章样式
     function getStatusClass(status: string): string {
@@ -325,11 +337,14 @@
         </div>
     {:else}
         <DataTable
-            data={orderList.items}
+            data={sortedItems}
             {columns}
             loading={orderList.loading}
             clickable={true}
             onRowClick={(item: SalesOrderBrief) => viewDetail(item.id)}
+            onHeaderClick={toggleSort}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
             emptyText={t('sales.msg.noItems', $localeStore)}
         >
             {#snippet cellRender({ item, column, value }: { item: SalesOrderBrief; column: { key: string }; value: unknown })}
