@@ -2,6 +2,7 @@
     import type { ContainerResponse } from '$lib';
     import { formatNumber } from '$lib/utils';
     import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { DataTable } from '$lib/components/ui';
     import EditButton from '$lib/components/EditButton.svelte';
@@ -57,6 +58,33 @@
         goto(`/container/add?parent=${container.fastCode}`);
     }
     
+    let barcodeSvg = $state<SVGSVGElement | null>(null);
+
+    async function renderBarcode() {
+        if (!barcodeSvg || !container.barcode) return;
+
+        const { default: JsBarcode } = await import('jsbarcode');
+        JsBarcode(barcodeSvg, container.barcode, {
+            format: 'CODE128',
+            displayValue: false,
+            width: 1,
+            height: 24,
+            margin: 0,
+            background: 'transparent',
+            lineColor: '#111827'
+        });
+    }
+
+    onMount(() => {
+        renderBarcode();
+    });
+
+    $effect(() => {
+        if (barcodeSvg && container.barcode) {
+            renderBarcode();
+        }
+    });
+
     function goToItem(itemId: number) {
         goto(`/item/${itemId}`);
     }
@@ -101,9 +129,14 @@
         <div class="lg:col-span-2 space-y-6">
             <!-- 容量卡片 -->
             <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
-                    <BoxIcon class="h-5 w-5 text-blue-600" />
-                    {container.fastCode}
+                <h2 class="text-lg font-semibold mb-6 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <BoxIcon class="h-5 w-5 text-blue-600" />
+                        <span>{container.fastCode}</span>
+                    </div>
+                    <span title={container.barcode} class="inline-block">
+                        <svg bind:this={barcodeSvg} class="h-8" aria-label="Container barcode"></svg>
+                    </span>
                 </h2>
                 <!-- 分隔线 -->
                 <div class="border-t border-gray-200"></div>
