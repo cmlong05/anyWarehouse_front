@@ -77,3 +77,14 @@ export {
     type PIDefaults,
     type SystemSettingUpdateRequest,
 } from './api/settings';
+
+// 导出出入库记录 API
+export {
+    InventoryMovementAPI,
+    inventoryMovementAPI,
+    type InventoryMovement,
+    type InventoryMovementCreateRequest,
+    type MovementType,
+    type MovementSummary,
+    type MovementFilters,
+} from './api/movement';

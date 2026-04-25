@@ -14,6 +14,14 @@
 		{ href: '/', label: 'Home' },
 		{ href: '/container/A', label: 'Container' },
 		{
+			href: '/storage/movement',
+			label: '出入库',
+			children: [
+				{ href: '/storage/movement', label: '出入库记录' },
+				{ href: '/storage/movement/add', label: '新建记录' }
+			]
+		},
+		{
 			href: '/item/category/4',
 			label: 'Categories',
 			children: [
