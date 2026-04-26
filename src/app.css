@@ -236,3 +236,10 @@ body {
   height: 40px;
   font-size: var(--font-size-base);
 }
+
+/* Svelecte 全局样式覆盖（第三方组件，无法通过 Tailwind 类直达内部 DOM） */
+.svelecte-control {
+  border: 1px solid var(--color-gray-300) !important;
+  border-radius: var(--border-radius-md) !important;
+  font-size: var(--font-size-sm);
+}

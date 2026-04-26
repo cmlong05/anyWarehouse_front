@@ -6,6 +6,13 @@
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import Plus from 'lucide-svelte/icons/plus';
+    import Svelecte from 'svelecte';
+
+    const typeOptions = [
+        { value: 'inbound', label: '入库' },
+        { value: 'outbound', label: '出库' },
+        { value: 'transfer', label: '移库' },
+    ];
 
     let movements = $state<InventoryMovement[]>([]);
     let loading = $state(true);
@@ -15,7 +22,7 @@
     const pageSize = 20;
 
     // 筛选
-    let filterType = $state<MovementType | ''>('');
+    let filterType = $state<MovementType | '' | null>('');
     let filterItem = $state('');
     let filterContainer = $state('');
     let filterDateFrom = $state('');
@@ -69,12 +76,14 @@
     }
 
     function typeBadgeClass(t: MovementType): string {
-        return {
-            inbound: 'badge-inbound',
-            outbound: 'badge-outbound',
-            transfer: 'badge-transfer',
-        }[t];
+        return badgeClasses[t];
     }
+
+    const badgeClasses: Record<MovementType, string> = {
+        inbound: 'bg-emerald-100 text-emerald-800',
+        outbound: 'bg-red-100 text-red-800',
+        transfer: 'bg-blue-100 text-blue-800',
+    };
 
     const totalPages = $derived(Math.max(1, Math.ceil(totalCount / pageSize)));
 </script>
@@ -83,44 +92,79 @@
     <title>出入库记录</title>
 </svelte:head>
 
-<div class="page">
-    <header class="page-header">
-        <h1>出入库记录</h1>
-        <button class="btn-primary" onclick={() => goto('/storage/movement/add')}>
+<div class="p-6 max-w-[1400px] mx-auto">
+    <header class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-gray-900">出入库记录</h1>
+        <button
+            class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            onclick={() => goto('/storage/movement/add')}
+        >
             <Plus size={16} /> 新建记录
         </button>
     </header>
 
-    <section class="filters">
-        <div class="filter-row">
-            <label>
+    <section class="bg-gray-50 p-4 rounded-lg mb-4">
+        <div class="flex flex-wrap gap-3 items-end">
+            <label class="flex flex-col gap-1 text-sm text-gray-700">
                 类型
-                <select bind:value={filterType}>
-                    <option value="">全部</option>
-                    <option value="inbound">入库</option>
-                    <option value="outbound">出库</option>
-                    <option value="transfer">移库</option>
-                </select>
+                <div class="min-w-[160px]">
+                    <Svelecte
+                        inputId="filter-type"
+                        options={typeOptions}
+                        bind:value={filterType}
+                        placeholder="全部"
+                        clearable={true}
+                        class="svelecte-control"
+                    />
+                </div>
             </label>
-            <label>
+            <label class="flex flex-col gap-1 text-sm text-gray-700">
                 物品 ID
-                <input type="number" bind:value={filterItem} placeholder="物品 ID" />
+                <input
+                    type="number"
+                    bind:value={filterItem}
+                    placeholder="物品 ID"
+                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
-            <label>
+            <label class="flex flex-col gap-1 text-sm text-gray-700">
                 容器 ID
-                <input type="number" bind:value={filterContainer} placeholder="容器 ID" />
+                <input
+                    type="number"
+                    bind:value={filterContainer}
+                    placeholder="容器 ID"
+                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
-            <label>
+            <label class="flex flex-col gap-1 text-sm text-gray-700">
                 起始日期
-                <input type="date" bind:value={filterDateFrom} />
+                <input
+                    type="date"
+                    bind:value={filterDateFrom}
+                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
-            <label>
+            <label class="flex flex-col gap-1 text-sm text-gray-700">
                 截止日期
-                <input type="date" bind:value={filterDateTo} />
+                <input
+                    type="date"
+                    bind:value={filterDateTo}
+                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
-            <div class="filter-actions">
-                <button class="btn-primary" onclick={applyFilters}>筛选</button>
-                <button class="btn-secondary" onclick={resetFilters}>重置</button>
+            <div class="flex gap-2">
+                <button
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    onclick={applyFilters}
+                >
+                    筛选
+                </button>
+                <button
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    onclick={resetFilters}
+                >
+                    重置
+                </button>
             </div>
         </div>
     </section>
@@ -132,51 +176,51 @@
     {#if loading}
         <Loading />
     {:else if movements.length === 0}
-        <p class="empty">没有出入库记录</p>
+        <p class="text-center py-8 text-gray-500">没有出入库记录</p>
     {:else}
-        <div class="table-wrap">
-            <table>
+        <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg">
+            <table class="w-full border-collapse">
                 <thead>
                     <tr>
-                        <th>单号</th>
-                        <th>类型</th>
-                        <th>物品</th>
-                        <th>数量</th>
-                        <th>来源</th>
-                        <th>目标</th>
-                        <th>原因</th>
-                        <th>关联</th>
-                        <th>时间</th>
-                        <th>操作人</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">单号</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">类型</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">物品</th>
+                        <th class="px-3 py-2.5 text-right text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">数量</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">来源</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">目标</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">原因</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">关联</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">时间</th>
+                        <th class="px-3 py-2.5 text-left text-sm font-semibold text-gray-700 bg-gray-50 border-b border-gray-100">操作人</th>
                     </tr>
                 </thead>
                 <tbody>
                     {#each movements as m (m.id)}
-                        <tr>
-                            <td class="mono">{m.movement_no}</td>
-                            <td>
-                                <span class="badge {typeBadgeClass(m.movement_type)}">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100 font-mono text-xs">{m.movement_no}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">
+                                <span class={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClasses[m.movement_type]}`}>
                                     {m.movement_type_display}
                                 </span>
                             </td>
-                            <td>
-                                <div class="item-cell">
-                                    <span class="sku">{m.item_sku}</span>
-                                    <span class="name">{m.item_name}</span>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-indigo-600">{m.item_sku}</span>
+                                    <span class="text-xs text-gray-500">{m.item_name}</span>
                                 </div>
                             </td>
-                            <td class="num">{m.quantity}</td>
-                            <td>{m.from_container_code ?? '-'}</td>
-                            <td>{m.to_container_code ?? '-'}</td>
-                            <td>{m.reason || '-'}</td>
-                            <td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100 text-right tabular-nums">{m.quantity}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.from_container_code ?? '-'}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.to_container_code ?? '-'}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.reason || '-'}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">
                                 {#if m.purchase_order_no}PO: {m.purchase_order_no}{/if}
                                 {#if m.sales_order_no}SO: {m.sales_order_no}{/if}
                                 {#if m.shipment_no}SH: {m.shipment_no}{/if}
                                 {#if !m.purchase_order_no && !m.sales_order_no && !m.shipment_no}-{/if}
                             </td>
-                            <td>{formatDate(m.created_at)}</td>
-                            <td>{m.created_by || '-'}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{formatDate(m.created_at)}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.created_by || '-'}</td>
                         </tr>
                     {/each}
                 </tbody>
@@ -184,40 +228,24 @@
         </div>
 
         {#if totalPages > 1}
-            <div class="pagination">
-                <button disabled={currentPage <= 1} onclick={() => changePage(currentPage - 1)}>上一页</button>
-                <span>{currentPage} / {totalPages}</span>
-                <button disabled={currentPage >= totalPages} onclick={() => changePage(currentPage + 1)}>下一页</button>
+            <div class="flex justify-center gap-4 items-center mt-4">
+                <button
+                    disabled={currentPage <= 1}
+                    onclick={() => changePage(currentPage - 1)}
+                    class="px-3 py-1.5 border border-gray-300 bg-white rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    上一页
+                </button>
+                <span class="text-sm text-gray-600">{currentPage} / {totalPages}</span>
+                <button
+                    disabled={currentPage >= totalPages}
+                    onclick={() => changePage(currentPage + 1)}
+                    class="px-3 py-1.5 border border-gray-300 bg-white rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    下一页
+                </button>
             </div>
         {/if}
     {/if}
 </div>
 
-<style>
-    .page { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .filters { background: #f9fafb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
-    .filter-row label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem; }
-    .filter-row input, .filter-row select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; min-width: 140px; }
-    .filter-actions { display: flex; gap: 0.5rem; }
-    .btn-primary { background: #4f46e5; color: white; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; }
-    .btn-secondary { background: #e5e7eb; color: #1f2937; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; }
-    .table-wrap { overflow-x: auto; background: white; border: 1px solid #e5e7eb; border-radius: 8px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 0.625rem 0.75rem; text-align: left; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
-    th { background: #f9fafb; font-weight: 600; color: #374151; }
-    .mono { font-family: monospace; font-size: 0.8rem; }
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .item-cell { display: flex; flex-direction: column; }
-    .sku { font-weight: 600; color: #4f46e5; }
-    .name { font-size: 0.75rem; color: #6b7280; }
-    .badge { display: inline-block; padding: 0.125rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
-    .badge-inbound { background: #d1fae5; color: #065f46; }
-    .badge-outbound { background: #fee2e2; color: #991b1b; }
-    .badge-transfer { background: #dbeafe; color: #1e40af; }
-    .pagination { display: flex; justify-content: center; gap: 1rem; align-items: center; margin-top: 1rem; }
-    .pagination button { padding: 0.4rem 0.8rem; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer; }
-    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .empty { text-align: center; padding: 2rem; color: #6b7280; }
-</style>

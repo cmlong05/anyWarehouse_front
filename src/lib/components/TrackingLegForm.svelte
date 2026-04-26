@@ -137,6 +137,4 @@
     </div>
 </form>
 
-<style>
-    :global(.svelecte-control) { border: 1px solid #ced4da !important; border-radius: 4px !important; font-size: 0.875rem; }
-</style>
+

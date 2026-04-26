@@ -2,6 +2,7 @@
     import { goto } from '$app/navigation';
     import { inventoryMovementAPI, type MovementType, type InventoryMovementCreateRequest } from '$lib/api';
     import Alert from '$lib/components/Alert.svelte';
+    import Svelecte from 'svelecte';
     import type { ContainerBriefID } from '$lib';
 
     let { data } = $props<{
@@ -14,19 +15,29 @@
         };
     }>();
 
+    const movementTypeOptions = [
+        { value: 'inbound', label: '入库 (Inbound)' },
+        { value: 'outbound', label: '出库 (Outbound)' },
+        { value: 'transfer', label: '移库 (Transfer)' },
+    ];
+
     let movementType = $state<MovementType>('inbound');
     let itemId = $state('');
     let quantity = $state(1);
-    let fromContainer = $state('');
-    let toContainer = $state('');
+    let fromContainer = $state<number | string>('');
+    let toContainer = $state<number | string>('');
+
+    const containerOptions = $derived(
+        (data.containers ?? []).map((c: ContainerBriefID) => ({ value: c.id, label: c.fastCode })),
+    );
 
     $effect(() => {
         if (['inbound', 'outbound', 'transfer'].includes(data.initialType)) {
             movementType = data.initialType as MovementType;
         }
         if (data.initialItemId) itemId = data.initialItemId;
-        if (data.initialFromContainerId) fromContainer = data.initialFromContainerId;
-        if (data.initialToContainerId) toContainer = data.initialToContainerId;
+        if (data.initialFromContainerId) fromContainer = Number(data.initialFromContainerId);
+        if (data.initialToContainerId) toContainer = Number(data.initialToContainerId);
     });
     let reason = $state('');
     let notes = $state('');
@@ -75,95 +86,123 @@
 
 <svelte:head><title>新建出入库记录</title></svelte:head>
 
-<div class="page">
-    <h1>新建出入库记录</h1>
+<div class="p-6 max-w-3xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">新建出入库记录</h1>
 
     {#if error}
         <Alert error={error} />
     {/if}
 
-    <form class="form" onsubmit={(e) => { e.preventDefault(); submit(); }}>
-        <div class="grid">
-            <label>
-                类型 <span class="req">*</span>
-                <select bind:value={movementType}>
-                    <option value="inbound">入库 (Inbound)</option>
-                    <option value="outbound">出库 (Outbound)</option>
-                    <option value="transfer">移库 (Transfer)</option>
-                </select>
+    <form
+        class="bg-white p-6 border border-gray-200 rounded-lg"
+        onsubmit={(e) => { e.preventDefault(); submit(); }}
+    >
+        <div class="grid grid-cols-2 gap-4">
+            <label class="flex flex-col gap-1.5 text-sm font-medium">
+                类型 <span class="text-red-500">*</span>
+                <Svelecte
+                    options={movementTypeOptions}
+                    bind:value={movementType}
+                    clearable={false}
+                    class="svelecte-control"
+                />
             </label>
 
-            <label>
-                物品 ID <span class="req">*</span>
-                <input type="number" bind:value={itemId} required />
+            <label class="flex flex-col gap-1.5 text-sm font-medium">
+                物品 ID <span class="text-red-500">*</span>
+                <input
+                    type="number"
+                    bind:value={itemId}
+                    required
+                    class="px-2 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
 
-            <label>
-                数量 <span class="req">*</span>
-                <input type="number" min="1" bind:value={quantity} required />
+            <label class="flex flex-col gap-1.5 text-sm font-medium">
+                数量 <span class="text-red-500">*</span>
+                <input
+                    type="number"
+                    min="1"
+                    bind:value={quantity}
+                    required
+                    class="px-2 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
 
             {#if showFrom}
-                <label>
-                    来源容器 <span class="req">*</span>
-                    <select bind:value={fromContainer}>
-                        <option value="">-- 选择 --</option>
-                        {#each data.containers as c (c.id)}
-                            <option value={c.id}>{c.fastCode}</option>
-                        {/each}
-                    </select>
+                <label class="flex flex-col gap-1.5 text-sm font-medium">
+                    来源容器 <span class="text-red-500">*</span>
+                    <Svelecte
+                        options={containerOptions}
+                        bind:value={fromContainer}
+                        placeholder="-- 选择 --"
+                        clearable={true}
+                        searchProps={{ fields: ['label'] }}
+                        class="svelecte-control"
+                    />
                 </label>
             {/if}
 
             {#if showTo}
-                <label>
-                    目标容器 <span class="req">*</span>
-                    <select bind:value={toContainer}>
-                        <option value="">-- 选择 --</option>
-                        {#each data.containers as c (c.id)}
-                            <option value={c.id}>{c.fastCode}</option>
-                        {/each}
-                    </select>
+                <label class="flex flex-col gap-1.5 text-sm font-medium">
+                    目标容器 <span class="text-red-500">*</span>
+                    <Svelecte
+                        options={containerOptions}
+                        bind:value={toContainer}
+                        placeholder="-- 选择 --"
+                        clearable={true}
+                        searchProps={{ fields: ['label'] }}
+                        class="svelecte-control"
+                    />
                 </label>
             {/if}
 
-            <label>
+            <label class="flex flex-col gap-1.5 text-sm font-medium">
                 操作人
-                <input type="text" bind:value={createdBy} placeholder="(可选)" />
+                <input
+                    type="text"
+                    bind:value={createdBy}
+                    placeholder="(可选)"
+                    class="px-2 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
 
-            <label class="full">
+            <label class="col-span-2 flex flex-col gap-1.5 text-sm font-medium">
                 原因
-                <input type="text" bind:value={reason} placeholder="如：盘点修正、报废、客户退货等" />
+                <input
+                    type="text"
+                    bind:value={reason}
+                    placeholder="如：盘点修正、报废、客户退货等"
+                    class="px-2 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
             </label>
 
-            <label class="full">
+            <label class="col-span-2 flex flex-col gap-1.5 text-sm font-medium">
                 备注
-                <textarea bind:value={notes} rows="3"></textarea>
+                <textarea
+                    bind:value={notes}
+                    rows="3"
+                    class="px-2 py-2 border border-gray-300 rounded-md text-sm resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                ></textarea>
             </label>
         </div>
 
-        <div class="actions">
-            <button type="button" class="btn-secondary" onclick={() => goto('/storage/movement')}>取消</button>
-            <button type="submit" class="btn-primary" disabled={submitting}>
+        <div class="flex justify-end gap-3 mt-6">
+            <button
+                type="button"
+                class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-md text-sm transition-colors"
+                onclick={() => goto('/storage/movement')}
+            >
+                取消
+            </button>
+            <button
+                type="submit"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={submitting}
+            >
                 {submitting ? '提交中...' : '提交'}
             </button>
         </div>
     </form>
 </div>
 
-<style>
-    .page { padding: 1.5rem; max-width: 800px; margin: 0 auto; }
-    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
-    .form { background: white; padding: 1.5rem; border: 1px solid #e5e7eb; border-radius: 8px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .grid label { display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.875rem; font-weight: 500; }
-    .full { grid-column: 1 / -1; }
-    input, select, textarea { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.875rem; }
-    textarea { resize: vertical; }
-    .req { color: #ef4444; }
-    .actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
-    .btn-primary { background: #4f46e5; color: white; padding: 0.5rem 1.25rem; border-radius: 6px; border: none; cursor: pointer; }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-secondary { background: #e5e7eb; color: #1f2937; padding: 0.5rem 1.25rem; border-radius: 6px; border: none; cursor: pointer; }
-</style>
