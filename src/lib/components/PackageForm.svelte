@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { packageAPI, shipmentAPI, itemAPI } from '$lib/api';
     import type { ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest } from '$lib/shipmentTypes';
     import type { Item } from '$lib';
-    import { safeParseFloat, formatNumber } from '$lib/utils';
+    import { safeParseFloat, formatNumber, getErrorMessage } from '$lib/utils';
     import { config } from '$lib/config';
     import { FormInput, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
@@ -136,7 +137,7 @@
                 if (initialShipmentId) { selectedShipmentIds = [initialShipmentId]; await loadShipmentDetail(initialShipmentId); }
                 packageNo = generatePackageNo();
             }
-        } catch (err: any) { error = err.message || '加载数据失败'; } 
+        } catch (err) { error = getErrorMessage(err, '加载数据失败'); } 
         finally { loading = false; }
     }
 
@@ -174,7 +175,7 @@
             }
             
             if (pkg.shipments) { for (const s of pkg.shipments) { selectedShipmentIds.push(s.id); await loadShipmentDetail(s.id); } }
-        } catch (err: any) { error = err.message || '加载包裹失败'; }
+        } catch (err) { error = getErrorMessage(err, '加载包裹失败'); }
     }
 
     async function loadShipmentDetail(shipmentId: number) { 
@@ -335,7 +336,7 @@
                 manualProductName = item.name;
                 itemCache.set(item.id, item);
             }).catch(err => {
-                console.error('加载物品详情失败:', err);
+                logger.error('加载物品详情失败:', err);
                 error = '加载物品详情失败';
                 setTimeout(() => error = '', 2000);
                 // 失败时清空
@@ -429,7 +430,7 @@
             }
             else { result = await packageAPI.update(packageId!, submitData); success = '包裹更新成功！'; }
             onSuccess?.(result);
-        } catch (err: any) { error = err.message || '保存失败'; }
+        } catch (err) { error = getErrorMessage(err, '保存失败'); }
         finally { saving = false; }
     }
 </script>

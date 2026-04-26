@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { page as pageStore } from '$app/state';
     import { salesOrderAPI, customerAPI } from '$lib/api';
     import { getCurrencySymbol } from '$lib/utils/formatters';
+    import { getErrorMessage } from '$lib/utils/errors';
     import { getSalesStatusClass as getStatusClass, getPriorityClass } from '$lib/utils/orderBadges';
     import type { SalesOrderBrief, CustomerBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
@@ -128,7 +130,7 @@
         try {
             customers = await customerAPI.listBrief();
         } catch (err) {
-            console.error('加载客户失败:', err);
+            logger.error('加载客户失败:', err);
         }
     }
 
@@ -166,9 +168,9 @@
             
             sessionStorage.setItem('sales_order_copy_data', JSON.stringify(copyData));
             goto(`/customer/sales-order/add?customer_id=${fullOrder.customer}`);
-        } catch (err: any) {
-            copyError = err.message || ($localeStore === 'zh' ? '复制订单失败' : 'Failed to copy order');
-            console.error('Copy error:', err);
+        } catch (err) {
+            copyError = getErrorMessage(err, $localeStore === 'zh' ? '复制订单失败' : 'Failed to copy order');
+            logger.error('Copy error:', err);
         }
     }
 

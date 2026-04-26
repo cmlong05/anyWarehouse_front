@@ -28,7 +28,7 @@
 
     const cleanInitial = $derived({ ...supplier });
 
-    function handlePartySubmit(data: any) {
+    function handlePartySubmit(data: Record<string, unknown>) {
         onSubmit({ ...data, currency } as SupplierFormData);
     }
 </script>

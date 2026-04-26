@@ -1,5 +1,6 @@
 <script lang="ts">
     import { config } from '$lib/config';
+    import { logger } from '$lib/logger';
     import type { ItemVariant } from '$lib/types/variant';
     import type { SupplierBrief, QuotationBrief, QuotationCreateRequest } from '$lib';
     import { NumberStepper, CurrencySelect } from '$lib/components/ui';
@@ -70,7 +71,7 @@
                 suppliers = await response.json();
             }
         } catch (err) {
-            console.error('加载供应商失败:', err);
+            logger.error('加载供应商失败', err);
         }
     }
 
@@ -109,7 +110,7 @@
                 }
             }
         } catch (err) {
-            console.error('加载报价失败:', err);
+            logger.error('加载报价失败', err);
         } finally {
             loading = false;
         }
@@ -161,7 +162,7 @@
                     successCount++;
                 } catch (err) {
                     errorCount++;
-                    console.error(`保存变体 ${variant.variant_item} 报价失败:`, err);
+                    logger.error(`保存变体 ${variant.variant_item} 报价失败`, err);
                 }
             }
 

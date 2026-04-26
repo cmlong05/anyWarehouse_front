@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -62,8 +63,8 @@
 
             // 添加/编辑成功后跳转到分类详情页
             await goto(`/item/category/${result.id}`);
-        } catch (error: any) {
-            alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${error?.message || '未知错误'}`);
+        } catch (error) {
+            alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${getErrorMessage(error, '未知错误')}`);
         }
     }
 

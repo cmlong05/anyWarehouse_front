@@ -10,6 +10,7 @@
 import type { Item } from '$lib';
 import type { ItemVariant } from '$lib/types/variant';
 import { itemAPI } from '$lib/api';
+import { getErrorMessage } from '$lib/utils/errors';
 
 export interface QuotationLine {
     id: number;
@@ -132,7 +133,9 @@ export function useQuotationLineForm(options: UseQuotationLineFormOptions) {
 
         try {
             const itemResponse = await itemAPI.get(itemId);
-            const item = (itemResponse as any).item || itemResponse;
+            const item = (itemResponse && typeof itemResponse === 'object' && 'item' in itemResponse)
+                ? (itemResponse as { item: typeof itemResponse }).item
+                : itemResponse;
 
             const updatedLine = { ...line, item: itemId, itemDetail: item };
             quotationLines[lineIndex] = updatedLine;
@@ -273,7 +276,7 @@ export function useQuotationLineForm(options: UseQuotationLineFormOptions) {
                 failCount++;
                 const rowNum = quotationLines.findIndex(l => l.id === line.id) + 1;
                 const itemName = line.itemDetail?.name || '未知物品';
-                const errMsg = err instanceof Error ? err.message : ((err as any)?.message || '创建失败');
+                const errMsg = getErrorMessage(err, '创建失败');
                 errors.push(`第 ${rowNum} 行 (${itemName}): ${errMsg}`);
             }
         }

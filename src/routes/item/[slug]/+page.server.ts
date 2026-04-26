@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { ItemSet, QuotationBrief } from '$lib';
@@ -31,7 +32,7 @@ export async function load({ params, fetch }: { params: { slug: string }, fetch:
             bestPrice = quotationData.best_price;
         }
     } catch (e) {
-        console.error('Failed to fetch quotations:', e);
+        logger.error('Failed to fetch quotations:', e);
     }
     
     // 获取物品的变体信息
@@ -42,7 +43,7 @@ export async function load({ params, fetch }: { params: { slug: string }, fetch:
             variantInfo = await variantRes.json();
         }
     } catch (e) {
-        console.error('Failed to fetch variant info:', e);
+        logger.error('Failed to fetch variant info:', e);
     }
     
     return { itemDetail, quotations, bestPrice, variantInfo };

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import type { ItemSet, QuotationBrief } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
@@ -67,7 +68,7 @@
                 data = { ...data, variantInfo };
             }
         } catch (e) {
-            console.error('刷新变体数据失败:', e);
+            logger.error('刷新变体数据失败:', e);
         }
     }
 
@@ -184,14 +185,14 @@
                 alert('盘点失败，请稍后重试');
             }
         } catch (error) {
-            console.error('盘点错误:', error);
+            logger.error('盘点错误:', error);
             alert('网络错误，请检查网络连接');
         } finally {
             isInventoryChecking = false;
         }
     };
 
-    const handleStorage = async (event: Event, storage: any) => {
+    const handleStorage = async (event: Event, storage: { id: number; quantity: number }) => {
         event.preventDefault();
         
         const quantity = quantityValues[storage.id] ?? 1;
@@ -224,7 +225,7 @@
                 alert('出库失败，请稍后重试');
             }
         } catch (error) {
-            console.error('出库错误:', error);
+            logger.error('出库错误:', error);
             alert('网络错误，请检查网络连接');
         }
     };

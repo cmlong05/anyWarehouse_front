@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { packageAPI, packageTrackingLegAPI } from '$lib/api';
-    import { formatDate, formatNumber, safeParseFloat } from '$lib/utils';
+    import { formatDate, formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package, PackageItem, PackageTrackingLeg } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -35,8 +36,8 @@
         try {
             await packageTrackingLegAPI.delete(leg.id);
             if (pkg) await loadPackage(pkg.id);
-        } catch (e: any) {
-            alert(e?.message || '删除失败');
+        } catch (e) {
+            alert(getErrorMessage(e, '删除失败'));
         }
     }
 
@@ -50,8 +51,8 @@
                 overall_status_display: result.overall_status_display,
                 current_leg_no: result.current_leg_no,
             };
-        } catch (e: any) {
-            alert(e?.message || '重算失败');
+        } catch (e) {
+            alert(getErrorMessage(e, '重算失败'));
         }
     }
 
@@ -69,9 +70,9 @@
             loading = true;
             error = '';
             pkg = await packageAPI.get(id);
-        } catch (err: any) {
-            error = err.message || '加载包裹详情失败';
-            console.error('Load error:', err);
+        } catch (err) {
+            error = getErrorMessage(err, '加载包裹详情失败');
+            logger.error('Load error:', err);
         } finally {
             loading = false;
         }
@@ -100,8 +101,8 @@
             deleting = true;
             await packageAPI.delete(pkg.id);
             goto('/customer/package');
-        } catch (err: any) {
-            error = err.message || '删除失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
             deleting = false;
             showDeleteModal = false;
         }
@@ -120,8 +121,8 @@
                 await packageAPI.seal(pkg.id);
             }
             await loadPackage(pkg.id);
-        } catch (err: any) {
-            error = err.message || '操作失败';
+        } catch (err) {
+            error = getErrorMessage(err, '操作失败');
         } finally {
             sealing = false;
         }

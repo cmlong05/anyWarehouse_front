@@ -8,6 +8,7 @@ import type { OrderFormItem } from '$lib/composables/useOrderForm.svelte';
 import type { ItemVariant } from '$lib/types/variant';
 import { buildVariantAttributes } from '$lib/utils/variant';
 import { config } from '$lib/config';
+import { logger } from '$lib/logger';
 
 /**
  * 通用的报价摘要接口（QuotationBrief 与 CustomerQuotationBrief 的公共子集）
@@ -38,7 +39,7 @@ async function fetchItemVariants(itemId: number): Promise<ItemVariant[]> {
             return data.variants || [];
         }
     } catch (err) {
-        console.error('获取变体失败:', err);
+        logger.error('获取变体失败', err);
     }
     return [];
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { CustomerAddress, CustomerAddressFormData } from '$lib';
     import { customerAddressAPI } from '$lib/api';
     import AddressCard from '$lib/components/customer/AddressCard.svelte';
@@ -95,8 +96,8 @@
             }
             closeModal();
             await reload();
-        } catch (err: any) {
-            error = err?.message || '保存失败';
+        } catch (err) {
+            error = getErrorMessage(err, '保存失败');
         } finally {
             saving = false;
         }
@@ -107,8 +108,8 @@
         try {
             await customerAddressAPI.delete(id);
             await reload();
-        } catch (err: any) {
-            error = err?.message || '删除失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
         }
     }
 
@@ -117,8 +118,8 @@
         try {
             await customerAddressAPI.update(addr.id, { ...addr, is_default: true, customer: customerId });
             await reload();
-        } catch (err: any) {
-            error = err?.message || '设置默认失败';
+        } catch (err) {
+            error = getErrorMessage(err, '设置默认失败');
         }
     }
 
@@ -126,8 +127,8 @@
         try {
             addresses = await customerAddressAPI.listAddresses({ customer_id: customerId });
             onRefresh?.();
-        } catch (err: any) {
-            error = err?.message || '加载失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载失败');
         }
     }
 </script>

@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { packageAPI } from '$lib/api';
-    import { formatDate, formatNumber, safeParseFloat } from '$lib/utils';
+    import { formatDate, formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -38,9 +39,9 @@
             });
             packages = response.results;
             totalCount = response.count;
-        } catch (err: any) {
-            error = err.message || '加载包裹列表失败';
-            console.error('Load error:', err);
+        } catch (err) {
+            error = getErrorMessage(err, '加载包裹列表失败');
+            logger.error('Load error:', err);
         } finally {
             loading = false;
         }
@@ -118,9 +119,9 @@
             deletePackageNo = '';
             // 刷新列表
             await loadPackages();
-        } catch (err: any) {
-            error = err.message || '删除失败';
-            console.error('Delete error:', err);
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
+            logger.error('Delete error:', err);
         } finally {
             deleting = false;
         }

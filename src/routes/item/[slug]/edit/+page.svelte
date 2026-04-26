@@ -1,5 +1,6 @@
 <!-- 编辑品项 -->
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import ItemForm from '$lib/components/ItemForm.svelte';
@@ -41,7 +42,7 @@
                 goto('/item');
             }
         } catch (err) {
-            console.error('删除失败:', err);
+            logger.error('删除失败:', err);
             error = err instanceof Error ? err.message : '删除失败，请稍后重试';
             deleteLoading = false;
             showDeleteModal = false;

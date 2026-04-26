@@ -5,6 +5,7 @@ import { goto } from '$app/navigation';
 import { shipmentAPI, packageAPI } from '$lib/api';
 import type { Shipment, Package } from '$lib/shipmentTypes';
 import { t, getStatusText, type Locale } from '$lib/i18n/shipment';
+import { getErrorMessage } from '$lib/utils/errors';
 
 export interface ShipmentActionConfig {
     action: string;
@@ -69,8 +70,8 @@ export function useShipmentDetail(shipmentId: () => number) {
             loading = true;
             error = '';
             shipment = await shipmentAPI.get(targetId);
-        } catch (err: any) {
-            error = err.message || '加载发货批次失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载发货批次失败');
         } finally {
             loading = false;
         }
@@ -113,8 +114,8 @@ export function useShipmentDetail(shipmentId: () => number) {
             }
             await loadShipment();
             return true;
-        } catch (err: any) {
-            error = err.message || '操作失败';
+        } catch (err) {
+            error = getErrorMessage(err, '操作失败');
             return false;
         } finally {
             actionLoading = false;
@@ -129,8 +130,8 @@ export function useShipmentDetail(shipmentId: () => number) {
             await shipmentAPI.delete(shipment.id);
             goto('/customer/shipment');
             return true;
-        } catch (err: any) {
-            error = err.message || '删除失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
             deleting = false;
             return false;
         }
@@ -146,8 +147,8 @@ export function useShipmentDetail(shipmentId: () => number) {
             const response = await packageAPI.getList({ page_size: 100 });
             const linkedIds = new Set(shipment?.packages?.map(p => p.id) || []);
             availablePackages = response.results.filter(p => !linkedIds.has(p.id));
-        } catch (err: any) {
-            error = err.message || '加载可用包裹失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载可用包裹失败');
         }
     }
 
@@ -164,8 +165,8 @@ export function useShipmentDetail(shipmentId: () => number) {
             showLinkPackageModal = false;
             selectedPackageId = null;
             return true;
-        } catch (err: any) {
-            error = err.message || '关联包裹失败';
+        } catch (err) {
+            error = getErrorMessage(err, '关联包裹失败');
             return false;
         } finally {
             linkingPackage = false;

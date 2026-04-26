@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { config } from '$lib/config';
 import type { ContainerBriefID } from '$lib';
 
@@ -5,7 +6,7 @@ export async function load({ fetch }) {
     try {
         const containerRes = await fetch(`${config.API_BASE_URL}/warehouse/container-brief/`);
         if (!containerRes.ok) {
-            console.error('Failed to fetch containers:', containerRes.status);
+            logger.error('Failed to fetch containers:', containerRes.status);
             return {
                 containers: []
             };
@@ -16,7 +17,7 @@ export async function load({ fetch }) {
             containers
         };
     } catch (err) {
-        console.error('Layout load error:', err);
+        logger.error('Layout load error:', err);
         // 返回空数组而不是抛出错误，让页面能够正常加载
         return {
             containers: []

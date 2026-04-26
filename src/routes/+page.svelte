@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import { onDestroy } from 'svelte';
     import { apiClient } from '$lib/api';
@@ -32,7 +33,7 @@
                 searchResults = response.results;
                 showResults = true;
             } catch (error) {
-                console.error('搜索错误:', error);
+                logger.error('搜索错误:', error);
             } finally {
                 isSearching = false;
             }

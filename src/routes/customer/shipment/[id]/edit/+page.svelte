@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { onMount } from 'svelte';
@@ -30,8 +31,8 @@
                 return;
             }
             checking = false;
-        } catch (err: any) {
-            checkError = err.message || '加载发货单失败';
+        } catch (err) {
+            checkError = getErrorMessage(err, '加载发货单失败');
             checking = false;
         }
     });

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { useBOMManager, type ComponentFormData } from '$lib/composables/useBOMManager.svelte';
     import { BOMTabs, ComponentList, BOMTreeView, TotalComponents, WhereUsed, AddComponentForm } from '$lib/components/bom';
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { BaseItem } from '$lib';
 
     interface Props {
@@ -23,8 +24,8 @@
         try {
             await bom.addComponent(childItemId, data);
             showAddForm = false;
-        } catch (err: any) {
-            alert(err.message);
+        } catch (err) {
+            alert(getErrorMessage(err));
         }
     }
 
@@ -32,8 +33,8 @@
     async function handleUpdate(id: number, data: ComponentFormData) {
         try {
             await bom.updateComponent(id, data);
-        } catch (err: any) {
-            alert(err.message);
+        } catch (err) {
+            alert(getErrorMessage(err));
         }
     }
 
@@ -42,8 +43,8 @@
         if (!confirm('确定要删除这个组件关系吗？')) return;
         try {
             await bom.deleteComponent(id);
-        } catch (err: any) {
-            alert(err.message);
+        } catch (err) {
+            alert(getErrorMessage(err));
         }
     }
 

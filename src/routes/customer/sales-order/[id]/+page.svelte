@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
@@ -414,7 +415,7 @@
         try {
             await salesOrderAPI.downloadPI(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
         } catch (e) {
-            console.error('PDF 生成失败', e);
+            logger.error('PDF 生成失败', e);
             alert('PDF 生成失败，请稍后重试。');
         } finally {
             piDownloading = false;
@@ -427,7 +428,7 @@
         try {
             await salesOrderAPI.downloadInvoice(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
         } catch (e) {
-            console.error('PDF 生成失败', e);
+            logger.error('PDF 生成失败', e);
             alert('PDF 生成失败，请稍后重试。');
         } finally {
             invoiceDownloading = false;
@@ -440,7 +441,7 @@
         try {
             await salesOrderAPI.downloadSkuReference(orderDetail.order.id, $localeStore, orderDetail.order.order_number);
         } catch (e) {
-            console.error('SKU 对照表生成失败', e);
+            logger.error('SKU 对照表生成失败', e);
             alert('SKU 对照表生成失败，请稍后重试。');
         } finally {
             skuReferenceDownloading = false;

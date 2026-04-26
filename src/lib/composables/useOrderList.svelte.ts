@@ -4,6 +4,8 @@
  * 提供采购订单和销售订单列表页面共享的逻辑
  */
 import type { PaginatedResponse } from '$lib/api/base';
+import { logger } from '$lib/logger';
+import { getErrorMessage } from '$lib/utils/errors';
 
 export interface ListFilters {
     status?: string;
@@ -15,7 +17,6 @@ export interface ListFilters {
 }
 
 export interface UseOrderListOptions<B> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     api: {
         listBrief: (params?: Record<string, unknown>) => Promise<PaginatedResponse<B>>;
         delete: (id: number) => Promise<void>;
@@ -93,16 +94,15 @@ export function useOrderList<B>(
         
         try {
             const params = buildQueryParams();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const response = await (api as any).listBrief(params);
+            const response = await api.listBrief(params);
             
             items = response.results as B[];
             totalCount = response.count;
-        } catch (err: any) {
-            const message = err.message || '加载数据失败';
+        } catch (err) {
+            const message = getErrorMessage(err, '加载数据失败');
             error = message;
             onError?.(message);
-            console.error('Load error:', err);
+            logger.error('Load error', err);
         } finally {
             loading = false;
         }
@@ -118,11 +118,11 @@ export function useOrderList<B>(
             await api.delete(id);
             await loadData();
             return true;
-        } catch (err: any) {
-            const message = err.message || '删除订单失败';
+        } catch (err) {
+            const message = getErrorMessage(err, '删除订单失败');
             error = message;
             onError?.(message);
-            console.error('Delete error:', err);
+            logger.error('Delete error', err);
             return false;
         }
     }

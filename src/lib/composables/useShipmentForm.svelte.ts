@@ -5,6 +5,7 @@ import { shipmentAPI, salesOrderAPI, customerAPI } from '$lib/api';
 import type { CustomerAddress, SalesOrderBrief, SalesOrderItem } from '$lib/index';
 import type { Shipment, ShipmentStatus, ShipmentCreateRequest } from '$lib/shipmentTypes';
 import { safeParseFloat } from '$lib/utils';
+import { getErrorMessage } from '$lib/utils/errors';
 
 export interface ShipmentPlanItem {
     id: string;
@@ -85,8 +86,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     await onOrderSelect(options.initialOrderId);
                 }
             }
-        } catch (err: any) {
-            error = err.message || '加载数据失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载数据失败');
         } finally {
             loading = false;
         }
@@ -99,8 +100,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                 salesOrderAPI.listBrief({ status: 'partial', ordering: 'priority' }),
             ]);
             availableOrders = [...confirmedRes.results, ...partialRes.results];
-        } catch (err: any) {
-            error = err.message || '加载订单失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载订单失败');
         }
     }
 
@@ -198,7 +199,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         shippingAddressesLoading = true;
         try {
             customerAddresses = await customerAPI.getAddresses(customerId);
-        } catch (err: any) {
+        } catch (err) {
             customerAddresses = [];
         } finally {
             shippingAddressesLoading = false;
@@ -369,7 +370,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                 success = '发货单创建成功';
                 options.onSuccess?.(shipment);
             } else {
-                const data: any = {
+                const data: Partial<ShipmentCreateRequest> = {
                     shipping_address: shippingAddress,
                     contact_person: contactPerson,
                     contact_phone: contactPhone,
@@ -383,8 +384,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                 success = '发货单更新成功';
                 options.onSuccess?.(shipment);
             }
-        } catch (err: any) {
-            error = err.message || (options.mode === 'create' ? '创建失败' : '更新失败');
+        } catch (err) {
+            error = getErrorMessage(err, options.mode === 'create' ? '创建失败' : '更新失败');
         } finally {
             saving = false;
         }

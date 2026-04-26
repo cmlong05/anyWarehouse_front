@@ -5,11 +5,23 @@
 
     import type { Snippet } from 'svelte';
 
+    interface PartyFormData {
+        code: string;
+        name: string;
+        contact_name: string;
+        phone: string;
+        email: string;
+        address: string;
+        remark: string;
+        is_active: boolean;
+        [key: string]: unknown;
+    }
+
     interface Props {
-        onSubmit: (data: any) => void;
+        onSubmit: (data: Record<string, unknown>) => void;
         onCancel: () => void;
-        initialData?: Record<string, any>;
-        schema: ZodSchema<any>;
+        initialData?: Record<string, unknown>;
+        schema: ZodSchema<unknown>;
         submitLabel?: string;
         loading?: boolean;
         showIsActive?: boolean;
@@ -27,19 +39,28 @@
         extras
     }: Props = $props();
 
-    let formData: Record<string, any> = $state({});
+    let formData: PartyFormData = $state({
+        code: '',
+        name: '',
+        contact_name: '',
+        phone: '',
+        email: '',
+        address: '',
+        remark: '',
+        is_active: true
+    });
     let errors: Record<string, string> = $state({});
 
     function resetForm() {
         formData = {
-            code: initialData.code || '',
-            name: initialData.name || '',
-            contact_name: initialData.contact_name || '',
-            phone: initialData.phone || '',
-            email: initialData.email || '',
-            address: initialData.address || '',
-            remark: initialData.remark || '',
-            is_active: initialData.is_active !== undefined ? initialData.is_active : true
+            code: (initialData.code as string) || '',
+            name: (initialData.name as string) || '',
+            contact_name: (initialData.contact_name as string) || '',
+            phone: (initialData.phone as string) || '',
+            email: (initialData.email as string) || '',
+            address: (initialData.address as string) || '',
+            remark: (initialData.remark as string) || '',
+            is_active: initialData.is_active !== undefined ? !!initialData.is_active : true
         };
     }
 
@@ -52,7 +73,8 @@
             return true;
         } catch (e) {
             if (e && typeof e === 'object' && 'issues' in e) {
-                for (const issue of (e as any).issues) {
+                const issues = (e as { issues: { path: (string | number)[]; message: string }[] }).issues;
+                for (const issue of issues) {
                     const path = issue.path[0] as string;
                     errors[path] = issue.message;
                 }

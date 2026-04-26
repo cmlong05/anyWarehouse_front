@@ -4,7 +4,7 @@
     import { page } from '$app/stores';
     import { get } from 'svelte/store';
     import { shipmentAPI } from '$lib/api';
-    import { formatDate } from '$lib/utils';
+    import { formatDate, getErrorMessage } from '$lib/utils';
     import type { Shipment, ShipmentFilters } from '$lib/shipmentTypes';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
     import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
@@ -89,8 +89,8 @@
                 totalCount = response.count || 0;
                 totalPages = Math.ceil(totalCount / (filters.page_size || 20));
             }
-        } catch (err: any) {
-            error = err.message || '加载失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载失败');
         } finally {
             loading = false;
         }
@@ -139,8 +139,8 @@
             deleteId = null;
             deleteName = '';
             await loadShipments();
-        } catch (err: any) {
-            error = err.message || '删除失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
         } finally {
             deleting = false;
         }

@@ -2,13 +2,13 @@
 <script lang="ts">
     import ItemForm from '$lib/components/ItemForm.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import type { Category } from '$lib';
+    import type { Category, Item } from '$lib';
 
     let { data } = $props<{ 
         data: {
             categories: Category[];
             defaultCategoryId?: number | null;
-            copyFromItem?: any;
+            copyFromItem?: Partial<Item>;
         }
     }>();
 

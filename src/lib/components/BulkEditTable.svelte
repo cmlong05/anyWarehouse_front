@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { ApiClient } from '$lib/api/client';
     import NumberStepper from '$lib/components/ui/NumberStepper.svelte';
     import CurrencySelect from '$lib/components/ui/CurrencySelect.svelte';
@@ -13,7 +14,7 @@
         currency?: string;
         in_fee?: number | null;
         weight?: string | number;
-        [key: string]: any;
+        [key: string]: unknown;
     }
 
     interface BulkEditTableProps {
@@ -113,7 +114,7 @@
         try {
             const response = await apiClient.post('/product/item/bulk_update_items/', {
                 updates
-            }) as { success: boolean; updated_count: number; failed_items?: any[]; error?: string };
+            }) as { success: boolean; updated_count: number; failed_items?: unknown[]; error?: string };
 
             if (response.success) {
                 const msg = `成功更新 ${response.updated_count} 个物品`;
@@ -125,8 +126,8 @@
             } else {
                 errorMessage = response.error || '更新失败';
             }
-        } catch (err: any) {
-            errorMessage = err?.message || '请求失败，请检查网络连接';
+        } catch (err) {
+            errorMessage = getErrorMessage(err, '请求失败，请检查网络连接');
         } finally {
             isSubmitting = false;
         }

@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { trackingNumberAPI } from '$lib/api';
-    import { formatDate } from '$lib/utils';
+    import { formatDate, getErrorMessage } from '$lib/utils';
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
@@ -93,8 +93,8 @@
             else if (linkedFilter === 'false') results = results.filter(tn => !tn.is_linked);
             
             trackingNumbers = results;
-        } catch (err: any) {
-            error = err.message || '加载快递单号失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载快递单号失败');
         } finally {
             loading = false;
         }
@@ -156,8 +156,8 @@
             }
             showFormModal = false;
             await loadTrackingNumbers();
-        } catch (err: any) {
-            error = err.message || '保存失败';
+        } catch (err) {
+            error = getErrorMessage(err, '保存失败');
         }
     }
 
@@ -173,8 +173,8 @@
             await trackingNumberAPI.delete(trackingNumberToDelete.id);
             success = '快递单号已删除';
             await loadTrackingNumbers();
-        } catch (err: any) {
-            error = err.message || '删除失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除失败');
         } finally {
             showDeleteModal = false;
             trackingNumberToDelete = null;
@@ -195,8 +195,8 @@
             detailSuccess = response.result?.message || `${detailTrackingNumber.tracking_no} 已注册到 Shippo`;
             detailTrackingNumber = response.tracking;
             await loadTrackingNumbers();
-        } catch (err: any) {
-            detailError = err.message || '注册失败';
+        } catch (err) {
+            detailError = getErrorMessage(err, '注册失败');
         } finally {
             detailRegistering = false;
         }
@@ -211,8 +211,8 @@
             if (detailTrackingNumber?.id === tn.id) {
                 detailTrackingNumber = response.tracking;
             }
-        } catch (err: any) {
-            error = err.message || '同步失败';
+        } catch (err) {
+            error = getErrorMessage(err, '同步失败');
         } finally {
             syncingIds.delete(tn.id);
             syncingIds = new Set(syncingIds);
@@ -229,8 +229,8 @@
             detailSuccess = response.result?.message || `${detailTrackingNumber.tracking_no} 物流状态已同步`;
             detailTrackingNumber = response.tracking;
             await loadTrackingNumbers();
-        } catch (err: any) {
-            detailError = err.message || '同步失败';
+        } catch (err) {
+            detailError = getErrorMessage(err, '同步失败');
         } finally {
             detailSyncing = false;
         }
@@ -269,8 +269,8 @@
         try {
             detailTrackingNumber = await trackingNumberAPI.get(tn.id);
             showDetailModal = true;
-        } catch (err: any) {
-            error = err.message || '加载快递单号详情失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载快递单号详情失败');
         }
     }
 </script>

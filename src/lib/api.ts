@@ -52,9 +52,11 @@ export {
     ItemAPI,
     ComponentAPI,
     ItemBOMAPI,
+    AttributeAPI,
     itemAPI,
     componentAPI,
     itemBOMAPI,
+    attributeAPI,
 } from './api/product';
 
 // 导出发货相关 API

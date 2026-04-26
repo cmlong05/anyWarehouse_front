@@ -10,15 +10,17 @@
     } from '$lib';
     import OrderForm from './OrderForm.svelte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
-    import { processPreloadItems } from '$lib/utils/preloadItems';
+    import { processPreloadItems, type PreloadItem } from '$lib/utils/preloadItems';
+    import { buildInitialOrderItems } from '$lib/utils/orderFormData';
     import { supplierAPI } from '$lib/api';
+    import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     
     interface Props {
         purchaseOrder?: PurchaseOrder;
         supplierId: number;
         supplier?: { id: number; name: string; contact_name?: string; phone?: string; email?: string; code?: string };
-        preloadItems?: any[] | null;
+        preloadItems?: PreloadItem[] | null;
         preloadQuotationPrices?: Record<string, { price: number; currency: string }> | null;
         purchaseOrderDefaults?: {
             shipping_address: string;
@@ -69,7 +71,7 @@
             // reactive effect below will watch quotations + preloadItems and
             // run processPreloadItems whenever both are available.
         } catch (err) {
-            console.error('加载报价失败:', err);
+            logger.error('加载报价失败', err);
         } finally {
             loadingQuotations = false;
         }
@@ -89,9 +91,12 @@
             // avoid repeating work if we already expanded the same payload
             // (simple by comparing lengths)
             if (!expandedPreloadItems || expandedPreloadItems.length !== preloadItems.length) {
+                let cancelled = false;
                 (async () => {
-                    expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
+                    const result = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
+                    if (!cancelled) expandedPreloadItems = result;
                 })();
+                return () => { cancelled = true; };
             }
         }
     });
@@ -110,27 +115,7 @@
         payment_terms: purchaseOrder?.payment_terms || undefined,
         notes: purchaseOrder?.notes || undefined,
         internal_notes: purchaseOrder?.internal_notes || undefined,
-        items: purchaseOrder?.items?.map(item => ({
-            id: `item_${item.id}`,  // 使用数据库 ID 生成临时 ID
-            dbId: item.id,  // 保存数据库 ID 用于更新
-            item: item.item || null,
-            sku: item.sku || '',
-            item_name: item.item_name || '',
-            quantity: item.quantity || 1,
-            unit_price: item.unit_price ? parseFloat(item.unit_price) : 0,
-            quotation: item.quotation || null,
-            expected_delivery: item.expected_delivery || null,
-            notes: item.notes || ''
-        })) || expandedPreloadItems || preloadItems?.map(item => ({
-            item: item.item || null,
-            sku: item.sku || '',
-            item_name: item.item_name || '',
-            quantity: item.quantity || 1,
-            unit_price: item.unit_price || 0,
-            quotation: item.quotation_id || null,
-            expected_delivery: null,
-            notes: ''
-        })),
+        items: buildInitialOrderItems(purchaseOrder?.items, expandedPreloadItems, preloadItems),
     });
     
     // 标签配置

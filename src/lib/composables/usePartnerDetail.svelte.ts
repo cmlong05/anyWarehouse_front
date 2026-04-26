@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 /**
  * 合作伙伴（客户/供应商）详情页共享逻辑
  */
@@ -71,7 +72,7 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
                 quotations = [];
             }
         } catch (err) {
-            console.error('加载报价失败:', err);
+            logger.error('加载报价失败:', err);
         } finally {
             quotationsLoading = false;
         }
@@ -81,9 +82,16 @@ export function usePartnerDetail<T extends { id: number; name: string; level: st
         ordersLoading = true;
         try {
             const result = await options.api.getRecentOrders(options.partnerId);
-            recentOrders = Array.isArray(result) ? result : ((result as any).orders || []);
+            if (Array.isArray(result)) {
+                recentOrders = result;
+            } else if (result && typeof result === 'object' && 'orders' in result) {
+                const ordersField = (result as { orders?: unknown }).orders;
+                recentOrders = Array.isArray(ordersField) ? ordersField : [];
+            } else {
+                recentOrders = [];
+            }
         } catch (err) {
-            console.error('加载最近订单失败:', err);
+            logger.error('加载最近订单失败:', err);
         } finally {
             ordersLoading = false;
         }

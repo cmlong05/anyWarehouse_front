@@ -2,6 +2,7 @@
     import Svelecte from 'svelecte';
     import type { PackageTrackingLeg, PackageTrackingLegRequest, TrackingNumberBrief, TrackingLegStage } from '$lib/shipmentTypes';
     import { packageTrackingLegAPI, trackingNumberAPI } from '$lib/api';
+    import { getErrorMessage } from '$lib/utils/errors';
 
     interface Props {
         packageId: number;
@@ -61,13 +62,15 @@
                 return;
             }
             const payload: PackageTrackingLegRequest = { ...form, package: packageId };
-            if (!payload.leg_no) delete (payload as any).leg_no;
+            if (!payload.leg_no) {
+                delete (payload as Partial<PackageTrackingLegRequest>).leg_no;
+            }
             const result = leg
                 ? await packageTrackingLegAPI.update(leg.id, payload)
                 : await packageTrackingLegAPI.create(payload);
             onsaved?.(result);
-        } catch (e: any) {
-            error = e?.message || String(e);
+        } catch (e) {
+            error = getErrorMessage(e);
         } finally {
             saving = false;
         }

@@ -1,5 +1,7 @@
 <script lang="ts">
-    import { config } from '$lib/config';
+    import { attributeAPI } from '$lib/api';
+    import { logger } from '$lib/logger';
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
     import { FormInput, NumberStepper } from '$lib/components/ui';
 
@@ -46,14 +48,10 @@
         loading = true;
         error = null;
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attributes/`);
-            if (response.ok) {
-                attributes = await response.json();
-            } else {
-                error = '加载属性失败';
-            }
+            attributes = await attributeAPI.listAttributes();
         } catch (e) {
-            error = '网络错误';
+            error = getErrorMessage(e, '加载属性失败');
+            logger.error('加载属性失败', e);
         } finally {
             loading = false;
         }
@@ -61,14 +59,9 @@
 
     async function loadAttributeValues() {
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attribute-values/`);
-            if (response.ok) {
-                attributeValues = await response.json();
-            } else {
-                console.error('加载属性值失败:', response.status);
-            }
+            attributeValues = await attributeAPI.listValues();
         } catch (e) {
-            console.error('加载属性值失败:', e);
+            logger.error('加载属性值失败', e);
         }
     }
 
@@ -80,73 +73,51 @@
     // 创建属性
     async function createAttribute() {
         if (!newAttributeName.trim() || !newAttributeCode.trim()) return;
-        
-        try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attributes/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: newAttributeName.trim(),
-                    code: newAttributeCode.trim().toLowerCase(),
-                    display_order: attributes.length + 1
-                })
-            });
 
-            if (response.ok) {
-                const newAttr = await response.json();
-                attributes = [...attributes, newAttr];
-                newAttributeName = '';
-                newAttributeCode = '';
-                showAddAttribute = false;
-                // 重新加载确保数据同步
-                await loadAttributes();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert('创建属性失败: ' + (errorData.detail || JSON.stringify(errorData)));
-            }
+        try {
+            const newAttr = await attributeAPI.createAttribute({
+                name: newAttributeName.trim(),
+                code: newAttributeCode.trim().toLowerCase(),
+                display_order: attributes.length + 1
+            });
+            attributes = [...attributes, newAttr];
+            newAttributeName = '';
+            newAttributeCode = '';
+            showAddAttribute = false;
+            // 重新加载确保数据同步
+            await loadAttributes();
         } catch (e) {
-            alert('网络错误');
+            alert('创建属性失败: ' + getErrorMessage(e));
         }
     }
 
     // 创建属性值
     async function createAttributeValue(attributeId: number) {
         if (!newValueName.trim() || !newValueCode.trim()) return;
-        
+
         try {
-            const body: any = {
+            const payload: { attribute: number; value: string; code: string; color_hex?: string } = {
                 attribute: attributeId,
                 value: newValueName.trim(),
                 code: newValueCode.trim().toLowerCase()
             };
-            
+
             // 如果是颜色属性，添加颜色代码
             const attr = attributes.find(a => a.id === attributeId);
             if (attr?.code === 'color' && newValueColor) {
-                body.color_hex = newValueColor;
+                payload.color_hex = newValueColor;
             }
 
-            const response = await fetch(`${config.API_BASE_URL}/product/attribute-values/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (response.ok) {
-                const newVal = await response.json();
-                attributeValues = [...attributeValues, newVal];
-                newValueName = '';
-                newValueCode = '';
-                newValueColor = '';
-                showAddValueForAttr = null;
-                // 重新加载确保数据同步
-                await loadAttributeValues();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert('创建属性值失败: ' + (errorData.detail || JSON.stringify(errorData)));
-            }
+            const newVal = await attributeAPI.createValue(payload);
+            attributeValues = [...attributeValues, newVal];
+            newValueName = '';
+            newValueCode = '';
+            newValueColor = '';
+            showAddValueForAttr = null;
+            // 重新加载确保数据同步
+            await loadAttributeValues();
         } catch (e) {
-            alert('网络错误');
+            alert('创建属性值失败: ' + getErrorMessage(e));
         }
     }
 
@@ -189,28 +160,17 @@
     // 保存属性修改
     async function saveAttributeEdit(attrId: number) {
         if (!editAttrName.trim() || !editAttrCode.trim()) return;
-        
-        try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attributes/${attrId}/`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: editAttrName.trim(),
-                    code: editAttrCode.trim().toLowerCase(),
-                    display_order: editAttrOrder
-                })
-            });
 
-            if (response.ok) {
-                const updatedAttr = await response.json();
-                attributes = attributes.map(a => a.id === attrId ? updatedAttr : a);
-                cancelEditAttribute();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert('修改属性失败: ' + (errorData.detail || JSON.stringify(errorData)));
-            }
+        try {
+            const updatedAttr = await attributeAPI.updateAttribute(attrId, {
+                name: editAttrName.trim(),
+                code: editAttrCode.trim().toLowerCase(),
+                display_order: editAttrOrder
+            });
+            attributes = attributes.map(a => a.id === attrId ? updatedAttr : a);
+            cancelEditAttribute();
         } catch (e) {
-            alert('网络错误');
+            alert('修改属性失败: ' + getErrorMessage(e));
         }
     }
 
@@ -235,73 +195,45 @@
     // 保存属性值修改
     async function saveValueEdit(valueId: number) {
         if (!editValueName.trim() || !editValueCode.trim()) return;
-        
+
         try {
-            const body: any = {
+            const payload: { value: string; code: string; display_order: number; color_hex?: string } = {
                 value: editValueName.trim(),
                 code: editValueCode.trim().toLowerCase(),
                 display_order: editValueOrder
             };
             if (editValueColor) {
-                body.color_hex = editValueColor;
+                payload.color_hex = editValueColor;
             }
-
-            const response = await fetch(`${config.API_BASE_URL}/product/attribute-values/${valueId}/`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (response.ok) {
-                const updatedValue = await response.json();
-                attributeValues = attributeValues.map(v => v.id === valueId ? updatedValue : v);
-                cancelEditValue();
-            } else {
-                const errorData = await response.json().catch(() => ({}));
-                alert('修改属性值失败: ' + (errorData.detail || JSON.stringify(errorData)));
-            }
+            const updatedValue = await attributeAPI.updateValue(valueId, payload);
+            attributeValues = attributeValues.map(v => v.id === valueId ? updatedValue : v);
+            cancelEditValue();
         } catch (e) {
-            alert('网络错误');
+            alert('修改属性值失败: ' + getErrorMessage(e));
         }
     }
 
     // 切换属性启用状态
     async function toggleAttributeActive(attr: ItemAttribute) {
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attributes/${attr.id}/`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_active: !attr.is_active })
+            const updatedAttr = await attributeAPI.updateAttribute(attr.id, {
+                is_active: !attr.is_active
             });
-
-            if (response.ok) {
-                const updatedAttr = await response.json();
-                attributes = attributes.map(a => a.id === attr.id ? updatedAttr : a);
-            } else {
-                alert('操作失败');
-            }
+            attributes = attributes.map(a => a.id === attr.id ? updatedAttr : a);
         } catch (e) {
-            alert('网络错误');
+            alert('操作失败: ' + getErrorMessage(e));
         }
     }
 
     // 切换属性值启用状态
     async function toggleValueActive(value: ItemAttributeValue) {
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/attribute-values/${value.id}/`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ is_active: !value.is_active })
+            const updatedValue = await attributeAPI.updateValue(value.id, {
+                is_active: !value.is_active
             });
-
-            if (response.ok) {
-                const updatedValue = await response.json();
-                attributeValues = attributeValues.map(v => v.id === value.id ? updatedValue : v);
-            } else {
-                alert('操作失败');
-            }
+            attributeValues = attributeValues.map(v => v.id === value.id ? updatedValue : v);
         } catch (e) {
-            alert('网络错误');
+            alert('操作失败: ' + getErrorMessage(e));
         }
     }
 </script>

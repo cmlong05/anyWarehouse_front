@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import { goto } from '$app/navigation';
@@ -84,7 +85,7 @@
         try {
             await purchaseOrderAPI.downloadPO(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
         } catch (e) {
-            console.error('采购单生成失败', e);
+            logger.error('采购单生成失败', e);
             alert('采购单生成失败，请稍后重试。');
         } finally {
             poDownloading = false;
@@ -97,7 +98,7 @@
         try {
             await purchaseOrderAPI.downloadSkuReference(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
         } catch (e) {
-            console.error('SKU 对照表生成失败', e);
+            logger.error('SKU 对照表生成失败', e);
             alert('SKU 对照表生成失败，请稍后重试。');
         } finally {
             skuReferenceDownloading = false;

@@ -2,6 +2,7 @@
  * 添加容器页面的服务器端处理
  */
 import { config } from '$lib/config';
+import { logger } from '$lib/logger';
 import type { Container, ContainerBriefID, ContainerResponse } from '$lib';
 
 export async function load({ url, fetch }): Promise<{ containers: ContainerBriefID[]; parentContainer?: Container }> {
@@ -25,7 +26,7 @@ export async function load({ url, fetch }): Promise<{ containers: ContainerBrief
             }
         } catch (err) {
             // 如果获取父容器失败，继续执行但不设置父容器
-            console.warn('Failed to fetch parent container:', err);
+            logger.warn('Failed to fetch parent container:', { err });
         }
     }
     

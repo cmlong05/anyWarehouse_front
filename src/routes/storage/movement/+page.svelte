@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { inventoryMovementAPI, type InventoryMovement, type MovementType } from '$lib/api';
-    import { formatDate } from '$lib/utils';
+    import { formatDate, getErrorMessage } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import Plus from 'lucide-svelte/icons/plus';
@@ -48,8 +48,8 @@
             const response = await inventoryMovementAPI.listFiltered(filters);
             movements = response?.results ?? [];
             totalCount = response?.count ?? movements.length;
-        } catch (err: any) {
-            error = err.message || '加载出入库记录失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载出入库记录失败');
         } finally {
             loading = false;
         }

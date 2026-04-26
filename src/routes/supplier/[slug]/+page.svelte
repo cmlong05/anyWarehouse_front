@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { supplierAPI } from '$lib/api';
@@ -46,7 +47,7 @@
             const result = await supplierAPI.getQuotations(supplier!.id);
             quotations = result.quotations || [];
         } catch (err) {
-            console.error('加载报价失败:', err);
+            logger.error('加载报价失败:', err);
         } finally {
             quotationsLoading = false;
         }
@@ -59,7 +60,7 @@
             const result = await supplierAPI.getRecentOrders(supplier!.id);
             recentOrders = result.orders || [];
         } catch (err) {
-            console.error('加载最近订单失败:', err);
+            logger.error('加载最近订单失败:', err);
         } finally {
             ordersLoading = false;
         }

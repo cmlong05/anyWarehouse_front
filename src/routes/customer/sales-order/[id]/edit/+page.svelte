@@ -3,6 +3,7 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { salesOrderAPI, customerAPI } from '$lib/api';
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { Customer, SalesOrder, SalesOrderUpdateRequest } from '$lib';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
@@ -54,8 +55,8 @@
             await salesOrderAPI.update(orderId, updatePayload);
             // 更新成功后跳转到订单详情页
             goto(`/customer/sales-order/${orderId}`);
-        } catch (err: any) {
-            error = err?.message || (err instanceof Error ? err.message : '更新销售订单失败');
+        } catch (err) {
+            error = getErrorMessage(err, '更新销售订单失败');
             submitting = false;
         }
     }

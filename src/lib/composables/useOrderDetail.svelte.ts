@@ -3,6 +3,7 @@
  */
 import { goto } from '$app/navigation';
 import type { SalesOrder, PurchaseOrder } from '$lib';
+import { getErrorMessage } from '$lib/utils/errors';
 
 // 状态映射配置
 export interface StatusConfig {
@@ -116,8 +117,8 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
         error = null;
         try {
             order = await options.api.get(options.orderId);
-        } catch (err: any) {
-            error = err.message || '加载订单失败';
+        } catch (err) {
+            error = getErrorMessage(err, '加载订单失败');
         } finally {
             loading = false;
         }
@@ -128,8 +129,8 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
         try {
             await options.api.delete(options.orderId);
             goto(options.listPath);
-        } catch (err: any) {
-            error = err.message || '删除订单失败';
+        } catch (err) {
+            error = getErrorMessage(err, '删除订单失败');
         }
     }
 
@@ -140,8 +141,8 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
         updating = true;
         try {
             order = await options.api.changeStatus(options.orderId, newStatus);
-        } catch (err: any) {
-            error = err.message || '状态变更失败';
+        } catch (err) {
+            error = getErrorMessage(err, '状态变更失败');
         } finally {
             updating = false;
         }
@@ -224,8 +225,8 @@ export function useShipModal<T extends ShipItem>(options: {
         try {
             await options.onShip(shipItems, notes);
             showModal = false;
-        } catch (err: any) {
-            error = err.message || '操作失败';
+        } catch (err) {
+            error = getErrorMessage(err, '操作失败');
         } finally {
             updating = false;
         }

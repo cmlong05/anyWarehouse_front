@@ -2,7 +2,7 @@
  * 供应商相关 API
  */
 import { BaseAPI, BaseOrderAPI } from './base';
-import { config } from '$lib/config';
+import { downloadPdf } from './pdf';
 import type { 
     Supplier, 
     SupplierBrief, 
@@ -139,16 +139,7 @@ export class PurchaseOrderAPI extends BaseOrderAPI<
     }
 
     private async _downloadPDF(path: string, filename: string): Promise<void> {
-        const url = `${config.API_BASE_URL}${path}`;
-        const resp = await fetch(url, { credentials: 'include' });
-        if (!resp.ok) throw new Error(`PDF 生成失败: ${resp.statusText}`);
-        const blob = await resp.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(blobUrl);
+        await downloadPdf(path, filename);
     }
 }
 

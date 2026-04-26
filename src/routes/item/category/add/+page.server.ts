@@ -1,4 +1,5 @@
 import { config } from '$lib/config';
+import { logger } from '$lib/logger';
 import type { Category, CategoryData } from '$lib';
 import type { PageServerLoad } from './$types';
 
@@ -22,7 +23,7 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
                 parentCategory = categoryData.category;
             }
         } catch (err) {
-            console.warn('Failed to fetch parent category:', err);
+            logger.warn('Failed to fetch parent category:', { err });
         }
     }
     

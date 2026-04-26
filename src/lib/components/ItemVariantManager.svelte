@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import type { ItemVariantInfo, ItemVariant, ItemAttributeValue } from '$lib/types/variant';
     import { config } from '$lib/config';
@@ -99,7 +100,7 @@
                 matchError = '匹配失败，请重试';
             }
         } catch (error) {
-            console.error('匹配变体失败:', error);
+            logger.error('匹配变体失败:', error);
             matchError = '网络错误，请检查连接';
         } finally {
             isMatching = false;

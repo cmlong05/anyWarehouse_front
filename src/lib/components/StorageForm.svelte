@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -69,8 +70,8 @@
                 await apiClient.patch(`/warehouse/storage/${initialData?.id}/`, submitData);
             }
             await goto(`/item/${submitData.item}`);
-        } catch (error: any) {
-            alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${error?.message || '未知错误'}`);
+        } catch (error) {
+            alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${getErrorMessage(error, '未知错误')}`);
         }
     }
 

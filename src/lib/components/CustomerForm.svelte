@@ -51,7 +51,7 @@
         { value: 'INACTIVE', label: '停用' }
     ];
 
-    function handlePartySubmit(data: any) {
+    function handlePartySubmit(data: Record<string, unknown>) {
         onSubmit({ ...data, level, status, currency } as CustomerFormData);
     }
 </script>

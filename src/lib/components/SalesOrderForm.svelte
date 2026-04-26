@@ -12,15 +12,17 @@
     } from '$lib';
     import OrderForm from './OrderForm.svelte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
-    import { processPreloadItems } from '$lib/utils/preloadItems';
+    import { processPreloadItems, type PreloadItem } from '$lib/utils/preloadItems';
+    import { buildInitialOrderItems } from '$lib/utils/orderFormData';
     import { customerAPI, customerAddressAPI } from '$lib/api';
+    import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     
     interface Props {
         salesOrder?: SalesOrder;
         customerId: number;
         customer?: Customer;
-        preloadItems?: any[] | null;
+        preloadItems?: PreloadItem[] | null;
         preloadQuotationPrices?: Record<string, { price: number; currency: string }> | null;
         onSubmit: (data: SalesOrderCreateRequest) => void;
         onCancel: () => void;
@@ -71,7 +73,7 @@
                 expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
             }
         } catch (err) {
-            console.error('加载报价失败:', err);
+            logger.error('加载报价失败', err);
         } finally {
             loadingQuotations = false;
         }
@@ -84,7 +86,7 @@
                 customer_id: customerId
             });
         } catch (err) {
-            console.error('加载客户地址失败:', err);
+            logger.error('加载客户地址失败', err);
             shippingAddresses = [];
         } finally {
             loadingShippingAddresses = false;
@@ -110,10 +112,15 @@
     // the latter if necessary
     $effect(() => {
         if (preloadItems && preloadItems.length > 0 && quotations.length > 0 && !preloadProcessed) {
+            let cancelled = false;
             (async () => {
-                expandedPreloadItems = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
-                preloadProcessed = true;
+                const result = await processPreloadItems(preloadItems, quotations, preloadQuotationPrices);
+                if (!cancelled) {
+                    expandedPreloadItems = result;
+                    preloadProcessed = true;
+                }
             })();
+            return () => { cancelled = true; };
         }
     });
     
@@ -134,27 +141,7 @@
         payment_terms: salesOrder?.payment_terms || undefined,
         notes: salesOrder?.notes || undefined,
         internal_notes: salesOrder?.internal_notes || undefined,
-        items: salesOrder?.items?.map(item => ({
-            id: `item_${item.id}`,  // 使用数据库 ID 生成临时 ID
-            dbId: item.id,  // 保存数据库 ID 用于更新
-            item: item.item || null,
-            sku: item.sku || '',
-            item_name: item.item_name || '',
-            quantity: item.quantity || 1,
-            unit_price: item.unit_price ? parseFloat(item.unit_price) : 0,
-            quotation: item.quotation || null,
-            expected_delivery: item.expected_delivery || null,
-            notes: item.notes || ''
-        })) || expandedPreloadItems || preloadItems?.map(item => ({
-            item: item.item || null,
-            sku: item.sku || '',
-            item_name: item.item_name || '',
-            quantity: item.quantity || 1,
-            unit_price: item.unit_price || 0,
-            quotation: item.quotation_id || null,
-            expected_delivery: null,
-            notes: ''
-        })) || [],
+        items: buildInitialOrderItems(salesOrder?.items, expandedPreloadItems, preloadItems) || [],
     });
 
     const hasInitialShippingSnapshot = $derived(

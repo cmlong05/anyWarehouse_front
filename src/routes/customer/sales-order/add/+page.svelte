@@ -3,7 +3,8 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { salesOrderAPI, customerAPI } from '$lib/api';
-    import type { Customer, SalesOrderCreateRequest } from '$lib';
+    import type { Customer, SalesOrder, SalesOrderCreateRequest } from '$lib';
+    import type { PreloadItem } from '$lib/utils/preloadItems';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
@@ -21,9 +22,9 @@
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
-    let preloadItems = $state<any[] | null>(null);
+    let preloadItems = $state<PreloadItem[] | null>(null);
     let preloadQuotationPrices = $state<Record<string, { price: number; currency: string }> | null>(null);
-    let copyFromOrder = $state<{ order_number: string; order_data: any } | null>(null);
+    let copyFromOrder = $state<{ order_number: string; order_data: SalesOrder } | null>(null);
     
     const breadcrumbs = $derived([
         { label: '首页', href: '/' },
@@ -96,13 +97,13 @@
                     };
                     // 设置预加载的明细
                     if (copyData.order_data.items?.length > 0) {
-                        preloadItems = copyData.order_data.items.map((item: any) => ({
+                        preloadItems = copyData.order_data.items.map((item: PreloadItem) => ({
                             item: item.item,
                             sku: item.sku,
                             item_name: item.item_name,
                             quantity: item.quantity,
                             unit_price: item.unit_price,
-                            notes: item.notes
+                            notes: (item as { notes?: string }).notes
                         }));
                     }
                 } else {
@@ -124,7 +125,7 @@
                 
                 // 验证客户ID匹配
                 if (preloadData.partner_id === currentCustomerId && preloadData.items?.length > 0) {
-                    preloadItems = preloadData.items.map((item: any) => ({
+                    preloadItems = preloadData.items.map((item: PreloadItem) => ({
                         item: item.item,
                         sku: item.sku,
                         item_name: item.item_name,

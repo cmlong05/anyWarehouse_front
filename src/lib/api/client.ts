@@ -19,21 +19,23 @@ export interface ApiError {
  *   { non_field_errors: ["msg"] }
  *   { message: "msg" }
  */
-function parseDrfError(data: any): string {
+function parseDrfError(data: unknown): string {
     if (!data || typeof data !== 'object') return '';
 
+    const obj = data as Record<string, unknown>;
+
     // DRF 通用错误 / 自定义 exception_handler
-    if (typeof data.detail === 'string') return data.detail;
+    if (typeof obj.detail === 'string') return obj.detail;
 
     // 自定义 message 字段
-    if (typeof data.message === 'string') return data.message;
+    if (typeof obj.message === 'string') return obj.message;
 
     // 字段级别错误：拼接所有字段的错误信息
     const messages: string[] = [];
-    for (const [key, value] of Object.entries(data)) {
+    for (const [key, value] of Object.entries(obj)) {
         if (Array.isArray(value)) {
             const fieldMsgs = value
-                .map((v: any) => {
+                .map((v: unknown) => {
                     const s = typeof v === 'string' ? v : JSON.stringify(v);
                     // 将 DRF UniqueTogetherValidator 英文报错翻译为友好中文
                     if (s.includes('must make a unique set')) {

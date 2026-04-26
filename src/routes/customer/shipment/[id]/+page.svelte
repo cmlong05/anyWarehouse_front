@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { page } from '$app/state';
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
@@ -38,7 +39,7 @@
         try {
             await shipmentAPI.downloadSkuReference(shipmentDetail.shipment.id, 'zh-CN', shipmentDetail.shipment.shipment_no);
         } catch (err: unknown) {
-            console.error('SKU 对照表生成失败', err);
+            logger.error('SKU 对照表生成失败', err);
             alert('SKU 对照表生成失败，请稍后重试。');
         } finally {
             skuReferenceDownloading = false;

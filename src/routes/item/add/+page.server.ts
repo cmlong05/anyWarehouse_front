@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { Category } from '$lib/index';
@@ -59,7 +60,7 @@ export async function load({ fetch, url }) {
                     };
                 }
             } catch (e) {
-                console.error('Failed to fetch copy item:', e);
+                logger.error('Failed to fetch copy item:', e);
             }
         }
         

@@ -134,7 +134,7 @@
                         itemName={quotation?.item_detail?.name}
                         itemNameEn={quotation?.item_detail?.name_en}
                         itemId={quotation?.item}
-                        itemIsVariant={(quotation?.item_detail as any)?.is_variant === true}
+                        itemIsVariant={(quotation?.item_detail as { is_variant?: boolean } | undefined)?.is_variant === true}
                     />
 
                     {#if error}

@@ -199,7 +199,7 @@
                         }))}
                         columns={descendantColumns}
                         clickable={true}
-                        onRowClick={(row: any) => goto(`/container/${row.fastCode}`)}
+                        onRowClick={(row: { fastCode: string }) => goto(`/container/${row.fastCode}`)}
                     >
                         {#snippet cellRender({ item, column })}
                             {#if column.key === 'fastCode'}
@@ -245,7 +245,7 @@
                         }))}
                         columns={storageColumns}
                         clickable={true}
-                        onRowClick={(row: any) => goToItem(row.item_id)}
+                        onRowClick={(row: { item_id: number }) => goToItem(row.item_id)}
                     >
                         {#snippet cellRender({ item, column })}
                             {#if column.key === 'sku'}

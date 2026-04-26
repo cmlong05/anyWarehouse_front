@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { config } from '$lib/config';
 import type { ContainerBriefID } from '$lib';
 
@@ -13,7 +14,7 @@ export async function load({ fetch, url }) {
             initialType: url.searchParams.get('type') || 'inbound',
         };
     } catch (err) {
-        console.error('Movement add load error:', err);
+        logger.error('Movement add load error:', err);
         return {
             containers: [],
             initialItemId: null,

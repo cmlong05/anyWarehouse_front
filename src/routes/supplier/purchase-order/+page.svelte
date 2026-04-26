@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { page as pageStore } from '$app/state';
@@ -56,7 +57,7 @@
         try {
             suppliers = await supplierAPI.listBrief();
         } catch (err) {
-            console.error('加载供应商失败:', err);
+            logger.error('加载供应商失败:', err);
         }
     }
 

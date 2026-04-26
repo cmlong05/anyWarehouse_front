@@ -3,6 +3,8 @@
  */
 import { componentAPI, itemBOMAPI } from '$lib/api';
 import type { ComponentDetail, BOMTreeNode, TotalComponentItem, WhereUsedItem, BaseItem } from '$lib';
+import { logger } from '$lib/logger';
+import { getErrorMessage } from '$lib/utils/errors';
 
 export interface MaxProducibleResult {
     max_producible: number;
@@ -56,7 +58,7 @@ export function useBOMManager(itemId: number, itemSKU: string) {
             maxProducibleResult = null;
         } catch (err) {
             error = err instanceof Error ? err.message : '加载数据失败';
-            console.error('加载BOM数据失败:', err);
+            logger.error('加载BOM数据失败', err);
         } finally {
             loading = false;
         }
@@ -74,8 +76,8 @@ export function useBOMManager(itemId: number, itemSKU: string) {
             });
             await loadData();
             return true;
-        } catch (err: any) {
-            const message = err?.message || '添加失败';
+        } catch (err) {
+            const message = getErrorMessage(err, '添加失败');
             if (message.includes('circular')) {
                 throw new Error('不能创建循环依赖（子物品不能是父物品的父级）');
             }
@@ -104,8 +106,8 @@ export function useBOMManager(itemId: number, itemSKU: string) {
             await componentAPI.delete(componentId);
             await loadData();
             return true;
-        } catch (err: any) {
-            throw new Error(err?.message || '删除失败');
+        } catch (err) {
+            throw new Error(getErrorMessage(err, '删除失败'));
         }
     }
 

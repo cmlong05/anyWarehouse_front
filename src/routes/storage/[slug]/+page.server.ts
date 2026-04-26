@@ -1,3 +1,4 @@
+import { logger } from '$lib/logger';
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { StorageStandard } from '$lib';
@@ -32,7 +33,7 @@ export async function load({ params, fetch, parent }) {
             containers
         };
     } catch (err) {
-        console.error('Storage load error:', err);
+        logger.error('Storage load error:', err);
         throw error(500, 'Failed to load storage data');
     }
 }

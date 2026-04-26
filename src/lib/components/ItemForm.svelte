@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
@@ -211,8 +212,8 @@
 
             alert(mode === 'edit' ? '更新成功！' : '添加成功！');
             await goto(`/item/${mode === 'edit' ? initialData?.id : result.id}`);
-        } catch (error: any) {
-            alert(`提交失败: ${error?.message || '未知错误'}`);
+        } catch (error) {
+            alert(`提交失败: ${getErrorMessage(error, '未知错误')}`);
         } finally {
             formLoading = false;
         }

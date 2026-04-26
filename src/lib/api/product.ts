@@ -11,6 +11,7 @@ import type {
     TotalComponentsResponse,
     WhereUsedResponse,
 } from '$lib/index';
+import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
 import type { ItemFormData } from '$lib/schemas';
 import type { PaginatedResponse } from './base';
 
@@ -88,8 +89,80 @@ export class ItemBOMAPI {
     }
 }
 
+// ========== Item Attribute API ==========
+
+export type AttributeCreatePayload = {
+    name: string;
+    code: string;
+    display_order?: number;
+};
+
+export type AttributeUpdatePayload = Partial<{
+    name: string;
+    code: string;
+    display_order: number;
+    is_active: boolean;
+}>;
+
+export type AttributeValueCreatePayload = {
+    attribute: number;
+    value: string;
+    code: string;
+    color_hex?: string;
+    display_order?: number;
+};
+
+export type AttributeValueUpdatePayload = Partial<{
+    value: string;
+    code: string;
+    color_hex: string;
+    display_order: number;
+    is_active: boolean;
+}>;
+
+export class AttributeAPI {
+    private client = apiClient;
+    private readonly attrPath = '/product/attributes/';
+    private readonly valuePath = '/product/attribute-values/';
+
+    /** 获取所有属性 */
+    listAttributes(): Promise<ItemAttribute[]> {
+        return this.client.get<ItemAttribute[]>(this.attrPath);
+    }
+
+    /** 获取所有属性值 */
+    listValues(): Promise<ItemAttributeValue[]> {
+        return this.client.get<ItemAttributeValue[]>(this.valuePath);
+    }
+
+    createAttribute(data: AttributeCreatePayload): Promise<ItemAttribute> {
+        return this.client.post<ItemAttribute>(this.attrPath, data);
+    }
+
+    updateAttribute(id: number, data: AttributeUpdatePayload): Promise<ItemAttribute> {
+        return this.client.patch<ItemAttribute>(`${this.attrPath}${id}/`, data);
+    }
+
+    deleteAttribute(id: number): Promise<void> {
+        return this.client.deleteNoContent(`${this.attrPath}${id}/`);
+    }
+
+    createValue(data: AttributeValueCreatePayload): Promise<ItemAttributeValue> {
+        return this.client.post<ItemAttributeValue>(this.valuePath, data);
+    }
+
+    updateValue(id: number, data: AttributeValueUpdatePayload): Promise<ItemAttributeValue> {
+        return this.client.patch<ItemAttributeValue>(`${this.valuePath}${id}/`, data);
+    }
+
+    deleteValue(id: number): Promise<void> {
+        return this.client.deleteNoContent(`${this.valuePath}${id}/`);
+    }
+}
+
 // ========== 导出 API 实例 ==========
 
 export const itemAPI = new ItemAPI();
 export const componentAPI = new ComponentAPI();
 export const itemBOMAPI = new ItemBOMAPI();
+export const attributeAPI = new AttributeAPI();

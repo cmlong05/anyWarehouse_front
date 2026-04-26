@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
     import { inventoryMovementAPI, type MovementType, type InventoryMovementCreateRequest } from '$lib/api';
     import Alert from '$lib/components/Alert.svelte';
@@ -75,9 +76,11 @@
         try {
             await inventoryMovementAPI.create(payload);
             goto('/storage/movement');
-        } catch (err: any) {
-            error = err?.message || '创建失败';
-            if (err?.detail) error = JSON.stringify(err.detail);
+        } catch (err) {
+            const detail = (err && typeof err === 'object' && 'detail' in err)
+                ? (err as { detail?: unknown }).detail
+                : undefined;
+            error = detail !== undefined ? JSON.stringify(detail) : getErrorMessage(err, '创建失败');
         } finally {
             submitting = false;
         }

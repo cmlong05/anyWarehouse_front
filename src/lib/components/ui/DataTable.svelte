@@ -73,9 +73,8 @@
         bordered = true
     }: Props = $props();
     
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function getValue(item: any, key: string): unknown {
-        return key.split('.').reduce((obj: unknown, k) => (obj as Record<string, unknown>)?.[k], item as unknown);
+    function getValue(item: unknown, key: string): unknown {
+        return key.split('.').reduce((obj: unknown, k) => (obj as Record<string, unknown>)?.[k], item);
     }
     
     function handleRowClick(item: T) {

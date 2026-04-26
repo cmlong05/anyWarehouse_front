@@ -35,7 +35,7 @@ export const actions = {
         const formData = await request.formData();
         
         // 构建更新数据
-        const itemData: any = {
+        const itemData: Record<string, unknown> = {
             SKU: formData.get('SKU'),
             name: formData.get('name'),
             SKU_zite: formData.get('SKU_zite') || '',

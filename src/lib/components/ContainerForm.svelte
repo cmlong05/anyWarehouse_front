@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { getErrorMessage } from '$lib/utils/errors';
+	import { logger } from '$lib/logger';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -117,9 +119,9 @@
                 result = await apiClient.patch<{ fastCode: string }>(`/warehouse/container/${initialData?.fastCode}/`, submitData);
             }
             await goto(`/container/${result.fastCode || submitData.fastCode}`);
-        } catch (error: any) {
-            console.error('Submit error:', error);
-            alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${error?.message || '未知错误'}`);
+        } catch (error) {
+            logger.error('Submit error:', error);
+            alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${getErrorMessage(error, '未知错误')}`);
         }
     }
 

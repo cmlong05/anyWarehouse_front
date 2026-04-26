@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { logger } from '$lib/logger';
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { purchaseOrderAPI, supplierAPI, systemSettingAPI } from '$lib/api';
     import type { Supplier, PurchaseOrderCreateRequest } from '$lib';
+    import type { PreloadItem } from '$lib/utils/preloadItems';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
@@ -21,7 +23,7 @@
     let loading = $state(true);
     let submitting = $state(false);
     let error = $state('');
-    let preloadItems = $state<any[] | null>(null);
+    let preloadItems = $state<PreloadItem[] | null>(null);
     let preloadQuotationPrices = $state<Record<string, { price: number; currency: string }> | null>(null);
     let purchaseOrderDefaults = $state<{
         shipping_address: string;
@@ -64,7 +66,7 @@
             };
             return;
         } catch (err) {
-            console.warn('通过系统设置读取采购订单默认收货信息失败，尝试备用接口:', err);
+            logger.warn('通过系统设置读取采购订单默认收货信息失败，尝试备用接口:', { err });
         }
 
         try {
@@ -75,7 +77,7 @@
                 contact_phone: defaults.purchase_order_contact_phone || '',
             };
         } catch (err) {
-            console.error('加载采购订单默认收货信息失败:', err);
+            logger.error('加载采购订单默认收货信息失败:', { err });
         }
     }
     

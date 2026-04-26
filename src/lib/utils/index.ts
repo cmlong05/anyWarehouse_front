@@ -19,3 +19,6 @@ export * from './formatters';
 
 // 导出排序工具
 export * from './sort';
+
+// 导出错误处理工具
+export * from './errors';
