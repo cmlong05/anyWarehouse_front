@@ -7,6 +7,7 @@
     import type { CustomerAddress } from '$lib';
     import { useOrderForm } from '$lib/composables/useOrderForm.svelte';
     import Svelecte from 'svelecte';
+    import { getCurrencySymbol } from '$lib/utils/formatters';
     import { NumberStepper } from './ui';
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
@@ -166,16 +167,6 @@
     );
     
     // 获取货币符号
-    function getCurrencySymbol(currency: string): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[currency] || currency + ' ';
-    }
 
     function formatShippingAddress(address: CustomerAddress): string {
         return [
@@ -659,7 +650,7 @@
                             contactPerson={formData.contact_person}
                             contactPhone={formData.contact_phone}
                             companyName={formData.company_name}
-                            address={formData.shipping_address}
+                            shippingAddress={formData.shipping_address}
                         />
                     </div>
                 {/if}

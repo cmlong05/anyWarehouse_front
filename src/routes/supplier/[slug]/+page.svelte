@@ -9,6 +9,7 @@
     import Loading from '$lib/components/Loading.svelte';
     import { PageContainer } from '$lib/components/layout';
     import { PartnerDetailHeader, OrdersSection, QuotationsSection } from '$lib/components/partner';
+    import { getPurchaseStatusClass as getOrderStatusClass, getPurchaseStatusLabel as getStatusLabel } from '$lib/utils/orderBadges';
 
     let supplierId = $derived(parseInt(page.params.slug || '0'));
     
@@ -36,27 +37,7 @@
         }
     }
     
-    const statusLabels: Record<string, string> = {
-        'draft': '草稿', 'pending': '待审批', 'approved': '已批准',
-        'ordered': '已下单', 'partial': '部分到货', 'received': '已完成', 'cancelled': '已取消'
-    };
-    
-    function getStatusLabel(status: string): string {
-        return statusLabels[status] || status;
-    }
-
-    function getOrderStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            draft: 'bg-gray-100 text-gray-700',
-            pending: 'bg-amber-100 text-amber-700',
-            approved: 'bg-blue-100 text-blue-700',
-            ordered: 'bg-emerald-100 text-emerald-700',
-            partial: 'bg-amber-100 text-amber-700',
-            received: 'bg-indigo-100 text-indigo-700',
-            cancelled: 'bg-red-100 text-red-700',
-        };
-        return map[status] || 'bg-gray-100 text-gray-700';
-    }
+    // 状态徽章已从 $lib/utils/orderBadges 导入
     
     async function loadQuotations() {
         if (!supplier) return;

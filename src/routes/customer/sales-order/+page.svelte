@@ -3,6 +3,8 @@
     import { goto } from '$app/navigation';
     import { page as pageStore } from '$app/state';
     import { salesOrderAPI, customerAPI } from '$lib/api';
+    import { getCurrencySymbol } from '$lib/utils/formatters';
+    import { getSalesStatusClass as getStatusClass, getPriorityClass } from '$lib/utils/orderBadges';
     import type { SalesOrderBrief, CustomerBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
@@ -89,31 +91,7 @@
         sortDirection = next.sortDirection;
     }
 
-    // 状态徽章样式
-    function getStatusClass(status: string): string {
-        const classes: Record<string, string> = {
-            draft: 'bg-gray-100 text-gray-600',
-            pending: 'bg-yellow-100 text-yellow-700',
-            approved: 'bg-blue-100 text-blue-700',
-            confirmed: 'bg-indigo-100 text-indigo-700',
-            partial: 'bg-amber-100 text-amber-700',
-            shipped: 'bg-purple-100 text-purple-700',
-            delivered: 'bg-emerald-100 text-emerald-700',
-            cancelled: 'bg-red-100 text-red-700',
-        };
-        return classes[status] || 'bg-gray-100 text-gray-600';
-    }
-
-    // 优先级徽章样式
-    function getPriorityClass(priority: string): string {
-        const classes: Record<string, string> = {
-            low: 'bg-gray-100 text-gray-600',
-            normal: '',
-            high: 'bg-orange-100 text-orange-700',
-            urgent: 'bg-red-100 text-red-700',
-        };
-        return classes[priority] ?? 'bg-gray-100 text-gray-600';
-    }
+    // 状态/优先级徽章函数已从 $lib/utils/orderBadges 导入
 
     // 状态标签
     function getStatusLabel(status: string): string {
@@ -200,16 +178,6 @@
     }
 
     // 获取货币符号
-    function getCurrencySymbol(currency: string): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[currency] || currency + ' ';
-    }
     
     // 格式化金额
     function formatAmount(amount: string, currency: string = 'CNY'): string {

@@ -2,6 +2,7 @@
     import { page } from '$app/state';
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
+    import { getCurrencySymbol } from '$lib/utils/formatters';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
     import type { PackageItem, ShipmentItem } from '$lib/shipmentTypes';
     import type { SalesOrder } from '$lib';
@@ -86,16 +87,6 @@
     }
 
     // 获取货币符号
-    function getCurrencySymbol(currency: string | undefined): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[currency || 'CNY'] || '¥';
-    }
 
     // 按钮变体样式
     function getButtonClass(variant: string): string {

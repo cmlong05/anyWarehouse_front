@@ -1,8 +1,8 @@
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
-    import type { QuotationBrief } from '$lib';
+    import type { QuotationBrief, CustomerQuotationBrief } from '$lib';
 
-    export let quotation: QuotationBrief;
+    export let quotation: QuotationBrief | CustomerQuotationBrief;
     export let currencySymbol: string = '';
     export let quantity: number | null = null;
     export let onRowClick: (id: number) => void;

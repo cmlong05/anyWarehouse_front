@@ -1,20 +1,22 @@
 <script lang="ts">
     import Loading from '$lib/components/Loading.svelte';
     import QuotationRow from './QuotationRow.svelte';
-    import type { QuotationBrief } from '$lib';
+    import type { QuotationBrief, CustomerQuotationBrief } from '$lib';
+
+    type AnyQuotationBrief = QuotationBrief | CustomerQuotationBrief;
 
     interface GroupedQuotation {
         parentId: number | null;
         parentName: string;
         parentSku: string;
         isTemplate: boolean;
-        quotations: QuotationBrief[];
+        quotations: AnyQuotationBrief[];
         expanded: boolean;
     }
     
     interface Props {
         title: string;
-        quotations: QuotationBrief[];
+        quotations: AnyQuotationBrief[];
         loading: boolean;
         emptyText: string;
         addHref: string;
@@ -34,13 +36,13 @@
 
     // 按母版分组的报价
     let groupedQuotations = $state<GroupedQuotation[]>([]);
-    let independentQuotations = $state<QuotationBrief[]>([]);
+    let independentQuotations = $state<AnyQuotationBrief[]>([]);
     let hasVariants = $state(false);
     
     // 将报价按母版分组
-    function groupQuotationsByParent(quotations: QuotationBrief[]) {
+    function groupQuotationsByParent(quotations: AnyQuotationBrief[]) {
         const groups = new Map<number | string, GroupedQuotation>();
-        const independent: QuotationBrief[] = [];
+        const independent: AnyQuotationBrief[] = [];
         let variantCount = 0;
         
         for (const q of quotations) {

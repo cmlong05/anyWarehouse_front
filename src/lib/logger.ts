@@ -9,7 +9,7 @@ interface LogContext {
 class Logger {
   private shouldLog(level: LogLevel): boolean {
     if (!config.DEBUG && level === 'debug') return false;
-    if (config.NODE_ENV === 'test') return false;
+    if (config.ENVIRONMENT === 'test') return false;
     return true;
   }
 

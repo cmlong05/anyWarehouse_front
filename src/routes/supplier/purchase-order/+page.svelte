@@ -3,6 +3,8 @@
     import { goto } from '$app/navigation';
     import { page as pageStore } from '$app/state';
     import { purchaseOrderAPI, supplierAPI } from '$lib/api';
+    import { getCurrencySymbol } from '$lib/utils/formatters';
+    import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel } from '$lib/utils/orderBadges';
     import type { PurchaseOrderBrief, SupplierBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
@@ -47,44 +49,7 @@
         { key: 'item_count', title: '明细数', align: 'right' as const },
     ];
 
-    // 状态徽章样式
-    function getStatusClass(status: string): string {
-        const classes: Record<string, string> = {
-            draft: 'bg-gray-100 text-gray-600',
-            pending: 'bg-yellow-100 text-yellow-700',
-            approved: 'bg-blue-100 text-blue-700',
-            ordered: 'bg-indigo-100 text-indigo-700',
-            partial: 'bg-green-100 text-green-700',
-            received: 'bg-purple-100 text-purple-700',
-            cancelled: 'bg-red-100 text-red-700',
-        };
-        return classes[status] || 'bg-gray-100 text-gray-600';
-    }
-
-    // 状态标签
-    function getStatusLabel(status: string): string {
-        const labels: Record<string, string> = {
-            draft: '草稿',
-            pending: '待审批',
-            approved: '已批准',
-            ordered: '已下单',
-            partial: '部分到货',
-            received: '已完成',
-            cancelled: '已取消',
-        };
-        return labels[status] || status;
-    }
-
-    // 优先级标签
-    function getPriorityLabel(priority: string): string {
-        const labels: Record<string, string> = {
-            low: '低',
-            normal: '普通',
-            high: '高',
-            urgent: '紧急',
-        };
-        return labels[priority] || priority;
-    }
+    // 状态/优先级徽章函数已从 $lib/utils/orderBadges 导入
 
     // 加载供应商列表
     async function loadSuppliers() {
@@ -101,16 +66,6 @@
     }
 
     // 获取货币符号
-    function getCurrencySymbol(currency: string): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[currency] || currency + ' ';
-    }
     
     // 格式化金额
     function formatAmount(amount: string, currency: string = 'CNY'): string {

@@ -91,32 +91,7 @@ export type CategoryFormData = z.infer<typeof categorySchema>;
 export type ItemFormData = z.infer<typeof itemSchema>;
 export type ComponentFormData = z.infer<typeof componentSchema>;
 
-// API 响应类型定义
-export interface Item {
-    id: number;
-    SKU: string;
-    name: string;
-    name_en?: string;
-    SKU_zite?: string;
-    SKU_A?: string;
-    description?: string;
-    image?: string;
-    weight?: string;
-    p_volume?: number;
-    s_volume?: number;
-    b_Price?: string;
-    currency?: string;
-    in_fee?: number;
-    barcode?: string;
-    category?: number[];
-    total_storage?: number;  // 总数量库存（整数）
-}
-
-export interface ItemSearchResponse {
-    query: string;
-    count: number;
-    results: Item[];
-}
+// Item 与 ItemSearchResponse 已移至 $lib/index.ts 作为唯一定义
 
 // ========== Party / Partner Schemas ==========
 

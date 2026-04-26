@@ -2,7 +2,7 @@
     import { goto } from '$app/navigation';
     import { onDestroy } from 'svelte';
     import { apiClient } from '$lib/api';
-    import type { Item, ItemSearchResponse } from '$lib/schemas';
+    import type { Item, ItemSearchResponse } from '$lib';
     
     let searchQuery = $state('');
     let searchResults = $state<Item[]>([]);

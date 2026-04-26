@@ -1,5 +1,6 @@
 <script lang="ts">
     import { safeParseFloat } from '$lib/utils';
+    import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';
 
     interface AmountItem {
         label: string;
@@ -18,16 +19,7 @@
     let { items, title = '金额信息', currency = 'CNY' }: Props = $props();
     
     // 获取货币符号
-    function getCurrencySymbol(curr: string): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[curr] || curr + ' ';
-    }
+    const getCurrencySymbol = (curr: string) => getCurrencySymbolFn(curr);
 
     function formatValue(item: AmountItem): string {
         const prefix = item.prefix !== undefined ? item.prefix : getCurrencySymbol(currency);

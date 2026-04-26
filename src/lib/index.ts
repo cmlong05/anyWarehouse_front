@@ -128,6 +128,12 @@ export interface ItemSet{
     storages: StorageContainer[];
 }
 
+export interface ItemSearchResponse {
+    query: string;
+    count: number;
+    results: Item[];
+}
+
 
 // 分类
 export interface Category {
@@ -675,6 +681,9 @@ export interface CustomerQuotationBrief {
     currency: string;
     is_preferred: boolean;
     partner_sku?: string;
+    note?: string;
+    min_quantity?: number;
+    lead_time_days?: number | null;
     // 变体相关字段
     is_variant_template?: boolean;
     is_variant?: boolean;

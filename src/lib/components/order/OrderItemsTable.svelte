@@ -1,5 +1,6 @@
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
+    import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';
     import { localeStore } from '$lib/i18n/sales';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
 
@@ -134,16 +135,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     });
 
     // 获取货币符号
-    function getCurrencySymbol(curr: string): string {
-        const symbols: Record<string, string> = {
-            'CNY': '¥',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'JPY': '¥',
-        };
-        return symbols[curr] || curr + ' ';
-    }
+    const getCurrencySymbol = (curr: string) => getCurrencySymbolFn(curr);
 
     const defaultLabels: Labels = {
         title: '订单明细',
