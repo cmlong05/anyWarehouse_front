@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { logger } from '$lib/logger';
-    import { packageAPI, shipmentAPI, itemAPI } from '$lib/api';
-    import type { ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest } from '$lib/shipmentTypes';
-    import type { Item } from '$lib';
+    import { packageAPI, shipmentAPI, getAvailableStoragesForItem } from '$lib/api';
+    import type { ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest, PackageItemAllocationCreateRequest } from '$lib/shipmentTypes';
+    import type { AvailableStorage } from '$lib/api/movement';
     import { safeParseFloat, formatNumber, getErrorMessage } from '$lib/utils';
-    import { config } from '$lib/config';
     import { FormInput, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
-    import Svelecte from 'svelecte';
 
     interface Props {
         mode: 'create' | 'edit';
@@ -41,10 +38,17 @@
         productName: string;
         quantity: number;
         pendingQuantity: number;
+        allocations: PackageItemAllocationCreateRequest[];
     }
     let packagePreviewItems = $state<PackagePreviewItem[]>([]);
     let existingItems = $state<PackageItem[]>([]);
     let linkedShipments = $state<{id: number, shipment_no: string, status: string}[]>([]);
+
+    // 容器分配 UI 状态：哪些行展开了、每个 itemFkId 对应的可用库存
+    // 包裹明细默认展开容器分配子表；collapsed[id]=true 表示收起
+    let allocationCollapsed = $state<Record<string, boolean>>({});
+    let availableStoragesByItem = $state<Record<number, AvailableStorage[]>>({});
+    let loadingStoragesByItem = $state<Record<number, boolean>>({});
 
     // 选项数据
     let availableShipments = $state<ShipmentBrief[]>([]);
@@ -52,47 +56,7 @@
     let saving = $state(false);
     let error = $state('');
     let success = $state('');
-    
-    // 手动添加商品表单
-    let manualSku = $state('');
-    let manualProductName = $state('');
-    let manualQuantity = $state<number | null>(1);
-    let selectedItemId = $state<number | null>(null);
-    let manualSelectedShipmentId = $state<number | null>(null); // 手动添加时选择的发货单
-    
-    // 物品搜索 URL
-    const itemSearchUrl = $derived(`${config.API_BASE_URL}/product/item/?search=[query]`);
-    
-    // 物品缓存，用于快速查找
-    let itemCache = $state<Map<number, Item>>(new Map());
-    
-    // 处理 fetch 返回的数据
-    function handleItemFetch(json: unknown) {
-        const items = Array.isArray(json) ? json : ((json as { results?: Item[] })?.results || []);
-        // 缓存物品信息
-        items.forEach((item: Item) => {
-            itemCache.set(item.id, item);
-        });
-        return items.map((item: Item) => ({
-            value: item.id,
-            label: `${item.SKU} - ${item.name}`,
-            item: item  // 保存完整物品信息供后续使用
-        }));
-    }
 
-    // 计算属性
-    // 手动添加时可选择的发货单选项
-    const manualShipmentOptions = $derived(
-        selectedShipmentIds.map(id => {
-            const shipment = availableShipments.find(s => s.id === id);
-            const customerName = shipment?.order_detail?.customer_name;
-            return {
-                value: id,
-                label: shipment ? `${shipment.shipment_no}${customerName ? ` (${customerName})` : ''}` : `发货单 #${id}`
-            };
-        })
-    );
-    
     // 所有可选的商品（来自已选发货单）
     const availableItems = $derived(() => {
         const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem}> = [];
@@ -117,14 +81,6 @@
     const totalAdded = $derived(() => {
         return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0);
     });
-
-    const invalidPreviewItems = $derived(() => {
-        return packagePreviewItems.filter(item => item.quantity > item.pendingQuantity);
-    });
-
-    function hasInvalidQuantities(): boolean {
-        return invalidPreviewItems().length > 0;
-    }
 
     $effect(() => { init(); });
 
@@ -169,12 +125,20 @@
                         sku: item.sku,
                         productName: item.product_name,
                         quantity: safeParseFloat(item.quantity),
-                        pendingQuantity: safeParseFloat(item.quantity)
+                        pendingQuantity: safeParseFloat(item.quantity),
+                        allocations: (item.allocations || []).map(a => ({
+                            container: a.container,
+                            quantity: a.quantity,
+                        })),
                     };
                 });
             }
             
             if (pkg.shipments) { for (const s of pkg.shipments) { selectedShipmentIds.push(s.id); await loadShipmentDetail(s.id); } }
+
+            // 预加载所有明细行涉及物品的可用库存（默认展开需要）
+            const itemFkIds = Array.from(new Set(packagePreviewItems.map(p => p.itemId).filter((x): x is number => x != null)));
+            await Promise.all(itemFkIds.map(id => loadStoragesFor(id)));
         } catch (err) { error = getErrorMessage(err, '加载包裹失败'); }
     }
 
@@ -197,173 +161,127 @@
         else { selectedShipmentIds = selectedShipmentIds.filter(id => id !== shipmentId); removeShipmentDetail(shipmentId); }
     }
 
-    function addItemToPreview(shipmentId: number, item: ShipmentItem) {
-        const shipment = selectedShipmentsDetail.get(shipmentId); 
+    async function addItemToPreview(shipmentId: number, item: ShipmentItem) {
+        const shipment = selectedShipmentsDetail.get(shipmentId);
         if (!shipment) return;
         if (!item.item) {
             error = `发货单明细 ${item.sku} 未关联物品，无法加入包裹`;
             setTimeout(() => error = '', 2500);
             return;
         }
-        if (packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) { 
-            error = '该商品已在包裹明细中'; 
-            setTimeout(() => error = '', 2000); 
-            return; 
-        }
-        packagePreviewItems = [...packagePreviewItems, { 
-            id: `${shipmentId}-${item.id}-${Date.now()}`, 
-            shipmentId, 
-            shipmentNo: shipment.shipment_no, 
-            itemId: item.item,
-            sku: item.sku, 
-            productName: item.product_name, 
-            quantity: safeParseFloat(item.quantity),
-            pendingQuantity: safeParseFloat(item.quantity)
-        }];
-    }
-    
-    // 手动添加商品到包裹
-    async function addManualItem() {
-        if (!selectedItemId) {
-            error = '请选择物品';
-            setTimeout(() => error = '', 2000);
-            return;
-        }
-
-        const sku = manualSku?.trim() || '';
-        const productName = manualProductName?.trim() || '';
-
-        if (!productName) {
-            error = '请输入商品名称';
-            setTimeout(() => error = '', 2000);
-            return;
-        }
-        if (!manualQuantity || manualQuantity < 1) {
-            error = '请输入有效的数量';
-            setTimeout(() => error = '', 2000);
-            return;
-        }
-        
-        if (!manualSelectedShipmentId) {
-            error = '请选择发货单';
-            setTimeout(() => error = '', 2000);
-            return;
-        }
-
-        const shipmentId = manualSelectedShipmentId;
-        let shipmentNo = "-";
-        const shipment = availableShipments.find(s => s.id === shipmentId);
-        shipmentNo = shipment ? shipment.shipment_no : `发货单 #${shipmentId}`;
-
-        if (packagePreviewItems.find(p => p.itemId === selectedItemId && p.shipmentId === shipmentId)) {
+        if (packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) {
             error = '该商品已在包裹明细中';
             setTimeout(() => error = '', 2000);
             return;
         }
-   
-        packagePreviewItems = [...packagePreviewItems, { 
-            id: `manual-${Date.now()}`, 
-            shipmentId: shipmentId, 
-            shipmentNo: shipmentNo,
-            itemId: selectedItemId,
-            sku: sku, 
-            productName: productName, 
-            quantity: manualQuantity,
-            pendingQuantity: manualQuantity
-        }];
-        
-        // 清空表单
-        manualSku = '';
-        manualProductName = '';
-        manualQuantity = 1;
-        selectedItemId = null;
-        manualSelectedShipmentId = null;
-    }
-    
-    // 处理物品选择
-    function handleItemSelect(selectedValue: unknown) {
-        // 如果选择为空（清除选择）
-        if (selectedValue === null || selectedValue === undefined || selectedValue === '') {
-            manualSku = '';
-            manualProductName = '';
-            selectedItemId = null;
-            return;
-        }
-        
-        let selectedId: number | null = null;
-        
-        if (typeof selectedValue === 'number') {
-            selectedId = selectedValue;
-        } else if (typeof selectedValue === 'string') {
-            selectedId = parseInt(selectedValue, 10);
-        } else if (selectedValue && typeof selectedValue === 'object') {
-            const obj = selectedValue as Record<string, unknown>;
-            // 如果有完整的物品信息直接使用
-            if (obj.item && typeof obj.item === 'object') {
-                const item = obj.item as Item;
-                manualSku = item.SKU || '';
-                manualProductName = item.name || '';
-                selectedItemId = item.id;
-                return;
-            }
-            // 否则尝试获取 value
-            if (typeof obj.value === 'number') {
-                selectedId = obj.value;
-            } else if (typeof obj.value === 'string') {
-                selectedId = parseInt(obj.value, 10);
-            }
-        }
-        
-        // 如果无法解析出有效ID，则清空
-        if (!selectedId || isNaN(selectedId)) {
-            manualSku = '';
-            manualProductName = '';
-            selectedItemId = null;
-            return;
-        }
-        
-        selectedItemId = selectedId;
-        
-        // 从缓存中获取物品信息
-        if (itemCache.has(selectedId)) {
-            const item = itemCache.get(selectedId)!;
-            manualSku = item.SKU;
-            manualProductName = item.name;
-        } else {
-            // 如果缓存中没有，异步获取
-            itemAPI.get(selectedId).then(item => {
-                manualSku = item.SKU;
-                manualProductName = item.name;
-                itemCache.set(item.id, item);
-            }).catch(err => {
-                logger.error('加载物品详情失败:', err);
-                error = '加载物品详情失败';
-                setTimeout(() => error = '', 2000);
-                // 失败时清空
-                manualSku = '';
-                manualProductName = '';
-                selectedItemId = null;
-            });
-        }
+        const newRow: PackagePreviewItem = {
+            id: `${shipmentId}-${item.id}-${Date.now()}`,
+            shipmentId,
+            shipmentNo: shipment.shipment_no,
+            itemId: item.item,
+            sku: item.sku,
+            productName: item.product_name,
+            quantity: safeParseFloat(item.quantity),
+            pendingQuantity: safeParseFloat(item.quantity),
+            allocations: [],
+        };
+        packagePreviewItems = [...packagePreviewItems, newRow];
+        // 从数组中拿代理后的引用，保证 Svelte 5 响应式跟踪
+        const proxyRow = packagePreviewItems[packagePreviewItems.length - 1];
+        await applyFifoSilently(proxyRow);
     }
 
-    function removePreviewItem(id: string) { 
-        const removedItem = packagePreviewItems.find(item => item.id === id);
-        
-        // 简化：直接删除，无需更新 quantity_packed
-        packagePreviewItems = packagePreviewItems.filter(item => item.id !== id); 
+    function removePreviewItem(id: string) {
+        packagePreviewItems = packagePreviewItems.filter(item => item.id !== id);
     }
     
     function clearAllItems() {
         packagePreviewItems = [];
     }
+
+    // ========== 容器分配 ==========
+
+    async function loadStoragesFor(itemFkId: number) {
+        if (availableStoragesByItem[itemFkId] !== undefined) return;
+        loadingStoragesByItem[itemFkId] = true;
+        try {
+            const resp = await getAvailableStoragesForItem(itemFkId);
+            availableStoragesByItem[itemFkId] = resp.storages;
+        } catch (err) {
+            availableStoragesByItem[itemFkId] = [];
+            error = getErrorMessage(err, '加载可用容器失败');
+            setTimeout(() => error = '', 2500);
+        } finally {
+            loadingStoragesByItem[itemFkId] = false;
+        }
+    }
+
+    async function toggleAllocationPanel(row: PackagePreviewItem) {
+        const willCollapse = !allocationCollapsed[row.id];
+        allocationCollapsed[row.id] = willCollapse;
+        // 展开时确保可用库存已加载
+        if (!willCollapse && row.itemId != null) {
+            await loadStoragesFor(row.itemId);
+        }
+    }
+
+    function setAllocation(row: PackagePreviewItem, containerId: number, qty: number) {
+        const idx = row.allocations.findIndex(a => a.container === containerId);
+        if (qty <= 0) {
+            if (idx >= 0) {
+                row.allocations.splice(idx, 1);
+            }
+        } else if (idx >= 0) {
+            row.allocations[idx] = { container: containerId, quantity: qty };
+        } else {
+            row.allocations.push({ container: containerId, quantity: qty });
+        }
+        row.quantity = getAllocationTotal(row);
+        packagePreviewItems = [...packagePreviewItems];
+    }
+
+    function getAllocQty(row: PackagePreviewItem, containerId: number): number {
+        return row.allocations.find(a => a.container === containerId)?.quantity ?? 0;
+    }
+
+    function getAllocationTotal(row: PackagePreviewItem): number {
+        return row.allocations.reduce((s, a) => s + a.quantity, 0);
+    }
+
+    /** 添加行时静默 FIFO 自动分配：库存不足或为空都不弹错，让用户自己手动调整。 */
+    async function applyFifoSilently(row: PackagePreviewItem) {
+        if (row.itemId == null) return;
+        await loadStoragesFor(row.itemId);
+        const list = availableStoragesByItem[row.itemId] || [];
+        if (list.length === 0) return;
+        applyFifo(row, list);
+    }
+
+    /** 把 row 的 allocations 用 FIFO 重写为对 list 的最大可用分配，返回剩余未分配数量。 */
+    function applyFifo(row: PackagePreviewItem, list: AvailableStorage[]): number {
+        let remaining = row.quantity;
+        const next: PackageItemAllocationCreateRequest[] = [];
+        for (const s of list) {
+            if (remaining <= 0) break;
+            const take = Math.min(s.quantity, remaining);
+            if (take > 0) {
+                next.push({ container: s.container_id, quantity: take });
+                remaining -= take;
+            }
+        }
+        row.allocations = next;
+        row.quantity = next.reduce((s, a) => s + a.quantity, 0);
+        packagePreviewItems = [...packagePreviewItems];
+        return remaining;
+    }
     
-    function fillAllPending() {
+    async function fillAllPending() {
         const items = availableItems();
+        const newRows: PackagePreviewItem[] = [];
         for (const { shipmentId, shipmentNo, item } of items) {
             if (!item.item) continue;
             if (!packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) {
-                packagePreviewItems = [...packagePreviewItems, {
+                const row: PackagePreviewItem = {
                     id: `${shipmentId}-${item.id}-${Date.now()}`,
                     shipmentId,
                     shipmentNo,
@@ -371,10 +289,17 @@
                     sku: item.sku,
                     productName: item.product_name,
                     quantity: safeParseFloat(item.quantity),
-                    pendingQuantity: safeParseFloat(item.quantity)
-                }];
+                    pendingQuantity: safeParseFloat(item.quantity),
+                    allocations: [],
+                };
+                newRows.push(row);
             }
         }
+        if (newRows.length === 0) return;
+        const baseLen = packagePreviewItems.length;
+        packagePreviewItems = [...packagePreviewItems, ...newRows];
+        const proxyRows = packagePreviewItems.slice(baseLen);
+        await Promise.all(proxyRows.map(r => applyFifoSilently(r)));
     }
 
     function getTotalQuantity(): number { return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0); }
@@ -387,16 +312,38 @@
         if (packagePreviewItems.length === 0) { error = '请至少添加一个商品到包裹'; return; }
         if (packagePreviewItems.some(item => !item.itemId || !item.shipmentId)) { error = '包裹明细必须同时关联发货单和物品'; return; }
 
+        // 校验：每行必须有容器分配，且总和等于数量
+        const allocErrors: string[] = [];
+        for (const row of packagePreviewItems) {
+            if (row.allocations.length === 0) {
+                allocErrors.push(`${row.sku}：未指定出货容器`);
+                continue;
+            }
+            const total = getAllocationTotal(row);
+            if (total !== row.quantity) {
+                allocErrors.push(`${row.sku}：容器分配总和(${total}) ≠ 数量(${row.quantity})`);
+            }
+            const ids = row.allocations.map(a => a.container);
+            if (ids.length !== new Set(ids).size) {
+                allocErrors.push(`${row.sku}：存在重复容器`);
+            }
+        }
+        if (allocErrors.length > 0) {
+            error = '请先修正容器分配：' + allocErrors.join('；');
+            return;
+        }
+
         saving = true; error = ''; success = '';
         try {
             // 使用第一个选中的发货单作为主关联（如果有的话）
             const primaryShipmentId = selectedShipmentIds.length > 0 ? selectedShipmentIds[0] : undefined;
             
-            // 处理明细数据：所有 PackageItem 现在都需要指定 shipment
+            // 处理明细数据：所有 PackageItem 现在都需要指定 shipment + allocations
             const items = packagePreviewItems.map(item => ({
                 shipment: item.shipmentId!,
                 item: item.itemId!,
-                quantity: item.quantity
+                quantity: item.quantity,
+                allocations: item.allocations,
             }));
             
             const submitData: PackageCreateRequest = {
@@ -519,58 +466,6 @@
         <div class="bg-gray-50 p-4 rounded-lg mb-4">
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
             
-            <!-- 手动添加商品表单 - 独立一行 -->
-            <div class="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
-                <div class="text-xs text-blue-700 font-medium mb-2">添加商品:</div>
-                <div class="flex flex-wrap gap-2 items-center">
-                    <div class="flex-[2] min-w-[200px]" style="--sv-min-height: 40px;">
-                        <Svelecte
-                            inputId="manual-item-select"
-                            valueAsObject={false}
-                            placeholder="搜索SKU或名称..."
-                            searchable={true}
-                            minQuery={1}
-                            fetch={itemSearchUrl}
-                            fetchCallback={handleItemFetch}
-                            valueField="value"
-                            labelField="label"
-                            bind:value={selectedItemId}
-                            onChange={(val: unknown) => handleItemSelect(val)}
-                            clearable={true}
-                        />
-                    </div>
-                    <div class="w-38">
-                        <NumberStepper
-                            bind:value={manualQuantity}
-                            min={1}
-                            step={1}
-                            decimalPlaces={0}
-                            size="lg"
-                            placeholder="数量"
-                        />
-                    </div>
-                    <div class="w-50" style="--sv-min-height: 40px;">
-                        <Svelecte
-                            inputId="manual-shipment-select"
-                            placeholder="选择发货单"
-                            searchable={true}
-                            clearable={true}
-                            valueField="value"
-                            labelField="label"
-                            options={manualShipmentOptions}
-                            bind:value={manualSelectedShipmentId}
-                        />
-                    </div>
-                    <button 
-                        type="button" 
-                        class="h-10 px-4 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-                        onclick={addManualItem}
-                    >
-                        添加
-                    </button>
-                </div>
-            </div>
-            
             {#if selectedShipmentIds.length > 0}
                 <DualSelectionPanel
                     layout="vertical"
@@ -635,32 +530,90 @@
                                 </thead>
                                 <tbody>
                                     {#each packagePreviewItems as item}
-                                        <tr class="hover:bg-gray-50" class:bg-red-50={item.quantity > item.pendingQuantity}>
-                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
-                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
-                                            <td class="p-2 border-b border-gray-200">{item.productName}</td>
-                                            <td class="text-right p-2 border-b border-gray-200 text-gray-600">{formatNumber(item.pendingQuantity)}</td>
-                                            <td class="text-right p-2 border-b border-gray-200">
-                                                <NumberStepper
-                                                    bind:value={item.quantity}
-                                                    min={1}
-                                                    step={1}
-                                                    decimalPlaces={0}
-                                                    size="sm"
-                                                />
+                                        {@const allocTotal = getAllocationTotal(item)}
+                                        {@const allocOk = allocTotal === item.pendingQuantity && allocTotal > 0}
+                                        {@const allocOver = allocTotal > item.pendingQuantity}
+                                        {@const expanded = !allocationCollapsed[item.id]}
+                                        <tr
+                                            class="hover:bg-gray-50 cursor-pointer select-none"
+                                            class:bg-red-50={item.quantity > item.pendingQuantity}
+                                            onclick={() => toggleAllocationPanel(item)}
+                                            title={expanded ? '点击收起容器分配' : '点击展开容器分配'}
+                                        >
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">
+                                                <span class="inline-block w-3 text-gray-400">{expanded ? '▾' : '▸'}</span>
+                                                {item.shipmentNo}
                                             </td>
-                                            <td class="text-center p-2 border-b border-gray-200">
+                                            <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
+                                            <td class="p-2 border-b border-gray-200">
+                                                {item.productName}
+                                                {#if item.allocations.length > 0}
+                                                    <span
+                                                        class="ml-2 px-1.5 py-0.5 rounded text-xs {allocOk ? 'bg-green-100 text-green-800' : allocOver ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}"
+                                                        title="出货容器分配状态"
+                                                    >
+                                                        {item.allocations.length}位置
+                                                    </span>
+                                                {/if}
+                                            </td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-gray-600">{formatNumber(item.pendingQuantity)}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 font-medium">
+                                                {allocTotal}
+                                            </td>
+                                            <td class="text-center p-2 border-b border-gray-200" onclick={(e) => e.stopPropagation()}>
                                                 <button type="button" class="px-2 py-1 bg-red-600 text-white rounded text-xs cursor-pointer" onclick={() => removePreviewItem(item.id)}>
                                                     删除
                                                 </button>
                                             </td>
                                         </tr>
+                                        {#if expanded}
+                                            <tr class="bg-gray-50">
+                                                <td colspan="6" class="p-3 border-b border-gray-200" onclick={(e) => e.stopPropagation()}>
+                                                    {#if item.itemId != null && loadingStoragesByItem[item.itemId]}
+                                                        <div class="text-sm text-gray-500">加载可用容器中...</div>
+                                                    {:else if item.itemId != null && (availableStoragesByItem[item.itemId]?.length ?? 0) === 0}
+                                                        <div class="text-sm text-red-600">该物品没有可用库存（已排除样品）。请先入库后再打包。</div>
+                                                    {:else if item.itemId != null}
+                                                        <table class="w-full text-xs border border-gray-200">
+                                                            <thead>
+                                                                <tr class="bg-white">
+                                                                    <th class="text-left p-2 border-b border-gray-200">容器编码</th>
+                                                                    <th class="text-left p-2 border-b border-gray-200">位置</th>
+                                                                    <th class="text-left p-2 border-b border-gray-200">容器标记</th>
+                                                                    <th class="text-right p-2 border-b border-gray-200 w-24">现有库存</th>
+                                                                    <th class="text-right p-2 border-b border-gray-200 w-32">本次出货</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {#each availableStoragesByItem[item.itemId] || [] as storage}
+                                                                    {@const currentAlloc = getAllocQty(item, storage.container_id)}
+                                                                    <tr>
+                                                                        <td class="p-2 border-b border-gray-100 font-mono">{storage.container_code}</td>
+                                                                        <td class="p-2 border-b border-gray-100 text-gray-500">{storage.container_path || '-'}</td>
+                                                                        <td class="p-2 border-b border-gray-100">{storage.container_mark || '-'}</td>
+                                                                        <td class="text-right p-2 border-b border-gray-100">{storage.quantity}</td>
+                                                                        <td class="text-right p-2 border-b border-gray-100">
+                                                                            <NumberStepper
+                                                                                value={currentAlloc}
+                                                                                min={0}
+                                                                                max={storage.quantity}
+                                                                                step={1}
+                                                                                decimalPlaces={0}
+                                                                                size="sm"
+                                                                                onchange={(v: number | null | undefined) => setAllocation(item, storage.container_id, v ?? 0)}
+                                                                            />
+                                                                        </td>
+                                                                    </tr>
+                                                                {/each}
+                                                            </tbody>
+                                                        </table>
+                                                    {/if}
+                                                </td>
+                                            </tr>
+                                        {/if}
                                     {/each}
                                 </tbody>
                             </table>
-                            {#if hasInvalidQuantities()}
-                                <div class="mt-3 text-sm text-red-600">部分商品数量超过待打包数量，请调整红色行的数量后再保存。</div>
-                            {/if}
                         {:else}
                             <div class="text-center p-12 text-gray-400 text-sm">
                                 <p>点击左侧"添加"按钮添加商品</p>
@@ -669,58 +622,8 @@
                     {/snippet}
                 </DualSelectionPanel>
             {:else}
-                <!-- 没有发货单时，只显示包裹内容 -->
-                <div class="bg-white p-4 rounded border">
-                    <h4 class="text-sm font-semibold text-gray-700 mb-3">📦 包裹内容 <span class="font-normal text-gray-500">({formatNumber(totalAdded())} 件)</span></h4>
-                    
-                    {#if packagePreviewItems.length > 0}
-                        <div class="flex justify-end gap-2 mb-2">
-                            <button type="button" class="px-2 py-1 text-xs text-blue-600 bg-transparent border-none cursor-pointer hover:underline" onclick={clearAllItems}>清空</button>
-                        </div>
-                        <table class="w-full border-collapse text-sm">
-                            <thead>
-                                <tr>
-                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">来源</th>
-                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">SKU</th>
-                                    <th class="text-left p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase">商品</th>
-                                    <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-20">待打包</th>
-                                    <th class="text-right p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-24">数量</th>
-                                    <th class="text-center p-2 border-b border-gray-200 bg-gray-100 text-xs font-semibold text-gray-700 uppercase w-16">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {#each packagePreviewItems as item}
-                                    <tr class="hover:bg-gray-50" class:bg-red-50={item.quantity > item.pendingQuantity}>
-                                        <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.shipmentNo}</td>
-                                        <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
-                                        <td class="p-2 border-b border-gray-200">{item.productName}</td>
-                                        <td class="text-right p-2 border-b border-gray-200 text-gray-600">{formatNumber(item.pendingQuantity)}</td>
-                                        <td class="text-right p-2 border-b border-gray-200">
-                                            <NumberStepper
-                                                bind:value={item.quantity}
-                                                min={1}
-                                                step={1}
-                                                decimalPlaces={0}
-                                                size="sm"
-                                            />
-                                        </td>
-                                        <td class="text-center p-2 border-b border-gray-200">
-                                            <button type="button" class="px-2 py-1 bg-red-600 text-white rounded text-xs cursor-pointer" onclick={() => removePreviewItem(item.id)}>
-                                                删除
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                        {#if hasInvalidQuantities()}
-                            <div class="mt-3 text-sm text-red-600">部分商品数量超过待打包数量，请调整红色行的数量后再保存。</div>
-                        {/if}
-                    {:else}
-                        <div class="text-center p-12 text-gray-400 text-sm">
-                            <p>请使用上方表单添加商品</p>
-                        </div>
-                    {/if}
+                <div class="text-center p-12 text-gray-400 text-sm bg-white rounded border">
+                    <p>请先在上方勾选关联发货单</p>
                 </div>
             {/if}
         </div>

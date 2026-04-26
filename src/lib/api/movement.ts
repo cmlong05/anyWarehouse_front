@@ -2,8 +2,31 @@
  * 出入库记录 (InventoryMovement) API
  */
 import { BaseAPI, type PaginatedResponse, type QueryParams } from './base';
+import { apiClient } from './client';
 
 export type MovementType = 'inbound' | 'outbound' | 'transfer';
+
+export interface AvailableStorage {
+    storage_id: number;
+    container_id: number;
+    container_code: string;
+    container_mark: string;
+    container_path: string;
+    quantity: number;
+}
+
+export interface AvailableStoragesResponse {
+    item_id: number;
+    total_available: number;
+    storages: AvailableStorage[];
+}
+
+export async function getAvailableStoragesForItem(itemId: number): Promise<AvailableStoragesResponse> {
+    return apiClient.get<AvailableStoragesResponse>(
+        '/warehouse/storage/available-by-item/',
+        { item_id: String(itemId) }
+    );
+}
 
 export interface InventoryMovement {
     id: number;

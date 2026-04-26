@@ -91,4 +91,7 @@ export {
     type MovementType,
     type MovementSummary,
     type MovementFilters,
+    type AvailableStorage,
+    type AvailableStoragesResponse,
+    getAvailableStoragesForItem,
 } from './movement';

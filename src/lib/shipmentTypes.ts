@@ -217,8 +217,24 @@ export interface PackageItem {
     notes?: string;
     item_detail?: ItemDetail;
     storage_locations?: string[];
+    allocations?: PackageItemAllocation[];
     created_at: string;
     updated_at: string;
+}
+
+/** 包裹明细的容器分配（读） */
+export interface PackageItemAllocation {
+    id: number;
+    container: number;
+    container_code: string;
+    container_mark?: string;
+    quantity: number;
+}
+
+/** 包裹明细的容器分配（写） */
+export interface PackageItemAllocationCreateRequest {
+    container: number;
+    quantity: number;
 }
 
 /** 创建包裹明细请求 */
@@ -227,6 +243,7 @@ export interface PackageItemCreateRequest {
     item: number;  // 物品 ID (必填)
     quantity: number;  // 数量 (必填)
     notes?: string;
+    allocations: PackageItemAllocationCreateRequest[];  // 容器分配，总和必须等于 quantity
 }
 
 /** 包裹-发货关联简要信息 */
