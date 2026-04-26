@@ -243,3 +243,36 @@ body {
   border-radius: var(--border-radius-md) !important;
   font-size: var(--font-size-sm);
 }
+
+/* 全局细滚动条：低饱和度，悬停时显现 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover,
+*:focus-within {
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent;
+}
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+*:hover::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+

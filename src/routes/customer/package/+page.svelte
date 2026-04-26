@@ -196,8 +196,8 @@
             {/if}
         </div>
     {:else}
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <table class="table table-zebra w-full">
+        <div class="bg-white rounded-lg shadow overflow-x-auto">
+            <table class="table table-zebra w-full min-w-[1100px]">
                 <thead>
                     <tr class="bg-gray-100">
                         <th class="px-4 py-3 text-left">包裹编号</th>
