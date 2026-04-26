@@ -2,18 +2,58 @@
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
-    import { packageAPI, trackingNumberAPI } from '$lib/api';
+    import { packageAPI, packageTrackingLegAPI } from '$lib/api';
     import { formatDate, formatNumber, safeParseFloat } from '$lib/utils';
-    import type { Package, PackageItem, TrackingNumberBrief } from '$lib/shipmentTypes';
+    import type { Package, PackageItem, PackageTrackingLeg } from '$lib/shipmentTypes';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import PrintPackingList from '$lib/components/shipment/PrintPackingList.svelte';
+    import TrackingLegTimeline from '$lib/components/TrackingLegTimeline.svelte';
+    import TrackingLegForm from '$lib/components/TrackingLegForm.svelte';
 
     let pkg = $state<Package | null>(null);
     let loading = $state(true);
     let error = $state('');
     let showDeleteModal = $state(false);
     let deleting = $state(false);
+    let showLegForm = $state(false);
+    let editingLeg = $state<PackageTrackingLeg | null>(null);
+
+    function openLegForm(leg: PackageTrackingLeg | null = null) {
+        editingLeg = leg;
+        showLegForm = true;
+    }
+
+    async function onLegSaved() {
+        showLegForm = false;
+        editingLeg = null;
+        if (pkg) await loadPackage(pkg.id);
+    }
+
+    async function deleteLeg(leg: PackageTrackingLeg) {
+        if (!confirm(`删除第 ${leg.leg_no} 段物流？`)) return;
+        try {
+            await packageTrackingLegAPI.delete(leg.id);
+            if (pkg) await loadPackage(pkg.id);
+        } catch (e: any) {
+            alert(e?.message || '删除失败');
+        }
+    }
+
+    async function recomputeStatus() {
+        if (!pkg) return;
+        try {
+            const result = await packageAPI.recomputeStatus(pkg.id);
+            pkg = {
+                ...pkg,
+                overall_status: result.overall_status as typeof pkg.overall_status,
+                overall_status_display: result.overall_status_display,
+                current_leg_no: result.current_leg_no,
+            };
+        } catch (e: any) {
+            alert(e?.message || '重算失败');
+        }
+    }
 
     onMount(async () => {
         const id = page.params.id;
@@ -84,95 +124,6 @@
             error = err.message || '操作失败';
         } finally {
             sealing = false;
-        }
-    }
-
-    // 关联快递单号
-    let showTrackingModal = $state(false);
-    let trackingModalLoading = $state(false);
-    let trackingModalError = $state('');
-    let availableTrackingNumbers = $state<TrackingNumberBrief[]>([]);
-    let selectedTrackingId = $state<number | null>(null);
-    let assigningTracking = $state(false);
-
-    async function openTrackingModal() {
-        showTrackingModal = true;
-        trackingModalError = '';
-        selectedTrackingId = null;
-        manualTrackingNo = '';
-        manualTrackingInfo = null;
-        manualTrackingError = '';
-        manualTrackingConfirmed = false;
-        trackingModalLoading = true;
-        try {
-            const data = await trackingNumberAPI.listAvailable();
-            availableTrackingNumbers = data;
-        } catch (err: any) {
-            trackingModalError = err.message || '加载快递单号失败';
-        } finally {
-            trackingModalLoading = false;
-        }
-    }
-
-    function closeTrackingModal() {
-        showTrackingModal = false;
-        selectedTrackingId = null;
-        trackingModalError = '';
-        manualTrackingNo = '';
-        manualTrackingInfo = null;
-        manualTrackingError = '';
-        manualTrackingConfirmed = false;
-    }
-
-    let manualTrackingNo = $state('');
-    let manualTrackingLoading = $state(false);
-    let manualTrackingInfo = $state<TrackingNumberBrief | null>(null);
-    let manualTrackingError = $state('');
-    let manualTrackingConfirmed = $state(false);
-
-    async function confirmAssignTracking() {
-        if (!pkg || selectedTrackingId === null) return;
-        if (manualTrackingInfo?.is_linked && !manualTrackingConfirmed) {
-            manualTrackingError = '确认继续关联已关联的快递单号';
-            return;
-        }
-
-        try {
-            assigningTracking = true;
-            trackingModalError = '';
-            await packageAPI.assignTracking(pkg.id, selectedTrackingId);
-            closeTrackingModal();
-            await loadPackage(pkg.id);
-        } catch (err: any) {
-            trackingModalError = err.message || '关联失败';
-        } finally {
-            assigningTracking = false;
-        }
-    }
-
-    async function lookupTrackingNumber() {
-        manualTrackingError = '';
-        manualTrackingInfo = null;
-        manualTrackingConfirmed = false;
-        if (!manualTrackingNo.trim()) {
-            manualTrackingError = '请输入快递单号';
-            return;
-        }
-        manualTrackingLoading = true;
-        try {
-            const tracking = await trackingNumberAPI.lookup(manualTrackingNo.trim());
-            manualTrackingInfo = tracking;
-            selectedTrackingId = tracking.id;
-            manualTrackingConfirmed = !tracking.is_linked;
-        } catch (err: any) {
-            if (err?.status === 404) {
-                manualTrackingError = '快递单号不存在';
-            } else {
-                manualTrackingError = err.message || '查询失败';
-            }
-            selectedTrackingId = null;
-        } finally {
-            manualTrackingLoading = false;
         }
     }
 
@@ -445,41 +396,40 @@
                 {/if}
             </div>
 
-            <!-- 快递信息 -->
+            <!-- 多段物流 -->
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold">快递信息</h2>
-                    {#if pkg.tracking_number_detail}
-                        <button
-                            class="px-3 py-1.5 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
-                            onclick={openTrackingModal}
-                        >更换</button>
-                    {:else}
-                        <button
-                            class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                            onclick={openTrackingModal}
-                        >关联快递单</button>
-                    {/if}
-                </div>
-                {#if pkg.tracking_number_detail}
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <span class="text-gray-500 text-sm">快递公司</span>
-                            <p class="font-medium">{pkg.tracking_number_detail.carrier_name}</p>
-                        </div>
-                        <div>
-                            <span class="text-gray-500 text-sm">快递单号</span>
-                            <p class="font-mono font-medium">{pkg.tracking_number_detail.tracking_no}</p>
-                        </div>
-                        <div>
-                            <span class="text-gray-500 text-sm">物流状态</span>
-                            <p class="font-medium">
-                                <LogisticsStatusBadge status={pkg.tracking_number_detail.logistics_status} />
+                    <div>
+                        <h2 class="text-lg font-bold">多段物流轨迹</h2>
+                        {#if pkg.overall_status_display}
+                            <p class="text-sm text-slate-500 mt-1">
+                                聚合状态：<span class="font-medium">{pkg.overall_status_display}</span>
+                                {#if pkg.current_leg_no}<span class="ml-2 text-xs">(当前第 {pkg.current_leg_no} 段)</span>{/if}
                             </p>
-                        </div>
+                        {/if}
                     </div>
-                {:else}
-                    <p class="text-gray-400 text-sm">暂未关联快递单号</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1.5 text-sm border rounded hover:bg-slate-50"
+                            onclick={recomputeStatus}>重算状态</button>
+                        <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                            onclick={() => openLegForm(null)}>+ 添加段</button>
+                    </div>
+                </div>
+                <TrackingLegTimeline
+                    legs={pkg.tracking_legs ?? []}
+                    currentLegNo={pkg.current_leg_no ?? 0}
+                />
+                {#if (pkg.tracking_legs?.length ?? 0) > 0}
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        {#each pkg.tracking_legs ?? [] as leg (leg.id)}
+                            <div class="flex items-center gap-1 text-xs">
+                                <button class="px-2 py-0.5 border rounded hover:bg-slate-50"
+                                    onclick={() => openLegForm(leg)}>编辑#{leg.leg_no}</button>
+                                <button class="px-2 py-0.5 border rounded text-red-600 hover:bg-red-50"
+                                    onclick={() => deleteLeg(leg)}>删除#{leg.leg_no}</button>
+                            </div>
+                        {/each}
+                    </div>
                 {/if}
             </div>
 
@@ -608,122 +558,19 @@
     </div>
 {/if}
 
-<!-- 关联快递单号弹窗 -->
-{#if showTrackingModal}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
-         onclick={(e) => { if (e.target === e.currentTarget) closeTrackingModal(); }}
-         role="dialog"
-         aria-modal="true"
-         tabindex="-1">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 class="font-bold text-lg">{pkg?.tracking_number_detail ? '更换快递单号' : '关联快递单号'}</h3>
-                <button class="text-gray-400 hover:text-gray-600" onclick={closeTrackingModal}>✕</button>
+{#if showLegForm && pkg}
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="px-5 py-3 border-b">
+                <h3 class="font-bold text-lg">{editingLeg ? '编辑物流段' : '添加物流段'}</h3>
             </div>
-            <div class="p-6">
-                {#if trackingModalError}
-                    <div class="mb-4 px-4 py-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">{trackingModalError}</div>
-                {/if}
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label for="manual-tracking-input" class="block text-sm font-medium text-gray-700 mb-2">手动输入快递单号</label>
-                        <div class="flex gap-2">
-                            <input
-                                id="manual-tracking-input"
-                                type="text"
-                                class="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-                                placeholder="请输入快递单号"
-                                bind:value={manualTrackingNo}
-                                onkeydown={(e) => e.key === 'Enter' && lookupTrackingNumber()}
-                            />
-                            <button
-                                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                onclick={lookupTrackingNumber}
-                                disabled={manualTrackingLoading}
-                            >
-                                {manualTrackingLoading ? '查询中...' : '校验'}
-                            </button>
-                        </div>
-                        {#if manualTrackingError}
-                            <p class="mt-2 text-sm text-red-600">{manualTrackingError}</p>
-                        {/if}
-                        {#if manualTrackingInfo}
-                            <div class="mt-3 p-3 rounded-lg border border-gray-200 bg-gray-50">
-                                <p class="font-medium text-sm">{manualTrackingInfo.tracking_no}</p>
-                                <p class="text-xs text-gray-500">{manualTrackingInfo.carrier_name} · {getLogisticsLabel(manualTrackingInfo.logistics_status)}</p>
-                                {#if manualTrackingInfo.is_linked}
-                                    <div class="mt-1 space-y-2">
-                                        <p class="text-xs text-yellow-600">该单号已被关联于其他包裹。</p>
-                                        {#if !manualTrackingConfirmed}
-                                            <button
-                                                class="px-3 py-1 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700"
-                                                onclick={() => {
-                                                    manualTrackingConfirmed = true;
-                                                    manualTrackingError = '';
-                                                }}
-                                            >
-                                                确认继续关联
-                                            </button>
-                                        {:else}
-                                            <p class="text-xs text-green-600">已确认继续关联该单号。</p>
-                                        {/if}
-                                    </div>
-                                {/if}
-                            </div>
-                        {/if}
-                    </div>
-                </div>
-                {#if trackingModalLoading}
-                    <div class="flex justify-center py-8">
-                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
-                {:else if availableTrackingNumbers.length === 0}
-                    <p class="text-center text-gray-400 py-6">暂无可用的快递单号</p>
-                {:else}
-                    <div class="space-y-2 max-h-80 overflow-y-auto">
-                        {#each availableTrackingNumbers as tn}
-                            <!-- svelte-ignore a11y_click_events_have_key_events -->
-                            <div
-                                class="flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors {selectedTrackingId === tn.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
-                                onclick={() => { selectedTrackingId = tn.id; }}
-                                role="option"
-                                aria-selected={selectedTrackingId === tn.id}
-                                tabindex="0"
-                            >
-                                <div>
-                                    <p class="font-mono font-medium text-sm">{tn.tracking_no}</p>
-                                    <p class="text-xs text-gray-500">{tn.carrier_name}</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    {#if tn.is_linked}
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-500">已关联包裹</span>
-                                    {/if}
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                                        {getLogisticsLabel(tn.logistics_status)}
-                                    </span>
-                                    {#if selectedTrackingId === tn.id}
-                                        <span class="text-blue-600">✓</span>
-                                    {/if}
-                                </div>
-                            </div>
-                        {/each}
-                    </div>
-                {/if}
-            </div>
-            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
-                <button
-                    class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    onclick={closeTrackingModal}
-                >取消</button>
-                <button
-                    class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onclick={confirmAssignTracking}
-                    disabled={selectedTrackingId === null || assigningTracking}
-                >
-                    {assigningTracking ? '关联中...' : '确认关联'}
-                </button>
+            <div class="p-5">
+                <TrackingLegForm
+                    packageId={pkg.id}
+                    leg={editingLeg}
+                    onsaved={onLegSaved}
+                    oncancel={() => { showLegForm = false; editingLeg = null; }}
+                />
             </div>
         </div>
     </div>

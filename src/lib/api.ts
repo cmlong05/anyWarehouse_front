@@ -63,10 +63,12 @@ export {
     ShipmentAPI,
     PackageAPI,
     ShipmentItemAPI,
+    PackageTrackingLegAPI,
     trackingNumberAPI,
     shipmentAPI,
     shipmentItemAPI,
     packageAPI,
+    packageTrackingLegAPI,
 } from './api/shipment';
 
 // 导出系统设置 API

@@ -47,8 +47,8 @@
                             <div class="flex-1">
                                 <div class="font-medium">{pkg.package_no}</div>
                                 <div class="text-sm text-gray-500">
-                                    {#if pkg.tracking_number_detail}
-                                        {pkg.tracking_number_detail.carrier_name} - {pkg.tracking_number_detail.tracking_no}
+                                    {#if pkg.final_tracking_number_detail}
+                                        {pkg.final_tracking_number_detail.carrier_name} - {pkg.final_tracking_number_detail.tracking_no}
                                     {:else}
                                         未关联快递单号
                                     {/if}

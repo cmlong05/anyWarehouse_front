@@ -226,13 +226,18 @@
                             </td>
                             <td class="px-4 py-3">#{pkg.sequence_no}</td>
                             <td class="px-4 py-3">
-                                {#if pkg.tracking_number_detail}
+                                {#if pkg.final_tracking_number_detail}
                                     <div>
-                                        <span class="text-sm text-gray-600">{pkg.tracking_number_detail.carrier_name}</span>
-                                        <p class="font-mono text-sm">{pkg.tracking_number_detail.tracking_no}</p>
+                                        <span class="text-sm text-gray-600">{pkg.final_tracking_number_detail.carrier_name}</span>
+                                        <p class="font-mono text-sm">{pkg.final_tracking_number_detail.tracking_no}</p>
                                     </div>
                                 {:else}
                                     <span class="text-gray-400">-</span>
+                                {/if}
+                                {#if pkg.overall_status_display && pkg.overall_status !== 'no_tracking'}
+                                    <p class="text-xs text-blue-600 mt-1">
+                                        {#if pkg.current_leg_no}[第{pkg.current_leg_no}段] {/if}{pkg.overall_status_display}
+                                    </p>
                                 {/if}
                             </td>
                             <td class="px-4 py-3">

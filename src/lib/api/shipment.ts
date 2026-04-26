@@ -25,6 +25,8 @@ import type {
     PackageUpdateRequest,
     PackageItem,
     PackageItemCreateRequest,
+    PackageTrackingLeg,
+    PackageTrackingLegRequest,
 } from '$lib/shipmentTypes';
 import type { PaginatedResponse } from './base';
 
@@ -222,8 +224,23 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
         return this.client.post<{ status: string; message: string }>(`${this.basePath}${packageId}/unseal/`, {});
     }
 
-    async assignTracking(packageId: number, trackingNumberId: number | null): Promise<Package> {
-        return this.client.patch<Package>(`${this.basePath}${packageId}/`, { tracking_number: trackingNumberId });
+    /** 触发服务端重算 overall_status / current_leg_no */
+    async recomputeStatus(packageId: number): Promise<{ overall_status: string; overall_status_display: string; current_leg_no: number }> {
+        return this.client.post(`${this.basePath}${packageId}/recompute-status/`, {});
+    }
+}
+
+// ========== Package Tracking Leg API（多段物流） ==========
+
+export class PackageTrackingLegAPI extends BaseAPI<PackageTrackingLeg, PackageTrackingLegRequest, Partial<PackageTrackingLegRequest>> {
+    constructor() {
+        super('/customer/package-tracking-legs/');
+    }
+
+    /** 按包裹查询所有物流段（按 leg_no 排序） */
+    async getByPackage(packageId: number): Promise<PackageTrackingLeg[]> {
+        const res = await this.list({ package_id: packageId.toString() });
+        return Array.isArray(res) ? res : (res.results ?? []);
     }
 }
 
@@ -255,3 +272,4 @@ export const shipmentAPI = new ShipmentAPI();
 export const packageAPI = new PackageAPI();
 export const shipmentItemAPI = new ShipmentItemAPI();
 export const packageItemAPI = new PackageItemAPI();
+export const packageTrackingLegAPI = new PackageTrackingLegAPI();

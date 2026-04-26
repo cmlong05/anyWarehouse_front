@@ -534,10 +534,10 @@
                                             <span class="text-red-500">待装箱</span>
                                         {/if}
                                     </div>
-                                    {#if pkg.tracking_number_detail}
+                                    {#if pkg.final_tracking_no}
                                         <div class="text-right">
-                                            <span class="text-sm text-gray-500">{pkg.tracking_number_detail.carrier_name}</span>
-                                            <p class="font-mono text-sm text-gray-900">{pkg.tracking_number_detail.tracking_no}</p>
+                                            <span class="text-sm text-gray-500">{pkg.final_carrier_name}</span>
+                                            <p class="font-mono text-sm text-gray-900">{pkg.final_tracking_no}</p>
                                         </div>
                                     {/if}
                                 </div>

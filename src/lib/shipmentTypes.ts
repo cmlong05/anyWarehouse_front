@@ -243,8 +243,6 @@ export interface Package {
     package_no: string;
     status: 'pending' | 'sealed';
     sequence_no: number;
-    tracking_number?: number;
-    tracking_number_detail?: TrackingNumberBrief;
     weight?: string;
     volume?: string;
     estimated_weight?: string;
@@ -259,8 +257,56 @@ export interface Package {
     shipments?: PackageShipmentBrief[];
     items?: PackageItem[];
     notes?: string;
+    /** 多段物流：聚合状态与段列表 */
+    overall_status?: PackageOverallStatus;
+    overall_status_display?: string;
+    current_leg_no?: number;
+    current_leg?: PackageTrackingLeg | null;
+    final_tracking_number_detail?: TrackingNumberBrief | null;
+    tracking_legs?: PackageTrackingLeg[];
     created_at: string;
     updated_at: string;
+}
+
+/** 物流段阶段 */
+export type TrackingLegStage = 'first' | 'middle' | 'last';
+
+/** 包裹聚合状态 */
+export type PackageOverallStatus =
+    | 'no_tracking' | 'pending' | 'collected' | 'in_transit'
+    | 'exception' | 'delivered' | 'returned' | 'cancelled';
+
+/** 包裹物流段 */
+export interface PackageTrackingLeg {
+    id: number;
+    package: number;
+    leg_no: number;
+    stage: TrackingLegStage;
+    stage_display?: string;
+    tracking_number: number;
+    tracking_number_detail?: TrackingNumberBrief;
+    agent_name?: string;
+    from_location?: string;
+    to_location?: string;
+    handover_at?: string | null;
+    notes?: string;
+    logistics_status?: LogisticsStatus | null;
+    logistics_status_display?: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 创建/更新物流段请求 */
+export interface PackageTrackingLegRequest {
+    package: number;
+    tracking_number: number;
+    leg_no?: number;
+    stage: TrackingLegStage;
+    agent_name?: string;
+    from_location?: string;
+    to_location?: string;
+    handover_at?: string | null;
+    notes?: string;
 }
 
 /** 包裹-发货批次关联（N:M关系） */
@@ -288,9 +334,14 @@ export interface PackageBrief {
     width?: string;
     height?: string;
     total_quantity: string;
-    tracking_no?: string;
-    carrier_name?: string;
-    tracking_number_detail?: TrackingNumberBrief;
+    /** 最后一段的快递单号 */
+    final_tracking_no?: string | null;
+    /** 最后一段的承运商 */
+    final_carrier_name?: string | null;
+    /** 多段物流聚合状态 */
+    overall_status?: PackageOverallStatus;
+    overall_status_display?: string;
+    current_leg_no?: number;
     /** 关联的发货单列表 */
     shipments?: PackageShipmentBrief[];
     /** 包裹明细列表（在详情接口中返回） */
@@ -307,9 +358,8 @@ export interface PackageCreateRequest {
     length?: number;
     width?: number;
     height?: number;
-    tracking_number?: number;
-    items?: PackageItemCreateRequest[];
-    notes?: string;
+    items?: PackageItemCreateRequest[];    /** 创建包裹时一并提交的初始物流段（每段可省略 leg_no，按顺序自动分配） */
+    tracking_legs?: Omit<PackageTrackingLegRequest, 'package'>[];    notes?: string;
     /** 关联的发货单ID，传入后自动建立关联 */
     shipment_id?: number;
 }
@@ -320,7 +370,6 @@ export interface PackageUpdateRequest {
     length?: number;
     width?: number;
     height?: number;
-    tracking_number?: number;
     notes?: string;
 }
 

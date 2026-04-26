@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { packageAPI, trackingNumberAPI, shipmentAPI, itemAPI } from '$lib/api';
-    import type { TrackingNumberBrief, ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest } from '$lib/shipmentTypes';
+    import { packageAPI, shipmentAPI, itemAPI } from '$lib/api';
+    import type { ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest } from '$lib/shipmentTypes';
     import type { Item } from '$lib';
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { config } from '$lib/config';
-    import { FormInput, FormSelect, NumberStepper } from '$lib/components/ui';
+    import { FormInput, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
@@ -25,7 +25,6 @@
     let length = $state<number | null>(null);
     let width = $state<number | null>(null);
     let height = $state<number | null>(null);
-    let trackingNumberId = $state<number | null>(null);
     let notes = $state('');
 
     // 发货单选择状态
@@ -47,7 +46,6 @@
     let linkedShipments = $state<{id: number, shipment_no: string, status: string}[]>([]);
 
     // 选项数据
-    let availableTrackingNumbers = $state<TrackingNumberBrief[]>([]);
     let availableShipments = $state<ShipmentBrief[]>([]);
     let loading = $state(true);
     let saving = $state(false);
@@ -82,8 +80,6 @@
     }
 
     // 计算属性
-    const trackingOptions = $derived([{ value: '', label: '请选择快递单号' }, ...availableTrackingNumbers.map(t => ({ value: t.id.toString(), label: `${t.carrier_name} - ${t.tracking_no}` }))]);
-    
     // 手动添加时可选择的发货单选项
     const manualShipmentOptions = $derived(
         selectedShipmentIds.map(id => {
@@ -133,7 +129,7 @@
 
     async function init() {
         try {
-            await Promise.all([loadTrackingNumbers(), loadShipments()]);
+            await loadShipments();
             if (mode === 'edit' && packageId) {
                 await loadPackage(packageId);
             } else {
@@ -144,7 +140,6 @@
         finally { loading = false; }
     }
 
-    async function loadTrackingNumbers() { try { availableTrackingNumbers = await trackingNumberAPI.listAvailable(); } catch {} }
     async function loadShipments() { 
         try { 
             const response = await shipmentAPI.list({ status: 'confirmed', page_size: 100 });
@@ -158,7 +153,7 @@
             const pkg = await packageAPI.get(id);
             packageNo = pkg.package_no; weight = pkg.weight ? safeParseFloat(pkg.weight) : null;
             length = pkg.length ? safeParseFloat(pkg.length) : null; width = pkg.width ? safeParseFloat(pkg.width) : null;
-            height = pkg.height ? safeParseFloat(pkg.height) : null; trackingNumberId = pkg.tracking_number || null;
+            height = pkg.height ? safeParseFloat(pkg.height) : null;
             notes = pkg.notes || ''; existingItems = pkg.items || []; linkedShipments = pkg.shipments || [];
             
             // 将现有明细转换为编辑模式下的预览格式
@@ -410,7 +405,6 @@
                 length: length ?? undefined, 
                 width: width ?? undefined, 
                 height: height ?? undefined,
-                tracking_number: trackingNumberId || undefined, 
                 notes: notes || undefined,
                 items: items as PackageItemCreateRequest[],
                 ...(primaryShipmentId ? { shipment_id: primaryShipmentId } : {})
@@ -451,7 +445,6 @@
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">基本信息</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormInput label="包裹编号" name="packageNo" value={packageNo} required disabled={mode === 'edit'} oninput={(v) => packageNo = v} />
-                <FormSelect label="快递单号" name="trackingNumber" options={trackingOptions} value={trackingNumberId?.toString() || ''} onchange={(v) => trackingNumberId = v ? Number(v) : null} />
             </div>
         </div>
 
