@@ -8,6 +8,8 @@
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import Plus from 'lucide-svelte/icons/plus';
+    import PackageCheck from 'lucide-svelte/icons/package-check';
+    import PackageOpen from 'lucide-svelte/icons/package-open';
 
     let packages = $state<Package[]>([]);
     let loading = $state(true);
@@ -86,12 +88,28 @@
 
     function getDisplayWeight(pkg: Package): string {
         const manualWeight = safeParseFloat(pkg.weight, 0);
-        return manualWeight > 0 ? `${manualWeight.toFixed(3)} kg` : '-';
+        return manualWeight > 0 ? manualWeight.toFixed(3) : '-';
     }
 
     function getDisplayVolume(pkg: Package): string {
         const volume = safeParseFloat(pkg.volume, 0);
         return volume > 0 ? formatCompactNumber(pkg.volume) : '-';
+    }
+
+    function formatMonthDay(value: string | Date | undefined | null): string {
+        if (!value) return '-';
+        const d = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(d.getTime())) return '-';
+        return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // 四色分组：待揽收(灰) / 进行中(黄) / 已完成(绿) / 异常(红)
+    function getOverallStatusGroup(status: string | undefined | null): 'pending' | 'progress' | 'done' | 'issue' | 'none' {
+        if (!status || status === 'no_tracking') return 'none';
+        if (status === 'pending') return 'pending';
+        if (status === 'delivered') return 'done';
+        if (status === 'exception' || status === 'returned' || status === 'cancelled') return 'issue';
+        return 'progress';
     }
 
     // 删除相关函数
@@ -204,11 +222,11 @@
                         <th class="px-4 py-3 text-left">包裹编号</th>
                         <th class="px-4 py-3 text-left">状态</th>
                         <th class="px-4 py-3 text-left">序号</th>
-                        <th class="px-4 py-3 text-left">快递信息</th>
-                        <th class="px-4 py-3 text-left">关联发货单</th>
+                        <th class="px-4 py-3 text-left">快递</th>
+                        <th class="px-4 py-3 text-left">发货单</th>
                         <th class="px-4 py-3 text-right">商品种类</th>
                         <th class="px-4 py-3 text-right">总数量</th>
-                        <th class="px-4 py-3 text-right">重量</th>
+                        <th class="px-4 py-3 text-right">重量 (kg)</th>
                         <th class="px-4 py-3 text-right">体积</th>
                         <th class="px-4 py-3 text-left">创建时间</th>
                         <th class="px-4 py-3 text-center">操作</th>
@@ -220,25 +238,33 @@
                             <td class="px-4 py-3 font-medium">{pkg.package_no}</td>
                             <td class="px-4 py-3">
                                 {#if pkg.status === 'sealed'}
-                                    <span class="badge badge-success badge-sm">已封箱</span>
+                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-green-100 text-green-600" title="已封箱" aria-label="已封箱" role="img">
+                                        <PackageCheck class="h-5 w-5" aria-hidden="true" />
+                                    </span>
                                 {:else}
-                                    <span class="badge badge-warning badge-sm">待装箱</span>
+                                    <span class="inline-flex items-center justify-center h-8 w-8 rounded-full bg-amber-100 text-amber-600" title="待装箱" aria-label="待装箱" role="img">
+                                        <PackageOpen class="h-5 w-5" aria-hidden="true" />
+                                    </span>
                                 {/if}
                             </td>
                             <td class="px-4 py-3">#{pkg.sequence_no}</td>
                             <td class="px-4 py-3">
-                                {#if pkg.final_tracking_number_detail}
-                                    <div>
-                                        <span class="text-sm text-gray-600">{pkg.final_tracking_number_detail.carrier_name}</span>
-                                        <p class="font-mono text-sm">{pkg.final_tracking_number_detail.tracking_no}</p>
-                                    </div>
-                                {:else}
+                                {#if !pkg.overall_status || pkg.overall_status === 'no_tracking'}
                                     <span class="text-gray-400">-</span>
-                                {/if}
-                                {#if pkg.overall_status_display && pkg.overall_status !== 'no_tracking'}
-                                    <p class="text-xs text-blue-600 mt-1">
-                                        {#if pkg.current_leg_no}[第{pkg.current_leg_no}段] {/if}{pkg.overall_status_display}
-                                    </p>
+                                {:else}
+                                    {@const group = getOverallStatusGroup(pkg.overall_status)}
+                                    <span
+                                        class="inline-flex h-4 w-4 rounded-full"
+                                        class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={group === 'pending'}
+                                        class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={group === 'progress'}
+                                        class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={group === 'done'}
+                                        class:bg-[radial-gradient(circle,_rgba(239,68,68,1)_5%,_rgba(239,68,68,0)_90%)]={group === 'issue'}
+                                        title={pkg.overall_status_display}
+                                        aria-label={pkg.overall_status_display}
+                                        role="img"
+                                    >
+                                        <span class="sr-only">{pkg.overall_status_display}</span>
+                                    </span>
                                 {/if}
                             </td>
                             <td class="px-4 py-3">
@@ -250,7 +276,7 @@
                             <td class="px-4 py-3 text-right">{formatNumber(pkg.total_quantity)}</td>
                             <td class="px-4 py-3 text-right">{getDisplayWeight(pkg)}</td>
                             <td class="px-4 py-3 text-right">{getDisplayVolume(pkg)}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500">{formatDate(pkg.created_at)}</td>
+                            <td class="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">{formatMonthDay(pkg.created_at)}</td>
                             <td class="px-4 py-3 text-center">
                                 <button 
                                     class="btn btn-ghost btn-sm p-1 text-gray-500 hover:text-gray-700" 
