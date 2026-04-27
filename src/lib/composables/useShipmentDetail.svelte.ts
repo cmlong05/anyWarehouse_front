@@ -81,6 +81,20 @@ export function useShipmentDetail(shipmentId: () => number) {
         goto('/customer/shipment');
     }
 
+    function updateShipmentItem(updated: { id: number } & Partial<import('$lib/shipmentTypes').ShipmentItem>) {
+        if (!shipment?.items) return;
+        const idx = shipment.items.findIndex(it => it.id === updated.id);
+        if (idx >= 0) {
+            shipment.items[idx] = { ...shipment.items[idx], ...updated };
+        }
+    }
+
+    function removeShipmentItems(ids: number[]) {
+        if (!shipment?.items || !ids.length) return;
+        const idSet = new Set(ids);
+        shipment.items = shipment.items.filter(it => !idSet.has(it.id));
+    }
+
     function goToEdit() {
         goto(`/customer/shipment/${shipmentId()}/edit`);
     }
@@ -204,6 +218,8 @@ export function useShipmentDetail(shipmentId: () => number) {
         
         // 方法
         loadShipment,
+        updateShipmentItem,
+        removeShipmentItems,
         goBack,
         goToEdit,
         executeAction,

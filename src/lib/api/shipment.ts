@@ -138,6 +138,16 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
         return this.client.post<SyncItemsResponse>(`${this.basePath}${id}/sync_items/`, {});
     }
 
+    /** 剔除未打包的发货明细（quantity_packed === 0）。
+     *  - 不传 ids → 全单剔除
+     *  - 传 ids → 仅在该集合内剔除（单条传 [itemId]） */
+    async pruneUnpacked(
+        id: number,
+        ids?: number[],
+    ): Promise<{ status: string; message: string; removed_ids: number[]; removed_skus: string[] }> {
+        return this.client.post(`${this.basePath}${id}/prune_unpacked/`, ids ? { ids } : {});
+    }
+
     /** 下载 SKU 对照表 PDF（服务端生成，跨浏览器一致） */
     async downloadSkuReference(id: number, locale = 'zh-CN', shipmentNo: string): Promise<void> {
         await this._downloadPDF(`${this.basePath}${id}/sku_reference/?locale=${locale}`, `SKU-REFERENCE-${shipmentNo}.pdf`);
