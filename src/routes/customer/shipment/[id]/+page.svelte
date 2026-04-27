@@ -8,6 +8,7 @@
     import type { PackageItem, ShipmentItem } from '$lib/shipmentTypes';
     import type { SalesOrder } from '$lib';
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
+    import { getErrorMessage } from '$lib/utils/errors';
     import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
@@ -32,6 +33,115 @@
     let lineSyncLoading = $state<Record<number, boolean>>({});
     let lineSyncError = $state<string | null>(null);
     let lineSyncMessage = $state<string | null>(null);
+    let rowSyncMessage = $state<string | null>(null);
+    let bulkSyncLoading = $state(false);
+    let pruneLoading = $state(false);
+    let rowPruneLoading = $state<Record<number, boolean>>({});
+
+    type ActionTarget = 'row' | 'batch';
+
+    /**
+     * 统一封装发货明细操作：confirm → 重置消息 → 翻转 loading → try/catch/finally → 错误归一化。
+     * `target=row` 写入 rowSyncMessage（表底），`batch` 写入 lineSyncMessage（顶部）。
+     */
+    async function runShipmentAction(opts: {
+        confirm?: string;
+        target: ActionTarget;
+        setLoading: (v: boolean) => void;
+        errorFallback: string;
+        run: () => Promise<void>;
+    }): Promise<void> {
+        if (opts.confirm && !confirm(opts.confirm)) return;
+        lineSyncError = null;
+        if (opts.target === 'row') rowSyncMessage = null;
+        else lineSyncMessage = null;
+        opts.setLoading(true);
+        try {
+            await opts.run();
+        } catch (err: unknown) {
+            lineSyncError = getErrorMessage(err, opts.errorFallback);
+        } finally {
+            opts.setLoading(false);
+        }
+    }
+
+    function setRowLoading(map: Record<number, boolean>, id: number, value: boolean) {
+        return { ...map, [id]: value };
+    }
+
+    function canPruneLine(item: ShipmentItem): boolean {
+        const status = shipmentDetail.shipment?.status;
+        if (!status || !SYNC_EDITABLE_STATUSES.includes(status)) return false;
+        return safeParseFloat(item.quantity_packed || '0') === 0;
+    }
+
+    async function pruneShipmentItemRow(item: ShipmentItem) {
+        if (rowPruneLoading[item.id]) return;
+        const shipmentId = shipmentDetail.shipment?.id;
+        if (!shipmentId) return;
+        await runShipmentAction({
+            confirm: `确认剔除未打包明细：SKU ${item.sku}？`,
+            target: 'row',
+            errorFallback: '剔除失败，请重试',
+            setLoading: v => (rowPruneLoading = setRowLoading(rowPruneLoading, item.id, v)),
+            run: async () => {
+                const resp = await shipmentAPI.pruneUnpacked(shipmentId, [item.id]);
+                shipmentDetail.removeShipmentItems(resp.removed_ids);
+                rowSyncMessage = resp.message || `已剔除 SKU ${item.sku}`;
+            },
+        });
+    }
+
+    function hasSyncableLine(): boolean {
+        const items = shipmentDetail.shipment?.items;
+        if (!items?.length) return false;
+        return items.some(canSyncLine);
+    }
+
+    function hasUnpackedLine(): boolean {
+        const status = shipmentDetail.shipment?.status;
+        if (!status || !SYNC_EDITABLE_STATUSES.includes(status)) return false;
+        const items = shipmentDetail.shipment?.items;
+        if (!items?.length) return false;
+        return items.some(it => safeParseFloat(it.quantity_packed || '0') === 0);
+    }
+
+    async function syncAllShipmentItems() {
+        if (bulkSyncLoading || !shipmentDetail.shipment) return;
+        const shipmentId = shipmentDetail.shipment.id;
+        await runShipmentAction({
+            confirm: '按已封箱包裹同步所有发货明细的计划数量？',
+            target: 'batch',
+            errorFallback: '同步失败，请重试',
+            setLoading: v => (bulkSyncLoading = v),
+            run: async () => {
+                const resp = await shipmentAPI.syncItems(shipmentId);
+                for (const it of resp.items) shipmentDetail.updateShipmentItem(it);
+                lineSyncMessage = resp.message || `已同步 ${resp.items.length} 条发货明细`;
+            },
+        });
+    }
+
+    async function pruneUnpackedItems() {
+        if (pruneLoading || !shipmentDetail.shipment) return;
+        const shipmentId = shipmentDetail.shipment.id;
+        const targets = (shipmentDetail.shipment.items || []).filter(
+            it => safeParseFloat(it.quantity_packed || '0') === 0,
+        );
+        if (!targets.length) return;
+        const skuList = targets.map(it => it.sku).join('、');
+        await runShipmentAction({
+            confirm: `将剔除以下未打包的发货明细行（共 ${targets.length} 条）：\n${skuList}\n\n确认继续？`,
+            target: 'batch',
+            errorFallback: '剔除失败，请重试',
+            setLoading: v => (pruneLoading = v),
+            run: async () => {
+                const resp = await shipmentAPI.pruneUnpacked(shipmentId);
+                shipmentDetail.removeShipmentItems(resp.removed_ids);
+                lineSyncMessage = resp.message || `已剔除 ${resp.removed_ids.length} 条未打包的发货明细`;
+            },
+        });
+    }
 
     async function downloadSkuReference() {
         if (skuReferenceDownloading || !shipmentDetail.shipment) return;
@@ -46,26 +156,30 @@
         }
     }
 
+    const SYNC_EDITABLE_STATUSES = ['draft', 'confirmed', 'packed', 'synced', 'shipped'];
+
     function canSyncLine(item: ShipmentItem): boolean {
+        const status = shipmentDetail.shipment?.status;
+        if (!status || !SYNC_EDITABLE_STATUSES.includes(status)) return false;
         const packed = safeParseFloat(item.quantity_packed || '0');
         const planned = safeParseFloat(item.quantity);
+        // 只有在实际打包 > 0 且与计划不一致时才能同步。
+        // packed === 0 的行请用“编辑数量”或“删除行”，避免误操作清零。
         return packed > 0 && packed !== planned;
     }
 
     async function syncShipmentItemRow(item: ShipmentItem) {
         if (lineSyncLoading[item.id]) return;
-        lineSyncError = null;
-        lineSyncMessage = null;
-        lineSyncLoading = { ...lineSyncLoading, [item.id]: true };
-        try {
-            await shipmentItemAPI.sync(item.id);
-            await shipmentDetail.loadShipment();
-            lineSyncMessage = `SKU ${item.sku} 已同步`;
-        } catch (err: unknown) {
-            lineSyncError = err instanceof Error ? err.message : '同步失败，请重试';
-        } finally {
-            lineSyncLoading = { ...lineSyncLoading, [item.id]: false };
-        }
+        await runShipmentAction({
+            target: 'row',
+            errorFallback: '同步失败，请重试',
+            setLoading: v => (lineSyncLoading = setRowLoading(lineSyncLoading, item.id, v)),
+            run: async () => {
+                const updated = await shipmentItemAPI.sync(item.id);
+                shipmentDetail.updateShipmentItem(updated);
+                rowSyncMessage = `SKU ${item.sku} 已同步`;
+            },
+        });
     }
 
     // 监听ID变化加载数据
@@ -110,10 +224,11 @@
         if (!status) return [];
         
         // 创建数组副本，避免修改原配置
-        const actions = [...(SHIPMENT_ACTIONS[status] || [])];
+        // 同步操作已移至「发货计划明细」区块，顶部不再展示
+        const actions = [...(SHIPMENT_ACTIONS[status] || [])].filter(a => a.action !== 'sync');
 
-    // 非草稿状态添加取消按钮（除已完成和已取消外）
-    if (status !== 'draft' && status !== 'delivered' && status !== 'cancelled') {
+    // 非草稿状态添加取消按钮（除已发货、已完成和已取消外）
+    if (status !== 'draft' && status !== 'shipped' && status !== 'delivered' && status !== 'cancelled') {
         actions.push({ action: 'cancel', label: '取消', variant: 'error', confirmMessage: '确认要取消此发货单？' });
     }
 
@@ -271,18 +386,16 @@
                     </button>
                 {/each}
                 
-                {#if ['draft', 'synced', 'confirmed'].includes(shipmentDetail.shipment.status)}
-                    <button 
-                        class="flex items-center p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                        onclick={shipmentDetail.goToEdit}
-                        aria-label="编辑"
-                        title="编辑"
-                    >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                    </button>
-                {/if}
+                <button 
+                    class="flex items-center p-2 text-gray-500 hover:text-blue-600 transition-colors"
+                    onclick={shipmentDetail.goToEdit}
+                    aria-label="编辑"
+                    title="编辑"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </button>
                 {#if ['draft', 'cancelled'].includes(shipmentDetail.shipment.status)}
                     <button 
                         class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-all duration-200"
@@ -385,7 +498,49 @@
 
             <!-- 发货计划明细 -->
             <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
-                <h2 class="text-lg font-bold text-gray-900 mb-4">发货计划明细</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">发货计划明细</h2>
+                    <div class="flex items-center gap-2">
+                        {#if hasUnpackedLine()}
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
+                                onclick={pruneUnpackedItems}
+                                disabled={pruneLoading}
+                                title="删除所有未打包（quantity_packed = 0）的发货明细行"
+                            >
+                                {#if pruneLoading}
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    剔除中...
+                                {:else}
+                                    🧹 剔除未打包行
+                                {/if}
+                            </button>
+                        {/if}
+                        {#if hasSyncableLine()}
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
+                                onclick={syncAllShipmentItems}
+                                disabled={bulkSyncLoading}
+                                title="按已封箱包裹同步所有发货明细的计划数量"
+                            >
+                                {#if bulkSyncLoading}
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                    同步中...
+                                {:else}
+                                    🔄 一键同步
+                                {/if}
+                            </button>
+                        {/if}
+                    </div>
+                </div>
                 {#if lineSyncError}
                     <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">⚠️ {lineSyncError}</div>
                 {/if}
@@ -482,6 +637,23 @@
                                                         🔄 同步
                                                     {/if}
                                                 </button>
+                                            {:else if section.type !== 'parent' && canPruneLine(item)}
+                                                <button
+                                                    type="button"
+                                                    class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    onclick={() => pruneShipmentItemRow(item)}
+                                                    disabled={rowPruneLoading[item.id]}
+                                                    title="剔除此未打包明细行"
+                                                >
+                                                    {#if rowPruneLoading[item.id]}
+                                                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                        </svg>
+                                                    {:else}
+                                                        🧹 剔除
+                                                    {/if}
+                                                </button>
                                             {/if}
                                         </td>
                                     </tr>
@@ -493,6 +665,9 @@
                         <span>总计: <strong class="text-gray-900">{shipment.items.length}</strong> 种商品</span>
                         <span>总数量: <strong class="text-gray-900">{formatNumber(shipment.items.reduce((sum, i) => sum + safeParseFloat(i.quantity), 0))}</strong></span>
                     </div>
+                    {#if rowSyncMessage}
+                        <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ {rowSyncMessage}</div>
+                    {/if}
                 {:else}
                     <p class="text-gray-400">暂无发货计划明细</p>
                 {/if}
