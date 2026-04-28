@@ -37,6 +37,14 @@ export class TrackingNumberAPI extends BaseAPI<TrackingNumber, TrackingNumberCre
         super('/customer/tracking-numbers/');
     }
 
+    /** 获取最近创建的快递单号，可按关键字筛选 */
+    async listRecent(limit = 10, search = ''): Promise<PaginatedResponse<TrackingNumberBrief>> {
+        return this.client.get<PaginatedResponse<TrackingNumberBrief>>(this.basePath, {
+            page_size: String(limit),
+            search,
+        });
+    }
+
     /** 按物流状态筛选 */
     async listByLogisticsStatus(status: LogisticsStatus): Promise<PaginatedResponse<TrackingNumber>> {
         return this.list({ logistics_status: status });
