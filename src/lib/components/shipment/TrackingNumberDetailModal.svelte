@@ -12,6 +12,7 @@
     export let onCloseCallback: (() => void) | undefined;
     export let onSyncCallback: (() => void) | undefined;
     export let onRegisterCallback: (() => void) | undefined;
+    export let onEditCallback: (() => void) | undefined;
 
     function handleClose() {
         onCloseCallback?.();
@@ -23,6 +24,10 @@
 
     function handleRegister() {
         onRegisterCallback?.();
+    }
+
+    function handleEdit() {
+        onEditCallback?.();
     }
 
     function getLogisticsBadgeClass(status: string): string {
@@ -74,6 +79,12 @@
                 <h3 class="text-gray-900 text-lg font-semibold">物流详情</h3>
                 <div class="flex items-center gap-2">
                     {#if trackingNumber.logistics_status !== 'cancelled'}
+                        <button
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors"
+                            on:click={handleEdit}
+                        >
+                            编辑
+                        </button>
                         <button
                             class="px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                             on:click={handleSync}

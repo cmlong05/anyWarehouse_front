@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
+    import { page } from '$app/state';
     import { trackingNumberAPI } from '$lib/api';
     import { formatDate, getErrorMessage } from '$lib/utils';
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
@@ -76,6 +77,14 @@
 
     onMount(async () => {
         await loadTrackingNumbers();
+        const openId = page.url.searchParams.get('open');
+        if (openId) {
+            const id = Number(openId);
+            if (Number.isFinite(id) && id > 0) {
+                const target = trackingNumbers.find((tn) => tn.id === id) ?? ({ id } as TrackingNumber);
+                await openDetailModal(target);
+            }
+        }
     });
 
     async function loadTrackingNumbers() {
@@ -431,10 +440,6 @@
                                 <div class="flex items-center justify-center gap-1">
                                     {#if tn.logistics_status !== 'cancelled'}
                                         <button
-                                            class="px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                                            on:click|stopPropagation={() => openEditModal(tn)}
-                                        >编辑</button>
-                                        <button
                                             class="px-2.5 py-1 text-xs font-medium text-green-600 hover:bg-green-50 rounded transition-colors"
                                             on:click|stopPropagation={() => openCopyModal(tn)}
                                         >复制</button>
@@ -594,4 +599,10 @@
     }}
     onSyncCallback={handleDetailSync}
     onRegisterCallback={handleDetailRegister}
+    onEditCallback={() => {
+        if (detailTrackingNumber) {
+            showDetailModal = false;
+            openEditModal(detailTrackingNumber);
+        }
+    }}
 />

@@ -52,7 +52,13 @@
                 <div class="text-sm">
                     {#if leg.tracking_number_detail}
                         <span class="font-medium">{leg.tracking_number_detail.carrier_name}</span>
-                        <span class="font-mono text-slate-700 ml-1">{leg.tracking_number_detail.tracking_no}</span>
+                        <a
+                            href="/customer/shipment/tracking-number?open={leg.tracking_number_detail.id}"
+                            class="font-mono text-blue-600 hover:text-blue-800 hover:underline ml-1"
+                            title="查看物流详情"
+                        >
+                            {leg.tracking_number_detail.tracking_no}
+                        </a>
                     {/if}
                 </div>
                 {#if leg.from_location || leg.to_location || leg.agent_name}
