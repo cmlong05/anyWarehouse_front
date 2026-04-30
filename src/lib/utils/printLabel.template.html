@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>{{TITLE}}</title>
+<style>
+  @page { size: var(--label-w) var(--label-h); margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #f3f4f6; }
+  .label {
+    width: var(--label-w);
+    height: var(--label-h);
+    padding: 2mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2mm;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: #000;
+    background: #fff;
+    overflow: hidden;
+  }
+  .label.vertical { flex-direction: column; gap: 1mm; }
+  .label.horizontal { flex-direction: row; }
+
+  .code {
+    font-weight: 800;
+    font-size: var(--code-font);
+    line-height: 1;
+    letter-spacing: 0.5mm;
+    text-align: center;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+  .barcode { display: flex; align-items: center; justify-content: center; }
+  .barcode svg {
+    width: var(--barcode-w);
+    height: var(--barcode-h);
+    display: block;
+  }
+
+  .label.vertical .code { width: 100%; }
+  .label.vertical .barcode { width: 100%; }
+  .label.horizontal .code { flex: 0 0 auto; }
+  .label.horizontal .barcode { flex: 1 1 auto; }
+
+  @media screen {
+    body { padding: 20px; display: flex; justify-content: center; align-items: flex-start; }
+    .label { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); }
+    .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; }
+    .toolbar button {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid #2563eb;
+      background: #2563eb;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .toolbar button.secondary { background: #fff; color: #2563eb; }
+  }
+  @media print {
+    body {
+      padding: 0;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .toolbar { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button type="button" onclick="window.print()">打印</button>
+    <button type="button" class="secondary" onclick="window.close()">关闭</button>
+  </div>
+  <div class="label {{LAYOUT}}">
+    <div class="code">{{CODE}}</div>
+    <div class="barcode">{{BARCODE_SVG}}</div>
+  </div>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () { window.focus(); window.print(); }, 150);
+    });
+    window.addEventListener('afterprint', function () {
+      window.close();
+    });
+  </script>
+</body>
+</html>
