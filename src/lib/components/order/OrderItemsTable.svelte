@@ -93,13 +93,6 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     let sortKey = $state<SortKey>('line_number');
     let sortDirection = $state<'asc' | 'desc'>('asc');
 
-    function getSortIndicator(key: SortKey): string {
-        if (sortKey !== key) {
-            return '↕';
-        }
-        return sortDirection === 'asc' ? '▲' : '▼';
-    }
-
     function toggleSort(key: SortKey) {
         const next = toggleSortKey(sortKey, sortDirection, key);
         sortKey = next.sortKey;
@@ -194,7 +187,21 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     interface GroupedSection {
         type: 'parent' | 'variant' | 'normal';
         item: OrderItem;
-        isFirstVariant?: boolean;
+        parentId?: number;
+        variantCount?: number;
+        /** 父行专用：所有变体是否均已处理完成 */
+        allVariantsProcessed?: boolean;
+    }
+
+    // 折叠状态：parentId -> 是否折叠（默认折叠）
+    let collapsedParents = $state<Record<number, boolean>>({});
+
+    function isParentCollapsed(parentId: number): boolean {
+        return collapsedParents[parentId] !== false;
+    }
+
+    function toggleParent(parentId: number) {
+        collapsedParents = { ...collapsedParents, [parentId]: !isParentCollapsed(parentId) };
     }
 
     function getGroupedSections(items: OrderItem[]): GroupedSection[] {
@@ -203,7 +210,6 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         
         // 先找出所有变体子项并按母版分组
         const variantsByParent = new Map<number, OrderItem[]>();
-        const normalItems: OrderItem[] = [];
         
         for (const item of items) {
             if (isVariantChild(item)) {
@@ -213,11 +219,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                         variantsByParent.set(parentId, []);
                     }
                     variantsByParent.get(parentId)!.push(item);
-                } else {
-                    normalItems.push(item);
                 }
-            } else {
-                normalItems.push(item);
             }
         }
         
@@ -232,6 +234,14 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                     
                     // 插入母版行（汇总所有变体的信息）
                     const firstVariant = variants[0];
+                    const totalLine = variants.reduce((sum, v) => sum + safeParseFloat(v.line_total), 0);
+                    const totalQty = variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0);
+                    // 单价取加权平均（总金额 / 总数量），数量为 0 时回退为简单平均
+                    const avgUnit = totalQty > 0
+                        ? totalLine / totalQty
+                        : variants.reduce((sum, v) => sum + safeParseFloat(v.unit_price), 0) / variants.length;
+                    const allShipped = variants.every((v) => !!v.is_fully_shipped);
+                    const allReceived = variants.every((v) => !!v.is_fully_received);
                     result.push({
                         type: 'parent',
                         item: {
@@ -239,21 +249,24 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             line_number: firstVariant.line_number,
                             sku: firstVariant.item_detail?.parent_item_sku || '',
                             item_name: firstVariant.item_detail?.parent_item_name || '',
-                            quantity: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity), 0).toString(),
+                            quantity: totalQty.toString(),
                             quantity_shipped: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_shipped), 0).toString(),
                             quantity_received: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_received), 0).toString(),
                             quantity_pending: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_pending), 0).toString(),
+                            unit_price: avgUnit.toString(),
+                            line_total: totalLine.toString(),
+                            is_fully_shipped: allShipped,
+                            is_fully_received: allReceived,
                         } as OrderItem,
+                        parentId,
+                        variantCount: variants.length,
+                        allVariantsProcessed: type === 'sales' ? allShipped : allReceived,
                     });
                     
                     // 插入变体子项
-                    for (let i = 0; i < variants.length; i++) {
-                        result.push({
-                            type: 'variant',
-                            item: variants[i],
-                            isFirstVariant: i === 0,
-                        });
-                        processed.add(variants[i].line_number);
+                    for (const variant of variants) {
+                        result.push({ type: 'variant', item: variant, parentId });
+                        processed.add(variant.line_number);
                     }
                 }
             } else {
@@ -315,8 +328,13 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         return cols;
     });
 
-    // 分组后的物品列表
-    let groupedSections = $derived(getGroupedSections(sortedItems));
+    // 分组后的物品列表（折叠时隐藏对应变体行）
+    let groupedSections = $derived(
+        getGroupedSections(sortedItems).filter(
+            (section) =>
+                !(section.type === 'variant' && section.parentId !== undefined && isParentCollapsed(section.parentId))
+        )
+    );
 </script>
 
 <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -353,6 +371,24 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                                 </svg>
                                 <span>{rowItem.line_number}</span>
                             </div>
+                        {:else if section.type === 'parent' && section.parentId !== undefined}
+                            {@const collapsed = isParentCollapsed(section.parentId)}
+                            <button
+                                type="button"
+                                class="inline-flex items-center gap-1.5 cursor-pointer hover:text-blue-600 transition-colors"
+                                onclick={() => toggleParent(section.parentId!)}
+                                title={collapsed ? `展开 ${section.variantCount} 个变体` : '折叠'}
+                            >
+                                <svg
+                                    class="w-4 h-4 text-gray-500 transition-transform {collapsed ? '' : 'rotate-90'}"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                                <span>{rowItem.line_number}</span>
+                            </button>
                         {:else}
                             {rowItem.line_number}
                         {/if}
