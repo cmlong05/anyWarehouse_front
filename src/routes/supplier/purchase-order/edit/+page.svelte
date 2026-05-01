@@ -29,6 +29,10 @@
         { label: '采购订单详情', href: order ? `/supplier/purchase-order/${order.id}` : '' },
         { label: '编辑订单', href: '' },
     ].filter(Boolean) as { label: string; href: string }[]);
+
+    function canEditOrder(status: string): boolean {
+        return ['draft', 'pending', 'approved', 'ordered', 'partial'].includes(status);
+    }
     
     async function loadOrder() {
         const id = orderId();
@@ -40,9 +44,8 @@
         
         try {
             const data = await purchaseOrderAPI.get(id);
-            // 只有草稿状态可以编辑
-            if (data.status !== 'draft') {
-                error = '只有草稿状态的订单可以编辑';
+            if (!canEditOrder(data.status)) {
+                error = '当前订单状态不支持编辑';
                 loading = false;
                 return;
             }

@@ -104,6 +104,10 @@
             skuReferenceDownloading = false;
         }
     }
+
+    function canEditOrder(status: string): boolean {
+        return ['draft', 'pending', 'approved', 'ordered', 'partial'].includes(status);
+    }
 </script>
 
 <div class="p-6 max-w-6xl mx-auto">
@@ -126,7 +130,7 @@
                 statusMap={PURCHASE_STATUS_MAP}
                 transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
                 updating={orderDetail.updating}
-                canEdit={order.status === 'draft'}
+                canEdit={canEditOrder(order.status)}
                 canDelete={['draft', 'pending', 'approved'].includes(order.status)}
                 onBack={orderDetail.goBack}
                 onEdit={editOrder}
