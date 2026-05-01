@@ -19,7 +19,8 @@
 
     // 表单数据
     let packageNo = $state('');
-    let weight = $state<number | null>(null);
+    let tare_weight = $state<number | null>(null);
+    let weight_adjustment = $state<number | null>(null);
     let length = $state<number | null>(null);
     let width = $state<number | null>(null);
     let height = $state<number | null>(null);
@@ -108,7 +109,9 @@
     async function loadPackage(id: number) {
         try {
             const pkg = await packageAPI.get(id);
-            packageNo = pkg.package_no; weight = pkg.weight ? safeParseFloat(pkg.weight) : null;
+            packageNo = pkg.package_no;
+            tare_weight = pkg.tare_weight ? safeParseFloat(pkg.tare_weight) : null;
+            weight_adjustment = pkg.weight_adjustment ? safeParseFloat(pkg.weight_adjustment) : null;
             length = pkg.length ? safeParseFloat(pkg.length) : null; width = pkg.width ? safeParseFloat(pkg.width) : null;
             height = pkg.height ? safeParseFloat(pkg.height) : null;
             notes = pkg.notes || ''; existingItems = pkg.items || []; linkedShipments = pkg.shipments || [];
@@ -349,7 +352,8 @@
             const submitData: PackageCreateRequest = {
                 package_no: packageNo, 
                 sequence_no: 1,
-                weight: weight ?? undefined, 
+                tare_weight: tare_weight ?? undefined, 
+                weight_adjustment: weight_adjustment ?? undefined,
                 length: length ?? undefined, 
                 width: width ?? undefined, 
                 height: height ?? undefined,
@@ -400,15 +404,26 @@
             <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">尺寸重量</h3>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <label for="weight" class="block text-sm text-gray-600 mb-1">重量(kg)</label>
+                    <label for="tare_weight" class="block text-sm text-gray-600 mb-1">箱体自重(kg)</label>
                     <NumberStepper
-                        id="weight"
-                        value={weight ?? undefined}
+                        id="tare_weight"
+                        value={tare_weight ?? undefined}
                         min={0}
                         step={0.01}
                         decimalPlaces={2}
-                        onchange={(v) => weight = v ?? null}
+                        onchange={(v) => tare_weight = v ?? null}
                     />
+                </div>
+                <div>
+                    <label for="weight_adjustment" class="block text-sm text-gray-600 mb-1">重量调整(kg)</label>
+                    <NumberStepper
+                        id="weight_adjustment"
+                        value={weight_adjustment ?? undefined}
+                        step={0.01}
+                        decimalPlaces={2}
+                        onchange={(v) => weight_adjustment = v ?? null}
+                    />
+                    <p class="text-xs text-gray-400 mt-1">可为负值，用于手动修正</p>
                 </div>
                 <div>
                     <label for="length" class="block text-sm text-gray-600 mb-1">长(cm)</label>

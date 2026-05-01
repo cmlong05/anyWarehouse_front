@@ -260,7 +260,9 @@ export interface Package {
     package_no: string;
     status: 'pending' | 'sealed';
     sequence_no: number;
-    weight?: string;
+    tare_weight?: string;
+    weight_adjustment?: string;
+    weight?: string;  // computed, read-only
     volume?: string;
     estimated_weight?: string;
     estimated_volume?: string;
@@ -343,7 +345,9 @@ export interface PackageBrief {
     package_no: string;
     status: 'pending' | 'sealed';
     sequence_no: number;
-    weight?: string;
+    tare_weight?: string;
+    weight_adjustment?: string;
+    weight?: string;  // computed, read-only
     volume?: string;
     estimated_weight?: string;
     estimated_volume?: string;
@@ -371,7 +375,8 @@ export interface PackageBrief {
 export interface PackageCreateRequest {
     package_no: string;
     sequence_no: number;
-    weight?: number;
+    tare_weight?: number;
+    weight_adjustment?: number;
     length?: number;
     width?: number;
     height?: number;
@@ -383,7 +388,8 @@ export interface PackageCreateRequest {
 
 /** 更新包裹请求 */
 export interface PackageUpdateRequest {
-    weight?: number;
+    tare_weight?: number;
+    weight_adjustment?: number;
     length?: number;
     width?: number;
     height?: number;
