@@ -31,7 +31,14 @@
             });
 
             if (!response.ok) {
-                throw new Error('删除失败');
+                let message = '删除失败';
+                try {
+                    const errData = await response.json();
+                    message = errData.detail || errData.message || message;
+                } catch {
+                    // ignore parse error
+                }
+                throw new Error(message);
             }
 
             // 删除成功后跳转到物品所在分类（取第一个分类），如果没有则跳转到物品列表
