@@ -207,17 +207,25 @@
 
         try {
             const newQuantity = storage.quantity - quantity;
-            const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${storage.id}/`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ quantity: newQuantity }),
-            });
+            const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${storage.id}/`,
+                newQuantity === 0
+                    ? { method: 'DELETE' }
+                    : {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantity: newQuantity }),
+                    }
+            );
 
             if (response.ok) {
-                const updatedStorage = await response.json();
                 const index = data.itemDetail.storages.findIndex((s: { id: number }) => s.id === storage.id);
                 if (index !== -1) {
-                    data.itemDetail.storages[index] = { ...data.itemDetail.storages[index], ...updatedStorage };
+                    if (newQuantity === 0) {
+                        data.itemDetail.storages.splice(index, 1);
+                    } else {
+                        const updatedStorage = await response.json();
+                        data.itemDetail.storages[index] = { ...data.itemDetail.storages[index], ...updatedStorage };
+                    }
                 }
                 quantityValues[storage.id] = 1;
                 data = { ...data };
