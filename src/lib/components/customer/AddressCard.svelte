@@ -1,12 +1,6 @@
 <script lang="ts">
     import type { CustomerAddress } from '$lib';
 
-    interface InfoRow {
-        label: string;
-        value?: string;
-        className: string;
-    }
-
     interface Props {
         addr: CustomerAddress;
         onSetDefault: (addr: CustomerAddress) => void;
@@ -16,28 +10,20 @@
 
     let { addr, onSetDefault, onEdit, onDelete }: Props = $props();
 
-    function formatAddress(address: CustomerAddress): string {
-        return [
-            address.country,
-            address.province,
-            address.city,
-            address.district,
-            address.detail_address,
-            address.detail_address2,
-        ]
-            .filter(Boolean)
-            .join(' ');
+    function joinWithComma(parts: Array<string | undefined>): string {
+        return parts.filter(Boolean).join(', ');
     }
 
     const contactParts = $derived.by(() => [addr.contact_name, addr.phone, addr.mobile].filter(Boolean));
 
-    const infoRows = $derived.by<InfoRow[]>(() => [
-        { label: '', value: addr.email, className: 'text-gray-400' },
-        { label: '税号', value: addr.tax_number, className: 'text-gray-400' },
-        { label: '', value: formatAddress(addr), className: 'text-gray-700' },
-        { label: '邮编', value: addr.postal_code, className: 'text-gray-400' },
-        { label: '备注', value: addr.remark, className: 'text-gray-500' },
-    ]);
+    const cityRegionPostalLine = $derived.by(() => {
+        const cityDistrict = joinWithComma([addr.city, addr.district]);
+        const region = addr.province || '';
+        const postal = addr.postal_code || '';
+        return [cityDistrict, region, postal].filter(Boolean).join(' ');
+    });
+
+    const detailAddressLines = $derived.by(() => [addr.detail_address, addr.detail_address2].filter(Boolean));
 </script>
 
 <div class="border rounded-lg p-3 {addr.is_default ? 'border-green-300 bg-green-50/30' : 'border-gray-200 bg-white'}">
@@ -60,6 +46,10 @@
     </div>
 
     <div class="mt-1.5 space-y-0.5 text-xs text-gray-600">
+        {#if addr.company}
+            <div class="text-gray-700 font-medium">{addr.company}</div>
+        {/if}
+
         {#if contactParts.length > 0}
             <div class="flex items-center gap-2">
                 {#each contactParts as part, index}
@@ -68,10 +58,28 @@
             </div>
         {/if}
 
-        {#each infoRows as row}
-            {#if row.value}
-                <div class={row.className}>{row.label ? `${row.label}：${row.value}` : row.value}</div>
-            {/if}
+        {#if addr.email}
+            <div class="text-gray-400">{addr.email}</div>
+        {/if}
+
+        {#each detailAddressLines as line}
+            <div class="text-gray-700">{line}</div>
         {/each}
+
+        {#if cityRegionPostalLine}
+            <div class="text-gray-700">{cityRegionPostalLine}</div>
+        {/if}
+
+        {#if addr.country}
+            <div class="text-gray-700 uppercase tracking-wide">{addr.country}</div>
+        {/if}
+
+        {#if addr.tax_number}
+            <div class="text-gray-400">税号：{addr.tax_number}</div>
+        {/if}
+
+        {#if addr.remark}
+            <div class="text-gray-500">备注：{addr.remark}</div>
+        {/if}
     </div>
 </div>
