@@ -126,12 +126,6 @@
                         清空
                     </button>
                 {/if}
-                <a 
-                    href="/item/add" 
-                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors"
-                >
-                    添加品项
-                </a>
             </div>
         {/snippet}
     </PageHeader>
