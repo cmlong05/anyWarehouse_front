@@ -472,7 +472,7 @@
         {@const order = orderDetail.order}
         
         <!-- 头部 -->
-        <div class="flex justify-between items-center mb-4">
+        <div class="mb-4">
             {#key $localeStore}
             <OrderDetailHeader
                 title={t('sales.detail.title', $localeStore)}
@@ -480,6 +480,7 @@
                 status={order.status}
                 statusMap={SALES_STATUS_MAP}
                 transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
+                                showMeta={false}
                 updating={orderDetail.updating}
                 canEdit={['draft', 'pending', 'confirmed', 'approved', 'partial'].includes(order.status)}
                 canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
@@ -496,11 +497,11 @@
                 onStatusChange={(status) => orderDetail.changeStatus(status as string)}
             />
             {/key}
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center justify-end gap-2">
                 <!-- 下载 PI 按钮 -->
                 <button
                     type="button"
-                    class="py-2 px-4 text-sm font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     onclick={downloadPI}
                     disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
                 >
@@ -511,13 +512,17 @@
                         </svg>
                         生成中...
                     {:else}
-                        📄 PI
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2h7l5 5v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 2v5h5" />
+                        </svg>
+                        PI
                     {/if}
                 </button>
                 <!-- 下载 Invoice 按钮 -->
                 <button
                     type="button"
-                    class="py-2 px-4 text-sm font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     onclick={downloadInvoice}
                     disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
                 >
@@ -528,13 +533,17 @@
                         </svg>
                         生成中...
                     {:else}
-                        🧾 Invoice
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6M9 12h6M9 16h4" />
+                        </svg>
+                        Invoice
                     {/if}
                 </button>
                 <!-- 下载 SKU 对照表按钮 -->
                 <button
                     type="button"
-                    class="py-2 px-4 text-sm font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     onclick={downloadSkuReference}
                     disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
                 >
@@ -545,7 +554,12 @@
                         </svg>
                         生成中...
                     {:else}
-                        🗂️ SKU表
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18v13H3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l2-4h14l2 4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h5" />
+                        </svg>
+                        SKU表
                     {/if}
                 </button>
                 <LocaleSwitcher variant="button" />
@@ -564,6 +578,7 @@
             }}
             items={[
                 { label: t('sales.field.orderNumber', $localeStore), value: order.order_number },
+                { label: $localeStore === 'en' ? 'Status' : '状态', value: getSalesStatusText(order.status, $localeStore) },
                 { label: t('sales.field.customer', $localeStore), value: order.customer_detail?.name, href: `/customer/${order.customer}` },
                 { label: t('sales.field.priority', $localeStore), value: order.priority, format: 'priority' },
                 { label: t('sales.field.orderDate', $localeStore), value: order.order_date },
