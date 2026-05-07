@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { goto, invalidateAll } from '$app/navigation';
+    import { invalidateAll } from '$app/navigation';
     import { ApiClient } from '$lib/api/client';
     import BulkEditTable from '$lib/components/BulkEditTable.svelte';
+    import BulkCategoryChangeModal from '$lib/components/BulkCategoryChangeModal.svelte';
     import type { CategoryData } from '$lib';
     
     let { data } = $props<{ category_details: CategoryData }>();
@@ -11,8 +12,10 @@
     // 选中的物品 IDs
     let selectedItems = $state<Set<number>>(new Set());
     let showBulkEditModal = $state(false);
+    let showBulkCategoryModal = $state(false);
 
-    const selectedItemIds = $derived(Array.from(selectedItems).join(','));
+    const selectedItemIdList = $derived(Array.from(selectedItems));
+    const selectedItemIds = $derived(selectedItemIdList.join(','));
     const customerQuotationHref = $derived(`/customer/quotation/add?item_ids=${selectedItemIds}`);
     const supplierQuotationHref = $derived(`/supplier/quotation/add?item_ids=${selectedItemIds}`);
     
@@ -49,6 +52,10 @@
     function openBulkEdit() {
         showBulkEditModal = true;
     }
+
+    function openBulkCategoryChange() {
+        showBulkCategoryModal = true;
+    }
     
     // 清空选择
     function clearSelection() {
@@ -60,6 +67,12 @@
         showBulkEditModal = false;
         selectedItems = new Set();
         // 刷新页面数据
+        await invalidateAll();
+    }
+
+    async function handleBulkCategorySuccess() {
+        // 不关闭弹窗，让操作人員看完结果；后台刷新数据并清空选择
+        selectedItems = new Set();
         await invalidateAll();
     }
 </script>
@@ -104,6 +117,12 @@
                                 onclick={clearSelection}
                             >
                                 清空
+                            </button>
+                            <button
+                                class="text-sm text-emerald-600 hover:text-emerald-800 transition-colors"
+                                onclick={openBulkCategoryChange}
+                            >
+                                转移分类
                             </button>
                             <button 
                                 class="text-sm text-purple-600 hover:text-purple-800 transition-colors"
@@ -227,4 +246,14 @@
     {apiClient}
     onclose={() => showBulkEditModal = false}
     onsuccess={handleBulkEditSuccess}
+/>
+
+<BulkCategoryChangeModal
+    isOpen={showBulkCategoryModal}
+    currentCategoryId={data.category_details.category.id}
+    currentCategoryName={data.category_details.category.name}
+    selectedItems={selectedItemDetails}
+    {apiClient}
+    onclose={() => showBulkCategoryModal = false}
+    onsuccess={handleBulkCategorySuccess}
 />
