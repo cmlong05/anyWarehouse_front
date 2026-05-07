@@ -7,27 +7,27 @@
     
     let { data } = $props<{ items: BaseItem[]; searchQuery: string }>();
     
-    // 安全获取 items 数组
+    // safely get items array
     let items = $derived(data?.items ?? []);
     let searchQuery = $state('');
     let searchDebounce = $state<ReturnType<typeof setTimeout> | null>(null);
     
-    // 当 data.searchQuery 变化时更新
+    // update when data.searchQuery changes
     $effect(() => {
         searchQuery = data?.searchQuery ?? '';
     });
     
-    // 选中的物品 IDs
+    // selected item IDs
     let selectedItems = $state<Set<number>>(new Set());
     
-    // 表格列定义
+    // table column definitions
     const columns = [
         { key: 'checkbox', title: '', width: '40px' },
         { key: 'SKU', title: 'SKU', width: '120px' },
         { key: 'name', title: '品项名称' },
     ];
     
-    // 实时搜索（URL 参数方式，刷新保留状态）
+    // real-time search (URL parameter way, keep state on refresh)
     function handleSearch() {
         if (searchDebounce) clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => {
@@ -50,7 +50,7 @@
         goto(`/item/${item.id}`);
     }
     
-    // 切换选中状态
+    // toggle selection for item with given ID
     function toggleSelection(itemId: number, event: Event) {
         event.stopPropagation();
         const newSet = new Set(selectedItems);
@@ -62,7 +62,7 @@
         selectedItems = newSet;
     }
     
-    // 全选/取消全选
+    // toggle select all/deselect all
     function toggleSelectAll(event: Event) {
         event.stopPropagation();
         if (selectedItems.size === items.length) {
@@ -72,7 +72,7 @@
         }
     }
     
-    // 跳转到客户报价页面
+    // jump to customer quotation page
     function goToCustomerQuotation() {
         if (selectedItems.size === 0) {
             alert('请先选择至少一个物品');
@@ -82,7 +82,7 @@
         goto(`/customer/quotation/add?item_ids=${itemIds}`);
     }
     
-    // 跳转到供应商报价页面
+    // jump to supplier quotation page
     function goToSupplierQuotation() {
         if (selectedItems.size === 0) {
             alert('请先选择至少一个物品');
@@ -92,7 +92,7 @@
         goto(`/supplier/quotation/add?item_ids=${itemIds}`);
     }
     
-    // 清空选择
+    // clear selection
     function clearSelection() {
         selectedItems = new Set();
     }
@@ -130,7 +130,7 @@
         {/snippet}
     </PageHeader>
     
-    <!-- 搜索框 -->
+    <!-- search box -->
     <div class="relative mb-4">
         <FormInput
             label=""
@@ -149,7 +149,7 @@
         {/if}
     </div>
     
-    <!-- 结果统计 -->
+    <!-- result statistics box -->
     <div class="mb-4 text-gray-500 text-sm">
         共 {items.length} 个品项
         {#if selectedItems.size > 0}
