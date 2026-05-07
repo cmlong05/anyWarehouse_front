@@ -12,7 +12,6 @@
         description?: string;
         b_Price?: string | number | null;
         currency?: string;
-        in_fee?: number | null;
         weight?: string | number;
         [key: string]: unknown;
     }
@@ -40,7 +39,6 @@
         { key: 'name_en', label: '英文名', type: 'text' },
         { key: 'b_Price', label: '价格', type: 'number', decimalPlaces: 2 },
         { key: 'currency', label: '币种', type: 'currency' },
-        { key: 'in_fee', label: '进项费', type: 'number', decimalPlaces: 2 },
         { key: 'weight', label: '重量(g)', type: 'number', decimalPlaces: 0 }
     ];
 
