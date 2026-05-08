@@ -62,20 +62,7 @@
     });
 </script>
 
-<div class="border-t-2 border-gray-200 py-6 mt-6">
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
-        <h3 class="text-gray-800 font-semibold text-lg">BOM 物料清单管理</h3>
-        <AddComponentForm
-            {itemId}
-            {itemSKU}
-            show={showAddForm}
-            loading={false}
-            onAdd={handleAdd}
-            onToggle={() => showAddForm = !showAddForm}
-            onFilter={handleFilter}
-        />
-    </div>
-
+<div class="pb-6">
     {#if bom.error}
         <div class="bg-red-50 text-red-800 p-3 rounded mb-4">{bom.error}</div>
     {/if}
@@ -86,6 +73,27 @@
         componentsCount={bom.components.length}
         whereUsedCount={bom.whereUsed.length}
         onChange={(tab) => activeTab = tab}
+    >
+        {#snippet actions()}
+            <button
+                type="button"
+                class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700"
+                onclick={() => showAddForm = !showAddForm}
+            >
+                {showAddForm ? '取消' : '添加组件'}
+            </button>
+        {/snippet}
+    </BOMTabs>
+
+    <AddComponentForm
+        {itemId}
+        {itemSKU}
+        show={showAddForm}
+        showToggle={false}
+        loading={false}
+        onAdd={handleAdd}
+        onToggle={() => showAddForm = !showAddForm}
+        onFilter={handleFilter}
     />
 
     <!-- 标签页内容 -->

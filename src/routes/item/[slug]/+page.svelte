@@ -446,7 +446,7 @@
                     </button>
                 </div>
 
-                <div class="bg-white p-6">
+                <div class="bg-white px-5 pb-2 pt-2">
                     <!-- 库存管理标签 -->
                     {#if activeTab === 'overview'}
                         <div class="space-y-4">

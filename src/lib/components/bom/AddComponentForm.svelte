@@ -9,12 +9,22 @@
         itemSKU: string;
         show: boolean;
         loading: boolean;
+        showToggle?: boolean;
         onAdd: (childItemId: number, data: ComponentFormData) => Promise<void>;
         onToggle: () => void;
         onFilter: (results: unknown) => { value: number; label: string }[];
     }
     
-    let { itemId, itemSKU, show, loading, onAdd, onToggle, onFilter }: Props = $props();
+    let {
+        itemId,
+        itemSKU,
+        show,
+        loading,
+        showToggle = true,
+        onAdd,
+        onToggle,
+        onFilter
+    }: Props = $props();
 
     let selectedChildItemId = $state<number | null>(null);
     let formData = $state<ComponentFormData>({ quantity: 1, order: 0, note: '' });
@@ -30,11 +40,13 @@
     }
 </script>
 
-<div class="mb-4">
-    <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-blue-600" onclick={onToggle}>
-        {show ? '取消' : '添加组件'}
-    </button>
-</div>
+{#if showToggle}
+    <div class="mb-4">
+        <button class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded transition-all duration-200 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-blue-600" onclick={onToggle}>
+            {show ? '取消' : '添加组件'}
+        </button>
+    </div>
+{/if}
 
 {#if show}
     <div class="bg-white p-4 rounded-md mb-4 border border-gray-200">
