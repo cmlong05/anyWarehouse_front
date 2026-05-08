@@ -7,16 +7,20 @@
     interface Props {
         onSubmit: (data: CustomerFormData) => void;
         onCancel: () => void;
+        onDelete?: () => void;
         initialData?: Partial<CustomerFormData>;
         submitLabel?: string;
+        deleteLabel?: string;
         loading?: boolean;
     }
     
     let { 
         onSubmit, 
         onCancel, 
+        onDelete,
         initialData = {},
         submitLabel = '保存',
+        deleteLabel = '删除客户',
         loading = false 
     }: Props = $props();
 
@@ -84,9 +88,11 @@
 <PartyForm
     onSubmit={handlePartySubmit}
     {onCancel}
+    {onDelete}
     initialData={cleanInitial}
     schema={customerSchema}
     {submitLabel}
+    {deleteLabel}
     {loading}
     showIsActive={false}
     {extras}

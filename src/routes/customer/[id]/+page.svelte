@@ -95,8 +95,10 @@
             <CustomerForm
                 onSubmit={partnerDetail.handleUpdate}
                 onCancel={partnerDetail.handleCancel}
+                onDelete={() => partnerDetail.showDeleteModal = true}
                 initialData={partnerDetail.partner}
                 submitLabel="保存修改"
+                deleteLabel="删除客户"
                 loading={partnerDetail.loading}
             />
         </div>
@@ -168,16 +170,6 @@
             onRowClick={(id) => goto(`/customer/quotation/${id}`)}
             onCreateOrder={partnerDetail.goToCreateOrder}
         />
-        
-        <!-- 底部操作区 -->
-        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-start">
-            <button 
-                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors"
-                onclick={() => partnerDetail.showDeleteModal = true}
-            >
-                删除客户
-            </button>
-        </div>
     {/if}
 </div>
 

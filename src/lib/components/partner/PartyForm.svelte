@@ -20,9 +20,11 @@
     interface Props {
         onSubmit: (data: Record<string, unknown>) => void;
         onCancel: () => void;
+        onDelete?: () => void;
         initialData?: Record<string, unknown>;
         schema: ZodSchema<unknown>;
         submitLabel?: string;
+        deleteLabel?: string;
         loading?: boolean;
         showIsActive?: boolean;
         extras?: Snippet;
@@ -31,9 +33,11 @@
     let {
         onSubmit,
         onCancel,
+        onDelete,
         initialData = {},
         schema,
         submitLabel = '保存',
+        deleteLabel = '删除',
         loading = false,
         showIsActive = true,
         extras
@@ -193,7 +197,24 @@
         {/if}
     </div>
 
-    <div class="flex flex-col-reverse md:flex-row justify-end gap-4 pt-6 border-t border-gray-200">
+    <div class="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4 pt-6 border-t border-gray-200">
+        <div class="flex justify-start">
+            {#if onDelete}
+                <button
+                    type="button"
+                    class="px-6 py-2.5 rounded font-medium text-base cursor-pointer
+                           transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed
+                           bg-red-600 text-white hover:bg-red-700 hover:shadow-md
+                           focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                    onclick={onDelete}
+                    disabled={loading}
+                >
+                    {deleteLabel}
+                </button>
+            {/if}
+        </div>
+
+        <div class="flex flex-col-reverse md:flex-row justify-end gap-4">
         <button 
             type="button" 
             class="px-6 py-2.5 rounded font-medium text-base cursor-pointer 
@@ -215,5 +236,6 @@
         >
             {loading ? '保存中...' : submitLabel}
         </button>
+        </div>
     </div>
 </form>
