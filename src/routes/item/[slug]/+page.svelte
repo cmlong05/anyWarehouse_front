@@ -186,9 +186,9 @@
     <title>{data.itemDetail.item.name}{data.itemDetail.item.name_en ? ` / ${data.itemDetail.item.name_en}` : ''} | 物品详情</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="max-w-7xl mx-auto px-4 pt-3 pb-6">
     <!-- 面包屑导航 -->
-    <div class="mb-6 space-y-2">
+    <div class="mb-3 space-y-1">
         {#each data.itemDetail.categories as category, catIndex}
             <nav class="flex items-center gap-2 text-sm text-gray-500 flex-wrap">
                 <a href="/item/category/4" class="hover:text-blue-600 transition-colors">主分类</a>
@@ -207,7 +207,7 @@
     </div>
 
     <!-- 主布局：左侧内容 + 右侧边栏 -->
-    <div class="flex flex-col lg:flex-row gap-6">
+    <div class="flex flex-col lg:flex-row gap-2">
         <!-- 左侧主内容区 -->
         <div class="flex-1 min-w-0">
             <!-- 顶部信息卡片 -->
@@ -595,7 +595,7 @@
         </div>
 
         <!-- 右侧边栏 -->
-        <aside class="lg:w-72 flex-shrink-0 lg:sticky lg:top-4 max-h-[calc(100vh-2rem)] overflow-y-auto space-y-4 pr-1">
+        <aside class="lg:w-64 flex-shrink-0 lg:sticky lg:top-4 max-h-[calc(100vh-2rem)] overflow-y-auto space-y-4 pr-1">
             {#each data.itemDetail.categories as category}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-shrink-0">
                     <!-- 分类标题 -->

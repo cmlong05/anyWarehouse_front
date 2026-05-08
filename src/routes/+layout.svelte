@@ -80,6 +80,7 @@
 			? navItems[openDropdownIndex].children!
 			: []
 	);
+	const currentYear = new Date().getFullYear();
 	
 	function toggleMobileMenu() {
 		mobileMenuOpen = !mobileMenuOpen;
@@ -123,7 +124,7 @@
 	
 </script>
 
-<div class="relative">
+<div class="relative min-h-screen flex flex-col">
 	<nav
 		class={`sticky top-0 z-[30] border-b shadow-sm ${navBorderClass}`}
 		style={`background-color: ${navBackgroundColor};`}
@@ -254,7 +255,12 @@
 		</div>
 	{/if}
 
-	<main class="min-h-screen bg-gray-50">
+	<main class="flex-1 bg-gray-50">
 		{@render children()}
 	</main>
+	<footer class="border-t border-gray-200 bg-white">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 text-xs text-gray-500 text-center">
+			© {currentYear} AnyWarehouse
+		</div>
+	</footer>
 </div>
