@@ -3,7 +3,6 @@
     import { customerAPI } from '$lib/api';
     import type { Customer, CustomerQuotationBrief } from '$lib';
     import { usePartnerDetail, PARTNER_STATUS_LABELS, PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
-    import CustomerForm from '$lib/components/CustomerForm.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
     import ConfirmModal from '$lib/components/ConfirmModal.svelte';
@@ -77,100 +76,74 @@
     {#if partnerDetail.error}
         <Alert error={partnerDetail.error} onDismiss={() => partnerDetail.error = ''} />
     {/if}
-    
-    {#if partnerDetail.isEditing}
-        <PartnerDetailHeader
-            name={partnerDetail.partner?.name || ''}
-            level={partnerDetail.partner?.level || ''}
-            status={partnerDetail.partner?.status || ''}
-            isEditing={true}
-            levelLabel={''}
-            statusLabel={''}
-            onEdit={() => {}}
-            onCancel={partnerDetail.handleCancel}
-            onDelete={() => {}}
+
+    <PartnerDetailHeader
+        name={partnerDetail.partner?.name || ''}
+        level={partnerDetail.partner?.level || ''}
+        status={partnerDetail.partner?.status || ''}
+        isEditing={false}
+        levelLabel={PARTNER_LEVEL_LABELS[partnerDetail.partner?.level] || partnerDetail.partner?.level}
+        statusLabel={partnerDetail.partner?.status === 'ACTIVE' ? '活跃' : '停用'}
+        onEdit={() => goto(`/customer/${partnerDetail.partner?.id}/edit`)}
+        onCancel={() => {}}
+        onDelete={() => partnerDetail.showDeleteModal = true}
+    />
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <PartnerInfoCard
+            title="基本信息"
+            items={[
+                { label: '客户编号', value: partnerDetail.partner?.code || '', isCode: true },
+                { label: '客户名称', value: partnerDetail.partner?.name || '' },
+                { label: '联系人', value: partnerDetail.partner?.contact_name || '' },
+                { label: '联系电话', value: partnerDetail.partner?.phone || '' },
+                { label: '电子邮箱', value: partnerDetail.partner?.email || '' },
+                { label: '货币', value: partnerDetail.partner?.currency || 'USD' },
+            ]}
         />
-        
-        <div class="bg-white p-8 rounded-lg border border-gray-200">
-            <CustomerForm
-                onSubmit={partnerDetail.handleUpdate}
-                onCancel={partnerDetail.handleCancel}
-                onDelete={() => partnerDetail.showDeleteModal = true}
-                initialData={partnerDetail.partner}
-                submitLabel="保存修改"
-                deleteLabel="删除客户"
-                loading={partnerDetail.loading}
+
+        <!-- 地址信息卡片：内嵌地址管理 -->
+        <div class="bg-white p-6 rounded-lg border border-gray-200">
+            <CustomerAddressManager
+                customerId={partnerDetail.partner?.id || 0}
+                bind:addresses
             />
         </div>
-    {:else}
-        <PartnerDetailHeader
-            name={partnerDetail.partner?.name || ''}
-            level={partnerDetail.partner?.level || ''}
-            status={partnerDetail.partner?.status || ''}
-            isEditing={false}
-            levelLabel={PARTNER_LEVEL_LABELS[partnerDetail.partner?.level] || partnerDetail.partner?.level}
-            statusLabel={partnerDetail.partner?.status === 'ACTIVE' ? '活跃' : '停用'}
-            onEdit={() => partnerDetail.isEditing = true}
-            onCancel={() => {}}
-            onDelete={() => partnerDetail.showDeleteModal = true}
+
+        <PartnerInfoCard
+            title="其他信息"
+            fullWidth={true}
+            items={[
+                { label: '备注', value: partnerDetail.partner?.remark || '' },
+                { label: '创建时间', value: partnerDetail.formatDate(partnerDetail.partner?.created_at || '') },
+                { label: '更新时间', value: partnerDetail.formatDate(partnerDetail.partner?.updated_at || '') },
+            ]}
         />
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <PartnerInfoCard
-                title="基本信息"
-                items={[
-                    { label: '客户编号', value: partnerDetail.partner?.code || '', isCode: true },
-                    { label: '客户名称', value: partnerDetail.partner?.name || '' },
-                    { label: '联系人', value: partnerDetail.partner?.contact_name || '' },
-                    { label: '联系电话', value: partnerDetail.partner?.phone || '' },
-                    { label: '电子邮箱', value: partnerDetail.partner?.email || '' },
-                    { label: '货币', value: partnerDetail.partner?.currency || 'USD' },
-                ]}
-            />
-            
-            <!-- 地址信息卡片：内嵌地址管理 -->
-            <div class="bg-white p-6 rounded-lg border border-gray-200">
-                <CustomerAddressManager
-                    customerId={partnerDetail.partner?.id || 0}
-                    bind:addresses
-                />
-            </div>
-            
-            <PartnerInfoCard
-                title="其他信息"
-                fullWidth={true}
-                items={[
-                    { label: '备注', value: partnerDetail.partner?.remark || '' },
-                    { label: '创建时间', value: partnerDetail.formatDate(partnerDetail.partner?.created_at || '') },
-                    { label: '更新时间', value: partnerDetail.formatDate(partnerDetail.partner?.updated_at || '') },
-                ]}
-            />
-        </div>
-        
-        <OrdersSection
-            title="最近销售订单"
-            orders={partnerDetail.recentOrders}
-            loading={partnerDetail.ordersLoading}
-            emptyText="暂无销售订单"
-            viewAllHref={`/customer/sales-order?customer_id=${partnerDetail.partner?.id}`}
-            getStatusLabel={getStatusLabel}
-            getStatusClass={getOrderStatusClass}
-            onRowClick={(id) => goto(`/customer/sales-order/${id}`)}
-        />
-        
-        <QuotationsSection
-            title="销售报价记录"
-            quotations={partnerDetail.quotations}
-            loading={partnerDetail.quotationsLoading}
-            emptyText="暂无报价记录"
-            addHref={`/customer/quotation/add?customer_id=${partnerDetail.partner?.id}`}
-            currency={partnerDetail.partner?.currency}
-            quotationQuantities={partnerDetail.quotationQuantities}
-            onQuantityChange={(id, value) => partnerDetail.quotationQuantities = { ...partnerDetail.quotationQuantities, [id]: value }}
-            onRowClick={(id) => goto(`/customer/quotation/${id}`)}
-            onCreateOrder={partnerDetail.goToCreateOrder}
-        />
-    {/if}
+    </div>
+
+    <OrdersSection
+        title="最近销售订单"
+        orders={partnerDetail.recentOrders}
+        loading={partnerDetail.ordersLoading}
+        emptyText="暂无销售订单"
+        viewAllHref={`/customer/sales-order?customer_id=${partnerDetail.partner?.id}`}
+        getStatusLabel={getStatusLabel}
+        getStatusClass={getOrderStatusClass}
+        onRowClick={(id) => goto(`/customer/sales-order/${id}`)}
+    />
+
+    <QuotationsSection
+        title="销售报价记录"
+        quotations={partnerDetail.quotations}
+        loading={partnerDetail.quotationsLoading}
+        emptyText="暂无报价记录"
+        addHref={`/customer/quotation/add?customer_id=${partnerDetail.partner?.id}`}
+        currency={partnerDetail.partner?.currency}
+        quotationQuantities={partnerDetail.quotationQuantities}
+        onQuantityChange={(id, value) => partnerDetail.quotationQuantities = { ...partnerDetail.quotationQuantities, [id]: value }}
+        onRowClick={(id) => goto(`/customer/quotation/${id}`)}
+        onCreateOrder={partnerDetail.goToCreateOrder}
+    />
 </div>
 
 <ConfirmModal
