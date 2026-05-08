@@ -53,10 +53,12 @@ export {
     ComponentAPI,
     ItemBOMAPI,
     AttributeAPI,
+    ExternalLinkAPI,
     itemAPI,
     componentAPI,
     itemBOMAPI,
     attributeAPI,
+    externalLinkAPI,
 } from './api/product';
 
 // 导出发货相关 API

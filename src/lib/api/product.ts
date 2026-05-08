@@ -166,3 +166,40 @@ export const itemAPI = new ItemAPI();
 export const componentAPI = new ComponentAPI();
 export const itemBOMAPI = new ItemBOMAPI();
 export const attributeAPI = new AttributeAPI();
+
+// ========== External Link API ==========
+
+export interface ExternalLinkCreatePayload {
+    item: number;
+    platform: string;
+    link_type: string;
+    external_id?: string;
+    url?: string;
+    label?: string;
+    sort_order?: number;
+}
+
+export interface ExternalLinkUpdatePayload extends Partial<Omit<ExternalLinkCreatePayload, 'item'>> {}
+
+export class ExternalLinkAPI {
+    private client = apiClient;
+    private readonly basePath = '/product/external-links/';
+
+    listByItem(itemId: number): Promise<import('$lib/index').ItemExternalLink[]> {
+        return this.client.get(this.basePath, { item_id: String(itemId) });
+    }
+
+    create(data: ExternalLinkCreatePayload): Promise<import('$lib/index').ItemExternalLink> {
+        return this.client.post(this.basePath, data);
+    }
+
+    update(id: number, data: ExternalLinkUpdatePayload): Promise<import('$lib/index').ItemExternalLink> {
+        return this.client.patch(`${this.basePath}${id}/`, data);
+    }
+
+    delete(id: number): Promise<void> {
+        return this.client.deleteNoContent(`${this.basePath}${id}/`);
+    }
+}
+
+export const externalLinkAPI = new ExternalLinkAPI();

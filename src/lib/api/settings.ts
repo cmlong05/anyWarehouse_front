@@ -8,6 +8,8 @@ export interface SystemSettingResponse {
     pi_payment_terms: string;
     pi_delivery_terms: string;
     pi_notes: string;
+    aliexpress_item_base_url: string;
+    ebay_item_base_url: string;
     purchase_order_shipping_address: string;
     purchase_order_contact_person: string;
     purchase_order_contact_phone: string;
@@ -22,6 +24,8 @@ export interface PIDefaults {
     payment_terms: string;
     delivery_terms: string;
     notes: string;
+    aliexpress_item_base_url: string;
+    ebay_item_base_url: string;
     purchase_order_shipping_address: string;
     purchase_order_contact_person: string;
     purchase_order_contact_phone: string;
@@ -33,6 +37,8 @@ export interface SystemSettingUpdateRequest {
     pi_payment_terms?: string;
     pi_delivery_terms?: string;
     pi_notes?: string;
+    aliexpress_item_base_url?: string;
+    ebay_item_base_url?: string;
     purchase_order_shipping_address?: string;
     purchase_order_contact_person?: string;
     purchase_order_contact_phone?: string;

@@ -45,6 +45,19 @@ export async function load({ params, fetch }: { params: { slug: string }, fetch:
     } catch (e) {
         logger.error('Failed to fetch variant info:', e);
     }
+
+    let aliexpressBaseUrl = '';
+    let ebayBaseUrl = '';
+    try {
+        const settingsRes = await fetch(`${config.API_BASE_URL}/index/system-settings/`);
+        if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            aliexpressBaseUrl = settingsData.aliexpress_item_base_url || '';
+            ebayBaseUrl = settingsData.ebay_item_base_url || '';
+        }
+    } catch (e) {
+        logger.error('Failed to fetch system settings:', e);
+    }
     
-    return { itemDetail, quotations, bestPrice, variantInfo };
+    return { itemDetail, quotations, bestPrice, variantInfo, aliexpressBaseUrl, ebayBaseUrl };
 }

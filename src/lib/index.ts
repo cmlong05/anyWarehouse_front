@@ -103,9 +103,22 @@ export interface ItemComponent {
     type?: string;
 }
 
+export interface ItemExternalLink {
+    id: number;
+    platform: string;
+    link_type: string;
+    external_id: string;
+    url: string;
+    label: string;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Item extends BaseItem  {
     SKU_zite: string;
     SKU_A: string;
+    external_links?: ItemExternalLink[];
     description: string;
     image: string;
     weight: string;

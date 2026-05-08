@@ -4,9 +4,12 @@
     import type { ItemSet, QuotationBrief } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
+    import { untrack } from 'svelte';
     import { formatDate, formatNumber } from '$lib/utils';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
     import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
+    import ItemExternalLinksTab from '$lib/components/ItemExternalLinksTab.svelte';
+    import ItemQuotationsTab from '$lib/components/ItemQuotationsTab.svelte';
     import { NumberStepper } from '$lib/components/ui';
     import Plus from 'lucide-svelte/icons/plus';
 
@@ -16,9 +19,13 @@
             quotations: QuotationBrief[];
             bestPrice: { price: string; supplier: string; quotation_id: number } | null;
             variantInfo: ItemVariantInfo | null;
+            aliexpressBaseUrl?: string;
+            ebayBaseUrl?: string;
         } 
     }>();
-    
+
+    let platformLinkCount = $state(untrack(() => data.itemDetail.item.external_links?.length ?? 0));
+
     // 判断是否为变体母版（处理字符串和布尔值）
     function isVariantTemplate(): boolean {
         return data.itemDetail.item.is_variant_template === true || 
@@ -27,7 +34,7 @@
     }
     
     // 默认标签：母版显示变体，普通Item显示库存
-    let activeTab = $state<'overview' | 'bom' | 'quotations' | 'variants'>(
+    let activeTab = $state<'overview' | 'bom' | 'quotations' | 'variants' | 'platforms'>(
         isVariantTemplate() ? 'variants' : 'overview'
     );
     let quantityValues = $state<Record<number, number>>({});
@@ -78,80 +85,6 @@
         }
         return parseFloat(String(price)).toFixed(2);
     }
-
-    // 报价分组相关
-    interface GroupedQuotation {
-        parentId: number | null;
-        parentName: string;
-        parentSku: string;
-        isTemplate: boolean;
-        quotations: QuotationBrief[];
-        expanded: boolean;
-    }
-    
-    let quotationGroups = $state<GroupedQuotation[]>([]);
-    let independentQuotations = $state<QuotationBrief[]>([]);
-    let hasVariantQuotations = $state(false);
-    
-    // 将报价按母版分组
-    function groupQuotationsByParent(quotations: QuotationBrief[]) {
-        const groups = new Map<number | string, GroupedQuotation>();
-        const independent: QuotationBrief[] = [];
-        let variantCount = 0;
-        
-        for (const q of quotations) {
-            // 如果是变体且有母版，放入对应组
-            if (q.is_variant && q.parent_item_id) {
-                variantCount++;
-                const key = q.parent_item_id;
-                if (!groups.has(key)) {
-                    groups.set(key, {
-                        parentId: q.parent_item_id,
-                        parentName: q.parent_item_name || '母版',
-                        parentSku: q.parent_item_sku || '-',
-                        isTemplate: false,
-                        quotations: [],
-                        expanded: false
-                    });
-                }
-                groups.get(key)!.quotations.push(q);
-            }
-            // 如果是母版本身
-            else if (q.is_variant_template) {
-                variantCount++;
-                const key = q.item || `template-${q.id}`;
-                if (!groups.has(key)) {
-                    groups.set(key, {
-                        parentId: typeof q.item === 'number' ? q.item : null,
-                        parentName: q.item_name || '母版',
-                        parentSku: q.item_sku || '-',
-                        isTemplate: true,
-                        quotations: [],
-                        expanded: false
-                    });
-                }
-                groups.get(key)!.quotations.push(q);
-            }
-            // 独立的普通item - 单独收集，不平铺
-            else {
-                independent.push(q);
-            }
-        }
-        
-        hasVariantQuotations = variantCount > 0 || groups.size > 0;
-        quotationGroups = Array.from(groups.values());
-        independentQuotations = independent;
-    }
-    
-    function toggleGroup(index: number) {
-        quotationGroups[index].expanded = !quotationGroups[index].expanded;
-    }
-    
-    $effect(() => {
-        if (data.quotations.length > 0) {
-            groupQuotationsByParent(data.quotations);
-        }
-    });
 
     function getTotalStock(): number {
         return data.itemDetail.item.total_storage ?? 0;
@@ -460,54 +393,60 @@
             </div>
 
             <!-- 标签页内容 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <!-- 标签页导航 -->
-                <div class="border-b border-gray-200">
-                    <nav class="flex gap-1 px-4">
-                        {#if !isVariantTemplate()}
-                            <!-- 普通Item显示库存管理 -->
-                            <button 
-                                onclick={() => activeTab = 'overview'}
-                                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
-                            >
-                                库存管理
-                            </button>
-                        {/if}
-                        <button 
-                            onclick={() => activeTab = 'quotations'}
-                            class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'quotations' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
+                <div class="flex items-end px-3 pt-2 bg-slate-100 border-b border-gray-300">
+                    {#if !isVariantTemplate()}
+                        <button
+                            type="button"
+                            onclick={() => activeTab = 'overview'}
+                            class="!px-4 !py-2 !-mb-px !-mr-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'overview' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
                         >
-                            供应商报价
-                            {#if data.quotations.length > 0}
-                                <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">{data.quotations.length}</span>
+                            库存管理
+                        </button>
+                    {/if}
+                    <button
+                        type="button"
+                        onclick={() => activeTab = 'quotations'}
+                        class="!px-4 !py-2 !-mb-px !-mr-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'quotations' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
+                    >
+                        供应商报价
+                        {#if data.quotations.length > 0}
+                            <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">{data.quotations.length}</span>
+                        {/if}
+                    </button>
+                    <button
+                        type="button"
+                        onclick={() => activeTab = 'bom'}
+                        class="!px-4 !py-2 !-mb-px !-mr-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'bom' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
+                    >
+                        BOM 组件
+                    </button>
+                    {#if isVariantTemplate() || (data.variantInfo?.is_variant)}
+                        <button
+                            type="button"
+                            onclick={() => activeTab = 'variants'}
+                            class="!px-4 !py-2 !-mb-px !-mr-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'variants' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
+                        >
+                            {isVariantTemplate() ? '变体管理' : '变体'}
+                            {#if data.variantInfo?.variants && data.variantInfo.variants.length > 0}
+                                <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">{data.variantInfo.variants.length}</span>
                             {/if}
                         </button>
-                        <button 
-                            onclick={() => activeTab = 'bom'}
-                            class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'bom' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
-                        >
-                            BOM 组件
-                        </button>
-                        <!-- 只有母版或有变体时才显示变体标签 -->
-                        {#if isVariantTemplate() || (data.variantInfo?.is_variant)}
-                            <button 
-                                onclick={() => activeTab = 'variants'}
-                                class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'variants' ? 'border-purple-600 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}"
-                            >
-                                {#if isVariantTemplate()}
-                                    <span class="mr-1">变体管理</span>
-                                {:else}
-                                    变体
-                                {/if}
-                                {#if data.variantInfo?.variants && data.variantInfo.variants.length > 0}
-                                    <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-purple-100 text-purple-700 rounded-full">{data.variantInfo.variants.length}</span>
-                                {/if}
-                            </button>
+                    {/if}
+                    <button
+                        type="button"
+                        onclick={() => activeTab = 'platforms'}
+                        class="!px-4 !py-2 !-mb-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'platforms' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
+                    >
+                        销售平台
+                        {#if platformLinkCount > 0}
+                            <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">{platformLinkCount}</span>
                         {/if}
-                    </nav>
+                    </button>
                 </div>
 
-                <div class="p-6">
+                <div class="bg-white p-6">
                     <!-- 库存管理标签 -->
                     {#if activeTab === 'overview'}
                         <div class="space-y-4">
@@ -613,165 +552,12 @@
 
                     <!-- 供应商报价标签 -->
                     {#if activeTab === 'quotations'}
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <h2 class="text-lg font-semibold text-gray-900">供应商报价</h2>
-                                <a 
-                                    href="/supplier/quotation/add?item_id={data.itemDetail.item.id}&item_sku={data.itemDetail.item.SKU}" 
-                                    class="inline-flex items-center justify-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-md no-underline transition-opacity hover:opacity-90"
-                                >
-                                    添加报价
-                                </a>
-                            </div>
-
-                            {#if data.quotations.length === 0}
-                                <div class="text-center py-12 bg-gray-50 rounded-lg">
-                                    <div class="w-12 h-12 mx-auto mb-3 bg-gray-200 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <p class="text-gray-500">暂无供应商报价</p>
-                                </div>
-                            {:else}
-                                {#if data.bestPrice}
-                                    <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                                        <div class="flex items-center gap-2 text-green-800">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                            </svg>
-                                            <span class="font-medium">最优价格: {formatPrice(data.bestPrice.price)}</span>
-                                            <span class="text-green-600">来自 {data.bestPrice.supplier}</span>
-                                        </div>
-                                    </div>
-                                {/if}
-
-                                <!-- 按母版/变体分组显示 -->
-                                <div class="overflow-hidden rounded-lg border border-gray-200">
-                                    <table class="w-full text-sm">
-                                        <thead class="bg-gray-50">
-                                            <tr>
-                                                {#if hasVariantQuotations}
-                                                    <th class="px-4 py-3 text-left font-medium text-gray-700 w-10"></th>
-                                                {/if}
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">供应商</th>
-                                                <th class="px-4 py-3 text-right font-medium text-gray-700">单价</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">货币</th>
-                                                <th class="px-4 py-3 text-left font-medium text-gray-700">MOQ</th>
-                                                <th class="px-4 py-3 text-center font-medium text-gray-700">状态</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-gray-200">
-                                            {#if hasVariantQuotations}
-                                                <!-- 有变体时显示折叠结构 -->
-                                                {#each quotationGroups as group, groupIndex}
-                                                    <!-- 母版/分组行 -->
-                                                    <tr class="bg-slate-50 cursor-pointer transition-colors hover:bg-slate-100" onclick={() => toggleGroup(groupIndex)}>
-                                                        <td class="px-4 py-3 text-center text-slate-500">
-                                                            <svg class="w-4 h-4 transition-transform {group.expanded ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </td>
-                                                        <td class="px-4 py-3 font-medium">
-                                                            {group.parentSku}
-                                                            {#if group.isTemplate}
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 bg-purple-200 text-purple-700">母版</span>
-                                                            {:else if group.parentId}
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ml-2 bg-blue-100 text-blue-600">变体组</span>
-                                                            {/if}
-                                                        </td>
-                                                        <td class="px-4 py-3 text-gray-600">{group.parentName}</td>
-                                                        <td class="px-4 py-3" colspan="3">
-                                                            <span class="text-sm text-gray-500">{group.quotations.length} 个报价</span>
-                                                        </td>
-                                                    </tr>
-                                                    <!-- 变体/报价详情行 -->
-                                                    {#if group.expanded}
-                                                        {#each group.quotations as quotation}
-                                                            <tr class="bg-white hover:bg-gray-50">
-                                                                <td class="px-4 py-3 border-l-[3px] border-gray-200"></td>
-                                                                <td class="px-4 py-3 pl-12">
-                                                                    <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
-                                                                        {quotation.supplier_name}
-                                                                    </a>
-                                                                </td>
-                                                                <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                                                <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                                <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
-                                                                <td class="px-4 py-3 text-center">
-                                                                    {#if quotation.is_preferred}
-                                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                            </svg>
-                                                                            首选
-                                                                        </span>
-                                                                    {:else}
-                                                                        <span class="text-gray-400">-</span>
-                                                                    {/if}
-                                                                </td>
-                                                            </tr>
-                                                        {/each}
-                                                    {/if}
-                                                {/each}
-                                                <!-- 独立物品直接平铺显示（不折叠） -->
-                                                {#each independentQuotations as quotation}
-                                                    <tr class="hover:bg-gray-50">
-                                                        <td class="px-4 py-3"></td>
-                                                        <td class="px-4 py-3">
-                                                            <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
-                                                                {quotation.supplier_name}
-                                                            </a>
-                                                        </td>
-                                                        <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                                        <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                        <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
-                                                        <td class="px-4 py-3 text-center">
-                                                            {#if quotation.is_preferred}
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                    </svg>
-                                                                    首选
-                                                                </span>
-                                                            {:else}
-                                                                <span class="text-gray-400">-</span>
-                                                            {/if}
-                                                        </td>
-                                                    </tr>
-                                                {/each}
-                                            {:else}
-                                                <!-- 无变体时直接平铺显示 -->
-                                                {#each data.quotations as quotation}
-                                                    <tr class="hover:bg-gray-50">
-                                                        <td class="px-4 py-3">
-                                                            <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
-                                                                {quotation.supplier_name}
-                                                            </a>
-                                                        </td>
-                                                        <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                                        <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                                        <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
-                                                        <td class="px-4 py-3 text-center">
-                                                            {#if quotation.is_preferred}
-                                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                                                    </svg>
-                                                                    首选
-                                                                </span>
-                                                            {:else}
-                                                                <span class="text-gray-400">-</span>
-                                                            {/if}
-                                                        </td>
-                                                    </tr>
-                                                {/each}
-                                            {/if}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            {/if}
-                        </div>
+                        <ItemQuotationsTab
+                            quotations={data.quotations}
+                            bestPrice={data.bestPrice}
+                            itemId={data.itemDetail.item.id}
+                            itemSKU={data.itemDetail.item.SKU}
+                        />
                     {/if}
 
                     <!-- BOM 标签 -->
@@ -791,6 +577,17 @@
                             itemName={data.itemDetail.item.name}
                             variantInfo={data.variantInfo}
                             onRefresh={refreshVariantInfo}
+                        />
+                    {/if}
+
+                    <!-- 销售平台标签 -->
+                    {#if activeTab === 'platforms'}
+                        <ItemExternalLinksTab
+                            itemId={data.itemDetail.item.id}
+                            aliexpressBaseUrl={data.aliexpressBaseUrl}
+                            ebayBaseUrl={data.ebayBaseUrl}
+                            initialLinks={data.itemDetail.item.external_links ?? []}
+                            bind:count={platformLinkCount}
                         />
                     {/if}
                 </div>
