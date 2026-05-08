@@ -22,3 +22,6 @@ export * from './sort';
 
 // 导出错误处理工具
 export * from './errors';
+
+// 导出地址格式化工具
+export * from './address';

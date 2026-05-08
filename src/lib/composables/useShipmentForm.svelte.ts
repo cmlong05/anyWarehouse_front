@@ -4,7 +4,7 @@
 import { shipmentAPI, salesOrderAPI, customerAPI } from '$lib/api';
 import type { CustomerAddress, SalesOrderBrief, SalesOrderItem } from '$lib/index';
 import type { Shipment, ShipmentStatus, ShipmentCreateRequest } from '$lib/shipmentTypes';
-import { safeParseFloat } from '$lib/utils';
+import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
 import { getErrorMessage } from '$lib/utils/errors';
 
 export interface ShipmentPlanItem {
@@ -151,28 +151,6 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
         return Math.min(pendingReal, Math.max(0, Math.round(currentStock)));
     }
 
-    function normalizeAddressValue(value: string | null | undefined): string {
-        return (value || '').trim().replace(/\s+/g, ' ');
-    }
-
-    function formatShippingAddress(address: string | null | undefined): string;
-    function formatShippingAddress(address: CustomerAddress): string;
-    function formatShippingAddress(address: string | CustomerAddress | null | undefined): string {
-        if (!address) return '';
-        if (typeof address === 'string') {
-            return normalizeAddressValue(address);
-        }
-
-        return normalizeAddressValue([
-            address.country,
-            address.province,
-            address.city,
-            address.district,
-            address.detail_address,
-            address.detail_address2,
-        ].filter(Boolean).join(' '));
-    }
-
     function findMatchingShippingAddress(order: { shipping_address?: string; contact_person?: string; contact_phone?: string } | null, addresses: CustomerAddress[]): CustomerAddress | null {
         if (!order || addresses.length === 0) return null;
 
@@ -182,15 +160,15 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
 
         return (
             addresses.find((address) =>
-                formatShippingAddress(address) === normalizedOrderAddress &&
+                addressMatches(address, normalizedOrderAddress) &&
                 normalizeAddressValue(address.contact_name) === normalizedContactPerson &&
                 normalizeAddressValue(address.phone) === normalizedContactPhone
             ) ||
             addresses.find((address) =>
-                formatShippingAddress(address) === normalizedOrderAddress &&
+                addressMatches(address, normalizedOrderAddress) &&
                 normalizeAddressValue(address.contact_name) === normalizedContactPerson
             ) ||
-            addresses.find((address) => formatShippingAddress(address) === normalizedOrderAddress) ||
+            addresses.find((address) => addressMatches(address, normalizedOrderAddress)) ||
             null
         );
     }

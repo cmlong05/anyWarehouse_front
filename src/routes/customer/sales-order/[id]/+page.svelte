@@ -5,7 +5,7 @@
     import { goto } from '$app/navigation';
     import { customerAPI, salesOrderAPI, salesOrderPaymentRecordAPI } from '$lib/api';
     import type { CustomerAddress, SalesOrder, SalesOrderItem, SalesOrderPaymentRecordCreateRequest } from '$lib';
-    import { safeParseFloat } from '$lib/utils';
+    import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { LocaleSwitcher } from '$lib/components/shipment';
@@ -78,21 +78,6 @@
         };
     }
 
-    function normalizeAddressValue(value: string | null | undefined): string {
-        return (value || '').trim().replace(/\s+/g, ' ');
-    }
-
-    function formatShippingAddress(address: CustomerAddress): string {
-        return normalizeAddressValue([
-            address.country,
-            address.province,
-            address.city,
-            address.district,
-            address.detail_address,
-            address.detail_address2,
-        ].filter(Boolean).join(' '));
-    }
-
     function findMatchingShippingAddress(order: SalesOrder | null, addresses: CustomerAddress[]): CustomerAddress | null {
         if (!order || addresses.length === 0) return null;
 
@@ -102,15 +87,15 @@
 
         return (
             addresses.find((address) =>
-                formatShippingAddress(address) === normalizedOrderAddress &&
+                addressMatches(address, normalizedOrderAddress) &&
                 normalizeAddressValue(address.contact_name) === normalizedContactPerson &&
                 normalizeAddressValue(address.phone) === normalizedContactPhone
             ) ||
             addresses.find((address) =>
-                formatShippingAddress(address) === normalizedOrderAddress &&
+                addressMatches(address, normalizedOrderAddress) &&
                 normalizeAddressValue(address.contact_name) === normalizedContactPerson
             ) ||
-            addresses.find((address) => formatShippingAddress(address) === normalizedOrderAddress) ||
+            addresses.find((address) => addressMatches(address, normalizedOrderAddress)) ||
             null
         );
     }

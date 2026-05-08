@@ -8,6 +8,7 @@
     import { useOrderForm } from '$lib/composables/useOrderForm.svelte';
     import Svelecte from 'svelecte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
+    import { formatAddressInline } from '$lib/utils';
     import { NumberStepper } from './ui';
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
@@ -168,19 +169,8 @@
     
     // 获取货币符号
 
-    function formatShippingAddress(address: CustomerAddress): string {
-        return [
-            toDisplayText(address.country),
-            toDisplayText(address.province),
-            toDisplayText(address.city),
-            toDisplayText(address.district),
-            toDisplayText(address.detail_address),
-            toDisplayText(address.detail_address2),
-        ].filter(Boolean).join(' ');
-    }
-
     function applyShippingAddress(address: CustomerAddress) {
-        formData.shipping_address = formatShippingAddress(address);
+        formData.shipping_address = formatAddressInline(address);
         formData.contact_person = toDisplayText(address.contact_name);
         formData.contact_phone = toDisplayText(address.phone) || toDisplayText(address.mobile);
         formData.company_name = address.company || '';

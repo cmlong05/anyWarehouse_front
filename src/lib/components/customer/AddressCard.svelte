@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { CustomerAddress } from '$lib';
+    import { formatAddressLocationLine, formatAddressPostalLine } from '$lib/utils';
 
     interface Props {
         addr: CustomerAddress;
@@ -10,18 +11,10 @@
 
     let { addr, onSetDefault, onEdit, onDelete }: Props = $props();
 
-    function joinWithComma(parts: Array<string | undefined>): string {
-        return parts.filter(Boolean).join(', ');
-    }
-
     const contactParts = $derived.by(() => [addr.contact_name, addr.phone, addr.mobile].filter(Boolean));
 
-    const cityRegionPostalLine = $derived.by(() => {
-        const cityDistrict = joinWithComma([addr.city, addr.district]);
-        const region = addr.province || '';
-        const postal = addr.postal_code || '';
-        return [cityDistrict, region, postal].filter(Boolean).join(' ');
-    });
+    const locationLine = $derived.by(() => formatAddressLocationLine(addr));
+    const postalLine = $derived.by(() => formatAddressPostalLine(addr));
 
     const detailAddressLines = $derived.by(() => [addr.detail_address, addr.detail_address2].filter(Boolean));
 </script>
@@ -66,12 +59,12 @@
             <div class="text-gray-700">{line}</div>
         {/each}
 
-        {#if cityRegionPostalLine}
-            <div class="text-gray-700">{cityRegionPostalLine}</div>
+        {#if locationLine}
+            <div class="text-gray-700">{locationLine}</div>
         {/if}
 
-        {#if addr.country}
-            <div class="text-gray-700 uppercase tracking-wide">{addr.country}</div>
+        {#if postalLine}
+            <div class="text-gray-700">{postalLine}</div>
         {/if}
 
         {#if addr.tax_number}
