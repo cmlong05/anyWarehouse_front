@@ -11,7 +11,8 @@
 
     let { addr, onSetDefault, onEdit, onDelete }: Props = $props();
 
-    const contactParts = $derived.by(() => [addr.contact_name, addr.phone, addr.mobile].filter(Boolean));
+    const contactName = $derived.by(() => addr.contact_name || '');
+    const contactPhoneLine = $derived.by(() => [addr.phone, addr.mobile].filter(Boolean).join(' / '));
 
     const locationLine = $derived.by(() => formatAddressLocationLine(addr));
     const postalLine = $derived.by(() => formatAddressPostalLine(addr));
@@ -43,12 +44,12 @@
             <div class="text-gray-700 font-medium">{addr.company}</div>
         {/if}
 
-        {#if contactParts.length > 0}
-            <div class="flex items-center gap-2">
-                {#each contactParts as part, index}
-                    <span class={index === 0 ? '' : 'text-gray-400'}>{part}</span>
-                {/each}
-            </div>
+        {#if contactName}
+            <div class="text-gray-700">{contactName}</div>
+        {/if}
+
+        {#if contactPhoneLine}
+            <div class="text-gray-500">{contactPhoneLine}</div>
         {/if}
 
         {#if addr.email}
