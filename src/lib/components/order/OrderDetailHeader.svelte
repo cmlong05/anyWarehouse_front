@@ -52,6 +52,8 @@
     };
 
     const l = $derived({ ...defaultLabels, ...labels });
+
+    const forwardTransitions = $derived(transitions.filter(t => !t.rollback));
 </script>
 
 <div class="mb-4 border-b border-slate-200 pb-4">
@@ -77,9 +79,10 @@
             {/if}
         </div>
 
-        <div class="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-            {#if transitions.length > 0}
-                {#each transitions as transition}
+        <div class="flex flex-col items-start gap-2 lg:items-end">
+            <!-- 正向操作按钮 -->
+            <div class="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+                {#each forwardTransitions as transition}
                     <button
                         class="inline-flex h-8 items-center rounded-md border px-2 text-xs font-semibold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 {transition.value === 'cancelled' ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100'}"
                         onclick={() => onStatusChange(transition.value)}
@@ -88,48 +91,50 @@
                         {transition.label}
                     </button>
                 {/each}
-            {/if}
 
-            {#if onCopy}
-                <button
-                    type="button"
-                    class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800"
-                    onclick={onCopy}
-                    title={l.copyOrder}
-                    aria-label={l.copyOrder}
-                >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <rect x="9" y="9" width="11" height="11" rx="2" stroke-width="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2" stroke-linecap="round"></path>
-                    </svg>
-                </button>
-            {/if}
+                {#if onCopy}
+                    <button
+                        type="button"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800"
+                        onclick={onCopy}
+                        title={l.copyOrder}
+                        aria-label={l.copyOrder}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="9" y="9" width="11" height="11" rx="2" stroke-width="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke-width="2" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                {/if}
 
-            {#if canEdit && onEdit}
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
-                    onclick={onEdit}
-                >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
-                    </svg>
-                    {l.edit}
-                </button>
-            {/if}
+                {#if canEdit && onEdit}
+                    <button
+                        type="button"
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                        onclick={onEdit}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
+                        </svg>
+                        {l.edit}
+                    </button>
+                {/if}
 
-            {#if canDelete && onDelete}
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
-                    onclick={onDelete}
-                >
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7v12m6-12v12M5 7l1-2h12l1 2M9 5h6" />
-                    </svg>
-                    {l.delete}
-                </button>
-            {/if}
+                {#if canDelete && onDelete}
+                    <button
+                        type="button"
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                        onclick={onDelete}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7v12m6-12v12M5 7l1-2h12l1 2M9 5h6" />
+                        </svg>
+                        {l.delete}
+                    </button>
+                {/if}
+            </div>
+
+
         </div>
     </div>
 </div>

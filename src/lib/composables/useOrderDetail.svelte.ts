@@ -14,6 +14,7 @@ export interface StatusConfig {
 export interface StatusTransition {
     value: string;
     label: string;
+    rollback?: boolean;
 }
 
 // 销售订单状态映射
@@ -50,24 +51,24 @@ export const PRIORITY_MAP: Record<string, { label: string; class: string }> = {
 // 销售订单状态流转
 export const SALES_STATUS_TRANSITIONS: Record<string, StatusTransition[]> = {
     draft: [{ value: 'pending', label: '提交审批' }, { value: 'cancelled', label: '取消订单' }],
-    pending: [{ value: 'approved', label: '批准' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '拒绝' }],
-    approved: [{ value: 'confirmed', label: '确认订单' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '取消' }],
+    pending: [{ value: 'approved', label: '批准' }, { value: 'cancelled', label: '拒绝' }, { value: 'draft', label: '草稿', rollback: true }],
+    approved: [{ value: 'confirmed', label: '确认订单' }, { value: 'cancelled', label: '取消' }, { value: 'draft', label: '草稿', rollback: true }],
     confirmed: [{ value: 'shipped', label: '完成发货' }, { value: 'cancelled', label: '取消' }],
-    partial: [{ value: 'shipped', label: '完成发货' }, { value: 'delivered', label: '完成交付' }, { value: 'confirmed', label: '继续发货' }],
-    shipped: [{ value: 'delivered', label: '确认交付' }, { value: 'partial', label: '退回部分' }],
+    partial: [{ value: 'shipped', label: '完成发货' }, { value: 'delivered', label: '完成交付' }, { value: 'confirmed', label: '已确认', rollback: true }],
+    shipped: [{ value: 'delivered', label: '确认交付' }, { value: 'partial', label: '部分发货', rollback: true }],
     delivered: [],
-    cancelled: [{ value: 'draft', label: '重新激活' }],
+    cancelled: [{ value: 'draft', label: '草稿', rollback: true }],
 };
 
 // 采购订单状态流转
 export const PURCHASE_STATUS_TRANSITIONS: Record<string, StatusTransition[]> = {
     draft: [{ value: 'pending', label: '提交审批' }, { value: 'cancelled', label: '取消订单' }],
-    pending: [{ value: 'approved', label: '批准' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '拒绝' }],
-    approved: [{ value: 'ordered', label: '确认下单' }, { value: 'draft', label: '退回草稿' }, { value: 'cancelled', label: '取消' }],
+    pending: [{ value: 'approved', label: '批准' }, { value: 'cancelled', label: '拒绝' }, { value: 'draft', label: '草稿', rollback: true }],
+    approved: [{ value: 'ordered', label: '确认下单' }, { value: 'cancelled', label: '取消' }, { value: 'draft', label: '草稿', rollback: true }],
     ordered: [{ value: 'partial', label: '部分收货' }, { value: 'received', label: '完成收货' }, { value: 'cancelled', label: '取消' }],
-    partial: [{ value: 'received', label: '完成收货' }, { value: 'ordered', label: '继续采购' }],
+    partial: [{ value: 'received', label: '完成收货' }, { value: 'ordered', label: '已下单', rollback: true }],
     received: [],
-    cancelled: [{ value: 'draft', label: '重新激活' }],
+    cancelled: [{ value: 'draft', label: '草稿', rollback: true }],
 };
 
 // 发货单状态映射

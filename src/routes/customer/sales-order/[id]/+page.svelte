@@ -248,6 +248,7 @@
     let piDownloading = $state(false);
     let invoiceDownloading = $state(false);
     let skuReferenceDownloading = $state(false);
+    let showRollback = $state(false);
 
     async function downloadPI() {
         if (piDownloading || !orderDetail.order) return;
@@ -335,8 +336,43 @@
                 onCopy={copyOrder}
                 onStatusChange={(status) => orderDetail.changeStatus(status as string)}
             />
-            <div class="flex flex-wrap items-center justify-end gap-2">
-                <!-- 下载 PI 按钮 -->
+        {#if orderDetail.order}
+            {@const rollbackTransitions = orderDetail.getAvailableTransitions().filter(t => t.rollback)}
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <!-- 状态调整（回退操作） -->
+                {#if rollbackTransitions.length > 0}
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            class="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                            onclick={() => showRollback = !showRollback}
+                        >
+                            <svg class="h-3.5 w-3.5 transition-transform {showRollback ? 'rotate-180' : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            状态回退
+                        </button>
+                        {#if showRollback}
+                            <div class="flex flex-wrap items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
+                                <span class="text-xs text-amber-500 mr-1">回退到：</span>
+                                {#each rollbackTransitions as transition}
+                                    <button
+                                        class="inline-flex h-7 items-center rounded border border-amber-300 bg-white px-2 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                        onclick={() => orderDetail.changeStatus(transition.value as string)}
+                                        disabled={orderDetail.updating}
+                                    >
+                                        {transition.label}
+                                    </button>
+                                {/each}
+                            </div>
+                        {/if}
+                    </div>
+                {:else}
+                    <div></div>
+                {/if}
+
+                <!-- 右侧：下载文件按钮 -->
+                <div class="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
                     class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
@@ -400,7 +436,9 @@
                         SKU表
                     {/if}
                 </button>
+                </div>
             </div>
+        {/if}
         </div>
 
         <!-- 基本信息 -->
