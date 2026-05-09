@@ -130,9 +130,9 @@
 		style={`background-color: ${navBackgroundColor};`}
 	>
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-			<div class="flex justify-between h-10">
+			<div class="grid h-12 grid-cols-[1fr_auto_1fr] items-center">
 				<!-- Logo / Brand -->
-				<div class="flex items-center">
+				<div class="hidden md:flex justify-self-start items-center">
 					<a href="/" class="flex items-center text-blue-600 hover:text-blue-700 transition-colors" aria-label="首页">
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -141,7 +141,7 @@
 				</div>
 				
 				<!-- Desktop Navigation -->
-				<div class="hidden md:flex items-center space-x-1">
+				<div class="hidden md:flex items-center justify-center space-x-1 justify-self-center">
 					{#each navItems as item, index}
 						{#if item.children}
 							<!-- Desktop Dropdown -->
@@ -165,9 +165,17 @@
 						{/if}
 					{/each}
 				</div>
+
+				<div class="md:hidden justify-self-center flex items-center">
+					<a href="/" class="flex items-center text-blue-600 hover:text-blue-700 transition-colors" aria-label="首页">
+						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+						</svg>
+					</a>
+				</div>
 				
 				<!-- Mobile Menu Button -->
-				<div class="flex items-center md:hidden">
+				<div class="flex items-center justify-self-end md:hidden">
 					<button 
 						onclick={toggleMobileMenu}
 						class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"

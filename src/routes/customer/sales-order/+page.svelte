@@ -11,9 +11,8 @@
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
-    import { PageContainer, PageHeader } from '$lib/components/layout';
+    import { PageContainer } from '$lib/components/layout';
     import Alert from '$lib/components/Alert.svelte';
-    import Plus from 'lucide-svelte/icons/plus';
 
     // 客户列表
     let customers = $state<CustomerBrief[]>([]);
@@ -212,19 +211,8 @@
     });
 </script>
 
-<PageContainer>
-    <PageHeader title="销售订单">
-        {#snippet actions()}
-            <button 
-                type="button"
-                class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-                onclick={() => goto('/customer')}
-            >
-                <Plus class="h-5 w-5" />
-                从客户创建
-            </button>
-        {/snippet}
-    </PageHeader>
+<PageContainer py="sm">
+    <h1 class="text-2xl font-bold text-gray-900 mb-2">销售订单</h1>
 
     {#if orderList.error}
         <Alert error={orderList.error} onDismiss={() => orderList.setError(null)} />

@@ -64,7 +64,7 @@ code {
     margin-bottom: 0;
 }
 
-:is(button, button:hover, button:active):disabled {
+:is(button:not([class]), button:not([class]):hover, button:not([class]):active):disabled {
     background: var(--link);
     filter: grayscale();
     opacity: .4;
@@ -87,7 +87,7 @@ a:active {
 /* end aobut a href */
 
 /* button */
-button {
+button:not([class]) {
     background: var(--link);
     color: var(--bg-1);
     border-radius: 60px;
@@ -98,10 +98,10 @@ button, input, select {
     font-family: inherit;
     font-size: inherit;
 }
-button:hover {
+button:not([class]):hover {
     background: var(--link-hover);
 }
-button:active {
+button:not([class]):active {
     background: var(--link-active);
 }
 /* button end*/
