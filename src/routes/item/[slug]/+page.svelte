@@ -110,7 +110,7 @@
                         ...data.itemDetail,
                         item: {
                             ...data.itemDetail.item,
-                            ...updatedItem,
+                            inventory_checked_at: updatedItem.inventory_checked_at,
                         }
                     }
                 };
@@ -526,7 +526,8 @@
                                                     <td class="px-2 sm:px-4 py-3">
                                                         <div class="flex items-center justify-center gap-1 sm:gap-2">
                                                             <NumberStepper
-                                                                bind:value={quantityValues[storage.id]}
+                                                                value={quantityValues[storage.id]}
+                                                                onchange={(v) => quantityValues[storage.id] = v ?? 1}
                                                                 min={1}
                                                                 max={storage.quantity}
                                                                 step={1}

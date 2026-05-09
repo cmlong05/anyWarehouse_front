@@ -17,7 +17,7 @@
     let {
         id,
         name,
-        value = $bindable<number | null | undefined>(undefined),
+        value = undefined,
         min = 0,
         max,
         step = 1,
@@ -35,6 +35,8 @@
         lg: 'stepper-lg',
     }[size]);
     
+    // Internal value state — source of truth for the component
+    let localValue = $state<number | null | undefined>(undefined);
     // 输入框的显示值（允许临时编辑）
     let inputValue = $state('');
     // 是否正在编辑
@@ -46,10 +48,15 @@
         return Number(val).toFixed(decimalPlaces);
     }
     
-    // 同步外部 value 到 inputValue（非编辑状态）
+    // Sync localValue from external value prop (parent-driven updates)
+    $effect(() => {
+        localValue = value;
+    });
+
+    // Sync display from localValue (non-editing state)
     $effect(() => {
         if (!isEditing) {
-            inputValue = formatValue(value);
+            inputValue = formatValue(localValue);
         }
     });
     
@@ -59,23 +66,22 @@
         inputValue = rawValue;
         
         const val = rawValue === '' ? null : parseFloat(rawValue);
-        value = val;
+        localValue = val;
         onchange?.(val);
     }
     
     function handleFocus() {
         isEditing = true;
         // 聚焦时，如果有值，移除末尾的0，方便编辑
-        if (value !== undefined && value !== null) {
-            // 将显示值转为普通数字字符串，方便编辑
-            inputValue = String(value);
+        if (localValue !== undefined && localValue !== null) {
+            inputValue = String(localValue);
         }
     }
     
     function handleBlur() {
         isEditing = false;
         // 失焦时格式化
-        inputValue = formatValue(value);
+        inputValue = formatValue(localValue);
     }
     
     function handleWheel(e: WheelEvent) {
@@ -92,23 +98,21 @@
     
     function decrement() {
         if (disabled) return;
-        const current = value ?? 0;
+        const current = localValue ?? 0;
         const newVal = current - step;
         if (newVal < min) return;
-        value = newVal;
+        localValue = newVal;
         onchange?.(newVal);
-        // 无论是否在编辑状态，都立即更新显示值，避免鼠标滚轮时延迟
         inputValue = formatValue(newVal);
     }
     
     function increment() {
         if (disabled) return;
-        const current = value ?? 0;
+        const current = localValue ?? 0;
         const newVal = current + step;
         if (max !== undefined && newVal > max) return;
-        value = newVal;
+        localValue = newVal;
         onchange?.(newVal);
-        // 无论是否在编辑状态，都立即更新显示值，避免鼠标滚轮时延迟
         inputValue = formatValue(newVal);
     }
 </script>

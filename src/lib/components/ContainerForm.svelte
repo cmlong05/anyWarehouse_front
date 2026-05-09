@@ -76,7 +76,6 @@
     // 当 initialData 变化时更新表单数据
     $effect(() => {
         formData.fastCode = initialData.fastCode || '';
-        formData.barcode = initialData.barcode || '';
         formData.mark = initialData.mark || '';
         formData.volume = initialData.volume || 0;
         formData.zz_volume = initialData.zz_volume || 0;
@@ -85,9 +84,9 @@
         formData.total_weight = initialData.total_weight || 0;
         formData.parent = getParentFastCode(initialData.parent);
 
-        if (mode === 'add' && !formData.barcode) {
-            formData.barcode = generateBarcode();
-        }
+        // Compute barcode without reading formData.barcode (avoids effect cycle)
+        const initialBarcode = initialData.barcode || '';
+        formData.barcode = (mode === 'add' && !initialBarcode) ? generateBarcode() : initialBarcode;
     });
 
     const getParentId = (parentFastCode: string | null): number | null => {
@@ -222,7 +221,8 @@
             name="zz_volume"
             value={formData.zz_volume}
             min={0}
-            step={0.01}
+            step={1}
+            decimalPlaces={0}
             size="sm"
             onchange={(v) => formData.zz_volume = v ?? 0}
         />
@@ -235,7 +235,8 @@
             name="zz_weight"
             value={formData.zz_weight}
             min={0}
-            step={0.01}
+            step={1}
+            decimalPlaces={0}
             size="sm"
             onchange={(v) => formData.zz_weight = v ?? 0}
         />
