@@ -189,18 +189,6 @@
             <div class="px-5 py-4 space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label for="new-link-platform" class="block text-xs font-medium text-gray-600 mb-1">平台</label>
-                        <select
-                            id="new-link-platform"
-                            bind:value={newLink.platform}
-                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:border-blue-400"
-                        >
-                            {#each PLATFORM_OPTIONS as opt}
-                                <option value={opt.value}>{opt.label}</option>
-                            {/each}
-                        </select>
-                    </div>
-                    <div>
                         <label for="new-link-type" class="block text-xs font-medium text-gray-600 mb-1">类型</label>
                         <select
                             id="new-link-type"
@@ -208,6 +196,18 @@
                             class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:border-blue-400"
                         >
                             {#each LINK_TYPE_OPTIONS as opt}
+                                <option value={opt.value}>{opt.label}</option>
+                            {/each}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="new-link-platform" class="block text-xs font-medium text-gray-600 mb-1">平台</label>
+                        <select
+                            id="new-link-platform"
+                            bind:value={newLink.platform}
+                            class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:border-blue-400"
+                        >
+                            {#each PLATFORM_OPTIONS as opt}
                                 <option value={opt.value}>{opt.label}</option>
                             {/each}
                         </select>
