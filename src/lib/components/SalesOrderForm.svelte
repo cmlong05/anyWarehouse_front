@@ -10,7 +10,7 @@
         OrderFormItem,
         CustomerAddress
     } from '$lib';
-    import OrderForm from './OrderForm.svelte';
+    import OrderForm from '$lib/components/OrderForm.svelte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { processPreloadItems, type PreloadItem } from '$lib/utils/preloadItems';
     import { buildInitialOrderItems } from '$lib/utils/orderFormData';
@@ -175,20 +175,6 @@
             : getDefaultShippingAddressId(shippingAddresses)
     );
     
-    // 标签配置
-    const labels = {
-        partner: '客户',
-        shipping: '收货',
-        orderSection: '基本信息',
-        shippingSection: '收货信息',
-        feesSection: '费用信息',
-        paymentFee: '付款费用',
-        itemsSection: '订单明细',
-        notesSection: '备注',
-        partnerVisibleNote: '客户可见',
-        internalNote: '客户不可见'
-    };
-    
     // 处理提交
     function handleSubmit(data: Record<string, unknown>) {
         onSubmit(data as unknown as SalesOrderCreateRequest);
@@ -207,7 +193,6 @@
         {initialShippingAddressId}
         {quotationOptions}
         {loadingQuotations}
-        {labels}
     {loading}
     {submitLabel}
     onSubmit={handleSubmit}

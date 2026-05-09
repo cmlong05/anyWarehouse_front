@@ -13,10 +13,10 @@
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
     import { buildVariantAttributes } from '$lib/utils/variant';
-    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
     import AddressInfo from '$lib/components/AddressInfo.svelte';
+    import { OrderFormItemsSection } from '$lib/components/order';
     
-    export type OrderType = 'purchase' | 'sales';
+    type OrderType = 'purchase' | 'sales';
     
     interface QuotationOption {
         value: number;
@@ -33,19 +33,6 @@
 
     type ShippingAddressSelectValue = ShippingAddressOption | ShippingAddressOption[] | number | string | null | undefined;
     
-    interface Labels {
-        partner: string;
-        shipping: string;
-        orderSection: string;
-        shippingSection: string;
-        feesSection: string;
-        paymentFee?: string;
-        itemsSection: string;
-        notesSection: string;
-        partnerVisibleNote: string;
-        internalNote: string;
-    }
-    
     interface Props {
         type: OrderType;
         partnerId: number;
@@ -59,7 +46,6 @@
         initialShippingAddressId?: number | null;
         quotationOptions: QuotationOption[];
         loadingQuotations?: boolean;
-        labels: Labels;
         loading?: boolean;
         submitLabel?: string;
         onSubmit: (data: Record<string, unknown>) => void;
@@ -78,13 +64,12 @@
         initialShippingAddressId = null,
         quotationOptions,
         loadingQuotations = false,
-        labels,
         loading = false,
         submitLabel = '保存',
         onSubmit,
         onCancel
     }: Props = $props();
-    
+
     // 直接使用 composable，不要用 $derived 包裹
     // svelte-ignore state_referenced_locally
     const orderForm = useOrderForm(partnerId, initialData);
@@ -113,9 +98,6 @@
     // Svelecte 选中值
     let selectedQuotation = $state<QuotationOption | undefined>(undefined);
 
-    // 获取已添加的 SKU 列表
-    const addedSkus = $derived(new Set(formData.items.map(item => item.sku).filter(Boolean)));
-    
     // 订单货币：优先使用传入的合作伙伴货币（销售订单），否则从报价推导（采购订单兼容）
     const orderCurrency = $derived((() => {
         if (currency) return currency;
@@ -258,24 +240,6 @@
         }
     }
     
-    // 过滤掉已存在的 SKU
-    const filteredQuotationOptions = $derived(
-        quotationOptions.filter(opt => {
-            const q = opt.quotation as { item_sku?: string };
-            return !addedSkus.has(q.item_sku);
-        })
-    );
-
-    // 数量输入配置
-    // regular items require at least 1, but variant child rows may be left at
-    // zero (preloaded or intentionally unselected) and are filtered out on
-    // submit.  give them a lower min so the native browser validator doesn't
-    // block the form.
-    const quantityMin = 1;
-    const variantQuantityMin = 0;
-    const quantityStep = 1;
-    const quantityDecimals = 0;
-
     // --------------------------------------------------------
     // ensure that when initialData.items is populated (for example
     // after preload expansion) we copy those items into the underlying
@@ -334,10 +298,9 @@
     });
 
     function handleItemSelect(selected: QuotationOption | undefined) {
-        selectedQuotation = selected;
         handleQuotationSelect(selected);
     }
-    
+
     // 获取物品的变体列表
     async function fetchItemVariants(itemId: number): Promise<ItemVariant[]> {
         try {
@@ -478,7 +441,7 @@
             </div>
             <div>
                 <h3 class="text-lg font-semibold text-gray-900">{partnerName}</h3>
-                <p class="text-sm text-gray-500">{labels.orderSection}</p>
+                <p class="text-sm text-gray-500">基本信息</p>
             </div>
         </div>
         
@@ -539,7 +502,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">{labels.shippingSection}</h3>
+            <h3 class="text-lg font-semibold text-gray-900">收货信息</h3>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -648,19 +611,19 @@
 
             {#if showManualShippingFields}
                 <div class="md:col-span-2 space-y-1.5">
-                    <label for="shipping_address" class="text-sm font-medium text-gray-700">{labels.shipping}地址</label>
+                    <label for="shipping_address" class="text-sm font-medium text-gray-700">收货地址</label>
                     <input
                         type="text"
                         id="shipping_address"
                         bind:value={formData.shipping_address}
-                        placeholder="请输入{labels.shipping}地址"
+                        placeholder="请输入收货地址"
                         disabled={loading}
                         class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
                     />
                 </div>
                 
                 <div class="space-y-1.5">
-                    <label for="contact_person" class="text-sm font-medium text-gray-700">{labels.shipping}联系人</label>
+                    <label for="contact_person" class="text-sm font-medium text-gray-700">收货联系人</label>
                     <input
                         type="text"
                         id="contact_person"
@@ -672,7 +635,7 @@
                 </div>
                 
                 <div class="space-y-1.5">
-                    <label for="contact_phone" class="text-sm font-medium text-gray-700">{labels.shipping}电话</label>
+                    <label for="contact_phone" class="text-sm font-medium text-gray-700">收货电话</label>
                     <input
                         type="tel"
                         id="contact_phone"
@@ -691,214 +654,31 @@
     </div>
     
     <!-- 订单明细 -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-gray-900">{labels.itemsSection}</h3>
-        </div>
-        
-        <!-- 添加明细表单 -->
-        <div class="bg-gray-50 rounded-lg p-4 mb-4">
-            <div class="flex flex-wrap items-end gap-3">
-                <div class="flex-1 min-w-[280px] space-y-1.5">
-                    <label for="item-select" class="text-sm font-medium text-gray-700">
-                        选择SKU <span class="text-red-500">*</span>
-                    </label>
-                    {#if filteredQuotationOptions.length === 0}
-                        <div class="px-3 py-2 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-500">
-                            所有SKU已添加完毕
-                        </div>
-                    {:else}
-                        {#key selectedQuotation}
-                            <Svelecte
-                                inputId="item-select"
-                                options={filteredQuotationOptions}
-                                value={selectedQuotation}
-                                valueAsObject={true}
-                                placeholder={loadingQuotations ? '加载中...' : '搜索SKU或物品名称...'}
-                                searchable={true}
-                                clearable={true}
-                                disabled={loading || loadingQuotations}
-                                onChange={handleItemSelect}
-                            />
-                        {/key}
-                    {/if}
-                    {#if itemErrors.quotation}
-                        <span class="text-xs text-red-500">{itemErrors.quotation}</span>
-                    {/if}
-                </div>
-                
-                <div class="w-28 space-y-1.5">
-                    <label for="item-quantity" class="text-sm font-medium text-gray-700">数量</label>
-                    <NumberStepper
-                        bind:value={currentItem.quantity}
-                        min={quantityMin}
-                        step={quantityStep}
-                        decimalPlaces={quantityDecimals}
-                        size="md"
-                        disabled={loading}
-                    />
-                    {#if itemErrors.quantity}
-                        <span class="text-xs text-red-500">{itemErrors.quantity}</span>
-                    {/if}
-                </div>
-                
-                <div class="w-32 space-y-1.5">
-                    <label for="item-price" class="text-sm font-medium text-gray-700">单价</label>
-                    <NumberStepper
-                        bind:value={currentItem.unit_price}
-                        min={0}
-                        step={0.01}
-                        size="md"
-                        disabled={loading}
-                    />
-                    {#if itemErrors.unit_price}
-                        <span class="text-xs text-red-500">{itemErrors.unit_price}</span>
-                    {/if}
-                </div>
-                
-                <div class="pb-0.5">
-                    <button
-                        type="button"
-                        class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        onclick={handleAddItem}
-                        disabled={loading}
-                    >
-                        添加
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 明细列表 -->
-        {#if formData.items.length > 0}
-            <div class="overflow-x-auto rounded-lg border border-gray-200">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-700">SKU</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-700">物品名称</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-700">数量</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-700">单价</th>
-                            <th class="px-4 py-3 text-right font-medium text-gray-700">小计</th>
-                            <th class="px-4 py-3 text-center font-medium text-gray-700 w-16">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        {#each formData.items as item, index}
-                            {@const parentIndex = item.parentId ? formData.items.findIndex(i => i.id === item.parentId) + 1 : null}
-                            {@const siblingIndex = item.parentId ? formData.items.filter(i => i.parentId === item.parentId).findIndex(i => i.id === item.id) + 1 : null}
-                            {@const displayIndex = item.isVariantChild && parentIndex ? `${parentIndex}-${siblingIndex}` : String(index + 1)}
-                            <tr class="{item.isVariantChild ? 'bg-purple-50/50' : 'hover:bg-gray-50'} transition-colors">
-                                <td class="px-4 py-3 {item.isVariantChild ? 'text-purple-600' : 'text-gray-500'}">{displayIndex}</td>
-                                <td class="px-4 py-3">
-                                    {#if item.isVariantChild}
-                                        <!-- 变体子项：显示缩进和物品信息 -->
-                                        <div class="flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                            <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
-                                            <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">变体</span>
-                                        </div>
-                                    {:else if item.quantity === 0 && formData.items.some(i => i.parentId === item.id)}
-                                        <!-- 母版分组行（数量为0，作为分组标识） -->
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-mono text-xs text-gray-500">{item.sku || '-'}</span>
-                                            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">母版</span>
-                                        </div>
-                                    {:else}
-                                        <!-- 普通行：直接显示 SKU -->
-                                        <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
-                                    {/if}
-                                </td>
-                                <td class="px-4 py-3">
-                                    {#if item.isVariantChild}
-                                        <!-- 变体子项：显示物品名称和属性 -->
-                                        <div class="text-gray-900">{item.item_name || '-'}</div>
-                                        <VariantAttributeBadge attributes={item.variantAttributes || []} class="mt-0.5" />
-                                    {:else if item.quantity === 0 && formData.items.some(i => i.parentId === item.id)}
-                                        <!-- 母版分组行 -->
-                                        <span class="text-gray-500">{item.item_name || '-'}</span>
-                                    {:else}
-                                        <!-- 普通行/母版行：直接显示物品名称 -->
-                                        <span class="text-gray-900">{item.item_name || '-'}</span>
-                                    {/if}
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <NumberStepper
-                                        value={item.quantity}
-                                        min={item.isVariantChild ? variantQuantityMin : (formData.items.some(i => i.parentId === item.id) ? 0 : quantityMin)}
-                                        step={quantityStep}
-                                        decimalPlaces={quantityDecimals}
-                                        size="sm"
-                                        disabled={loading}
-                                        onchange={(v) => updateItemField(index, 'quantity', v)}
-                                    />
-                                </td>
-                                <td class="px-4 py-3 text-right">
-                                    <NumberStepper
-                                        value={item.unit_price}
-                                        min={0}
-                                        step={0.01}
-                                        size="sm"
-                                        disabled={loading}
-                                        onchange={(v) => updateItemField(index, 'unit_price', v)}
-                                    />
-                                </td>
-                                <td class="px-4 py-3 text-right font-medium text-gray-900">
-                                    {getCurrencySymbol(orderCurrency)}{(item.quantity * Number(item.unit_price)).toFixed(2)}
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <button
-                                        type="button"
-                                        class="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        onclick={() => {
-                                            // 如果是母版行，同时删除其所有变体子项
-                                            if (!item.isVariantChild && item.id) {
-                                                formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
-                                            } else {
-                                                removeItem(index);
-                                            }
-                                        }}
-                                        disabled={loading}
-                                        title="删除"
-                                        aria-label="删除此明细项"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </td>
-                            </tr>
-                        {/each}
-                    </tbody>
-                    <tfoot class="bg-gray-50 font-medium">
-                        <tr>
-                            <td colspan="5" class="px-4 py-3 text-right text-gray-700">汇总:</td>
-                            <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency)}{subtotal.toFixed(2)}</td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        {:else}
-            <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <p>暂无明细项，请在上方添加</p>
-                {#if errors.items}
-                    <span class="text-xs text-red-500 mt-2 block">{errors.items}</span>
-                {/if}
-            </div>
-        {/if}
-    </div>
+    <OrderFormItemsSection
+        items={formData.items}
+        {quotationOptions}
+        {loadingQuotations}
+        {loading}
+        {orderCurrency}
+        {subtotal}
+        {itemErrors}
+        {errors}
+        bind:selectedQuotation
+        currentItemQuantity={currentItem.quantity ?? 1}
+        currentItemUnitPrice={currentItem.unit_price ?? 0}
+        onItemSelect={handleItemSelect}
+        onAddItem={handleAddItem}
+        onCurrentItemQuantityChange={(v) => { currentItem.quantity = v ?? 1; }}
+        onCurrentItemUnitPriceChange={(v) => { currentItem.unit_price = v ?? 0; }}
+        onUpdateItem={(index, field, value) => updateItemField(index, field as 'quantity' | 'unit_price', value as number)}
+        onRemoveItem={(index, item) => {
+            if (!item.isVariantChild && item.id) {
+                formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
+            } else {
+                removeItem(index);
+            }
+        }}
+    />
     
     <!-- 费用信息 -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -908,7 +688,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">{labels.feesSection}</h3>
+            <h3 class="text-lg font-semibold text-gray-900">费用信息</h3>
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -937,7 +717,7 @@
 
             {#if type === 'sales'}
                 <div class="space-y-1.5">
-                    <label for="payment_fee" class="text-sm font-medium text-gray-700">{labels.paymentFee || '付款费用'}</label>
+                    <label for="payment_fee" class="text-sm font-medium text-gray-700">付款费用</label>
                     <NumberStepper
                         bind:value={formData.payment_fee}
                         min={0}
@@ -985,7 +765,7 @@
                 </div>
                 {#if type === 'sales'}
                     <div class="flex justify-between text-sm">
-                        <span class="text-gray-600">{labels.paymentFee || '付款费用'}:</span>
+                        <span class="text-gray-600">付款费用:</span>
                         <span class="font-medium text-gray-900">{getCurrencySymbol(orderCurrency)}{Number(formData.payment_fee).toFixed(2)}</span>
                     </div>
                 {/if}
@@ -1013,7 +793,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-gray-900">{labels.notesSection}</h3>
+            <h3 class="text-lg font-semibold text-gray-900">备注</h3>
         </div>
         
         <div class="space-y-4">
@@ -1022,7 +802,7 @@
                 <textarea
                     id="notes"
                     bind:value={formData.notes}
-                    placeholder="输入订单备注（{labels.partnerVisibleNote}）"
+                    placeholder="输入订单备注（{type === 'purchase' ? '供应商可见' : '客户可见'}）"
                     rows="2"
                     disabled={loading}
                     class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-y"
@@ -1034,7 +814,7 @@
                 <textarea
                     id="internal_notes"
                     bind:value={formData.internal_notes}
-                    placeholder="输入内部备注（{labels.internalNote}）"
+                    placeholder="输入内部备注（{type === 'purchase' ? '供应商不可见' : '客户不可见'}）"
                     rows="2"
                     disabled={loading}
                     class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors resize-y"

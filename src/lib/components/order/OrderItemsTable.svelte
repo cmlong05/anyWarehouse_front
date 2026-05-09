@@ -1,8 +1,7 @@
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';
-    import { localeStore } from '$lib/i18n/sales';
-    import { sortByKey, toggleSortKey } from '$lib/utils/sort';
+    import { toggleSortKey } from '$lib/utils/sort';
 
     import { 
         isVariantChild, 
@@ -402,12 +401,12 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                         {#if section.type === 'variant'}
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-gray-900">{$localeStore === 'en' ? (rowItem.item_name_en ?? '') : rowItem.item_name}</span>
+                                    <span class="text-gray-900">{rowItem.item_name}</span>
                                     <VariantAttributeBadge attributes={variantAttrs} />
                                 </div>
                             </div>
                         {:else}
-                            {$localeStore === 'en' ? (rowItem.item_name_en ?? '') : rowItem.item_name}
+                            {rowItem.item_name}
                         {/if}
                     {:else if column.key === 'currentStock'}
                         {#if currentStock !== null}

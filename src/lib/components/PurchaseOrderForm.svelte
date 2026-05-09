@@ -8,7 +8,7 @@
         QuotationBrief,
         OrderFormItem
     } from '$lib';
-    import OrderForm from './OrderForm.svelte';
+    import OrderForm from '$lib/components/OrderForm.svelte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { processPreloadItems, type PreloadItem } from '$lib/utils/preloadItems';
     import { buildInitialOrderItems } from '$lib/utils/orderFormData';
@@ -118,19 +118,6 @@
         items: buildInitialOrderItems(purchaseOrder?.items, expandedPreloadItems, preloadItems),
     });
     
-    // 标签配置
-    const labels = {
-        partner: '供应商',
-        shipping: '收货',
-        orderSection: '基本信息',
-        shippingSection: '收货信息',
-        feesSection: '费用信息',
-        itemsSection: '订单明细',
-        notesSection: '备注',
-        partnerVisibleNote: '供应商可见',
-        internalNote: '供应商不可见'
-    };
-    
     // 处理提交
     function handleSubmit(data: Record<string, unknown>) {
         onSubmit(data as unknown as PurchaseOrderCreateRequest);
@@ -144,7 +131,6 @@
     {initialData}
     {quotationOptions}
     {loadingQuotations}
-    {labels}
     {loading}
     {submitLabel}
     onSubmit={handleSubmit}

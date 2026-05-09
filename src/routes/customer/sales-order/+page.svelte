@@ -12,9 +12,7 @@
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import { LocaleSwitcher } from '$lib/components/shipment';
     import Alert from '$lib/components/Alert.svelte';
-    import { localeStore, t, getStatusText, getPriorityText } from '$lib/i18n/sales';
     import Plus from 'lucide-svelte/icons/plus';
 
     // 客户列表
@@ -65,7 +63,7 @@
     
     // 客户选项
     const customerOptions = $derived([
-        { value: '', label: $localeStore === 'zh' ? '全部客户' : 'All Customers' },
+        { value: '', label: '全部客户' },
         ...customers.map(c => ({ value: c.id.toString(), label: c.name }))
     ]);
     
@@ -74,15 +72,15 @@
 
     // 表格列定义
     const columns = $derived([
-        { key: 'order_number', title: t('sales.field.orderNumber', $localeStore), sortable: true },
-        { key: 'customer_name', title: t('sales.field.customer', $localeStore), sortable: true },
-        { key: 'status', title: t('sales.field.status', $localeStore), sortable: true },
-        { key: 'payment_status', title: $localeStore === 'zh' ? '收款' : 'Payment Status', sortable: true },
-        { key: 'priority', title: t('sales.field.priority', $localeStore), sortable: true },
-        { key: 'order_date', title: t('sales.field.orderDate', $localeStore), sortable: true },
-        { key: 'expected_delivery', title: t('sales.field.expectedDelivery', $localeStore), sortable: true },
-        { key: 'total_amount', title: $localeStore === 'zh' ? '金额' : t('sales.field.totalAmount', $localeStore), align: 'right' as const, sortable: true },
-        { key: 'item_count', title: t('sales.items.title', $localeStore), align: 'right' as const, sortable: true },
+        { key: 'order_number', title: '订单号', sortable: true },
+        { key: 'customer_name', title: '客户', sortable: true },
+        { key: 'status', title: '状态', sortable: true },
+        { key: 'payment_status', title: '收款', sortable: true },
+        { key: 'priority', title: '优先级', sortable: true },
+        { key: 'order_date', title: '下单日期', sortable: true },
+        { key: 'expected_delivery', title: '预计交货', sortable: true },
+        { key: 'total_amount', title: '金额', align: 'right' as const, sortable: true },
+        { key: 'item_count', title: '物品明细', align: 'right' as const, sortable: true },
     ]);
 
     const sortedItems = $derived.by(() => sortByKey(orderList.items, sortKey, sortDirection));
@@ -97,22 +95,32 @@
 
     // 状态标签
     function getStatusLabel(status: string): string {
-        return getStatusText(status, $localeStore);
+        const map: Record<string, string> = {
+            draft: '草稿',
+            pending: '待审批',
+            approved: '已批准',
+            confirmed: '已确认',
+            partial: '部分发货',
+            shipped: '已发货',
+            delivered: '已交付',
+            cancelled: '已取消',
+        };
+        return map[status] || status;
     }
 
     // 优先级标签
     function getPriorityLabel(priority: string): string {
-        return getPriorityText(priority, $localeStore);
+        const map: Record<string, string> = {
+            low: '低',
+            normal: '普通',
+            high: '高',
+            urgent: '紧急',
+        };
+        return map[priority] || priority;
     }
 
     // 付款状态标签
     function getPaymentStatusLabel(status: string | undefined): string {
-        if ($localeStore === 'en') {
-            if (status === 'paid') return 'Paid';
-            if (status === 'partial') return 'Partially Paid';
-            return 'Unpaid';
-        }
-
         if (status === 'paid') return '已收款';
         if (status === 'partial') return '部分收款';
         return '未收款';
@@ -153,7 +161,7 @@
                     tax_rate: parseFloat(fullOrder.tax_rate),
                     shipping_cost: parseFloat(fullOrder.shipping_cost),
                     discount: parseFloat(fullOrder.discount),
-                    notes: `${$localeStore === 'zh' ? '复制自订单' : 'Copied from order'} ${fullOrder.order_number}`,
+                    notes: `复制自订单 ${fullOrder.order_number}`,
                     internal_notes: '',
                     items: fullOrder.items?.map(item => ({
                         item: item.item,
@@ -169,7 +177,7 @@
             sessionStorage.setItem('sales_order_copy_data', JSON.stringify(copyData));
             goto(`/customer/sales-order/add?customer_id=${fullOrder.customer}`);
         } catch (err) {
-            copyError = getErrorMessage(err, $localeStore === 'zh' ? '复制订单失败' : 'Failed to copy order');
+            copyError = getErrorMessage(err, '复制订单失败');
             logger.error('Copy error:', err);
         }
     }
@@ -205,16 +213,15 @@
 </script>
 
 <PageContainer>
-    <PageHeader title={t('sales.list.title', $localeStore)}>
+    <PageHeader title="销售订单">
         {#snippet actions()}
-            <LocaleSwitcher variant="button" />
             <button 
                 type="button"
                 class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                 onclick={() => goto('/customer')}
             >
                 <Plus class="h-5 w-5" />
-                {$localeStore === 'zh' ? '从客户创建' : 'Create from Customer'}
+                从客户创建
             </button>
         {/snippet}
     </PageHeader>
@@ -230,7 +237,7 @@
     <!-- 筛选区域 -->
     <FilterPanel onReset={resetAllFilters}>
         <FormSelect
-            label={t('sales.field.priority', $localeStore)}
+            label="优先级"
             name="priority"
             options={PRIORITY_OPTIONS}
             value={orderList.filters.priority || ''}
@@ -238,7 +245,7 @@
         />
 
         <FormSelect
-            label={t('sales.field.customer', $localeStore)}
+            label="客户"
             name="customer"
             options={customerOptions}
             value={orderList.filters.customer_id || ''}
@@ -246,7 +253,7 @@
         />
         
         <FormSelect
-            label={t('sales.field.status', $localeStore)}
+            label="状态"
             name="status"
             options={ORDER_STATUS_OPTIONS.sales}
             value={orderList.filters.status || ''}
@@ -261,21 +268,21 @@
                     onchange={(event) => handleShowDeliveredPaidToggle((event.target as HTMLInputElement).checked)}
                     class="h-5 w-5 text-blue-600 border-gray-300 rounded"
                 />
-                <span>{$localeStore === 'zh' ? '已交付收款' : 'Show Delivered + Paid'}</span>
+                <span>已交付收款</span>
             </label>
         </div>
         
         <FormInput
-            label={t('sales.field.orderNumber', $localeStore)}
+            label="订单号"
             name="order_number"
             value={orderList.filters.order_number || ''}
-            placeholder={$localeStore === 'zh' ? '搜索订单号' : 'Search order number'}
+            placeholder="搜索订单号"
             onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
         />
         
         <FormInput
             type="date"
-            label={t('sales.field.orderDate', $localeStore)}
+            label="下单日期"
             name="date_from"
             value={orderList.filters.date_from || ''}
             onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
@@ -283,7 +290,7 @@
         
         <FormInput
             type="date"
-            label={$localeStore === 'zh' ? '到' : 'To'}
+            label="到"
             name="date_to"
             value={orderList.filters.date_to || ''}
             onchange={(v) => { orderList.filters.date_to = v; orderList.applyFilters(); }}
@@ -296,14 +303,14 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <p class="text-gray-500 mb-4">{t('sales.msg.noItems', $localeStore)}</p>
+            <p class="text-gray-500 mb-4">暂无订单</p>
             <a 
                 href="/customer" 
                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-                {$localeStore === 'zh' ? '前往客户页面创建' : 'Go to Customer Page'}
+                前往客户页面创建
             </a>
-            <p class="text-sm text-gray-400 mt-3">{$localeStore === 'zh' ? '销售订单需从具体客户页面创建' : 'Sales orders must be created from customer page'}</p>
+            <p class="text-sm text-gray-400 mt-3">销售订单需从具体客户页面创建</p>
         </div>
     {:else}
         <DataTable
@@ -315,7 +322,7 @@
             onHeaderClick={toggleSort}
             sortKey={sortKey}
             sortDirection={sortDirection}
-            emptyText={t('sales.msg.noItems', $localeStore)}
+            emptyText="暂无订单"
         >
             {#snippet cellRender({ item, column, value }: { item: SalesOrderBrief; column: { key: string }; value: unknown })}
                 {#if column.key === 'order_number'}
@@ -330,7 +337,7 @@
                         class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
                         class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
                         class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
-                        title={value === 'paid' ? ($localeStore === 'zh' ? '已收款' : 'Paid') : value === 'partial' ? ($localeStore === 'zh' ? '部分收款' : 'Partially Paid') : ($localeStore === 'zh' ? '未收款' : 'Unpaid')}
+                        title={value === 'paid' ? '已收款' : value === 'partial' ? '部分收款' : '未收款'}
                     ></span>
                 {:else if column.key === 'priority'}
                     {#if getPriorityClass(value as string)}
