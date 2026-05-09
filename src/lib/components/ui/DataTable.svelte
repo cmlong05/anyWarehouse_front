@@ -77,7 +77,12 @@
         return key.split('.').reduce((obj: unknown, k) => (obj as Record<string, unknown>)?.[k], item);
     }
     
-    function handleRowClick(item: T) {
+    function handleRowClick(item: T, event: MouseEvent) {
+        // 当点击的是行内的 <a>/<button> 等可交互元素时，避免行级 onclick
+        // 与链接的 SPA 导航重复触发（否则在快速导航后会落到目标页第一行）
+        if (event.target instanceof Element && event.target.closest('a, button')) {
+            return;
+        }
         if (clickable && onRowClick) {
             onRowClick(item);
         }
@@ -173,7 +178,7 @@
                                 rowClass ? rowClass(item) : ''
                             ].filter(Boolean).join(' ')
                         }
-                        onclick={() => handleRowClick(item)}
+                        onclick={(e) => handleRowClick(item, e)}
                     >
                         {#each columns as column}
                             <td
