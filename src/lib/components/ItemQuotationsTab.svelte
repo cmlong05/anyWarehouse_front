@@ -80,6 +80,10 @@
         return parseFloat(String(price)).toFixed(2);
     }
 
+    function isBestPriceQuotation(quotation: QuotationBrief): boolean {
+        return bestPrice?.quotation_id === quotation.id;
+    }
+
     $effect(() => {
         groupQuotationsByParent(quotations);
     });
@@ -106,18 +110,6 @@
             <p class="text-gray-500">暂无供应商报价</p>
         </div>
     {:else}
-        {#if bestPrice}
-            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div class="flex items-center gap-2 text-green-800">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    <span class="font-medium">最优价格: {formatPrice(bestPrice.price)}</span>
-                    <span class="text-green-600">来自 {bestPrice.supplier}</span>
-                </div>
-            </div>
-        {/if}
-
         <div class="overflow-hidden rounded-lg border border-gray-200">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50">
@@ -156,16 +148,16 @@
                             </tr>
                             {#if group.expanded}
                                 {#each group.quotations as quotation}
-                                    <tr class="bg-white hover:bg-gray-50">
-                                        <td class="px-4 py-3 border-l-[3px] border-gray-200"></td>
+                                    <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'bg-white hover:bg-gray-50'}">
+                                        <td class="px-4 py-3 border-l-[3px] {isBestPriceQuotation(quotation) ? 'border-green-300' : 'border-gray-200'}"></td>
                                         <td class="px-4 py-3 pl-12">
-                                            <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                            <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                                 {quotation.supplier_name}
                                             </a>
                                         </td>
-                                        <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                        <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                        <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
+                                        <td class="px-4 py-3 text-right font-mono font-medium {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatPrice(quotation.price)}</td>
+                                        <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : 'text-gray-600'}">{quotation.currency}</td>
+                                        <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatNumber(quotation.min_quantity)}</td>
                                         <td class="px-4 py-3 text-center">
                                             {#if quotation.is_preferred}
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -183,16 +175,16 @@
                             {/if}
                         {/each}
                         {#each independentQuotations as quotation}
-                            <tr class="hover:bg-gray-50">
+                            <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}">
                                 <td class="px-4 py-3"></td>
                                 <td class="px-4 py-3">
-                                    <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                    <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                         {quotation.supplier_name}
                                     </a>
                                 </td>
-                                <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
+                                <td class="px-4 py-3 text-right font-mono font-medium {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatPrice(quotation.price)}</td>
+                                <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : 'text-gray-600'}">{quotation.currency}</td>
+                                <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatNumber(quotation.min_quantity)}</td>
                                 <td class="px-4 py-3 text-center">
                                     {#if quotation.is_preferred}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
@@ -209,15 +201,15 @@
                         {/each}
                     {:else}
                         {#each quotations as quotation}
-                            <tr class="hover:bg-gray-50">
+                            <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}">
                                 <td class="px-4 py-3">
-                                    <a href="/supplier/{quotation.supplier}" class="font-medium text-blue-600 hover:underline">
+                                    <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                         {quotation.supplier_name}
                                     </a>
                                 </td>
-                                <td class="px-4 py-3 text-right font-mono font-medium">{formatPrice(quotation.price)}</td>
-                                <td class="px-4 py-3 text-gray-600">{quotation.currency}</td>
-                                <td class="px-4 py-3">{formatNumber(quotation.min_quantity)}</td>
+                                <td class="px-4 py-3 text-right font-mono font-medium {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatPrice(quotation.price)}</td>
+                                <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : 'text-gray-600'}">{quotation.currency}</td>
+                                <td class="px-4 py-3 {isBestPriceQuotation(quotation) ? 'text-green-700' : ''}">{formatNumber(quotation.min_quantity)}</td>
                                 <td class="px-4 py-3 text-center">
                                     {#if quotation.is_preferred}
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">

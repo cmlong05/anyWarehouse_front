@@ -307,11 +307,6 @@
                                     {formatPrice(displayPrice().price)}
                                 </span>
                                 <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
-                                {#if data.bestPrice && parseFloat(data.bestPrice.price) < parseFloat(data.itemDetail.item.b_Price || '0')}
-                                    <div class="mt-1 text-sm text-green-600">
-                                        最优采购价: {formatPrice(data.bestPrice.price)} ({data.bestPrice.supplier})
-                                    </div>
-                                {/if}
                             {:else if displayPrice().source === 'preferred'}
                                 {@const preferred = data.quotations.find((q: QuotationBrief) => 
                                     q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
@@ -331,11 +326,6 @@
                                     {formatPrice(displayPrice().price)}
                                 </span>
                                 <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
-                                {#if data.bestPrice}
-                                    <div class="mt-1 text-sm text-green-600">
-                                        最优采购价: {formatPrice(data.bestPrice?.price)} ({data.bestPrice?.supplier})
-                                    </div>
-                                {/if}
                             {/if}
                         </div>
 
@@ -411,9 +401,6 @@
                         class="!px-4 !py-2 !-mb-px !-mr-px !text-sm !rounded-t-md !rounded-b-none !border !border-b-0 !shadow-none transition-colors {activeTab === 'quotations' ? '!bg-white !border-gray-300 !text-gray-900 !font-medium relative z-10' : '!bg-slate-100 !border-gray-300/70 !text-gray-500 hover:!bg-slate-50 hover:!text-gray-700'}"
                     >
                         供应商报价
-                        {#if data.quotations.length > 0}
-                            <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">{data.quotations.length}</span>
-                        {/if}
                     </button>
                     <button
                         type="button"
@@ -462,7 +449,7 @@
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 text-white font-medium rounded-lg shadow-md hover:bg-amber-600 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-sm font-medium text-white rounded-md shadow-sm hover:bg-amber-600 transition-colors"
                                             onclick={handleInventoryCheck}
                                             disabled={isInventoryChecking}
                                         >
@@ -470,10 +457,10 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-sm font-medium text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors"
                                             onclick={() => goto(`/storage/add/${data.itemDetail.item.id}`)}
                                         >
-                                            <Plus class="h-5 w-5" />
+                                            <Plus class="h-4 w-4" />
                                             入库
                                         </button>
                                     </div>
