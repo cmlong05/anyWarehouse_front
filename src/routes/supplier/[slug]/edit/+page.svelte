@@ -8,12 +8,15 @@
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let supplier = $state<Supplier | null>(null);
     let loading = $state(true);
     let saving = $state(false);
     let error = $state('');
+    let showDeleteModal = $state(false);
+    let deleteLoading = $state(false);
     
     const id = $derived(parseInt(page.params.slug || '0'));
     
@@ -47,6 +50,21 @@
         } catch (err) {
             error = err instanceof Error ? err.message : '更新供应商失败';
             saving = false;
+        }
+    }
+
+    async function handleDelete() {
+        if (!supplier) return;
+        deleteLoading = true;
+        error = '';
+
+        try {
+            await supplierAPI.delete(supplier.id);
+            goto('/supplier');
+        } catch (err) {
+            error = err instanceof Error ? err.message : '删除供应商失败';
+            deleteLoading = false;
+            showDeleteModal = false;
         }
     }
     
@@ -90,9 +108,25 @@
                 {supplier}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
+                onDelete={() => showDeleteModal = true}
                 submitLabel="保存修改"
+                deleteLabel="删除供应商"
                 loading={saving}
             />
         </div>
     {/if}
 </PageContainer>
+
+{#if supplier}
+    <ConfirmModal
+        isOpen={showDeleteModal}
+        title="删除供应商"
+        message="确定要删除以下供应商吗？此操作不可撤销。"
+        itemName={supplier.name}
+        confirmText="删除"
+        cancelText="取消"
+        loading={deleteLoading}
+        onConfirm={handleDelete}
+        onCancel={() => showDeleteModal = false}
+    />
+{/if}

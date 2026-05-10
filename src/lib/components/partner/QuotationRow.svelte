@@ -12,11 +12,23 @@
     export let leftBorderClasses: string = 'border-l-[3px] border-slate-200';
 </script>
 
-<tr class="bg-white">
+<tr class="bg-white cursor-pointer transition-colors hover:bg-gray-50" onclick={() => onRowClick(quotation.id)}>
     {#if showLeftBorder}
         <td class={"px-2 py-1.5 " + leftBorderClasses}></td>
     {/if}
-    <td class={skuCellClass} onclick={() => onRowClick(quotation.id)}>{quotation.item_sku || '-'}</td>
+    <td class={skuCellClass}>
+        {#if quotation.item}
+            <a
+                href="/item/{quotation.item}"
+                class="text-blue-600 hover:text-blue-700 hover:underline"
+                onclick={(e) => e.stopPropagation()}
+            >
+                {quotation.item_sku || '-'}
+            </a>
+        {:else}
+            {quotation.item_sku || '-'}
+        {/if}
+    </td>
     <td class="px-2 py-1.5 text-gray-600">
         <div>{quotation.item_name || '-'}</div>
         {#if quotation.note}
@@ -26,7 +38,7 @@
     <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
     <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.item_total_storage ?? 0}</td>
     <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
-    <td class="px-2 py-1.5 text-right">
+    <td class="px-2 py-1.5 text-right" onclick={(e) => e.stopPropagation()}>
         <NumberStepper
             value={quantity ?? undefined}
             step={1}

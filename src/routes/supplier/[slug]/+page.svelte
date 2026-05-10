@@ -6,7 +6,6 @@
     import type { PurchaseOrderBrief, Supplier, QuotationBrief } from '$lib';
     import Alert from '$lib/components/Alert.svelte';
     import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { PageContainer } from '$lib/components/layout';
     import { PartnerDetailHeader, OrdersSection, QuotationsSection } from '$lib/components/partner';
@@ -21,8 +20,6 @@
     let quotationsLoading = $state(true);
     let ordersLoading = $state(true);
     let error = $state('');
-    let showDeleteModal = $state(false);
-    let deleteLoading = $state(false);
     let quotationQuantities = $state<Record<number, number | null>>({});
     
     async function loadSupplier() {
@@ -63,20 +60,6 @@
             logger.error('加载最近订单失败:', err);
         } finally {
             ordersLoading = false;
-        }
-    }
-    
-    async function handleDelete() {
-        if (!supplier) return;
-        deleteLoading = true;
-        error = '';
-        try {
-            await supplierAPI.delete(supplier!.id);
-            goto('/supplier');
-        } catch (err) {
-            error = err instanceof Error ? err.message : '删除供应商失败';
-            deleteLoading = false;
-            showDeleteModal = false;
         }
     }
     
@@ -169,7 +152,7 @@
         statusLabel={supplier!.is_active ? '活跃' : '停用'}
         onEdit={() => goto(`/supplier/${supplier!.id}/edit`)}
         onCancel={() => {}}
-        onDelete={() => showDeleteModal = true}
+        onDelete={() => {}}
     />
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -257,23 +240,5 @@
         </div>
     </div>
     
-    <!-- 底部操作区 -->
-    {#if supplier}
-        <div class="mt-8 pt-6 border-t border-gray-200 flex justify-start">
-            <button class="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors" onclick={() => showDeleteModal = true}>删除供应商</button>
-        </div>
-    {/if}
     {/if}
 </PageContainer>
-
-<ConfirmModal
-    isOpen={showDeleteModal}
-    title="删除供应商"
-    message="确定要删除以下供应商吗？此操作不可撤销。"
-    itemName={supplier?.name}
-    confirmText="删除"
-    cancelText="取消"
-    loading={deleteLoading}
-    onConfirm={handleDelete}
-    onCancel={() => showDeleteModal = false}
-/>

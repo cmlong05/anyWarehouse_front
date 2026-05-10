@@ -6,7 +6,9 @@
         supplier?: Partial<SupplierFormData>;
         onSubmit: (data: SupplierFormData) => void;
         onCancel: () => void;
+        onDelete?: () => void;
         submitLabel?: string;
+        deleteLabel?: string;
         loading?: boolean;
     }
     
@@ -14,7 +16,9 @@
         supplier, 
         onSubmit, 
         onCancel, 
+        onDelete,
         submitLabel = '保存',
+        deleteLabel = '删除供应商',
         loading = false
     }: Props = $props();
 
@@ -43,9 +47,11 @@
 <PartyForm
     onSubmit={handlePartySubmit}
     {onCancel}
+    {onDelete}
     initialData={cleanInitial}
     schema={supplierSchema}
     {submitLabel}
+    {deleteLabel}
     {loading}
     showIsActive={true}
     {extras}
