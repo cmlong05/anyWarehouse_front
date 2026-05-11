@@ -25,3 +25,6 @@ export * from './errors';
 
 // 导出地址格式化工具
 export * from './address';
+
+// 导出物品详情价格计算工具
+export * from './item-price';
