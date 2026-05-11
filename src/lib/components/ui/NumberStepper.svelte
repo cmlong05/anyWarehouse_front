@@ -17,7 +17,7 @@
     let {
         id,
         name,
-        value = undefined,
+        value = $bindable(undefined),
         min = 0,
         max,
         step = 1,
@@ -35,8 +35,6 @@
         lg: 'stepper-lg',
     }[size]);
     
-    // Internal value state — source of truth for the component
-    let localValue = $state<number | null | undefined>(undefined);
     // 输入框的显示值（允许临时编辑）
     let inputValue = $state('');
     // 是否正在编辑
@@ -47,16 +45,11 @@
         if (val === undefined || val === null) return '';
         return Number(val).toFixed(decimalPlaces);
     }
-    
-    // Sync localValue from external value prop (parent-driven updates)
-    $effect(() => {
-        localValue = value;
-    });
 
-    // Sync display from localValue (non-editing state)
+    // Sync display from value (non-editing state)
     $effect(() => {
         if (!isEditing) {
-            inputValue = formatValue(localValue);
+            inputValue = formatValue(value);
         }
     });
     
@@ -66,22 +59,22 @@
         inputValue = rawValue;
         
         const val = rawValue === '' ? null : parseFloat(rawValue);
-        localValue = val;
+        value = val;
         onchange?.(val);
     }
     
     function handleFocus() {
         isEditing = true;
         // 聚焦时，如果有值，移除末尾的0，方便编辑
-        if (localValue !== undefined && localValue !== null) {
-            inputValue = String(localValue);
+        if (value !== undefined && value !== null) {
+            inputValue = String(value);
         }
     }
     
     function handleBlur() {
         isEditing = false;
         // 失焦时格式化
-        inputValue = formatValue(localValue);
+        inputValue = formatValue(value);
     }
     
     function handleWheel(e: WheelEvent) {
@@ -98,20 +91,20 @@
     
     function decrement() {
         if (disabled) return;
-        const current = localValue ?? 0;
+        const current = value ?? 0;
         const newVal = current - step;
         if (newVal < min) return;
-        localValue = newVal;
+        value = newVal;
         onchange?.(newVal);
         inputValue = formatValue(newVal);
     }
     
     function increment() {
         if (disabled) return;
-        const current = localValue ?? 0;
+        const current = value ?? 0;
         const newVal = current + step;
         if (max !== undefined && newVal > max) return;
-        localValue = newVal;
+        value = newVal;
         onchange?.(newVal);
         inputValue = formatValue(newVal);
     }

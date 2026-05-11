@@ -139,6 +139,7 @@
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">库存数量</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价{currency ? `（${currency}）` : ''}</th>
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
+                        <th class="px-2 py-2 text-center font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">状态</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -40,30 +40,55 @@
     let quantityValues = $state<Record<number, number>>({});
     let descriptionExpanded = $state(false);
     let isInventoryChecking = $state(false);
+    let basicInfoEl = $state<HTMLDivElement | null>(null);
+    let imageSquareSize = $state(0);
+    let imageLoadFailed = $state(false);
 
 
-    // 计算显示价格（如果item的b_Price为空，则显示首选供应商报价）
+    // 计算显示价格：首选供应商报价 > item字段价格 > 供应商最高报价
     const displayPrice = $derived(() => {
-        const itemPrice = data.itemDetail.item.b_Price;
-        // 检查item自身价格是否有效（非空字符串、非null、非undefined、非0）
-        if (itemPrice && itemPrice !== '' && itemPrice !== '0' && itemPrice !== '0.00') {
-            return { price: itemPrice, currency: data.itemDetail.item.currency || 'CNY', source: 'item' as const };
-        }
-        
         // 尝试获取首选供应商报价（处理可能的字符串/布尔类型）
         const preferred = data.quotations.find((q: QuotationBrief) => 
             q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
         );
-        if (preferred) {
-            return { price: preferred.price, currency: preferred.currency, source: 'preferred' as const };
+        if (preferred && preferred.price !== null && preferred.price !== undefined && preferred.price !== '') {
+            return {
+                price: preferred.price,
+                currency: preferred.currency || 'CNY',
+                source: 'preferred' as const,
+                supplierName: preferred.supplier_name || ''
+            };
+        }
+
+        const itemPrice = data.itemDetail.item.b_Price;
+        // 检查item自身价格是否有效（非空字符串、非null、非undefined、非0）
+        if (itemPrice && itemPrice !== '' && itemPrice !== '0' && itemPrice !== '0.00') {
+            return {
+                price: itemPrice,
+                currency: data.itemDetail.item.currency || 'CNY',
+                source: 'item' as const,
+                supplierName: ''
+            };
         }
         
-        // 尝试获取最优价格
-        if (data.bestPrice && data.bestPrice.price) {
-            return { price: data.bestPrice.price, currency: data.itemDetail.item.currency || 'CNY', source: 'best' as const };
+        // 既没有首选报价，也没有item价格时，取供应商中的最高报价
+        const quotationsWithPrice = data.quotations.filter((q: QuotationBrief) => {
+            const p = q.price;
+            return p !== null && p !== undefined && p !== '' && !Number.isNaN(parseFloat(String(p)));
+        });
+        if (quotationsWithPrice.length > 0) {
+            const highestQuotation = quotationsWithPrice.reduce((maxQ: QuotationBrief, currentQ: QuotationBrief) => {
+                return parseFloat(String(currentQ.price)) > parseFloat(String(maxQ.price)) ? currentQ : maxQ;
+            });
+            return {
+                price: highestQuotation.price,
+                currency: highestQuotation.currency || 'CNY',
+                source: 'highest' as const,
+                supplierName: highestQuotation.supplier_name || ''
+            };
         }
         
-        return { price: '-', currency: '', source: 'item' as const };
+        return { price: '-', currency: '', source: 'none' as const, supplierName: '' };
     });
 
     // 刷新变体数据
@@ -88,6 +113,25 @@
 
     function getTotalStock(): number {
         return data.itemDetail.item.total_storage ?? 0;
+    }
+
+    function isDescriptionCollapsible(): boolean {
+        return (data.itemDetail.item.description?.length ?? 0) > 100;
+    }
+
+    function handleDescriptionAreaClick() {
+        if (!isDescriptionCollapsible()) {
+            return;
+        }
+
+        if (typeof window !== 'undefined') {
+            const selection = window.getSelection();
+            if (selection && !selection.isCollapsed && selection.toString().trim().length > 0) {
+                return;
+            }
+        }
+
+        descriptionExpanded = !descriptionExpanded;
     }
 
     const handleInventoryCheck = async () => {
@@ -180,6 +224,31 @@
             });
         }
     });
+
+    $effect(() => {
+        if (!basicInfoEl || typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        const updateSize = () => {
+            imageSquareSize = Math.max(0, Math.round(basicInfoEl?.offsetHeight ?? 0));
+        };
+
+        updateSize();
+        const observer = new ResizeObserver(() => {
+            updateSize();
+        });
+        observer.observe(basicInfoEl);
+
+        return () => {
+            observer.disconnect();
+        };
+    });
+
+    $effect(() => {
+        data.itemDetail.item.image;
+        imageLoadFailed = false;
+    });
 </script>
 
 <svelte:head>
@@ -211,176 +280,207 @@
         <!-- 左侧主内容区 -->
         <div class="flex-1 min-w-0">
             <!-- 顶部信息卡片 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-                <div class="flex flex-col lg:flex-row">
-                    <!-- 图片区域 -->
-                    <div class="lg:w-80 bg-gray-50 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-gray-200 overflow-hidden p-4">
-                        {#if data.itemDetail.item.image}
-                            <a
-                                href={data.itemDetail.item.image}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="block leading-[0]"
-                                title="点击查看大图"
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4">
+                <div class="p-6">
+                    <div class="flex flex-col sm:flex-row gap-5">
+                        <!-- 图片区域 -->
+                            <div
+                                class="hidden sm:flex flex-shrink-0 bg-gray-50 rounded-lg border border-gray-200 items-center justify-center overflow-hidden"
+                                style="width: {imageSquareSize}px; height: {imageSquareSize}px;"
                             >
-                                <img 
-                                    src={data.itemDetail.item.image.trim()} 
-                                    alt="{data.itemDetail.item.name}{data.itemDetail.item.name_en ? ` / ${data.itemDetail.item.name_en}` : ''}"
-                                    class="max-w-full max-h-80 object-contain hover:scale-105 transition-transform"
-                                />
-                            </a>
-                        {:else}
-                            <div class="w-40 h-40 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
-                                <svg class="w-14 h-14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        {/if}
-                    </div>
-
-                    <!-- 基本信息 -->
-                    <div class="flex-1 p-6">
-                        <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h1 class="text-2xl font-bold text-gray-900 mb-1">{data.itemDetail.item.name}</h1>
-                                {#if data.itemDetail.item.name_en}
-                                    <p class="text-lg text-gray-500 mb-2">{data.itemDetail.item.name_en}</p>
-                                {/if}
-                                <div class="flex items-center gap-3 text-sm flex-wrap">
-                                    <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full font-mono">{data.itemDetail.item.SKU}</span>
-                                    
-                                    <!-- 变体标识 -->
-                                    {#if isVariantTemplate()}
-                                        <span class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                            </svg>
-                                            变体母版
-                                        </span>
-                                    {:else if data.variantInfo?.is_variant}
-                                        <span class="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                                            </svg>
-                                            变体
-                                        </span>
-                                        {#if data.variantInfo?.parent_item}
-                                            <a href="/item/{data.variantInfo.parent_item.id}" class="text-xs text-blue-600 hover:underline">
-                                                母版: {data.variantInfo.parent_item.sku}
-                                            </a>
-                                        {/if}
-                                    {:else if getTotalStock() > 0}
-                                        <span class="px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full text-xs">库存充足</span>
-                                    {:else}
-                                        <span class="px-2.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">暂无库存</span>
-                                    {/if}
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <a 
-                                    href="/item/add?copy_from={data.itemDetail.item.id}" 
-                                    class="flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
-                                    title="复制"
-                                    aria-label="复制"
+                            {#if data.itemDetail.item.image && !imageLoadFailed}
+                                <a
+                                    href={data.itemDetail.item.image}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                        class="block w-full h-full leading-[0]"
+                                    title="点击查看大图"
                                 >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
+                                    <img 
+                                        src={data.itemDetail.item.image.trim()} 
+                                        alt="{data.itemDetail.item.name}{data.itemDetail.item.name_en ? ` / ${data.itemDetail.item.name_en}` : ''}"
+                                            class="w-full h-full object-contain hover:scale-105 transition-transform"
+                                        onerror={() => { imageLoadFailed = true; }}
+                                    />
                                 </a>
-                                <a 
-                                    href="/item/{data.itemDetail.item.id}/edit" 
-                                    class="flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
-                                    title="编辑"
-                                    aria-label="编辑"
-                                >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </a>
-                        </div>
-                    </div>
-
-                    <!-- 价格 -->
-                        <div class="mb-4">
-                            {#if displayPrice().source === 'item'}
-                                <span class="text-3xl font-bold text-gray-900">
-                                    {formatPrice(displayPrice().price)}
-                                </span>
-                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
-                            {:else if displayPrice().source === 'preferred'}
-                                {@const preferred = data.quotations.find((q: QuotationBrief) => 
-                                    q.is_preferred === true || String(q.is_preferred).toLowerCase() === 'true'
-                                )}
-                                <span class="text-3xl font-bold text-amber-600">
-                                    {formatPrice(displayPrice().price)}
-                                </span>
-                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
-                                <div class="mt-1 text-sm text-amber-600 flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                    </svg>
-                                    首选供应商价: {preferred?.supplier_name || data.bestPrice?.supplier}
-                                </div>
                             {:else}
-                                <span class="text-3xl font-bold text-gray-900">
-                                    {formatPrice(displayPrice().price)}
-                                </span>
-                                <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                    <svg class="w-14 h-14 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
                             {/if}
                         </div>
 
-                        <!-- 属性网格 -->
-                        <div class="grid grid-cols-3 gap-3">
-                            <div class="p-3 bg-gray-50 rounded-lg text-center">
-                                <div class="text-xs text-gray-500 mb-1">重量</div>
-                                <div class="font-medium text-gray-900">{data.itemDetail.item.weight}g</div>
+                        <!-- 基本信息 -->
+                        <div class="flex-1 min-w-0" bind:this={basicInfoEl}>
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h1 class="text-2xl font-bold text-gray-900 mb-1">{data.itemDetail.item.name}</h1>
+                                    {#if data.itemDetail.item.name_en}
+                                        <p class="text-lg text-gray-500 mb-2">{data.itemDetail.item.name_en}</p>
+                                    {/if}
+                                    <div class="flex items-center gap-3 text-sm flex-wrap">
+                                        <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full font-mono">{data.itemDetail.item.SKU}</span>
+                                        
+                                        <!-- 变体标识 -->
+                                        {#if isVariantTemplate()}
+                                            <span class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                                </svg>
+                                                变体母版
+                                            </span>
+                                        {:else if data.variantInfo?.is_variant}
+                                            <span class="px-2.5 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                                </svg>
+                                                变体
+                                            </span>
+                                            {#if data.variantInfo?.parent_item}
+                                                <a href="/item/{data.variantInfo.parent_item.id}" class="text-xs text-blue-600 hover:underline">
+                                                    母版: {data.variantInfo.parent_item.sku}
+                                                </a>
+                                            {/if}
+                                        {/if}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <a 
+                                        href="/item/add?copy_from={data.itemDetail.item.id}" 
+                                        class="flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                                        title="复制"
+                                        aria-label="复制"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </a>
+                                    <a 
+                                        href="/item/{data.itemDetail.item.id}/edit" 
+                                        class="flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                                        title="编辑"
+                                        aria-label="编辑"
+                                    >
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </a>
+                                </div>
                             </div>
-                            <div class="p-3 bg-gray-50 rounded-lg text-center">
-                                <div class="text-xs text-gray-500 mb-1">体积</div>
-                                <div class="font-medium text-gray-900">{data.itemDetail.item.s_volume}cm³</div>
+
+                            <!-- 价格 -->
+                            <div class="mb-4">
+                                {#if displayPrice().source === 'item'}
+                                    <span class="text-3xl font-bold text-gray-900">
+                                        {formatPrice(displayPrice().price)}
+                                    </span>
+                                    <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                {:else if displayPrice().source === 'preferred'}
+                                    <span class="text-3xl font-bold text-amber-800">
+                                        {formatPrice(displayPrice().price)}
+                                    </span>
+                                    <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                    <button
+                                        type="button"
+                                        class="group relative ml-1 inline-flex items-center align-middle text-amber-800"
+                                        aria-label="首选最优报价"
+                                    >
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                        <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-900 px-2 py-1 text-xs text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                                            首选最优报价: {displayPrice().supplierName || '-'}
+                                        </span>
+                                    </button>
+                                {:else if displayPrice().source === 'highest'}
+                                    <span class="text-3xl font-bold text-gray-900">
+                                        {formatPrice(displayPrice().price)}
+                                    </span>
+                                    <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                {:else}
+                                    <span class="text-3xl font-bold text-gray-900">
+                                        {formatPrice(displayPrice().price)}
+                                    </span>
+                                    <span class="text-gray-500 ml-1">{displayPrice().currency || 'CNY'}</span>
+                                {/if}
                             </div>
-                            <div class="p-3 bg-gray-50 rounded-lg text-center">
-                                <div class="text-xs text-gray-500 mb-1">总库存</div>
-                                <div class="font-medium {getTotalStock() > 0 ? 'text-green-600' : 'text-red-600'}">{getTotalStock()}</div>
+
+                            <!-- 属性网格 -->
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="p-3 bg-gray-50 rounded-lg text-center">
+                                    <div class="text-xs text-gray-500 mb-1">重量</div>
+                                    <div class="font-medium text-gray-900">{data.itemDetail.item.weight}g</div>
+                                </div>
+                                <div class="p-3 bg-gray-50 rounded-lg text-center">
+                                    <div class="text-xs text-gray-500 mb-1">体积</div>
+                                    <div class="font-medium text-gray-900">{data.itemDetail.item.s_volume}cm³</div>
+                                </div>
+                                <div class="p-3 bg-gray-50 rounded-lg text-center">
+                                    <div class="text-xs text-gray-500 mb-1">总库存</div>
+                                    <div class="font-medium {getTotalStock() > 0 ? 'text-green-600' : 'text-red-600'}">{getTotalStock()}</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        <!-- 描述 -->
-                        {#if data.itemDetail.item.description}
-                            <div class="border-t border-gray-200 mt-4 pt-4">
-                                <div class="relative">
-                                    <p 
-                                        class="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap transition-all duration-300 {descriptionExpanded ? '' : 'line-clamp-6'}"
+            <!-- 描述 -->
+            {#if data.itemDetail.item.description}
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4">
+                    <div
+                        class="px-6 py-4 {isDescriptionCollapsible() ? 'cursor-pointer select-text' : ''}"
+                        role="button"
+                        tabindex="0"
+                        aria-expanded={isDescriptionCollapsible() ? descriptionExpanded : undefined}
+                        onkeydown={(e) => {
+                            if (!isDescriptionCollapsible()) return;
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                handleDescriptionAreaClick();
+                            }
+                        }}
+                        onclick={handleDescriptionAreaClick}
+                    >
+                        <div class="relative">
+                            <p 
+                                class="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap transition-all duration-300 {descriptionExpanded ? '' : 'line-clamp-3 pr-16'}"
+                            >
+                                {data.itemDetail.item.description}
+                            </p>
+                            {#if !descriptionExpanded && isDescriptionCollapsible()}
+                                <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
+                                <span class="pointer-events-none absolute bottom-0 right-0 z-10 inline-flex items-center gap-0.5 bg-white/95 pl-2 text-[10px] text-gray-500">
+                                    更多...
+                                    <svg 
+                                        class="w-3 h-3" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
                                     >
-                                        {data.itemDetail.item.description}
-                                    </p>
-                                    {#if !descriptionExpanded && data.itemDetail.item.description.length > 100}
-                                        <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
-                                    {/if}
-                                </div>
-                                {#if data.itemDetail.item.description.length > 100}
-                                    <div class="flex justify-end mt-1">
-                                        <button 
-                                            onclick={() => descriptionExpanded = !descriptionExpanded}
-                                            class="text-[10px] flex items-center gap-0.5 cursor-pointer text-gray-500 hover:text-gray-700 bg-transparent border-0 p-0 m-0 font-inherit outline-none"
-                                        >
-                                            {descriptionExpanded ? '收起' : '更多...'}
-                                            <svg 
-                                                class="w-3 h-3 transition-transform duration-200 {descriptionExpanded ? 'rotate-180' : ''}" 
-                                                fill="none" 
-                                                stroke="currentColor" 
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                {/if}
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            {/if}
+                        </div>
+                        {#if isDescriptionCollapsible() && descriptionExpanded}
+                            <div class="flex justify-end mt-1">
+                                <span class="text-[10px] flex items-center gap-0.5 text-gray-500 hover:text-gray-700">
+                                    收起
+                                    <svg 
+                                        class="w-3 h-3 transition-transform duration-200 {descriptionExpanded ? 'rotate-180' : ''}" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
                             </div>
                         {/if}
                     </div>
                 </div>
-            </div>
+            {/if}
 
             <!-- 标签页内容 -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

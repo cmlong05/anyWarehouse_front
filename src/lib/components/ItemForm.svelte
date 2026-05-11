@@ -278,7 +278,25 @@
             <div class="flex items-center gap-2 mb-2">
                 <span class="text-sm font-medium text-gray-700">价格:</span>
                 <NumberStepper value={parseFloat(formData.b_Price) || 0} min={0} step={0.01} size="sm" onchange={(v) => formData.b_Price = (v ?? 0).toFixed(2)} />
-                <div class="w-20"><Svelecte options={[{value:'CNY',label:'CNY'},{value:'USD',label:'USD'},{value:'EUR',label:'EUR'}]} bind:value={formData.currency} class="svelecte-control" /></div>
+                <div class="relative w-20 shrink-0">
+                    <select
+                        bind:value={formData.currency}
+                        class="h-[29px] w-full appearance-none rounded-sm border border-gray-300 bg-white pl-2 pr-6 text-xs leading-none text-gray-700 outline-none transition-colors hover:border-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        aria-label="货币"
+                    >
+                        <option value="CNY">CNY</option>
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                    </select>
+                    <svg
+                        class="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        stroke="currentColor"
+                    >
+                        <path d="M6 8l4 4 4-4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div class="flex items-center gap-2">

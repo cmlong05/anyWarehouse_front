@@ -80,6 +80,12 @@
                     {/if}
                 </span>
             </div>
+            {#if partnerSku}
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 text-sm">合作方SKU</span>
+                    <span class="font-mono bg-gray-100 px-2 py-1 rounded text-sm">{partnerSku}</span>
+                </div>
+            {/if}
         </div>
     </div>
 
@@ -152,11 +158,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="bg-white p-6 rounded-lg border border-gray-200 mb-6">
-    <h3 class="text-lg font-semibold text-gray-700 mb-2">合作方SKU</h3>
-    <p class="font-mono text-gray-800">{partnerSku || '-'}</p>
 </div>
 
 {#if note}
