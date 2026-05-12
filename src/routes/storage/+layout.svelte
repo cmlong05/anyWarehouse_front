@@ -12,10 +12,6 @@
 </script>
 
 <div class="storage-layout">
-    <header class="storage-header">
-        <h1>存储管理</h1>
-    </header>
-
     <main class="storage-main">
         {@render children()}
     </main>

@@ -6,6 +6,7 @@
     let { data } = $props<{ 
         data: {
             item: string; 
+            itemName: string;
             itemSKU: string;
             containers: ContainerBriefID[];
         }
@@ -13,13 +14,13 @@
 </script>
 
 <svelte:head>
-    <title>添加存储 - 物品: {data.itemSKU}</title>
+    <title>新建库存位置 - 物品: {data.itemName || data.itemSKU}</title>
 </svelte:head>
 
 <PageContainer maxWidth="md">
     <PageHeader 
-        title="添加存储"
-        subtitle="为物品 {data.itemSKU} 创建新的存储记录"
+        title="新建库存位置"
+        subtitle="为物品 {data.itemName || data.itemSKU} 创建新的存储记录"
     />
     
     <StorageForm 

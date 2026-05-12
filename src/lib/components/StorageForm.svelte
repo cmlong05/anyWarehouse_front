@@ -113,7 +113,7 @@
         <label for="quantity" class="block mb-1 font-bold text-gray-700">数量 <span class="text-red-600">*</span></label>
         <NumberStepper
             id="quantity"
-            value={typeof formData.quantity === 'string' ? parseInt(formData.quantity) : formData.quantity}
+            value={formData.quantity === '' ? undefined : Number(formData.quantity)}
             min={1}
             step={1}
             decimalPlaces={0}
