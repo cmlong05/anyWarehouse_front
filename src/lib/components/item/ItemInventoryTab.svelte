@@ -14,10 +14,12 @@
         quantityFlash: Record<number, boolean>;
         quantityDelta: Record<number, number>;
         removingIds: Set<number>;
+        transferFlash?: Record<number, number>;
         onInventoryCheck: () => void;
         onInbound: () => void;
         onOutbound: (storage: StorageContainer) => void;
         onQuantityChange: (storageId: number, quantity: number) => void;
+        onTransferDrop: (fromStorageId: number, toStorageId: number) => void;
     }
 
     let {
@@ -30,11 +32,66 @@
         quantityFlash,
         quantityDelta,
         removingIds,
+        transferFlash = {},
         onInventoryCheck,
         onInbound,
         onOutbound,
         onQuantityChange,
+        onTransferDrop = () => {},
     }: Props = $props();
+
+    let dragFromStorageId = $state<number | null>(null);
+    let dragOverStorageId = $state<number | null>(null);
+    let tooltipVisibleId = $state<number | null>(null);
+    let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function handleRowMouseEnter(storageId: number) {
+        hoverTimer = setTimeout(() => { tooltipVisibleId = storageId; }, 3000);
+    }
+
+    function handleRowMouseLeave() {
+        if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+        tooltipVisibleId = null;
+    }
+
+    function handleDragStart(e: DragEvent, storage: StorageContainer) {
+        if (storage.quantity <= 0) {
+            e.preventDefault();
+            return;
+        }
+        dragFromStorageId = storage.id;
+        if (e.dataTransfer) {
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', String(storage.id));
+            e.dataTransfer.setData('application/x-storage-id', String(storage.id));
+        }
+    }
+
+    function handleDragOver(e: DragEvent, target: StorageContainer) {
+        if (dragFromStorageId === null || dragFromStorageId === target.id) return;
+        e.preventDefault();
+        dragOverStorageId = target.id;
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDrop(e: DragEvent, target: StorageContainer) {
+        e.preventDefault();
+        let fromId = dragFromStorageId;
+        if (!fromId && e.dataTransfer) {
+            const raw = e.dataTransfer.getData('application/x-storage-id') || e.dataTransfer.getData('text/plain');
+            const parsed = Number(raw);
+            if (Number.isFinite(parsed)) fromId = parsed;
+        }
+        dragOverStorageId = null;
+        dragFromStorageId = null;
+        if (!fromId || fromId === target.id) return;
+        onTransferDrop(fromId, target.id);
+    }
+
+    function handleDragEnd() {
+        dragOverStorageId = null;
+        dragFromStorageId = null;
+    }
 </script>
 
 <div class="space-y-4">
@@ -70,9 +127,7 @@
                 </button>
             </div>
         </div>
-    {/if}
 
-    {#if !isVariantTemplate}
         <div class="overflow-x-auto rounded-lg border border-gray-200">
             <table class="w-full text-sm min-w-[500px]">
                 <thead class="bg-gray-50">
@@ -85,7 +140,19 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {#each storages as storage}
-                        <tr class="hover:bg-gray-50 transition-opacity duration-[3000ms] {removingIds.has(storage.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'}">
+                        <tr
+                            draggable={storage.quantity > 0 ? 'true' : 'false'}
+                            ondragstart={(e) => handleDragStart(e, storage)}
+                            ondragover={(e) => handleDragOver(e, storage)}
+                            ondrop={(e) => handleDrop(e, storage)}
+                            ondragleave={() => {
+                                if (dragOverStorageId === storage.id) dragOverStorageId = null;
+                            }}
+                            ondragend={handleDragEnd}
+                            onmouseenter={() => handleRowMouseEnter(storage.id)}
+                            onmouseleave={handleRowMouseLeave}
+                            class="transition-opacity duration-[3000ms] {removingIds.has(storage.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'} {dragOverStorageId === storage.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : 'hover:bg-gray-50'} {dragFromStorageId === storage.id ? 'opacity-60' : ''} {storage.quantity > 0 ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'}"
+                        >
                             <td class="px-2 sm:px-4 py-3">
                                 <a href="/container/{storage.container_fastCode}" class="font-medium text-blue-600 hover:underline">
                                     {storage.container_fastCode}
@@ -109,6 +176,9 @@
                                         </span>
                                     {/if}
                                 </a>
+                                {#if transferFlash[storage.id]}
+                                    <span class="text-xs font-medium text-green-600 transition-opacity duration-[1500ms] opacity-100">+{transferFlash[storage.id]}</span>
+                                {/if}
                             </td>
                             <td class="px-2 sm:px-4 py-3">
                                 <div class="flex items-center justify-center gap-2 sm:gap-6">
@@ -133,6 +203,12 @@
                     {/each}
                 </tbody>
             </table>
+        </div>
+    {/if}
+
+    {#if tooltipVisibleId !== null}
+        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-800/90 text-white text-xs rounded-full px-4 py-2 shadow-lg pointer-events-none">
+            拖拽到另一行可移库
         </div>
     {/if}
 </div>

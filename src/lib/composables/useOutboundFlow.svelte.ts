@@ -91,14 +91,14 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
                 }, 3000);
             } else {
                 const updated = await response.json();
-                storages[idx] = { ...storages[idx], ...updated };
                 quantityValues[storage.id] = 1;
                 pending = null;
                 quantityDelta[storage.id] = qty;
                 quantityFlash[storage.id] = true;
-                onChange?.();
                 setTimeout(() => {
                     quantityFlash[storage.id] = false;
+                    storages[idx] = { ...storages[idx], ...updated };
+                    onChange?.();
                 }, 1500);
                 setTimeout(() => {
                     delete quantityDelta[storage.id];

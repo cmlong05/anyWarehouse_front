@@ -1,11 +1,13 @@
 <script lang="ts">
     import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
-    import type { ItemSet, QuotationBrief } from '$lib';
+    import type { ItemSet, QuotationBrief, StorageContainer } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
     import { config } from '$lib/config';
     import { untrack } from 'svelte';
     import { resolveItemDisplayPrice } from '$lib/utils';
+    import { getErrorMessage } from '$lib/utils/errors';
+    import { inventoryMovementAPI } from '$lib/api';
     import { useOutboundFlow } from '$lib/composables/useOutboundFlow.svelte';
     import { useInventoryCheck } from '$lib/composables/useInventoryCheck.svelte';
     import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
@@ -13,6 +15,7 @@
     import ItemExternalLinksTab from '$lib/components/ItemExternalLinksTab.svelte';
     import ItemQuotationsTab from '$lib/components/ItemQuotationsTab.svelte';
     import OutboundConfirmModal from '$lib/components/item/OutboundConfirmModal.svelte';
+    import TransferConfirmModal from '$lib/components/item/TransferConfirmModal.svelte';
     import ItemDescriptionCard from '$lib/components/item/ItemDescriptionCard.svelte';
     import ItemTabsNav, { type ItemDetailTab } from '$lib/components/item/ItemTabsNav.svelte';
     import ItemInventoryTab from '$lib/components/item/ItemInventoryTab.svelte';
@@ -69,6 +72,86 @@
         },
     });
 
+    type TransferPending = {
+        fromStorageId: number;
+        toStorageId: number;
+        fromContainerId: number;
+        toContainerId: number;
+        fromContainerCode: string;
+        toContainerCode: string;
+        fromQuantity: number;
+        toQuantity: number;
+    } | null;
+
+    let transferPending = $state<TransferPending>(null);
+    let transferProcessing = $state(false);
+    let transferError = $state('');
+    let transferFlash = $state<Record<number, number>>({});
+
+    function requestTransferByDrop(fromStorageId: number, toStorageId: number) {
+        const source = data.itemDetail.storages.find((s: StorageContainer) => s.id === fromStorageId);
+        const target = data.itemDetail.storages.find((s: StorageContainer) => s.id === toStorageId);
+        if (!source || !target || source.id === target.id || source.quantity <= 0) return;
+        transferError = '';
+        transferPending = {
+            fromStorageId: source.id,
+            toStorageId: target.id,
+            fromContainerId: source.container_id,
+            toContainerId: target.container_id,
+            fromContainerCode: source.container_fastCode,
+            toContainerCode: target.container_fastCode,
+            fromQuantity: source.quantity,
+            toQuantity: target.quantity,
+        };
+    }
+
+    function cancelTransfer() {
+        transferPending = null;
+        transferError = '';
+    }
+
+    async function refreshItemDetail() {
+        const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemDetail.item.id}/`);
+        if (!response.ok) throw new Error('刷新库存失败');
+        const itemDetail: ItemSet = await response.json();
+        data = { ...data, itemDetail };
+    }
+
+    async function confirmTransfer(quantity: number) {
+        if (!transferPending || transferProcessing) return;
+        transferProcessing = true;
+        transferError = '';
+        const fromId = transferPending.fromStorageId;
+        const toId = transferPending.toStorageId;
+        try {
+            await inventoryMovementAPI.create({
+                movement_type: 'transfer',
+                item: data.itemDetail.item.id,
+                quantity,
+                from_container: transferPending.fromContainerId,
+                to_container: transferPending.toContainerId,
+            });
+            transferPending = null;
+            // 先触发动画，动画结束后再刷新数量
+            outbound.quantityDelta[fromId] = quantity;
+            outbound.quantityFlash[fromId] = true;
+            transferFlash[toId] = quantity;
+            setTimeout(async () => {
+                outbound.quantityFlash[fromId] = false;
+                delete transferFlash[toId];
+                delete outbound.quantityDelta[fromId];
+                await refreshItemDetail();
+            }, 1500);
+        } catch (err) {
+            const detail = (err && typeof err === 'object' && 'detail' in err)
+                ? (err as { detail?: unknown }).detail
+                : undefined;
+            transferError = detail !== undefined ? JSON.stringify(detail) : getErrorMessage(err, '移库失败');
+        } finally {
+            transferProcessing = false;
+        }
+    }
+
     // 计算显示价格：首选供应商报价 > item字段价格 > 供应商最高报价
     const displayPrice = $derived.by(() =>
         resolveItemDisplayPrice(data.quotations, data.itemDetail.item)
@@ -103,6 +186,14 @@
     processing={outbound.processing}
     onCancel={outbound.cancel}
     onConfirm={outbound.confirm}
+/>
+
+<TransferConfirmModal
+    pending={transferPending}
+    processing={transferProcessing}
+    error={transferError}
+    onCancel={cancelTransfer}
+    onConfirm={confirmTransfer}
 />
 
 <div class="max-w-7xl mx-auto px-4 pt-3 pb-6">
@@ -162,10 +253,12 @@
                             quantityFlash={outbound.quantityFlash}
                             quantityDelta={outbound.quantityDelta}
                             removingIds={outbound.removingIds}
+                            {transferFlash}
                             onInventoryCheck={inventoryCheck.check}
                             onInbound={() => { goto(`/storage/add/${data.itemDetail.item.id}`); }}
                             onOutbound={outbound.request}
                             onQuantityChange={outbound.setQuantity}
+                            onTransferDrop={requestTransferByDrop}
                         />
                     {/if}
 
