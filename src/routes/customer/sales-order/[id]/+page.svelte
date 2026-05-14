@@ -454,9 +454,9 @@
                 urgent: { label: '紧急', class: 'priority-urgent' },
             }}
             items={[
+                { label: '客户', value: order.customer_detail?.name, href: `/customer/${order.customer}` },
                 { label: '订单号', value: order.order_number },
                 { label: '状态', value: order.status === 'draft' ? '草稿' : order.status === 'pending' ? '待审批' : order.status === 'approved' ? '已批准' : order.status === 'confirmed' ? '已确认' : order.status === 'partial' ? '部分发货' : order.status === 'shipped' ? '已发货' : order.status === 'delivered' ? '已交付' : order.status === 'cancelled' ? '已取消' : order.status },
-                { label: '客户', value: order.customer_detail?.name, href: `/customer/${order.customer}` },
                 { label: '优先级', value: order.priority, format: 'priority' },
                 { label: '下单日期', value: order.order_date },
                 { label: '预计交货', value: order.expected_delivery },
