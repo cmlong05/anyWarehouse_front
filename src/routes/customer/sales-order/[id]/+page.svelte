@@ -28,10 +28,13 @@
     let orderId = $derived(parseInt(page.params.id || '0'));
 
     // 使用共享逻辑
+    const backUrl = $derived(page.url.searchParams.get('from') ?? undefined);
+
     const orderDetail = useOrderDetail<SalesOrder, string>({
         get orderId() { return orderId; },
         api: salesOrderAPI,
         listPath: '/customer/sales-order',
+        get backUrl() { return backUrl; },
         statusMap: SALES_STATUS_MAP,
         statusTransitions: SALES_STATUS_TRANSITIONS,
     });
@@ -325,7 +328,7 @@
                 canEdit={['draft', 'pending', 'confirmed', 'approved', 'partial'].includes(order.status)}
                 canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
                 labels={{
-                    backToList: '← 返回列表',
+                    backToList: '← 返回',
                     copyOrder: '复制订单',
                     edit: '编辑',
                     delete: '删除',

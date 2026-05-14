@@ -35,7 +35,7 @@
     });
 </script>
 
-<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4">
+<div class="bg-white rounded-xl rounded-b-none shadow-sm border border-gray-200 border-b-0 overflow-hidden">
     <div class="p-6">
         <div class="flex flex-col sm:flex-row gap-5">
             <!-- 图片：移动端 -->

@@ -129,7 +129,7 @@
         viewAllHref={`/customer/sales-order?customer_id=${partnerDetail.partner?.id}`}
         getStatusLabel={getStatusLabel}
         getStatusClass={getOrderStatusClass}
-        onRowClick={(id) => goto(`/customer/sales-order/${id}`)}
+        onRowClick={(id) => goto(`/customer/sales-order/${id}?from=/customer/${data.customer.id}`)}
     />
 
     <QuotationsSection

@@ -28,7 +28,7 @@
 </script>
 
 {#if description}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-4">
+    <div class="bg-white rounded-xl rounded-t-none shadow-sm border border-gray-200 overflow-hidden mb-4">
         {#if isDescriptionCollapsible}
             <div
                 class="px-6 py-4 cursor-pointer select-text"

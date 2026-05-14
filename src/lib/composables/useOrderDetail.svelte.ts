@@ -89,6 +89,7 @@ export interface UseOrderDetailOptions<T, S> {
         changeStatus: (id: number, status: S) => Promise<T>;
     };
     listPath: string;
+    backUrl?: string;
     statusMap: Record<string, StatusConfig>;
     statusTransitions: Record<string, StatusTransition[]>;
 }
@@ -150,7 +151,7 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
     }
 
     function goBack() {
-        goto(options.listPath);
+        goto(options.backUrl ?? options.listPath);
     }
 
     function getAvailableTransitions(): StatusTransition[] {
