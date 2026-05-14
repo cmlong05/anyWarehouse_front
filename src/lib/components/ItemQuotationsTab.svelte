@@ -148,10 +148,10 @@
                             </tr>
                             {#if group.expanded}
                                 {#each group.quotations as quotation}
-                                    <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'bg-white hover:bg-gray-50'}">
+                                    <tr class="cursor-pointer {isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'bg-white hover:bg-gray-50'}" onclick={() => window.location.href = `/supplier/quotation/${quotation.id}`}>
                                         <td class="px-4 py-3 border-l-[3px] {isBestPriceQuotation(quotation) ? 'border-green-300' : 'border-gray-200'}"></td>
                                         <td class="px-4 py-3 pl-12">
-                                            <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
+                                            <a href="/supplier/{quotation.supplier}" onclick={(e) => e.stopPropagation()} class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                                 {quotation.supplier_name}
                                             </a>
                                         </td>
@@ -175,10 +175,10 @@
                             {/if}
                         {/each}
                         {#each independentQuotations as quotation}
-                            <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}">
+                            <tr class="cursor-pointer {isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}" onclick={() => window.location.href = `/supplier/quotation/${quotation.id}`}>
                                 <td class="px-4 py-3"></td>
                                 <td class="px-4 py-3">
-                                    <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
+                                    <a href="/supplier/{quotation.supplier}" onclick={(e) => e.stopPropagation()} class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                         {quotation.supplier_name}
                                     </a>
                                 </td>
@@ -201,9 +201,9 @@
                         {/each}
                     {:else}
                         {#each quotations as quotation}
-                            <tr class="{isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}">
+                            <tr class="cursor-pointer {isBestPriceQuotation(quotation) ? 'bg-green-50/70 text-green-700 hover:bg-green-100/70' : 'hover:bg-gray-50'}" onclick={() => window.location.href = `/supplier/quotation/${quotation.id}`}>
                                 <td class="px-4 py-3">
-                                    <a href="/supplier/{quotation.supplier}" class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
+                                    <a href="/supplier/{quotation.supplier}" onclick={(e) => e.stopPropagation()} class="font-medium hover:underline {isBestPriceQuotation(quotation) ? 'text-green-700 hover:text-green-800' : 'text-blue-600'}">
                                         {quotation.supplier_name}
                                     </a>
                                 </td>
