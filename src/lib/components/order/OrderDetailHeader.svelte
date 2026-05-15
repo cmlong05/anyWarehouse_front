@@ -57,15 +57,15 @@
 </script>
 
 <div class="mb-4 border-b border-slate-200 pb-4">
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div class="flex min-w-0 flex-col gap-2">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="flex min-w-0 flex-1 flex-col gap-2">
             <div class="flex items-center gap-3">
                 <button
                     type="button"
                     class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
                     onclick={onBack}
                 >
-                    <span aria-hidden="true" class="mr-1">←</span>{l.backToList}
+                    {l.backToList}
                 </button>
                 <h1 class="m-0 text-2xl font-bold text-slate-900">{title}</h1>
             </div>
@@ -79,9 +79,9 @@
             {/if}
         </div>
 
-        <div class="flex flex-col items-start gap-2 lg:items-end">
+        <div class="flex flex-shrink-0 flex-col items-end gap-2">
             <!-- 正向操作按钮 -->
-            <div class="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+            <div class="flex flex-wrap items-center justify-end gap-2">
                 {#each forwardTransitions as transition}
                     <button
                         class="inline-flex h-8 items-center rounded-md border px-2 text-xs font-semibold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 {transition.value === 'cancelled' ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100'}"

@@ -11,7 +11,6 @@
     import { DataTable, Pagination, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Alert from '$lib/components/Alert.svelte';
-    import Plus from 'lucide-svelte/icons/plus';
 
     let shipments = $state<Shipment[]>([]);
     let loading = $state(true);
@@ -108,10 +107,6 @@
         loadShipments();
     }
 
-    function goToAdd() {
-        goto('/customer/shipment/add');
-    }
-
     function goToDetail(id: number) {
         goto(`/customer/shipment/${id}`);
     }
@@ -151,45 +146,35 @@
     <title>发货管理 - AnyWarehouse</title>
 </svelte:head>
 
-<PageContainer>
-    <PageHeader title="发货管理">
-        {#snippet actions()}
-            <button 
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
-                onclick={goToAdd}
-            >
-                <Plus class="h-5 w-5 flex-shrink-0" />
-                <span>新建发货批次</span>
-            </button>
-        {/snippet}
-    </PageHeader>
+<PageContainer py="sm">
+    <PageHeader title="发货管理" mb="none" />
 
     {#if error}
         <Alert error={{ message: error }} onDismiss={() => error = ''} />
     {/if}
 
     <!-- 筛选器 -->
-    <FilterPanel onReset={clearFilters} onApply={applyFilters}>
+    <FilterPanel onReset={clearFilters}>
         <FormInput
             label="搜索"
             name="search"
             value={filters.search || ''}
             placeholder="发货批次号/收货人"
-            onchange={(v) => filters.search = v}
+            onchange={(v) => { filters.search = v; applyFilters(); }}
         />
         <FormSelect
             label="状态"
             name="status"
             options={statusOptions}
             value={filters.status || ''}
-            onchange={(v) => filters.status = v}
+            onchange={(v) => { filters.status = v; applyFilters(); }}
         />
         <FormSelect
             label="排序"
             name="ordering"
             options={orderingOptions}
             value={filters.ordering || ''}
-            onchange={(v) => filters.ordering = v}
+            onchange={(v) => { filters.ordering = v; applyFilters(); }}
         />
     </FilterPanel>
 

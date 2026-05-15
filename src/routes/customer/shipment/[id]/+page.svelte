@@ -205,16 +205,12 @@
 
     // 按钮变体样式
     function getButtonClass(variant: string): string {
-        const base = 'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed';
+        const base = 'inline-flex h-8 items-center rounded-md border px-2 text-xs font-semibold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50';
         switch (variant) {
-            case 'primary':
-                return `${base} bg-blue-600 text-white hover:bg-blue-700`;
-            case 'outline':
-                return `${base} bg-white border border-gray-300 text-gray-700 hover:bg-gray-50`;
             case 'error':
-                return `${base} bg-red-600 text-white hover:bg-red-700`;
+                return `${base} border-red-300 bg-red-50 text-red-700 hover:bg-red-100`;
             default:
-                return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200`;
+                return `${base} border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100`;
         }
     }
 
@@ -346,66 +342,91 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gray-100 p-4 print:bg-white print:p-0">
-    <!-- 工具栏 -->
-        <div class="max-w-5xl mx-auto mb-4 flex justify-between items-center print:hidden">
-            <div class="flex gap-2">
-                <button class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600" onclick={shipmentDetail.goBack}>
-                    ← 返回
-                </button>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" onclick={printShipment}>
-                    🖨️ 打印
-                </button>
-                <button
-                    class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    onclick={downloadSkuReference}
-                    disabled={skuReferenceDownloading}
-                >
-                    {#if skuReferenceDownloading}
-                        生成中...
-                    {:else}
-                        🗂️ SKU 对照表
+    <div class="max-w-5xl mx-auto mb-4 border-b border-slate-200 pb-4 print:hidden">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <div class="flex items-center gap-3">
+                    <button
+                        type="button"
+                        class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                        onclick={shipmentDetail.goBack}
+                    >
+                        ← 返回列表
+                    </button>
+                    <h1 class="m-0 text-2xl font-bold text-slate-900">发货详情</h1>
+                </div>
+            </div>
+            <div class="flex flex-shrink-0 flex-col items-end gap-2">
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    {#if shipmentDetail.shipment}
+                        {#each getAvailableActions() as act}
+                            <button
+                                type="button"
+                                class={getButtonClass(act.variant)}
+                                onclick={() => handleAction(act.action, act.confirmMessage)}
+                                disabled={shipmentDetail.actionLoading}
+                                title={act.confirmMessage}
+                            >
+                                {act.label}
+                            </button>
+                        {/each}
+                        <button
+                            type="button"
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                            onclick={shipmentDetail.goToEdit}
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            编辑
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                            onclick={printShipment}
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4H9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z" />
+                            </svg>
+                            打印
+                        </button>
+                        <button
+                            type="button"
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            onclick={downloadSkuReference}
+                            disabled={skuReferenceDownloading}
+                        >
+                            {#if skuReferenceDownloading}
+                                <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                生成中...
+                            {:else}
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18v13H3z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l2-4h14l2 4" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h5" />
+                                </svg>
+                                SKU表
+                            {/if}
+                        </button>
+                        {#if ['draft', 'cancelled'].includes(shipmentDetail.shipment.status)}
+                            <button
+                                type="button"
+                                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                                onclick={() => shipmentDetail.showDeleteModal = true}
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7v12m6-12v12M5 7l1-2h12l1 2M9 5h6" />
+                                </svg>
+                                删除
+                            </button>
+                        {/if}
                     {/if}
-                </button>
+                </div>
             </div>
         </div>
-
-    <!-- 头部 -->
-    <div class="max-w-5xl mx-auto flex items-center justify-between mb-6 print:hidden">
-        <h1 class="text-2xl font-bold text-gray-900">发货详情</h1>
-        
-        {#if shipmentDetail.shipment}
-            <div class="flex gap-2 flex-wrap">
-                {#each getAvailableActions() as act}
-                    <button 
-                        class={getButtonClass(act.variant)}
-                        onclick={() => handleAction(act.action, act.confirmMessage)}
-                        disabled={shipmentDetail.actionLoading}
-                        title={act.confirmMessage}
-                    >
-                        {act.label}
-                    </button>
-                {/each}
-                
-                <button 
-                    class="flex items-center p-2 text-gray-500 hover:text-blue-600 transition-colors"
-                    onclick={shipmentDetail.goToEdit}
-                    aria-label="编辑"
-                    title="编辑"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                </button>
-                {#if ['draft', 'cancelled'].includes(shipmentDetail.shipment.status)}
-                    <button 
-                        class="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-red-300 text-red-600 hover:bg-red-50 transition-all duration-200"
-                        onclick={() => shipmentDetail.showDeleteModal = true}
-                    >
-                        删除
-                    </button>
-                {/if}
-            </div>
-        {/if}
     </div>
 
     {#if shipmentDetail.error}

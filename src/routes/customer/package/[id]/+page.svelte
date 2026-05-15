@@ -305,32 +305,69 @@
 <PrintPackingList {pkg} />
 
 <div class="container mx-auto px-4 py-6 no-print">
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-            <button class="btn btn-ghost btn-sm" onclick={goBack} aria-label="返回">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-            </button>
-            <h1 class="text-2xl font-bold">包裹详情</h1>
-        </div>
-        <div class="flex gap-2">
-            <button
-                class="btn {pkg?.status === 'sealed' ? 'btn-warning' : 'btn-success'} btn-outline"
-                onclick={toggleSeal}
-                disabled={sealing}
-            >
-                {#if sealing}
-                    <span class="loading loading-spinner loading-xs"></span>
-                {:else if pkg?.status === 'sealed'}
-                    开箱
-                {:else}
-                    封箱
-                {/if}
-            </button>
-            <button class="btn btn-outline" onclick={goToEdit}>编辑</button>
-            <button class="btn btn-secondary btn-outline" onclick={printPackingList}>打印装箱单</button>
-            <button class="btn btn-error btn-outline" onclick={confirmDelete}>删除</button>
+    <!-- 顶部头部，与销售订单样式一致 -->
+    <div class="mb-4 border-b border-slate-200 pb-4">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <div class="flex items-center gap-3">
+                    <button
+                        class="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
+                        onclick={goBack}
+                        aria-label="返回"
+                    >
+                        <span aria-hidden="true" class="mr-1">←</span>返回
+                    </button>
+                    <h1 class="m-0 text-2xl font-bold text-slate-900">包裹详情</h1>
+                </div>
+            </div>
+            <div class="flex flex-shrink-0 flex-col items-end gap-2">
+                <!-- 主要操作按钮 -->
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                        class="inline-flex h-8 items-center rounded-md border px-2 text-xs font-semibold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 {pkg?.status === 'sealed' ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100' : 'border-green-300 bg-green-50 text-green-700 hover:bg-green-100'}"
+                        onclick={toggleSeal}
+                        disabled={sealing}
+                    >
+                        {#if sealing}
+                            <svg class="animate-spin h-3.5 w-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                        {:else if pkg?.status === 'sealed'}
+                            开箱
+                        {:else}
+                            封箱
+                        {/if}
+                    </button>
+                    <button
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                        onclick={goToEdit}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
+                        </svg>
+                        编辑
+                    </button>
+                    <button
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                        onclick={printPackingList}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4H9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z" />
+                        </svg>
+                        打印装箱单
+                    </button>
+                    <button
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                        onclick={confirmDelete}
+                    >
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 7h12M9 7v12m6-12v12M5 7l1-2h12l1 2M9 5h6" />
+                        </svg>
+                        删除
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
