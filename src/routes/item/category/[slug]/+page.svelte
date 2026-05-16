@@ -162,12 +162,15 @@
                                 onchange={toggleSelectAll}
                                 class="w-4 h-4 accent-gray-800 opacity-40 cursor-pointer"
                             />
-                            {#if selectedItems.size > 0}
-                                <span class="text-sm text-blue-600 font-medium">已选 {selectedItems.size} 个</span>
-                            {/if}
+                            <div class="flex-1 min-w-0">
+                                {#if selectedItems.size > 0}
+                                    <span class="text-sm text-blue-600 font-medium">已选 {selectedItems.size} 个</span>
+                                {/if}
+                            </div>
+                            <span class="w-20 text-right text-xs text-gray-500 font-medium">库存数量</span>
                         </div>
                     {/if}
-                    {#each data.category_details.items as { id, SKU, name }}
+                    {#each data.category_details.items as { id, SKU, name, total_storage }}
                         <div class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group">
                             <input 
                                 type="checkbox" 
@@ -175,10 +178,11 @@
                                 onchange={(e) => toggleSelection(id, e)}
                                 class="w-4 h-4 accent-gray-800 opacity-40 cursor-pointer"
                             />
-                            <a href="/item/{id}" class="flex-1 flex items-center gap-4 group-hover:text-blue-600">
+                            <a href="/item/{id}" class="flex-1 flex items-center gap-4 group-hover:text-blue-600 min-w-0">
                                 <span class="font-mono text-sm font-medium text-purple-600">{SKU}</span>
-                                <span class="text-gray-700 text-sm">{name}</span>
+                                <span class="text-gray-700 text-sm truncate">{name}</span>
                             </a>
+                            <div class="w-20 text-right text-sm text-gray-600 font-mono">{total_storage ?? 0}</div>
                         </div>
                     {:else}
                         <div class="px-4 py-8 text-center text-gray-400">

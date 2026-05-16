@@ -130,6 +130,7 @@ export interface Item extends BaseItem  {
     date_added: string;
     barcode: string | null;
     category: number[];
+    total_storage?: number;
     is_variant_template?: boolean;
     variant_attributes_config?: Record<string, string[]> | null;
     inventory_checked_at?: string | null;
