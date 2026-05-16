@@ -320,6 +320,7 @@ export interface QuotationBrief {
     min_quantity?: number;
     lead_time_days?: number | null;
     is_preferred: boolean;
+    is_unique_supplier?: boolean;
     partner_sku?: string;
     note?: string;
     // 变体相关字段
@@ -693,6 +694,7 @@ export interface CustomerQuotationBrief {
     price: string;
     currency: string;
     is_preferred: boolean;
+    is_unique_supplier?: boolean;
     partner_sku?: string;
     note?: string;
     min_quantity?: number;
