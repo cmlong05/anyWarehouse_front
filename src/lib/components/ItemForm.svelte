@@ -13,6 +13,7 @@
             SKU: string;
             name: string;
             name_en?: string;
+            item_status?: 'normal' | 'clearance' | 'discontinued';
             SKU_zite?: string;
             SKU_A?: string;
             description?: string;
@@ -36,7 +37,7 @@
 
     let {
         mode,
-        initialData = { SKU: '', name: '', SKU_zite: '', SKU_A: '', description: '', image: '', weight: '', p_volume: 0, s_volume: 0, b_Price: '', currency: '', in_fee: null, barcode: '', category: [], is_variant_template: false },
+        initialData = { SKU: '', name: '', name_en: '', item_status: 'normal', SKU_zite: '', SKU_A: '', description: '', image: '', weight: '', p_volume: 0, s_volume: 0, b_Price: '', currency: '', in_fee: null, barcode: '', category: [], is_variant_template: false },
         categories = [],
         onCancel,
         onShowDeleteModal
@@ -48,6 +49,7 @@
         SKU: '',
         name: '',
         name_en: '',
+        item_status: 'normal' as 'normal' | 'clearance' | 'discontinued',
         SKU_zite: '',
         SKU_A: '',
         description: '',
@@ -74,6 +76,7 @@
             formData.SKU = initialData?.SKU || '';
             formData.name = initialData?.name || '';
             formData.name_en = initialData?.name_en || '';
+            formData.item_status = initialData?.item_status || 'normal';
             formData.SKU_zite = initialData?.SKU_zite || '';
             formData.SKU_A = initialData?.SKU_A || '';
             formData.description = initialData?.description || '';
@@ -164,7 +167,7 @@
             submitData.set('name', formData.name);
             
             // 可选字符串字段：空字符串不提交
-            const optionalStringFields = ['SKU_zite', 'SKU_A', 'description', 'barcode', 'currency', 'name_en'] as const;
+            const optionalStringFields = ['SKU_zite', 'SKU_A', 'description', 'barcode', 'currency', 'name_en', 'item_status'] as const;
             for (const field of optionalStringFields) {
                 const value = formData[field];
                 if (value && String(value).trim() !== '') {
@@ -228,6 +231,18 @@
             <FormInput label="SKU" name="SKU" required value={formData.SKU} placeholder="商品唯一标识码" maxlength={50} oninput={(v) => formData.SKU = v} />
             <FormInput label="商品名称" name="name" required value={formData.name} placeholder="商品名称（中文）" maxlength={200} oninput={(v) => formData.name = v} />
             <FormInput label="商品名称 (英文)" name="name_en" value={formData.name_en || ''} placeholder="Product Name (English), 可选" maxlength={200} oninput={(v) => formData.name_en = v} />
+            <div class="mb-2">
+                <label for="item_status" class="block text-sm font-medium text-gray-700 mb-1">商品状态</label>
+                <select
+                    id="item_status"
+                    bind:value={formData.item_status}
+                    class="w-full px-3 py-2 border border-gray-300 rounded bg-white focus:border-blue-400 focus:outline-none"
+                >
+                    <option value="normal">正常</option>
+                    <option value="clearance">清仓</option>
+                    <option value="discontinued">停售</option>
+                </select>
+            </div>
             
             <!-- 变体母版选项 -->
             <div class="mt-3 pt-3 border-t border-gray-200">

@@ -80,6 +80,7 @@
             SKU: data.itemData.item.SKU,
             name: data.itemData.item.name,
             name_en: data.itemData.item.name_en,
+            item_status: data.itemData.item.item_status,
             SKU_zite: data.itemData.item.SKU_zite,
             SKU_A: data.itemData.item.SKU_A,
             description: data.itemData.item.description,

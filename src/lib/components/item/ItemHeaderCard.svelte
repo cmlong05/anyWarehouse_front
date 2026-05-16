@@ -16,6 +16,17 @@
 
     const square = useImageSquare();
     let imageLoadFailed = $state(false);
+    const skuBadgeClass = $derived.by(() => {
+        switch (item.item_status) {
+            case 'clearance':
+                return 'bg-amber-100 text-amber-800';
+            case 'discontinued':
+                return 'bg-red-100 text-red-800';
+            case 'normal':
+            default:
+                return 'bg-green-100 text-green-800';
+        }
+    });
     const visiblePriceCardCount = $derived.by(() => {
         let count = 0;
         if (displayPrice.local) count += 1;
@@ -97,7 +108,7 @@
                             <p class="text-lg text-gray-500 mb-2">{item.name_en}</p>
                         {/if}
                         <div class="flex items-center gap-3 text-sm flex-wrap">
-                            <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-full font-mono">{item.SKU}</span>
+                            <span class={`px-2.5 py-0.5 rounded-full font-mono ${skuBadgeClass}`}>{item.SKU}</span>
 
                             {#if isVariantTemplate}
                                 <span class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">

@@ -38,6 +38,7 @@ export const actions = {
         const itemData: Record<string, unknown> = {
             SKU: formData.get('SKU'),
             name: formData.get('name'),
+            item_status: formData.get('item_status') || 'normal',
             SKU_zite: formData.get('SKU_zite') || '',
             SKU_A: formData.get('SKU_A') || '',
             description: formData.get('description') || '',

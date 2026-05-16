@@ -120,6 +120,7 @@ export interface Item extends BaseItem  {
     SKU_A: string;
     external_links?: ItemExternalLink[];
     description: string;
+    item_status?: 'normal' | 'clearance' | 'discontinued';
     image: string;
     weight: string;
     p_volume: number;
