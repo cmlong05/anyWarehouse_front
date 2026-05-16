@@ -16,6 +16,17 @@
 
     const square = useImageSquare();
     let imageLoadFailed = $state(false);
+    const statusLabel = $derived.by(() => {
+        switch (item.item_status) {
+            case 'clearance':
+                return '清仓';
+            case 'discontinued':
+                return '停售';
+            case 'normal':
+            default:
+                return '正常';
+        }
+    });
     const skuBadgeClass = $derived.by(() => {
         switch (item.item_status) {
             case 'clearance':
@@ -108,7 +119,12 @@
                             <p class="text-lg text-gray-500 mb-2">{item.name_en}</p>
                         {/if}
                         <div class="flex items-center gap-3 text-sm flex-wrap">
-                            <span class={`px-2.5 py-0.5 rounded-full font-mono ${skuBadgeClass}`}>{item.SKU}</span>
+                            <span
+                                title={`商品状态：${statusLabel}`}
+                                class={`px-2.5 py-0.5 rounded-full font-mono cursor-help ${skuBadgeClass}`}
+                            >
+                                {item.SKU}
+                            </span>
 
                             {#if isVariantTemplate}
                                 <span class="px-2.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">
