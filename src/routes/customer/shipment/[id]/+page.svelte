@@ -250,6 +250,8 @@
 
     // 变体相关
     import { isVariantChild, getVariantParentId, getVariantAttributes } from '$lib/utils/variant';
+    import SortableHeader from '$lib/components/ui/SortableHeader.svelte';
+    import { toggleSortKey } from '$lib/utils/sort';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
 
     // 按母版分组物品
@@ -335,6 +337,46 @@
         if (currentStock === null) return false;
         return pending > 0 && currentStock < pending;
     }
+
+    type PlanSortKey = 'sku' | 'product_name' | 'currentStock' | 'quantity' | 'quantity_packed' | 'pending';
+    let planSortKey = $state<PlanSortKey>('sku');
+    let planSortDir = $state<'asc' | 'desc'>('asc');
+
+    function togglePlanSort(key: PlanSortKey) {
+        const next = toggleSortKey(planSortKey, planSortDir, key);
+        planSortKey = next.sortKey as PlanSortKey;
+        planSortDir = next.sortDirection;
+    }
+
+    const sortedSections = $derived.by(() => {
+        const items = shipmentDetail.shipment?.items;
+        if (!items) return [];
+        const sorted = [...items].sort((a, b) => {
+            let va: number | string;
+            let vb: number | string;
+            if (planSortKey === 'currentStock') {
+                va = a.item_detail?.total_storage ?? -1;
+                vb = b.item_detail?.total_storage ?? -1;
+            } else if (planSortKey === 'quantity') {
+                va = safeParseFloat(a.quantity);
+                vb = safeParseFloat(b.quantity);
+            } else if (planSortKey === 'quantity_packed') {
+                va = safeParseFloat(a.quantity_packed || 0);
+                vb = safeParseFloat(b.quantity_packed || 0);
+            } else if (planSortKey === 'pending') {
+                va = safeParseFloat(a.quantity) - safeParseFloat(a.quantity_packed || 0);
+                vb = safeParseFloat(b.quantity) - safeParseFloat(b.quantity_packed || 0);
+            } else {
+                va = String((a as unknown as Record<string, unknown>)[planSortKey] ?? '');
+                vb = String((b as unknown as Record<string, unknown>)[planSortKey] ?? '');
+            }
+            if (typeof va === 'number' && typeof vb === 'number') {
+                return planSortDir === 'asc' ? va - vb : vb - va;
+            }
+            return String(va).localeCompare(String(vb), 'zh-CN', { numeric: true, sensitivity: 'base' }) * (planSortDir === 'asc' ? 1 : -1);
+        });
+        return getGroupedSections(sorted);
+    });
 </script>
 
 <svelte:head>
@@ -569,23 +611,22 @@
                     <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ {lineSyncMessage}</div>
                 {/if}
                 {#if shipment.items?.length}
-                    {@const sections = getGroupedSections(shipment.items)}
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm border-collapse">
                             <thead>
                                 <tr class="bg-gray-50">
-                                    <th class="text-left px-3 py-2.5 font-medium text-gray-700">SKU</th>
-                                    <th class="text-left px-3 py-2.5 font-medium text-gray-700">商品名称</th>
-                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">现有库存</th>
-                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">计划数量</th>
-                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">已打包</th>
-                                    <th class="text-right px-3 py-2.5 font-medium text-gray-700 w-24">待打包</th>
-                                    <th class="text-center px-3 py-2.5 font-medium text-gray-700 w-20">状态</th>
-                                    <th class="text-center px-3 py-2.5 font-medium text-gray-700 w-24">操作</th>
+                                    <SortableHeader title="SKU" columnKey="sku" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} />
+                                    <SortableHeader title="商品名称" columnKey="product_name" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} />
+                                    <SortableHeader title="现有库存" columnKey="currentStock" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} align="right" width="6rem" />
+                                    <SortableHeader title="计划数量" columnKey="quantity" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} align="right" width="6rem" />
+                                    <SortableHeader title="已打包" columnKey="quantity_packed" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} align="right" width="6rem" />
+                                    <SortableHeader title="待打包" columnKey="pending" sortable sortKey={planSortKey} sortDirection={planSortDir} onSort={(k) => togglePlanSort(k as PlanSortKey)} align="right" width="6rem" />
+                                    <th class="p-3 text-center font-semibold text-gray-700 w-20">状态</th>
+                                    <th class="p-3 text-center font-semibold text-gray-700 w-24">操作</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                {#each sections as section}
+                                {#each sortedSections as section}
                                     {@const item = section.item}
                                     {@const qty = safeParseFloat(item.quantity)}
                                     {@const packed = safeParseFloat(item.quantity_packed || 0)}

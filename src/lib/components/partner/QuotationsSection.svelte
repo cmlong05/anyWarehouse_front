@@ -1,6 +1,8 @@
 <script lang="ts">
     import Loading from '$lib/components/Loading.svelte';
     import QuotationRow from './QuotationRow.svelte';
+    import SortableHeader from '$lib/components/ui/SortableHeader.svelte';
+    import { toggleSortKey } from '$lib/utils/sort';
     import type { QuotationBrief, CustomerQuotationBrief } from '$lib';
 
     type AnyQuotationBrief = QuotationBrief | CustomerQuotationBrief;
@@ -38,6 +40,40 @@
     let groupedQuotations = $state<GroupedQuotation[]>([]);
     let independentQuotations = $state<AnyQuotationBrief[]>([]);
     let hasVariants = $state(false);
+
+    type QuotationSortKey = 'item_sku' | 'item_name' | 'partner_sku' | 'item_total_storage' | 'price' | 'is_preferred';
+    let sortKey = $state<QuotationSortKey>('item_sku');
+    let sortDir = $state<'asc' | 'desc'>('asc');
+
+    function toggleSort(key: QuotationSortKey) {
+        const next = toggleSortKey(sortKey, sortDir, key);
+        sortKey = next.sortKey as QuotationSortKey;
+        sortDir = next.sortDirection;
+    }
+
+    const sortedQuotations = $derived.by(() => {
+        return [...quotations].sort((a, b) => {
+            let va: number | string;
+            let vb: number | string;
+            if (sortKey === 'item_total_storage') {
+                va = a.item_total_storage ?? -1;
+                vb = b.item_total_storage ?? -1;
+            } else if (sortKey === 'price') {
+                va = parseFloat(a.price || '0');
+                vb = parseFloat(b.price || '0');
+            } else if (sortKey === 'is_preferred') {
+                va = a.is_preferred ? 1 : 0;
+                vb = b.is_preferred ? 1 : 0;
+            } else {
+                va = String((a as unknown as Record<string, unknown>)[sortKey] ?? '');
+                vb = String((b as unknown as Record<string, unknown>)[sortKey] ?? '');
+            }
+            if (typeof va === 'number' && typeof vb === 'number') {
+                return sortDir === 'asc' ? va - vb : vb - va;
+            }
+            return String(va).localeCompare(String(vb), 'zh-CN', { numeric: true, sensitivity: 'base' }) * (sortDir === 'asc' ? 1 : -1);
+        });
+    });
     
     // 将报价按母版分组
     function groupQuotationsByParent(quotations: AnyQuotationBrief[]) {
@@ -94,8 +130,8 @@
     }
     
     $effect(() => {
-        if (quotations.length > 0) {
-            groupQuotationsByParent(quotations);
+        if (sortedQuotations.length > 0) {
+            groupQuotationsByParent(sortedQuotations);
         }
     });
 </script>
@@ -133,13 +169,13 @@
                         {#if hasVariants}
                             <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200 w-8"></th>
                         {/if}
-                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">SKU</th>
-                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">物品名称</th>
-                        <th class="px-2 py-2 text-left font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">合作方SKU</th>
-                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">库存数量</th>
-                        <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">单价{currency ? `（${currency}）` : ''}</th>
+                        <SortableHeader title="SKU" columnKey="item_sku" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
+                        <SortableHeader title="物品名称" columnKey="item_name" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
+                        <SortableHeader title="合作方SKU" columnKey="partner_sku" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
+                        <SortableHeader title="库存数量" columnKey="item_total_storage" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="right" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
+                        <SortableHeader title={"单价" + (currency ? `（${currency}）` : '')} columnKey="price" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="right" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
-                        <th class="px-2 py-2 text-center font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">状态</th>
+                        <SortableHeader title="状态" columnKey="is_preferred" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="center" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                     </tr>
                 </thead>
                 <tbody>
@@ -195,7 +231,7 @@
                         {/each}
                     {:else}
                         <!-- 无变体时直接平铺显示 -->
-                        {#each quotations as quotation}
+                        {#each sortedQuotations as quotation}
                             <QuotationRow
                                 quotation={quotation}
                                 currencySymbol={currencySymbol}

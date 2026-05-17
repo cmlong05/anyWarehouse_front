@@ -1,6 +1,10 @@
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
+    import SortableHeader from '$lib/components/ui/SortableHeader.svelte';
+    import { toggleSortKey } from '$lib/utils/sort';
     import type { ShipmentPlanItem } from '$lib/composables/useShipmentForm.svelte';
+
+    type SortKey = 'sku' | 'itemName' | 'currentStock' | 'quantityPendingReal';
 
     interface Props {
         items: ShipmentPlanItem[];
@@ -10,6 +14,38 @@
     }
     
     let { items, onRemove, onClear, onFillAll }: Props = $props();
+
+    let sortKey = $state<SortKey>('sku');
+    let sortDirection = $state<'asc' | 'desc'>('asc');
+
+    function toggleSort(key: SortKey) {
+        const next = toggleSortKey(sortKey, sortDirection, key);
+        sortKey = next.sortKey as SortKey;
+        sortDirection = next.sortDirection;
+    }
+
+    const sortedItems = $derived.by(() => {
+        const sorted = [...items];
+        sorted.sort((a, b) => {
+            let valueA: number | string;
+            let valueB: number | string;
+            if (sortKey === 'currentStock') {
+                valueA = a.currentStock ?? -1;
+                valueB = b.currentStock ?? -1;
+            } else if (sortKey === 'quantityPendingReal') {
+                valueA = a.quantityPendingReal;
+                valueB = b.quantityPendingReal;
+            } else {
+                valueA = a[sortKey] as string;
+                valueB = b[sortKey] as string;
+            }
+            if (typeof valueA === 'number' && typeof valueB === 'number') {
+                return sortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+            }
+            return String(valueA).localeCompare(String(valueB), 'zh-CN', { numeric: true, sensitivity: 'base' }) * (sortDirection === 'asc' ? 1 : -1);
+        });
+        return sorted;
+    });
 
     function formatStock(stock: number | null): string {
         return stock !== null ? stock.toFixed(0) : '-';
@@ -43,16 +79,16 @@
         <table class="w-full text-sm border-collapse">
             <thead>
                 <tr class="bg-gray-50">
-                    <th class="px-3 py-2 text-left font-semibold text-gray-700">SKU</th>
-                    <th class="px-3 py-2 text-left font-semibold text-gray-700">商品名称</th>
-                    <th class="px-3 py-2 text-right font-semibold text-gray-700">库存</th>
-                    <th class="px-3 py-2 text-right font-semibold text-gray-700">待建发货单</th>
+                    <SortableHeader title="SKU" columnKey="sku" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} headerClass="px-3 py-2" />
+                    <SortableHeader title="商品名称" columnKey="itemName" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} headerClass="px-3 py-2" />
+                    <SortableHeader title="库存" columnKey="currentStock" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
+                    <SortableHeader title="待建发货单" columnKey="quantityPendingReal" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
                     <th class="px-3 py-2 text-right font-semibold text-blue-700">本次计划</th>
                     <th class="px-3 py-2 text-center font-semibold text-gray-700">操作</th>
                 </tr>
             </thead>
             <tbody>
-                {#each items as item}
+                {#each sortedItems as item}
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-3 align-top font-mono text-xs text-gray-500">{item.sku}</td>
                         <td class="px-3 py-3 align-top text-gray-900">{item.itemName}</td>
