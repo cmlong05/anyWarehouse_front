@@ -92,7 +92,8 @@
             currency: data.itemData.item.currency,
             in_fee: data.itemData.item.in_fee,
             barcode: data.itemData.item.barcode,
-            category: data.itemData.item.category
+            category: data.itemData.item.category,
+            is_variant_template: data.itemData.item.is_variant_template
         }}
         categories={data.categories}
         onShowDeleteModal={() => showDeleteModal = true}

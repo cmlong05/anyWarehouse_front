@@ -193,10 +193,8 @@
                 submitData.append('category', String(categoryId));
             }
             
-            // 变体母版标记
-            if (formData.is_variant_template) {
-                submitData.set('is_variant_template', 'true');
-            }
+            // 变体母版标记（始终提交，否则取消勾选时后端无法感知变更）
+            submitData.set('is_variant_template', formData.is_variant_template ? 'true' : 'false');
             
             // 图片处理
             if (selectedFile) {
