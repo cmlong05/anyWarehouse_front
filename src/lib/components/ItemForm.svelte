@@ -28,6 +28,15 @@
             barcode?: string;
             category?: number[];
             is_variant_template?: boolean;
+            is_variant?: boolean;
+            parent_variant_info?: {
+                variant_id: number;
+                parent_item_id: number;
+                parent_sku: string;
+                parent_name: string;
+                sku_suffix: string;
+                attributes: { id: number; attribute_code: string; attribute_name: string; name: string; color_hex?: string | null }[];
+            } | null;
         };
         categories?: Category[];
         onCancel?: () => void;
@@ -99,6 +108,51 @@
     let selectedFile = $state<File | null>(null);
     let previewUrl = $state<string>('');
     let imageUrlInput = $state<string>('');
+
+    // 变体属性编辑
+    type AttrOption = { id: number; value: string; code: string; color_hex: string | null };
+    type AttrDef = { name: string; values: AttrOption[] };
+    let editingVariant = $state(false);
+    let availableAttrs = $state<Record<string, AttrDef>>({});
+    let selectedValues = $state<Record<string, number | null>>({});
+    let variantEditLoading = $state(false);
+    let variantEditError = $state<string | null>(null);
+
+    async function startEditVariant() {
+        const pvi = initialData?.parent_variant_info;
+        if (!pvi) return;
+        editingVariant = true;
+        variantEditError = null;
+        try {
+            const resp = await apiClient.get<{ variant_summary?: { attributes?: Record<string, AttrDef> } }>(`/product/item/${pvi.parent_item_id}/variants/`);
+            availableAttrs = resp.variant_summary?.attributes ?? {};
+            const selected: Record<string, number | null> = {};
+            for (const code of Object.keys(availableAttrs)) {
+                const current = pvi.attributes.find(a => a.attribute_code === code);
+                selected[code] = current?.id ?? null;
+            }
+            selectedValues = selected;
+        } catch {
+            variantEditError = '加载属性选项失败';
+        }
+    }
+
+    async function saveVariantEdit() {
+        const pvi = initialData?.parent_variant_info;
+        if (!pvi) return;
+        variantEditLoading = true;
+        variantEditError = null;
+        try {
+            const ids = Object.values(selectedValues).filter((v): v is number => v !== null);
+            await apiClient.put<unknown>(`/product/variants/${pvi.variant_id}/`, { attribute_value_ids: ids });
+            editingVariant = false;
+            window.location.reload();
+        } catch (e) {
+            variantEditError = getErrorMessage(e);
+        } finally {
+            variantEditLoading = false;
+        }
+    }
 
     // 修复：displayImageUrl 应该是值而不是函数
     const displayImageUrl = $derived((() => {
@@ -242,20 +296,91 @@
                 </select>
             </div>
             
-            <!-- 变体母版选项 -->
-            <div class="mt-3 pt-3 border-t border-gray-200">
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input 
-                        type="checkbox" 
-                        bind:checked={formData.is_variant_template}
-                        class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                    />
-                    <span class="text-sm font-medium text-gray-700">作为变体母版</span>
-                </label>
-                <p class="text-xs text-gray-500 mt-1 ml-6">
-                    标记为母版后，可为该商品创建多个变体（如不同颜色、尺寸）
-                </p>
-            </div>
+            <!-- 变体子项信息横幅 -->
+            {#if initialData?.is_variant && initialData.parent_variant_info}
+                {@const pvi = initialData.parent_variant_info}
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-sm">
+                        <!-- 标题行 -->
+                        <div class="flex items-center gap-1.5 text-gray-500 text-xs mb-1.5">
+                            <span>⬡</span>
+                            <span class="uppercase tracking-wide">变体子项</span>
+                        </div>
+                        <!-- 母版信息行 -->
+                        <div class="text-gray-700 mb-2">
+                            所属母版：
+                            <a href="/item/{pvi.parent_item_id}" class="font-mono font-medium text-gray-900 hover:underline">{pvi.parent_sku}</a>
+                            <span class="ml-1 text-gray-600">{pvi.parent_name}</span>
+                        </div>
+                        <!-- 当前属性行 + 编辑按钮 -->
+                        {#if !editingVariant}
+                            <div class="flex flex-wrap items-center gap-1.5 mb-1">
+                                {#each pvi.attributes as attr}
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-300 rounded-full text-xs text-gray-600">
+                                        {#if attr.color_hex}
+                                            <span class="inline-block w-2.5 h-2.5 rounded-full border border-gray-300" style="background:{attr.color_hex}"></span>
+                                        {/if}
+                                        {attr.attribute_name}：{attr.name}
+                                    </span>
+                                {/each}
+                                <button type="button" onclick={startEditVariant}
+                                    class="text-xs px-2 py-0.5 border border-gray-300 text-gray-500 rounded-full hover:bg-gray-100 transition-colors">
+                                    编辑…
+                                </button>
+                            </div>
+                        {/if}
+                        <!-- 编辑属性展开区 -->
+                        {#if editingVariant}
+                            <div class="mt-1 space-y-2 mb-2">
+                                {#each Object.entries(availableAttrs) as [code, attr]}
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs text-gray-500 w-14 shrink-0">{attr.name}</span>
+                                        <select
+                                            class="flex-1 text-sm border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-gray-400"
+                                            value={selectedValues[code] ?? ''}
+                                            onchange={(e) => { selectedValues[code] = parseInt((e.target as HTMLSelectElement).value) || null; }}
+                                        >
+                                            <option value="">-- 请选择 --</option>
+                                            {#each attr.values as v}
+                                                <option value={v.id}>{v.value}</option>
+                                            {/each}
+                                        </select>
+                                    </div>
+                                {/each}
+                                {#if variantEditError}
+                                    <p class="text-xs text-red-600">{variantEditError}</p>
+                                {/if}
+                                <div class="flex gap-2 pt-1">
+                                    <button type="button" onclick={saveVariantEdit} disabled={variantEditLoading}
+                                        class="text-xs px-3 py-1 bg-gray-700 text-white rounded-md hover:bg-gray-900 disabled:opacity-50">
+                                        {variantEditLoading ? '保存中…' : '保存'}
+                                    </button>
+                                    <button type="button" onclick={() => { editingVariant = false; }}
+                                        class="text-xs px-3 py-1 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-100">
+                                        取消
+                                    </button>
+                                </div>
+                            </div>
+                        {/if}
+
+                    </div>
+                </div>
+            {:else}
+                <!-- 变体母版选项（非变体子项才显示） -->
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            bind:checked={formData.is_variant_template}
+                            class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                        />
+                        <span class="text-sm font-medium text-gray-700">作为变体母版</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 ml-6">
+                        标记为母版后，可为该商品创建多个变体（如不同颜色、尺寸）
+                    </p>
+                </div>
+            {/if}
         </div>
 
         <!-- SKU扩展信息 -->

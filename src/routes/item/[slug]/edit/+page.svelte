@@ -93,7 +93,9 @@
             in_fee: data.itemData.item.in_fee,
             barcode: data.itemData.item.barcode,
             category: data.itemData.item.category,
-            is_variant_template: data.itemData.item.is_variant_template
+            is_variant_template: data.itemData.item.is_variant_template,
+            is_variant: data.itemData.item.is_variant,
+            parent_variant_info: data.itemData.item.parent_variant_info
         }}
         categories={data.categories}
         onShowDeleteModal={() => showDeleteModal = true}

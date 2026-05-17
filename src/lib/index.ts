@@ -135,6 +135,15 @@ export interface Item extends BaseItem  {
     is_variant_template?: boolean;
     variant_attributes_config?: Record<string, string[]> | null;
     inventory_checked_at?: string | null;
+    is_variant?: boolean;
+    parent_variant_info?: {
+        variant_id: number;
+        parent_item_id: number;
+        parent_sku: string;
+        parent_name: string;
+        sku_suffix: string;
+        attributes: { id: number; attribute_code: string; attribute_name: string; name: string; color_hex?: string | null }[];
+    } | null;
 }
 
 export interface ItemSet{
