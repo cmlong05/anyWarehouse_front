@@ -36,6 +36,13 @@
         {/if}
     </td>
     <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
+    <td class="px-2 py-1.5 text-right font-mono">
+        {#if (quotation.quantity_on_order ?? 0) > 0}
+            <span class="text-amber-600 font-medium">{quotation.quantity_on_order}</span>
+        {:else}
+            <span class="text-gray-300">-</span>
+        {/if}
+    </td>
     <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.item_total_storage ?? 0}</td>
     <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
     <td class="px-2 py-1.5 text-right" onclick={(e) => e.stopPropagation()}>

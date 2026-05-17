@@ -326,6 +326,7 @@ export interface QuotationBrief {
     item_name: string;
     item_name_en?: string;
     item_total_storage?: number;
+    quantity_on_order?: number;
     price: string;
     currency: string;
     min_quantity?: number;
@@ -702,6 +703,7 @@ export interface CustomerQuotationBrief {
     item_name: string;
     item_name_en?: string;
     item_total_storage?: number;
+    quantity_on_order?: number;
     price: string;
     currency: string;
     is_preferred: boolean;

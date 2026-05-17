@@ -41,7 +41,7 @@
     let independentQuotations = $state<AnyQuotationBrief[]>([]);
     let hasVariants = $state(false);
 
-    type QuotationSortKey = 'item_sku' | 'item_name' | 'partner_sku' | 'item_total_storage' | 'price' | 'is_preferred';
+    type QuotationSortKey = 'item_sku' | 'item_name' | 'partner_sku' | 'quantity_on_order' | 'item_total_storage' | 'price' | 'is_preferred';
     let sortKey = $state<QuotationSortKey>('item_sku');
     let sortDir = $state<'asc' | 'desc'>('asc');
 
@@ -55,7 +55,10 @@
         return [...quotations].sort((a, b) => {
             let va: number | string;
             let vb: number | string;
-            if (sortKey === 'item_total_storage') {
+            if (sortKey === 'quantity_on_order') {
+                va = a.quantity_on_order ?? 0;
+                vb = b.quantity_on_order ?? 0;
+            } else if (sortKey === 'item_total_storage') {
                 va = a.item_total_storage ?? -1;
                 vb = b.item_total_storage ?? -1;
             } else if (sortKey === 'price') {
@@ -172,6 +175,7 @@
                         <SortableHeader title="SKU" columnKey="item_sku" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <SortableHeader title="物品名称" columnKey="item_name" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <SortableHeader title="合作方SKU" columnKey="partner_sku" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
+                        <SortableHeader title="在途" columnKey="quantity_on_order" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="right" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <SortableHeader title="库存数量" columnKey="item_total_storage" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="right" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <SortableHeader title={"单价" + (currency ? `（${currency}）` : '')} columnKey="price" sortable sortKey={sortKey} sortDirection={sortDir} onSort={(k) => toggleSort(k as QuotationSortKey)} align="right" headerClass="px-2 py-2 bg-gray-50 border-b border-gray-200" />
                         <th class="px-2 py-2 text-right font-semibold text-gray-700 bg-gray-50 border-b border-gray-200">数量</th>
