@@ -223,7 +223,7 @@
         />
 
         <!-- 订单明细 -->
-        <OrderItemsTable items={order.items || []} type="purchase" currency={order.currency || 'CNY'} />
+        <OrderItemsTable items={order.items || []} type="purchase" showCurrentStock currency={order.currency || 'CNY'} />
 
         <!-- 收货进度 -->
         {#if order.progress_percentage !== undefined}

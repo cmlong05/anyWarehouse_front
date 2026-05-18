@@ -76,6 +76,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         items: OrderItem[];
         showPrices?: boolean;
         type: 'sales' | 'purchase';
+        showCurrentStock?: boolean;
         labels?: Labels;
         currency?: string;
         /**
@@ -88,7 +89,16 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         reverseSyncLoading?: Record<string, boolean>;
     }
     
-    let { items, showPrices = true, type, labels = {}, currency = 'CNY', onReverseSync, reverseSyncLoading = {} }: Props = $props();
+    let {
+        items,
+        showPrices = true,
+        type,
+        showCurrentStock = false,
+        labels = {},
+        currency = 'CNY',
+        onReverseSync,
+        reverseSyncLoading = {}
+    }: Props = $props();
     let sortKey = $state<SortKey>('line_number');
     let sortDirection = $state<'asc' | 'desc'>('asc');
 
@@ -295,7 +305,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
             { key: 'item_name', title: l.itemName, sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
         ];
 
-        if (type === 'sales') {
+        if (type === 'sales' || showCurrentStock) {
             cols.push({
                 key: 'currentStock',
                 title: l.currentStock,
