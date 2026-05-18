@@ -43,7 +43,14 @@
 </script>
 
 <div class="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
-    <h2 class="text-lg font-medium text-gray-800 mb-4">{title}</h2>
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-medium text-gray-800">{title}</h2>
+        {#if $$slots.actions}
+            <div class="flex gap-2">
+                <slot name="actions" />
+            </div>
+        {/if}
+    </div>
     <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
         {#each items as item}
             {#if item.separator}

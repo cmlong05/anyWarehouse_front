@@ -316,7 +316,7 @@
         {@const order = orderDetail.order}
         
         <!-- 头部 -->
-        <div class="mb-4">
+        <div class="mb-2">
             <OrderDetailHeader
                 title="销售订单详情"
                 orderNumber={order.order_number}
@@ -373,73 +373,6 @@
                 {:else}
                     <div></div>
                 {/if}
-
-                <!-- 右侧：下载文件按钮 -->
-                <div class="flex flex-wrap items-center gap-2">
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    onclick={downloadPI}
-                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
-                >
-                    {#if piDownloading}
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        生成中...
-                    {:else}
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2h7l5 5v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 2v5h5" />
-                        </svg>
-                        PI
-                    {/if}
-                </button>
-                <!-- 下载 Invoice 按钮 -->
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    onclick={downloadInvoice}
-                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
-                >
-                    {#if invoiceDownloading}
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        生成中...
-                    {:else}
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6M9 12h6M9 16h4" />
-                        </svg>
-                        Invoice
-                    {/if}
-                </button>
-                <!-- 下载 SKU 对照表按钮 -->
-                <button
-                    type="button"
-                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    onclick={downloadSkuReference}
-                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
-                >
-                    {#if skuReferenceDownloading}
-                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        生成中...
-                    {:else}
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18v13H3z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l2-4h14l2 4" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h5" />
-                        </svg>
-                        SKU表
-                    {/if}
-                </button>
-                </div>
             </div>
         {/if}
         </div>
@@ -463,7 +396,71 @@
                 { label: '实际交货', value: order.actual_delivery },
                 { label: '创建人', value: order.created_by },
             ]}
-        />
+        >
+            <svelte:fragment slot="actions">
+                <button
+                    type="button"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    onclick={downloadPI}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
+                >
+                    {#if piDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2h7l5 5v13a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 2v5h5" />
+                        </svg>
+                        PI
+                    {/if}
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    onclick={downloadInvoice}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
+                >
+                    {#if invoiceDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6M9 12h6M9 16h4" />
+                        </svg>
+                        Invoice
+                    {/if}
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    onclick={downloadSkuReference}
+                    disabled={piDownloading || invoiceDownloading || skuReferenceDownloading}
+                >
+                    {#if skuReferenceDownloading}
+                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        生成中...
+                    {:else}
+                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18v13H3z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l2-4h14l2 4" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h8M8 16h5" />
+                        </svg>
+                        SKU表
+                    {/if}
+                </button>
+            </svelte:fragment>
+        </OrderInfoGrid>
 
         <!-- 金额信息 -->
         <OrderAmountGrid
