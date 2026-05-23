@@ -213,6 +213,12 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         collapsedParents = { ...collapsedParents, [parentId]: !isParentCollapsed(parentId) };
     }
 
+    function handleSectionRowClick(section: GroupedSection) {
+        if (section.type === 'parent' && section.parentId !== undefined) {
+            toggleParent(section.parentId);
+        }
+    }
+
     function getGroupedSections(items: OrderItem[]): GroupedSection[] {
         const result: GroupedSection[] = [];
         const processed = new Set<number>();
@@ -290,12 +296,12 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     // 获取行样式类
     function getRowClass(section: GroupedSection): string {
         if (section.type === 'variant') {
-            return 'bg-purple-50/50';
+            return 'bg-purple-50/50 cursor-default';
         }
         if (section.type === 'parent') {
-            return 'bg-gray-100 font-medium';
+            return 'bg-gray-100 font-medium cursor-pointer';
         }
-        return isFullyProcessed(section.item) ? 'opacity-70' : '';
+        return isFullyProcessed(section.item) ? 'opacity-70 cursor-default' : 'cursor-default';
     }
 
     const columns = $derived.by<TableColumn[]>(() => {
@@ -357,7 +363,8 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                 sortKey={sortKey as string}
                 sortDirection={sortDirection}
                 onHeaderClick={(key) => toggleSort(key as SortKey)}
-                clickable={false}
+                clickable={true}
+                onRowClick={handleSectionRowClick}
                 rowHover={false}
                 loading={false}
                 emptyText={l.noItems}
