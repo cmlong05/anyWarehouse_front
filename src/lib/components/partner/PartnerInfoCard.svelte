@@ -14,8 +14,8 @@
     let { title, items, fullWidth = false }: Props = $props();
 </script>
 
-<div class="bg-white p-6 rounded-lg border border-gray-200" class:col-span-full={fullWidth}>
-    <h3 class="m-0 mb-4 text-lg text-gray-700 pb-3 border-b border-gray-200">{title}</h3>
+<div class="bg-white p-5 rounded-lg border border-gray-200" class:col-span-full={fullWidth}>
+    <h3 class="m-0 mb-3 text-lg text-gray-700 pb-2 border-b border-gray-200">{title}</h3>
     <div class="flex flex-col gap-3">
         {#each items as item}
             <div class="flex justify-between items-start gap-4">

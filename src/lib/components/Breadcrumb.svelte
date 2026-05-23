@@ -11,7 +11,7 @@
         let { items }: Props = $props();
 </script>
 
-<nav class="mb-4 text-sm" aria-label="Breadcrumb">
+<nav class="mt-2 mb-2 text-sm" aria-label="Breadcrumb">
     <ol class="flex items-center gap-2 list-none m-0 p-0">
         {#each items as item, i}
             <li class="flex items-center gap-2">

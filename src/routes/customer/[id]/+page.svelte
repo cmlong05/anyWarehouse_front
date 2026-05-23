@@ -103,7 +103,7 @@
         />
 
         <!-- 地址信息卡片：内嵌地址管理 -->
-        <div class="bg-white p-6 rounded-lg border border-gray-200">
+        <div class="bg-white p-5 rounded-lg border border-gray-200">
             <CustomerAddressManager
                 customerId={partnerDetail.partner?.id || 0}
                 bind:addresses

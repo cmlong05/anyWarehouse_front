@@ -14,7 +14,7 @@
     let { name, level, status, isEditing, levelLabel, statusLabel, onEdit, onCancel, onDelete }: Props = $props();
 </script>
 
-<div class="flex justify-between items-center mb-8 pb-4 border-b border-gray-200 max-md:flex-col max-md:items-start max-md:gap-4">
+<div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 max-md:flex-col max-md:items-start max-md:justify-start max-md:gap-2 max-md:mb-4">
     {#if isEditing}
         <h1 class="m-0 text-2xl font-bold text-gray-900">编辑</h1>
         <button 
