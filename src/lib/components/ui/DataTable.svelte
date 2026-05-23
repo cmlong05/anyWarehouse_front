@@ -132,7 +132,6 @@
                             class={
                                 [
                                     'p-3',
-                                    'whitespace-nowrap',
                                     'text-gray-700',
                                     'font-semibold',
                                     column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',

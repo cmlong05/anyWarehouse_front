@@ -155,7 +155,7 @@
                 { label: '创建人', value: order.created_by },
             ]}
         >
-            <svelte:fragment slot="actions">
+            {#snippet actions()}
                 <button
                     type="button"
                     class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -207,7 +207,7 @@
                         收货
                     </button>
                 {/if}
-            </svelte:fragment>
+            {/snippet}
         </OrderInfoGrid>
 
         <!-- 金额信息 -->

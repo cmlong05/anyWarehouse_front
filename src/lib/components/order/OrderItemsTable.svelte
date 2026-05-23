@@ -197,6 +197,8 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         type: 'parent' | 'variant' | 'normal';
         item: OrderItem;
         parentId?: number;
+        parentLineNumber?: number;
+        variantIndex?: number;
         variantCount?: number;
         /** 父行专用：所有变体是否均已处理完成 */
         allVariantsProcessed?: boolean;
@@ -279,8 +281,14 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                     });
                     
                     // 插入变体子项
-                    for (const variant of variants) {
-                        result.push({ type: 'variant', item: variant, parentId });
+                    for (const [index, variant] of variants.entries()) {
+                        result.push({
+                            type: 'variant',
+                            item: variant,
+                            parentId,
+                            parentLineNumber: firstVariant.line_number,
+                            variantIndex: index + 1,
+                        });
                         processed.add(variant.line_number);
                     }
                 }
@@ -308,7 +316,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         const cols: TableColumn[] = [
             { key: 'line_number', title: '#', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
             { key: 'sku', title: 'SKU', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'font-mono' },
-            { key: 'item_name', title: l.itemName, sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'item_name', title: l.itemName, sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
         ];
 
         if (type === 'sales' || showCurrentStock) {
@@ -350,6 +358,33 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                 !(section.type === 'variant' && section.parentId !== undefined && isParentCollapsed(section.parentId))
         )
     );
+
+    const displayLineLabels = $derived.by(() => {
+        const labels = new Map<GroupedSection, string>();
+        const parentTopIndex = new Map<number, number>();
+        let topLevelIndex = 0;
+
+        for (const section of groupedSections) {
+            if (section.type === 'variant') {
+                const parentIndex = section.parentId !== undefined ? parentTopIndex.get(section.parentId) : undefined;
+                labels.set(section, `${parentIndex ?? topLevelIndex}.${section.variantIndex ?? 1}`);
+                continue;
+            }
+
+            topLevelIndex += 1;
+            labels.set(section, String(topLevelIndex));
+
+            if (section.type === 'parent' && section.parentId !== undefined) {
+                parentTopIndex.set(section.parentId, topLevelIndex);
+            }
+        }
+
+        return labels;
+    });
+
+    function getDisplayLineLabel(section: GroupedSection): string {
+        return displayLineLabels.get(section) ?? String(section.item.line_number);
+    }
 </script>
 
 <div class="bg-white rounded-lg p-6 shadow-sm">
@@ -382,10 +417,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                     {#if column.key === 'line_number'}
                         {#if section.type === 'variant'}
                             <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <span>{rowItem.line_number}</span>
+                                <span>{getDisplayLineLabel(section)}</span>
                             </div>
                         {:else if section.type === 'parent' && section.parentId !== undefined}
                             {@const collapsed = isParentCollapsed(section.parentId)}
@@ -403,10 +435,10 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                                 >
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                 </svg>
-                                <span>{rowItem.line_number}</span>
+                                <span>{getDisplayLineLabel(section)}</span>
                             </button>
                         {:else}
-                            {rowItem.line_number}
+                            {getDisplayLineLabel(section)}
                         {/if}
                     {:else if column.key === 'sku'}
                         {#if rowItem.item_detail?.id}
@@ -447,11 +479,11 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                         {getCurrencySymbol(currency)}{safeParseFloat(rowItem.line_total).toFixed(2)}
                     {:else if column.key === 'status'}
                         {#if isFullyProcessed(rowItem)}
-                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{l.completed}</span>
+                            <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{l.completed}</span>
                         {:else if shipped > 0}
-                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{l.partial}</span>
+                            <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{l.partial}</span>
                         {:else}
-                            <span class="inline-block px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
+                            <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
                         {/if}
                     {:else if column.key === 'action'}
                         {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipped > safeParseFloat(rowItem.quantity)}

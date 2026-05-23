@@ -37,7 +37,6 @@
 <th
     class={[
         'p-3',
-        'whitespace-nowrap',
         'text-gray-700',
         'font-semibold',
         align === 'center' ? 'text-center' : align === 'right' ? 'text-right' : 'text-left',

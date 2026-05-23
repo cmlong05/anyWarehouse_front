@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Snippet } from 'svelte';
     import { PRIORITY_MAP } from '$lib/composables/useOrderDetail.svelte';
 
     interface PriorityMap {
@@ -18,9 +19,10 @@
         title: string;
         items: InfoItem[];
         priorityMap?: Record<string, PriorityMap>;
+        actions?: Snippet;
     }
     
-    let { title, items, priorityMap = PRIORITY_MAP }: Props = $props();
+    let { title, items, priorityMap = PRIORITY_MAP, actions }: Props = $props();
 
     function formatValue(item: InfoItem): string {
         if (item.value === undefined || item.value === null || item.value === '') return '-';
@@ -45,9 +47,9 @@
 <div class="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-medium text-gray-800">{title}</h2>
-        {#if $$slots.actions}
+        {#if actions}
             <div class="flex gap-2">
-                <slot name="actions" />
+                {@render actions()}
             </div>
         {/if}
     </div>
