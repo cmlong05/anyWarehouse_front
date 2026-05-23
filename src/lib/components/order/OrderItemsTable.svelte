@@ -304,17 +304,17 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     // 获取行样式类
     function getRowClass(section: GroupedSection): string {
         if (section.type === 'variant') {
-            return 'bg-purple-50/50 cursor-default';
+            return 'bg-sky-50/70 hover:bg-sky-100/80 cursor-default';
         }
         if (section.type === 'parent') {
-            return 'bg-gray-100 font-medium cursor-pointer';
+            return 'bg-amber-50 hover:bg-amber-100/90 font-medium cursor-pointer';
         }
         return isFullyProcessed(section.item) ? 'opacity-70 cursor-default' : 'cursor-default';
     }
 
     const columns = $derived.by<TableColumn[]>(() => {
         const cols: TableColumn[] = [
-            { key: 'line_number', title: '#', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'line_number', title: '#', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'relative' },
             { key: 'sku', title: 'SKU', sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'font-mono' },
             { key: 'item_name', title: l.itemName, sortable: true, align: 'left', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
         ];
@@ -416,27 +416,31 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
 
                     {#if column.key === 'line_number'}
                         {#if section.type === 'variant'}
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 pl-2">
+                                <span class="absolute inset-y-0 left-0 w-1 bg-sky-400/90"></span>
                                 <span>{getDisplayLineLabel(section)}</span>
                             </div>
                         {:else if section.type === 'parent' && section.parentId !== undefined}
                             {@const collapsed = isParentCollapsed(section.parentId)}
-                            <button
-                                type="button"
-                                class="inline-flex items-center gap-1.5 cursor-pointer hover:text-blue-600 transition-colors"
-                                onclick={() => toggleParent(section.parentId!)}
-                                title={collapsed ? `展开 ${section.variantCount} 个变体` : '折叠'}
-                            >
-                                <svg
-                                    class="w-4 h-4 text-gray-500 transition-transform {collapsed ? '' : 'rotate-90'}"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                            <div>
+                                <span class="absolute inset-y-0 left-0 w-1 bg-amber-500"></span>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center gap-0.5 cursor-pointer hover:text-blue-600 transition-colors"
+                                    onclick={() => toggleParent(section.parentId!)}
+                                    title={collapsed ? `展开 ${section.variantCount} 个变体` : '折叠'}
                                 >
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                </svg>
-                                <span>{getDisplayLineLabel(section)}</span>
-                            </button>
+                                    <svg
+                                        class="w-4 h-4 text-amber-700 transition-transform {collapsed ? '' : 'rotate-90'}"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <span>{getDisplayLineLabel(section)}</span>
+                                </button>
+                            </div>
                         {:else}
                             {getDisplayLineLabel(section)}
                         {/if}
