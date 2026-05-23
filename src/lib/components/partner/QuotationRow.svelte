@@ -7,14 +7,14 @@
     export let quantity: number | null = null;
     export let onRowClick: (id: number) => void;
     export let onQuantityChange: (id: number, value: number | null) => void;
-    export let skuCellClass: string = 'px-2 py-1.5 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline';
+    export let skuCellClass: string = 'p-3 text-gray-600 cursor-pointer hover:text-blue-600 hover:underline';
     export let showLeftBorder: boolean = false;
     export let leftBorderClasses: string = 'border-l-[3px] border-slate-200';
 </script>
 
 <tr class="bg-white cursor-pointer transition-colors hover:bg-gray-50" onclick={() => onRowClick(quotation.id)}>
     {#if showLeftBorder}
-        <td class={"px-2 py-1.5 " + leftBorderClasses}></td>
+        <td class={"p-3 " + leftBorderClasses}></td>
     {/if}
     <td class={skuCellClass}>
         {#if quotation.item}
@@ -29,23 +29,23 @@
             {quotation.item_sku || '-'}
         {/if}
     </td>
-    <td class="px-2 py-1.5 text-gray-600">
+    <td class="p-3 text-gray-600">
         <div>{quotation.item_name || '-'}</div>
         {#if quotation.note}
             <div class="text-xs text-gray-500 mt-1">备注：{quotation.note}</div>
         {/if}
     </td>
-    <td class="px-2 py-1.5 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
-    <td class="px-2 py-1.5 text-right font-mono">
+    <td class="p-3 text-gray-600 font-mono">{quotation.partner_sku || '-'}</td>
+    <td class="p-3 text-right font-mono">
         {#if (quotation.quantity_on_order ?? 0) > 0}
             <span class="text-amber-600 font-medium">{quotation.quantity_on_order}</span>
         {:else}
             <span class="text-gray-300">-</span>
         {/if}
     </td>
-    <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{quotation.item_total_storage ?? 0}</td>
-    <td class="px-2 py-1.5 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
-    <td class="px-2 py-1.5 text-right" onclick={(e) => e.stopPropagation()}>
+    <td class="p-3 text-gray-600 text-right font-mono">{quotation.item_total_storage ?? 0}</td>
+    <td class="p-3 text-gray-600 text-right font-mono">{currencySymbol}{quotation.price}</td>
+    <td class="p-3 text-right" onclick={(e) => e.stopPropagation()}>
         <NumberStepper
             value={quantity ?? undefined}
             step={1}
@@ -54,7 +54,7 @@
             onchange={(value) => onQuantityChange(quotation.id, value ?? null)}
         />
     </td>
-    <td class="px-2 py-1.5 text-center" onclick={(e) => e.stopPropagation()}>
+    <td class="p-3 text-center" onclick={(e) => e.stopPropagation()}>
         {#if quotation.is_preferred}
             <span title="首选供应商" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-help">
                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">

@@ -139,6 +139,7 @@
         emptyText="暂无报价记录"
         addHref={`/customer/quotation/add?customer_id=${partnerDetail.partner?.id}`}
         currency={partnerDetail.partner?.currency}
+        showStatus={false}
         quotationQuantities={partnerDetail.quotationQuantities}
         onQuantityChange={(id, value) => partnerDetail.quotationQuantities = { ...partnerDetail.quotationQuantities, [id]: value }}
         onRowClick={(id) => goto(`/customer/quotation/${id}`)}
