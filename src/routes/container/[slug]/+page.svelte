@@ -128,65 +128,6 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- 主内容区 (70%) -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- 容量卡片 -->
-            <div class="bg-white border border-gray-200 rounded-lg p-6">
-                <h2 class="text-lg font-semibold mb-6 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <BoxIcon class="h-5 w-5 text-blue-600" />
-                        <span>{container.fastCode}</span>
-                    </div>
-                    <span title={container.barcode} class="inline-flex items-center gap-2">
-                        <svg bind:this={barcodeSvg} class="h-8" aria-label="Container barcode"></svg>
-                        <PrintLabelButton
-                            code={container.fastCode}
-                            barcode={container.barcode}
-                        />
-                    </span>
-                </h2>
-                <!-- 分隔线 -->
-                <div class="border-t border-gray-200"></div>
-                    
-                <div class="space-y-6">
-                    <!-- 容器信息卡片 -->
-                    <div class="flex justify-between mb-2">
-                        <p class="text-sm text-gray-600 mb-4">{container.mark || '-'}</p>
-                    </div>
-                    <!-- 进度条 -->
-                    <div>
-                        <div class="flex justify-between mb-2">
-                            <span class="text-sm text-gray-600">剩余空间</span>
-                            <span class="font-semibold text-gray-900">
-                                {formatNumber(container.a_volume)} / {formatNumber(container.volume)}
-                            </span>
-                        </div>
-                        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
-                                class="h-full bg-green-500 transition-all"
-                                style="width: {remainingPercent}%"
-                            ></div>
-                        </div>
-                    </div>
-                    
-                    <!-- 详细参数 -->
-                    <div>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">总容量</span>
-                                <span class="text-gray-900 font-mono">{formatNumber(container.volume)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">已占用</span>
-                                <span class="text-gray-900 font-mono">{formatNumber(occupiedVolume)}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">可用</span>
-                                <span class="text-gray-900 font-mono">{formatNumber(container.a_volume)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- 子容器卡片 -->
             {#if descendants.length > 0}
                 <div class="bg-white border border-gray-200 rounded-lg p-6">
@@ -204,7 +145,7 @@
                         }))}
                         columns={descendantColumns}
                         clickable={true}
-                        onRowClick={(row: { fastCode: string }) => goto(`/container/${row.fastCode}`)}
+                        onRowClick={(row: { fastCode: string }) => goto(`/container/${row.fastCode}`, { noScroll: true })}
                     >
                         {#snippet cellRender({ item, column })}
                             {#if column.key === 'fastCode'}
@@ -271,6 +212,61 @@
         <!-- 侧栏区 (30%) -->
         <div class="lg:col-span-1">
             <div class="sticky top-4 space-y-4">                            
+                <!-- 容量卡片 -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-lg font-semibold mb-6 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <BoxIcon class="h-5 w-5 text-blue-600" />
+                            <span>{container.fastCode}</span>
+                        </div>
+                        <span title={container.barcode} class="inline-flex items-center gap-2">
+                            <svg bind:this={barcodeSvg} class="h-8" aria-label="Container barcode"></svg>
+                            <PrintLabelButton
+                                code={container.fastCode}
+                                barcode={container.barcode}
+                            />
+                        </span>
+                    </h2>
+                    <div class="border-t border-gray-200"></div>
+
+                    <div class="space-y-6">
+                        <div class="flex justify-between mb-2">
+                            <p class="text-sm text-gray-600 mb-4">{container.mark || '-'}</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <span class="text-sm text-gray-600">剩余空间</span>
+                                <span class="font-semibold text-gray-900">
+                                    {formatNumber(container.a_volume)} / {formatNumber(container.volume)}
+                                </span>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                    class="h-full bg-green-500 transition-all"
+                                    style="width: {remainingPercent}%"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">总容量</span>
+                                    <span class="text-gray-900 font-mono">{formatNumber(container.volume)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">已占用</span>
+                                    <span class="text-gray-900 font-mono">{formatNumber(occupiedVolume)}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">可用</span>
+                                    <span class="text-gray-900 font-mono">{formatNumber(container.a_volume)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 相邻容器 -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h3 class="text-mdfont-semibold text-gray-700 mb-3">相邻容器</h3>
@@ -285,6 +281,10 @@
                                     <a 
                                         href="/container/{sibling.fastCode}"
                                         class="block text-md text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-gray-50 transition-colors"
+                                        onclick={(e) => {
+                                            e.preventDefault();
+                                            goto(`/container/${sibling.fastCode}`, { noScroll: true });
+                                        }}
                                     >
                                         {sibling.fastCode}
                                     </a>
