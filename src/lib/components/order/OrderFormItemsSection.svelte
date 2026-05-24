@@ -81,7 +81,7 @@
     let collapsedParents = $state<Record<string, boolean>>({});
 
     function isParentCollapsed(parentId: string) {
-        return collapsedParents[parentId] !== false;
+        return collapsedParents[parentId] === true;
     }
 
     function toggleParent(parentId: string) {
@@ -328,7 +328,7 @@
     <!-- 明细列表 -->
     {#if groupedSections.length > 0}
         <div class="overflow-x-auto rounded-lg border border-gray-200">
-            <table class="w-full text-sm border-collapse">
+            <table class="w-full text-sm border-collapse border-spacing-0">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
@@ -340,22 +340,36 @@
                         <th class="px-4 py-3 text-center font-medium text-gray-700 w-16">操作</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody>
                     {#each groupedSections as section}
                         {@const item = section.item}
                         {@const summary = section.type === 'parent' ? getParentSummary(section) : null}
                         <tr class="{getRowClass(section)} transition-colors" onclick={() => handleSectionRowClick(section)}>
-                            <td class="px-4 py-3 text-left text-gray-700 align-top">
+                            <td class="p-3 text-left text-gray-700 align-top relative">
                                 {#if section.type === 'parent' && section.parentId}
-                                    <div class="inline-flex items-center gap-1 text-sm text-gray-700">
-                                        <svg
-                                            class="w-4 h-4 transition-transform {isParentCollapsed(section.parentId!) ? '' : 'rotate-90'}"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                    {@const collapsed = isParentCollapsed(section.parentId)}
+                                    <div>
+                                        <span class="absolute inset-y-0 left-0 w-1 bg-amber-500"></span>
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-0.5 cursor-pointer hover:text-blue-600 transition-colors"
+                                            onclick={() => toggleParent(section.parentId!)}
+                                            title={collapsed ? `展开 ${section.variantCount} 个变体` : '折叠'}
                                         >
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                        </svg>
+                                            <svg
+                                                class="w-4 h-4 text-amber-700 transition-transform {collapsed ? '' : 'rotate-90'}"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            <span>{getDisplayLineLabel(section)}</span>
+                                        </button>
+                                    </div>
+                                {:else if section.type === 'variant'}
+                                    <div class="flex items-center gap-2 pl-2">
+                                        <span class="absolute inset-y-0 left-0 w-1 bg-sky-400/90"></span>
                                         <span>{getDisplayLineLabel(section)}</span>
                                     </div>
                                 {:else}
@@ -364,15 +378,11 @@
                             </td>
                             <td class="px-4 py-3 align-top">
                                 {#if section.type === 'variant'}
-                                    <div class="flex items-center gap-2 pl-4">
+                                    <div class="flex items-center gap-2">
                                         <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
-                                        <span class="px-1.5 py-0.5 bg-sky-100 text-sky-700 text-xs rounded">变体</span>
                                     </div>
                                 {:else if section.type === 'parent'}
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-mono text-xs text-gray-700">{item.sku || '-'}</span>
-                                        <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">母版</span>
-                                    </div>
+                                    <span class="font-mono text-xs text-gray-700">{item.sku || '-'}</span>
                                 {:else}
                                     <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
                                 {/if}
@@ -385,7 +395,6 @@
                                     </div>
                                 {:else if section.type === 'parent'}
                                     <div class="text-gray-700">{item.item_name || '-'}</div>
-                                    <div class="text-xs text-gray-500">{section.variantCount} 个变体</div>
                                 {:else}
                                     <span class="text-gray-900">{item.item_name || '-'}</span>
                                 {/if}
