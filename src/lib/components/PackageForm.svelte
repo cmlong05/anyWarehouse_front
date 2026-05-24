@@ -58,14 +58,19 @@
     let error = $state('');
     let success = $state('');
 
+    function getShipmentItemId(item: ShipmentItem): number | null {
+        return item.item ?? item.item_detail?.id ?? null;
+    }
+
     // 所有可选的商品（来自已选发货单）
     const availableItems = $derived(() => {
         const items: Array<{shipmentId: number; shipmentNo: string; item: ShipmentItem}> = [];
         for (const [shipmentId, shipment] of selectedShipmentsDetail) {
             if (!shipment.items) continue;
             for (const item of shipment.items) {
+                const itemId = getShipmentItemId(item);
                 // 过滤掉已添加的商品
-                const isAdded = packagePreviewItems.some(p => p.itemId === item.item && p.shipmentId === shipmentId);
+                const isAdded = itemId != null && packagePreviewItems.some(p => p.itemId === itemId && p.shipmentId === shipmentId);
                 if (!isAdded) {
                     items.push({ shipmentId, shipmentNo: shipment.shipment_no, item });
                 }
@@ -167,12 +172,13 @@
     async function addItemToPreview(shipmentId: number, item: ShipmentItem) {
         const shipment = selectedShipmentsDetail.get(shipmentId);
         if (!shipment) return;
-        if (!item.item) {
+        const itemId = getShipmentItemId(item);
+        if (!itemId) {
             error = `发货单明细 ${item.sku} 未关联物品，无法加入包裹`;
             setTimeout(() => error = '', 2500);
             return;
         }
-        if (packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) {
+        if (packagePreviewItems.find(p => p.itemId === itemId && p.shipmentId === shipmentId)) {
             error = '该商品已在包裹明细中';
             setTimeout(() => error = '', 2000);
             return;
@@ -181,7 +187,7 @@
             id: `${shipmentId}-${item.id}-${Date.now()}`,
             shipmentId,
             shipmentNo: shipment.shipment_no,
-            itemId: item.item,
+            itemId,
             sku: item.sku,
             productName: item.product_name,
             quantity: safeParseFloat(item.quantity),
@@ -282,13 +288,14 @@
         const items = availableItems();
         const newRows: PackagePreviewItem[] = [];
         for (const { shipmentId, shipmentNo, item } of items) {
-            if (!item.item) continue;
-            if (!packagePreviewItems.find(p => p.itemId === item.item && p.shipmentId === shipmentId)) {
+            const itemId = getShipmentItemId(item);
+            if (!itemId) continue;
+            if (!packagePreviewItems.find(p => p.itemId === itemId && p.shipmentId === shipmentId)) {
                 const row: PackagePreviewItem = {
                     id: `${shipmentId}-${item.id}-${Date.now()}`,
                     shipmentId,
                     shipmentNo,
-                    itemId: item.item,
+                    itemId,
                     sku: item.sku,
                     productName: item.product_name,
                     quantity: safeParseFloat(item.quantity),
