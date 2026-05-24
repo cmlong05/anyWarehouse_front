@@ -325,7 +325,7 @@
         if (!validateItem()) return;
         
         // 获取当前要添加的报价信息
-        const quotation = selectedQuotation?.quotation as { 
+const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => opt.value === currentItem.quotation)?.quotation) as { 
             id: number; 
             item?: number; 
             sku?: string; 

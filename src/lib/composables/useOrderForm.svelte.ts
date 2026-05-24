@@ -12,6 +12,13 @@ export interface OrderFormItem extends OrderItemCreateRequestBase {
     isVariantChild?: boolean; // 是否为变体子项
     parentId?: string; // 父项（母版）的临时 ID
     variantAttributes?: Array<{ value: string; color?: string }>; // 变体属性组合（带颜色）
+    item_detail?: {
+        is_variant?: boolean | string | number;
+        parent_item_id?: number | null;
+        parent_item_name?: string;
+        parent_item_sku?: string;
+        variant_attributes?: Array<{ attribute: string; value: string; color?: string }>;
+    };
 }
 
 export interface OrderFormData {

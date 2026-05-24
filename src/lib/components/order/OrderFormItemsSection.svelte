@@ -1,14 +1,28 @@
 <script lang="ts">
     import type { OrderFormItem } from '$lib/composables/useOrderForm.svelte';
+    import {  formatNumber } from '$lib/utils';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { NumberStepper } from '$lib/components/ui';
     import Svelecte from 'svelecte';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+    import { isVariantChild, getVariantParentId } from '$lib/utils/variant';
 
     interface QuotationOption {
         value: number;
         label: string;
         quotation: unknown;
+    }
+
+    type SectionType = 'parent' | 'variant' | 'normal';
+
+    interface GroupedSection {
+        type: SectionType;
+        item: OrderFormItem;
+        originalIndex: number;
+        parentId?: string;
+        variantIndex?: number;
+        variantCount?: number;
+        children?: OrderFormItem[];
     }
 
     interface Props {
@@ -63,6 +77,167 @@
     const variantQuantityMin = 0;
     const quantityStep = 1;
     const quantityDecimals = 0;
+
+    let collapsedParents = $state<Record<string, boolean>>({});
+
+    function isParentCollapsed(parentId: string) {
+        return collapsedParents[parentId] !== false;
+    }
+
+    function toggleParent(parentId: string) {
+        collapsedParents = { ...collapsedParents, [parentId]: !isParentCollapsed(parentId) };
+    }
+
+    function handleItemSelectInternal(selected: QuotationOption | undefined) {
+        selectedQuotation = selected;
+        onItemSelect(selected);
+    }
+
+    function getGroupedSections(items: OrderFormItem[]): GroupedSection[] {
+        const childrenByParent = new Map<string, Array<{ item: OrderFormItem; originalIndex: number }>>();
+        const parentMeta = new Map<string, { parentSku?: string; parentName?: string }>();
+
+        items.forEach((item, index) => {
+            if (item.parentId) {
+                const group = childrenByParent.get(item.parentId) || [];
+                group.push({ item, originalIndex: index });
+                childrenByParent.set(item.parentId, group);
+                return;
+            }
+
+            if (isVariantChild(item)) {
+                const detailParentId = getVariantParentId(item);
+                if (detailParentId !== null) {
+                    const key = `parent_${detailParentId}`;
+                    const group = childrenByParent.get(key) || [];
+                    group.push({ item, originalIndex: index });
+                    childrenByParent.set(key, group);
+                    parentMeta.set(key, {
+                        parentSku: item.item_detail?.parent_item_sku || '',
+                        parentName: item.item_detail?.parent_item_name || '',
+                    });
+                    return;
+                }
+            }
+        });
+
+        const sections: GroupedSection[] = [];
+        const usedIndexes = new Set<number>();
+
+        for (const [parentKey, children] of childrenByParent) {
+            const explicitParent = items.find((item) => item.id === parentKey);
+            if (explicitParent) {
+                const parentIndex = items.findIndex((item) => item.id === parentKey);
+                sections.push({
+                    type: 'parent',
+                    item: explicitParent,
+                    originalIndex: parentIndex,
+                    parentId: parentKey,
+                    variantCount: children.length,
+                    children: children.map((child) => child.item),
+                });
+                usedIndexes.add(parentIndex);
+            } else {
+                const child = children[0].item;
+                const meta = parentMeta.get(parentKey);
+                sections.push({
+                    type: 'parent',
+                    item: {
+                        ...child,
+                        sku: meta?.parentSku || child.sku,
+                        item_name: meta?.parentName || child.item_name,
+                        quantity: 0,
+                        unit_price: child.unit_price,
+                    },
+                    originalIndex: children[0].originalIndex,
+                    parentId: parentKey,
+                    variantCount: children.length,
+                    children: children.map((child) => child.item),
+                });
+                usedIndexes.add(children[0].originalIndex);
+            }
+
+            children.forEach((child, index) => {
+                sections.push({
+                    type: 'variant',
+                    item: child.item,
+                    originalIndex: child.originalIndex,
+                    parentId: parentKey,
+                    variantIndex: index + 1,
+                });
+                usedIndexes.add(child.originalIndex);
+            });
+        }
+
+        items.forEach((item, index) => {
+            if (!usedIndexes.has(index)) {
+                sections.push({
+                    type: 'normal',
+                    item,
+                    originalIndex: index,
+                });
+            }
+        });
+
+        return sections;
+    }
+
+    const groupedSections = $derived.by(() =>
+        getGroupedSections(items).filter((section) =>
+            !(section.type === 'variant' && section.parentId && isParentCollapsed(section.parentId))
+        )
+    );
+
+    const displayLineLabels = $derived.by(() => {
+        const labels = new Map<GroupedSection, string>();
+        const parentLabels = new Map<string, string>();
+        let topLevel = 0;
+
+        for (const section of groupedSections) {
+            if (section.type === 'parent' && section.parentId) {
+                topLevel += 1;
+                const label = String(topLevel);
+                labels.set(section, label);
+                parentLabels.set(section.parentId, label);
+            } else if (section.type === 'variant' && section.parentId) {
+                const prefix = parentLabels.get(section.parentId) ?? String(topLevel);
+                labels.set(section, `${prefix}.${section.variantIndex ?? 1}`);
+            } else {
+                topLevel += 1;
+                labels.set(section, String(topLevel));
+            }
+        }
+
+        return labels;
+    });
+
+    function getDisplayLineLabel(section: GroupedSection) {
+        return displayLineLabels.get(section) ?? String(section.originalIndex + 1);
+    }
+
+    function getParentSummary(section: GroupedSection) {
+        const children = section.children || [];
+        const quantity = children.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        const total = children.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0);
+        const avgUnit = quantity > 0 ? total / quantity : children.length > 0 ? children.reduce((sum, item) => sum + Number(item.unit_price || 0), 0) / children.length : 0;
+        return { quantity, total, avgUnit };
+    }
+
+    function handleSectionRowClick(section: GroupedSection) {
+        if (section.type === 'parent' && section.parentId) {
+            toggleParent(section.parentId);
+        }
+    }
+
+    function getRowClass(section: GroupedSection): string {
+        if (section.type === 'variant') {
+            return 'bg-sky-50/70 hover:bg-sky-100/80';
+        }
+        if (section.type === 'parent') {
+            return 'bg-amber-50 hover:bg-amber-100/90 font-medium cursor-pointer';
+        }
+        return 'hover:bg-gray-50';
+    }
 </script>
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -97,7 +272,7 @@
                             searchable={true}
                             clearable={true}
                             disabled={loading || loadingQuotations}
-                            onChange={onItemSelect}
+                            onChange={handleItemSelectInternal}
                         />
                     {/key}
                 {/if}
@@ -151,9 +326,9 @@
     </div>
 
     <!-- 明细列表 -->
-    {#if items.length > 0}
+    {#if groupedSections.length > 0}
         <div class="overflow-x-auto rounded-lg border border-gray-200">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm border-collapse">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
@@ -166,69 +341,96 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    {#each items as item, index}
-                        {@const parentIndex = item.parentId ? items.findIndex(i => i.id === item.parentId) + 1 : null}
-                        {@const siblingIndex = item.parentId ? items.filter(i => i.parentId === item.parentId).findIndex(i => i.id === item.id) + 1 : null}
-                        {@const displayIndex = item.isVariantChild && parentIndex ? `${parentIndex}-${siblingIndex}` : String(index + 1)}
-                        <tr class="{item.isVariantChild ? 'bg-purple-50/50' : 'hover:bg-gray-50'} transition-colors">
-                            <td class="px-4 py-3 {item.isVariantChild ? 'text-purple-600' : 'text-gray-500'}">{displayIndex}</td>
-                            <td class="px-4 py-3">
-                                {#if item.isVariantChild}
-                                    <div class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {#each groupedSections as section}
+                        {@const item = section.item}
+                        {@const summary = section.type === 'parent' ? getParentSummary(section) : null}
+                        <tr class="{getRowClass(section)} transition-colors" onclick={() => handleSectionRowClick(section)}>
+                            <td class="px-4 py-3 text-left text-gray-700 align-top">
+                                {#if section.type === 'parent' && section.parentId}
+                                    <div class="inline-flex items-center gap-1 text-sm text-gray-700">
+                                        <svg
+                                            class="w-4 h-4 transition-transform {isParentCollapsed(section.parentId!) ? '' : 'rotate-90'}"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                         </svg>
-                                        <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
-                                        <span class="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">变体</span>
+                                        <span>{getDisplayLineLabel(section)}</span>
                                     </div>
-                                {:else if item.quantity === 0 && items.some(i => i.parentId === item.id)}
+                                {:else}
+                                    <span>{getDisplayLineLabel(section)}</span>
+                                {/if}
+                            </td>
+                            <td class="px-4 py-3 align-top">
+                                {#if section.type === 'variant'}
+                                    <div class="flex items-center gap-2 pl-4">
+                                        <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
+                                        <span class="px-1.5 py-0.5 bg-sky-100 text-sky-700 text-xs rounded">变体</span>
+                                    </div>
+                                {:else if section.type === 'parent'}
                                     <div class="flex items-center gap-2">
-                                        <span class="font-mono text-xs text-gray-500">{item.sku || '-'}</span>
+                                        <span class="font-mono text-xs text-gray-700">{item.sku || '-'}</span>
                                         <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">母版</span>
                                     </div>
                                 {:else}
                                     <span class="font-mono text-xs text-gray-600">{item.sku || '-'}</span>
                                 {/if}
                             </td>
-                            <td class="px-4 py-3">
-                                {#if item.isVariantChild}
-                                    <div class="text-gray-900">{item.item_name || '-'}</div>
-                                    <VariantAttributeBadge attributes={item.variantAttributes || []} class="mt-0.5" />
-                                {:else if item.quantity === 0 && items.some(i => i.parentId === item.id)}
-                                    <span class="text-gray-500">{item.item_name || '-'}</span>
+                            <td class="px-4 py-3 align-top">
+                                {#if section.type === 'variant'}
+                                    <div class="space-y-1">
+                                        <div class="text-gray-900">{item.item_name || '-'}</div>
+                                        <VariantAttributeBadge attributes={item.variantAttributes || []} class="mt-0.5" />
+                                    </div>
+                                {:else if section.type === 'parent'}
+                                    <div class="text-gray-700">{item.item_name || '-'}</div>
+                                    <div class="text-xs text-gray-500">{section.variantCount} 个变体</div>
                                 {:else}
                                     <span class="text-gray-900">{item.item_name || '-'}</span>
                                 {/if}
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <NumberStepper
-                                    value={item.quantity}
-                                    min={item.isVariantChild ? variantQuantityMin : (items.some(i => i.parentId === item.id) ? 0 : quantityMin)}
-                                    step={quantityStep}
-                                    decimalPlaces={quantityDecimals}
-                                    size="sm"
-                                    disabled={loading}
-                                    onchange={(v) => onUpdateItem(index, 'quantity', v)}
-                                />
+                            <td class="px-4 py-3 text-right align-top">
+                                {#if section.type === 'parent'}
+                                    <span class="text-gray-700">{summary && summary.quantity > 0 ? formatNumber(summary.quantity) : '-'}</span>
+                                {:else}
+                                    <NumberStepper
+                                        value={item.quantity}
+                                        min={section.type === 'variant' ? variantQuantityMin : quantityMin}
+                                        step={quantityStep}
+                                        decimalPlaces={quantityDecimals}
+                                        size="sm"
+                                        disabled={loading}
+                                        onchange={(v) => onUpdateItem(section.originalIndex, 'quantity', v)}
+                                    />
+                                {/if}
                             </td>
-                            <td class="px-4 py-3 text-right">
-                                <NumberStepper
-                                    value={item.unit_price}
-                                    min={0}
-                                    step={0.01}
-                                    size="sm"
-                                    disabled={loading}
-                                    onchange={(v) => onUpdateItem(index, 'unit_price', v)}
-                                />
+                            <td class="px-4 py-3 text-right align-top">
+                                {#if section.type === 'parent'}
+                                    <span class="text-gray-700">{summary && summary.quantity > 0 ? `${getCurrencySymbol(orderCurrency)}${summary.avgUnit.toFixed(2)}` : '-'}</span>
+                                {:else}
+                                    <NumberStepper
+                                        value={item.unit_price}
+                                        min={0}
+                                        step={0.01}
+                                        size="sm"
+                                        disabled={loading}
+                                        onchange={(v) => onUpdateItem(section.originalIndex, 'unit_price', v)}
+                                    />
+                                {/if}
                             </td>
-                            <td class="px-4 py-3 text-right font-medium text-gray-900">
-                                {getCurrencySymbol(orderCurrency)}{(item.quantity * Number(item.unit_price)).toFixed(2)}
+                            <td class="px-4 py-3 text-right align-top font-medium text-gray-900">
+                                {#if section.type === 'parent'}
+                                    <span>{summary ? `${getCurrencySymbol(orderCurrency)}${summary.total.toFixed(2)}` : '-'}</span>
+                                {:else}
+                                    <span>{getCurrencySymbol(orderCurrency)}{(Number(item.quantity || 0) * Number(item.unit_price || 0)).toFixed(2)}</span>
+                                {/if}
                             </td>
-                            <td class="px-4 py-3 text-center">
+                            <td class="px-4 py-3 text-center align-top">
                                 <button
                                     type="button"
                                     class="w-7 h-7 flex items-center justify-center bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    onclick={() => onRemoveItem(index, item)}
+                                    onclick={(event) => { event.stopPropagation(); onRemoveItem(section.originalIndex, item); }}
                                     disabled={loading}
                                     title="删除"
                                     aria-label="删除此明细项"

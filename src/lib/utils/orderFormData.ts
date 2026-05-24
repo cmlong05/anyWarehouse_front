@@ -20,6 +20,13 @@ export interface OrderItemLike {
     quotation?: number | null;
     expected_delivery?: string | null;
     notes?: string;
+    item_detail?: {
+        is_variant?: boolean | string | number;
+        parent_item_id?: number | null;
+        parent_item_name?: string;
+        parent_item_sku?: string;
+        variant_attributes?: Array<{ attribute: string; value: string; color?: string }>;
+    };
 }
 
 /**
@@ -41,7 +48,14 @@ export function buildInitialOrderItems(
             unit_price: item.unit_price ? parseFloat(item.unit_price) : 0,
             quotation: item.quotation || null,
             expected_delivery: item.expected_delivery || null,
-            notes: item.notes || ''
+            notes: item.notes || '',
+            item_detail: item.item_detail
+                ? {
+                    ...item.item_detail,
+                    parent_item_name: item.item_detail.parent_item_name ?? undefined,
+                    parent_item_sku: item.item_detail.parent_item_sku ?? undefined,
+                }
+                : undefined,
         })) as OrderFormItem[];
     }
 
