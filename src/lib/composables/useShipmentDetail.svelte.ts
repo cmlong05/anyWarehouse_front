@@ -146,6 +146,7 @@ export function useShipmentDetail(shipmentId: () => number) {
         } catch (err) {
             error = getErrorMessage(err, '删除失败');
             deleting = false;
+            showDeleteModal = false;
             return false;
         }
     }

@@ -27,7 +27,8 @@ function parseDrfError(data: unknown): string {
     // DRF 通用错误 / 自定义 exception_handler
     if (typeof obj.detail === 'string') return obj.detail;
 
-    // 自定义 message 字段
+    // 自定义 error / message 字段
+    if (typeof obj.error === 'string') return obj.error;
     if (typeof obj.message === 'string') return obj.message;
 
     // 字段级别错误：拼接所有字段的错误信息
@@ -183,11 +184,29 @@ export class ApiClient {
                     message: `HTTP ${response.status}: ${response.statusText}`,
                     status: response.status,
                 };
+
+                try {
+                    const errorData = await response.json();
+                    error.message = parseDrfError(errorData) || error.message;
+                    error.code = errorData.code;
+                } catch {
+                    // Ignore parse failure and keep default message
+                }
+
                 throw error;
             }
             // 不解析响应体，直接返回
         } catch (error) {
             clearTimeout(timeoutId);
+            if (error instanceof Error) {
+                if (error.name === 'AbortError') {
+                    throw {
+                        message: '请求超时',
+                        status: 408,
+                        code: 'TIMEOUT'
+                    } as ApiError;
+                }
+            }
             throw error;
         }
     }
