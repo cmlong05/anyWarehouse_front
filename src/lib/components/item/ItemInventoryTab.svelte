@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import type { StorageContainer } from '$lib';
     import { formatDate, formatNumber } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';
@@ -154,7 +155,14 @@
                             class="transition-opacity duration-[3000ms] {removingIds.has(storage.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'} {dragOverStorageId === storage.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : 'hover:bg-gray-50'} {dragFromStorageId === storage.id ? 'opacity-60' : ''} {storage.quantity > 0 ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'}"
                         >
                             <td class="px-2 sm:px-4 py-3">
-                                <a href="/container/{storage.container_fastCode}" class="font-medium text-blue-600 hover:underline">
+                                <a
+                                    href="/container/{storage.container_fastCode}"
+                                    class="font-medium text-blue-600 hover:underline"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        goto(`/container/${storage.container_fastCode}`, { noScroll: true });
+                                    }}
+                                >
                                     {storage.container_fastCode}
                                 </a>
                             </td>
@@ -168,7 +176,14 @@
                                 {/if}
                             </td>
                             <td class="px-2 sm:px-4 py-3 text-right">
-                                <a href="/storage/{storage.id}" class="relative inline-flex items-center gap-1 font-medium transition-colors duration-300 {quantityFlash[storage.id] ? 'text-red-500' : 'text-gray-900 hover:text-blue-600'}">
+                                <a
+                                    href="/storage/{storage.id}"
+                                    class="relative inline-flex items-center gap-1 font-medium transition-colors duration-300 {quantityFlash[storage.id] ? 'text-red-500' : 'text-gray-900 hover:text-blue-600'}"
+                                    onclick={(e) => {
+                                        e.preventDefault();
+                                        goto(`/storage/${storage.id}`, { noScroll: true });
+                                    }}
+                                >
                                     {formatNumber(storage.quantity)}
                                     {#if quantityDelta[storage.id]}
                                         <span class="text-xs font-normal transition-opacity duration-[3000ms] {quantityFlash[storage.id] ? 'opacity-100' : 'opacity-0'} text-red-400">

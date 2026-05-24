@@ -47,7 +47,7 @@
     }
     
     function viewDetail(item: BaseItem) {
-        goto(`/item/${item.id}`);
+        goto(`/item/${item.id}`, { noScroll: true });
     }
     
     // toggle selection for item with given ID

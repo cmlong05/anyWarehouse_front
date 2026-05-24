@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import type { Item } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
     import type { ItemDisplayPrice } from '$lib/utils/item-price';
@@ -49,6 +50,12 @@
     function formatPrice(price: string | number | null | undefined): string {
         if (price === null || price === undefined || price === '') return '-';
         return parseFloat(String(price)).toFixed(2);
+    }
+
+    function navigateToParentItem(parentItemId: number | null | undefined, event: MouseEvent) {
+        event.preventDefault();
+        if (!parentItemId) return;
+        goto(`/item/${parentItemId}`, { noScroll: true });
     }
 
     $effect(() => {
@@ -141,7 +148,11 @@
                                     变体
                                 </span>
                                 {#if variantInfo?.parent_item}
-                                    <a href="/item/{variantInfo.parent_item.id}" class="text-xs text-blue-600 hover:underline">
+                                    <a
+                                        href="/item/{variantInfo.parent_item.id}"
+                                        class="text-xs text-blue-600 hover:underline"
+                                        onclick={(e) => navigateToParentItem(variantInfo?.parent_item?.id, e)}
+                                    >
                                         母版: {variantInfo.parent_item.sku}
                                     </a>
                                 {/if}

@@ -255,7 +255,7 @@
                             removingIds={outbound.removingIds}
                             {transferFlash}
                             onInventoryCheck={inventoryCheck.check}
-                            onInbound={() => { goto(`/storage/add/${data.itemDetail.item.id}`); }}
+                            onInbound={() => { goto(`/storage/add/${data.itemDetail.item.id}`, { noScroll: true }); }}
                             onOutbound={outbound.request}
                             onQuantityChange={outbound.setQuantity}
                             onTransferDrop={requestTransferByDrop}
