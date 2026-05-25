@@ -29,16 +29,20 @@ function getConfig(): Config {
   
   // 关键修改：区分服务端(SSR)和客户端(浏览器)
   const isServer = typeof window === 'undefined';
+  const mode = env.MODE || 'production';
+  const defaultInternalApiUrl = mode === 'development'
+    ? 'http://127.0.0.1:8000/api'
+    : 'http://nginx/api';
   
   const rawConfig = {
     // SSR 时使用内部地址，浏览器时使用相对路径或外部URL
     API_BASE_URL: isServer 
-      ? getServerEnv('INTERNAL_API_URL', 'http://nginx/api')  // 服务端：从环境变量读取或使用默认值
+      ? getServerEnv('INTERNAL_API_URL', defaultInternalApiUrl)  // 服务端：从环境变量读取或使用默认值
       : (env.VITE_API_BASE_URL || '/api'),                     // 浏览器：相对路径
     IMAGE_BASE_URL: env.VITE_IMAGE_BASE_URL,
     APP_NAME: env.VITE_APP_NAME || 'AnyWarehouse',
     DEBUG: env.VITE_DEBUG === 'true',
-    ENVIRONMENT: env.MODE || 'production'
+    ENVIRONMENT: mode
   };
 
   // 使用 zod 验证配置
