@@ -31,7 +31,7 @@
         syncError = null;
         syncLoading = true;
         try {
-            const result = await salesOrderAPI.syncQuantities(order.id);
+            const result = await salesOrderAPI.syncQuantities(order.id, { allowDecrease: true });
             syncResult = result;
             if (result.updated_items.length > 0) {
                 await onOrderReload();
@@ -55,7 +55,7 @@
                 class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-orange-50 text-orange-700 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onclick={syncQuantities}
                 disabled={syncLoading}
-                title="根据发货单明细汇总数量，向上对齐订单行的订购数量（只增不减）"
+                title="根据发货单明细汇总数量对齐订单行的订购数量"
             >
                 {#if syncLoading}
                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

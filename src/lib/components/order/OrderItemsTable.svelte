@@ -490,13 +490,14 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
                         {/if}
                     {:else if column.key === 'action'}
-                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipped > safeParseFloat(rowItem.quantity)}
+                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipped !== safeParseFloat(rowItem.quantity)}
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick={() => onReverseSync(rowItem)}
                                 disabled={reverseSyncLoading[rowItem.sku]}
-                                title="将订单数量同步为发货单数量（只可增大）"
+                                title="将订单数量同步为发货单数量"
+                                aria-label="反向同步，将订单数量同步为发货单数量"
                             >
                                 {#if reverseSyncLoading[rowItem.sku]}
                                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -504,7 +505,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                     </svg>
                                 {:else}
-                                    ↩️ 反向同步
+                                    <span class="text-base leading-none">↩️</span>
                                 {/if}
                             </button>
                         {/if}

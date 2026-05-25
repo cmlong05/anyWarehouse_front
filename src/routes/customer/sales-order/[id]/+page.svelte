@@ -235,7 +235,7 @@
         reverseSyncError = null;
         reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: true };
         try {
-            const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku });
+            const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku, allowDecrease: true });
             reverseSyncResult = result;
             if (result.updated_items.length > 0) {
                 await orderDetail.loadOrder();
