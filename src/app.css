@@ -55,7 +55,7 @@
 }
 
 /* 链接默认继承文本颜色，避免浏览器蓝色/紫色干扰 */
-a {
+a:not([class*="text-"]) {
   color: inherit;
 }
 

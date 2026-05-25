@@ -205,13 +205,31 @@
                             </td>
                             <td class="px-3 py-2.5 text-sm border-b border-gray-100">
                                 <div class="flex flex-col">
-                                    <span class="font-semibold text-indigo-600">{m.item_sku}</span>
+                                    <a href={`/item/${m.item}`} class="font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                                        {m.item_sku}
+                                    </a>
                                     <span class="text-xs text-gray-500">{m.item_name}</span>
                                 </div>
                             </td>
                             <td class="px-3 py-2.5 text-sm border-b border-gray-100 text-right tabular-nums">{m.quantity}</td>
-                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.from_container_code ?? '-'}</td>
-                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.to_container_code ?? '-'}</td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">
+                                {#if m.from_container_code}
+                                    <a href={`/container/${m.from_container_code}`} class="text-blue-600 hover:text-blue-800 transition-colors">
+                                        {m.from_container_code}
+                                    </a>
+                                {:else}
+                                    -
+                                {/if}
+                            </td>
+                            <td class="px-3 py-2.5 text-sm border-b border-gray-100">
+                                {#if m.to_container_code}
+                                    <a href={`/container/${m.to_container_code}`} class="text-blue-600 hover:text-blue-800 transition-colors">
+                                        {m.to_container_code}
+                                    </a>
+                                {:else}
+                                    -
+                                {/if}
+                            </td>
                             <td class="px-3 py-2.5 text-sm border-b border-gray-100">{m.reason || '-'}</td>
                             <td class="px-3 py-2.5 text-sm border-b border-gray-100">
                                 {#if m.purchase_order_no}PO: {m.purchase_order_no}{/if}
