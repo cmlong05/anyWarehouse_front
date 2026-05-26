@@ -3,7 +3,9 @@
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib/schemas';
-    import { DataTable, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
+    import { DataTable, FilterPanel, FormInput } from '$lib/components/ui';
+    import FormField from '$lib/components/ui/FormField.svelte';
+    import Svelecte from 'svelecte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import Alert from '$lib/components/Alert.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
@@ -13,20 +15,20 @@
     let loading = $state(true);
     let error = $state('');
     let searchQuery = $state('');
-    let levelFilter = $state('');
-    let statusFilter = $state('');
+    // 等级筛选：多选，默认不选中"临时客户"
+    let levelFilter = $state<any[]>(['VIP', 'NORMAL']);
+    let statusFilter = $state<any[]>(['ACTIVE']);
     let sortKey = $state<keyof Customer>('code');
     let sortDirection = $state<'asc' | 'desc'>('asc');
+    let initialLoad = $state(true);
     
     const levelOptions = [
-        { value: '', label: '全部等级' },
         { value: 'VIP', label: 'VIP客户' },
         { value: 'NORMAL', label: '普通客户' },
         { value: 'TEMP', label: '临时客户' }
     ];
     
     const statusOptions = [
-        { value: '', label: '全部状态' },
         { value: 'ACTIVE', label: '活跃' },
         { value: 'INACTIVE', label: '停用' }
     ];
@@ -44,6 +46,13 @@
     const sortedCustomers = $derived.by(() => {
         return sortByKey(customers, sortKey, sortDirection);
     });
+
+    const levelFilterActive = $derived(
+        levelFilter.length > 0 && levelFilter.length < levelOptions.length
+    );
+    const statusFilterActive = $derived(
+        statusFilter.length > 0 && statusFilter.length < statusOptions.length
+    );
     
     // 等级徽章样式
     function getLevelClass(level: string): string {
@@ -61,8 +70,14 @@
         try {
             const params: { search?: string; level?: string; status?: string } = {};
             if (searchQuery) params.search = searchQuery;
-            if (levelFilter) params.level = levelFilter;
-            if (statusFilter) params.status = statusFilter;
+            if (levelFilter.length > 0 && levelFilter.length < levelOptions.length) {
+                const levels = levelFilter.map(v => typeof v === 'string' ? v : (v && v.value) ? v.value : undefined).filter(Boolean);
+                if (levels.length) params.level = levels.join(',');
+            }
+            if (statusFilter.length > 0 && statusFilter.length < statusOptions.length) {
+                const statuses = statusFilter.map(v => typeof v === 'string' ? v : (v && v.value) ? v.value : undefined).filter(Boolean);
+                if (statuses.length) params.status = statuses.join(',');
+            }
             
             const result = await customerAPI.list(params);
             if (result && typeof result === 'object' && 'results' in result) {
@@ -85,8 +100,8 @@
     
     function resetFilters() {
         searchQuery = '';
-        levelFilter = '';
-        statusFilter = '';
+        levelFilter = ['VIP', 'NORMAL'];
+        statusFilter = ['ACTIVE'];
         loadCustomers();
     }
 
@@ -96,8 +111,17 @@
         sortDirection = next.sortDirection;
     }
     
-    onMount(() => {
-        loadCustomers();
+    onMount(async () => {
+        await loadCustomers();
+        initialLoad = false;
+    });
+
+    // 监听筛选条件变化，初始加载后重新查询
+    $effect(() => {
+        if (initialLoad) return;
+        if (levelFilter || statusFilter) {
+            loadCustomers();
+        }
     });
 </script>
 
@@ -133,21 +157,39 @@
             onchange={(v) => { searchQuery = v; loadCustomers(); }}
         />
         
-        <FormSelect
-            label="等级"
-            name="level"
-            options={levelOptions}
-            value={levelFilter}
-            onchange={(v) => { levelFilter = v; loadCustomers(); }}
-        />
+        <FormField label="等级" for="level-filter">
+            <div class="min-w-[180px]">
+                <Svelecte
+                    options={levelOptions}
+                    bind:value={levelFilter}
+                    multiple={true}
+                    emitValues={true}
+                    closeAfterSelect={false}
+                    keepSelectionInList={false}
+                    collapseSelection={null}
+                    valueField="value"
+                    labelField="label"
+                    placeholder="选择等级"
+                />
+            </div>
+        </FormField>
         
-        <FormSelect
-            label="状态"
-            name="status"
-            options={statusOptions}
-            value={statusFilter}
-            onchange={(v) => { statusFilter = v; loadCustomers(); }}
-        />
+        <FormField label="状态" for="status-filter">
+            <div class="min-w-[180px]">
+                <Svelecte
+                    options={statusOptions}
+                    bind:value={statusFilter}
+                    multiple={true}
+                    emitValues={true}
+                    closeAfterSelect={false}
+                    keepSelectionInList={false}
+                    collapseSelection={null}
+                    valueField="value"
+                    labelField="label"
+                    placeholder="选择状态"
+                />
+            </div>
+        </FormField>
     </FilterPanel>
     
     {#if !loading && customers.length === 0}
@@ -155,8 +197,8 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
-            <p class="text-gray-500 mb-4">{searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}</p>
-            {#if !searchQuery && !levelFilter && !statusFilter}
+            <p class="text-gray-500 mb-4">{searchQuery || levelFilterActive || statusFilterActive ? '没有找到匹配的客户' : '暂无客户'}</p>
+            {#if !searchQuery && !levelFilterActive && !statusFilterActive}
                 <button
                     type="button"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -184,7 +226,7 @@
             onHeaderClick={(key) => toggleSort(key as keyof Customer)}
             sortKey={sortKey as string}
             {sortDirection}
-            emptyText={searchQuery || levelFilter || statusFilter ? '没有找到匹配的客户' : '暂无客户'}
+            emptyText={searchQuery || levelFilterActive || statusFilter ? '没有找到匹配的客户' : '暂无客户'}
         >
             {#snippet cellRender({ item, column, value }: { item: Customer; column: { key: string }; value: unknown })}
                 {#if column.key === 'code'}
