@@ -420,10 +420,10 @@
                                     </button>
                                 </div>
                             {:else}
-                                <div class="group inline-flex items-center">
+                                <div class="group inline-flex items-stretch">
                                     <button
                                         onclick={() => toggleValue(attribute.id, value.id)}
-                                        class="px-3 py-1.5 text-sm rounded-l-lg border-y border-l transition-all {isValueSelected(value.id)
+                                        class="flex items-center whitespace-nowrap px-3 py-1.5 text-sm rounded-l-lg border-y border-l transition-all {isValueSelected(value.id)
                                             ? 'border-purple-500 bg-purple-50 text-purple-700' 
                                             : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'}"
                                     >
@@ -439,7 +439,7 @@
                                         <button
                                             type="button"
                                             onclick={() => startEditValue(value)}
-                                            class="px-2 py-1.5 text-sm rounded-r-lg border-y border-r border-gray-300 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-gray-100 transition-colors"
+                                            class="flex items-center justify-center flex-none h-full px-2 py-1.5 text-sm rounded-r-lg border-y border-r border-gray-300 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-gray-100 transition-colors"
                                             title="编辑"
                                             aria-label="编辑"
                                         >
