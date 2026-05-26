@@ -12,6 +12,7 @@
         value: string | number | null | undefined;
         format?: 'date' | 'priority' | 'default';
         href?: string;
+        linkClass?: string;
         separator?: boolean;
     }
 
@@ -65,7 +66,7 @@
                         {formatValue(item)}
                     </span>
                 {:else if item.href}
-                    <a href={item.href} class="font-medium text-gray-900">
+                    <a href={item.href} class={item.linkClass || 'font-medium text-gray-900'}>
                         {formatValue(item)}
                     </a>
                 {:else}
