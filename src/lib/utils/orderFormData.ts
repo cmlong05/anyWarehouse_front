@@ -20,13 +20,8 @@ export interface OrderItemLike {
     quotation?: number | null;
     expected_delivery?: string | null;
     notes?: string;
-    item_detail?: {
-        is_variant?: boolean | string | number;
-        parent_item_id?: number | null;
-        parent_item_name?: string;
-        parent_item_sku?: string;
-        variant_attributes?: Array<{ attribute: string; value: string; color?: string }>;
-    };
+    // item_detail can be either variant metadata or a BaseItem detail from API — accept any for compatibility
+    item_detail?: any;
 }
 
 /**

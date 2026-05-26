@@ -25,10 +25,12 @@ export {
     QuotationAPI,
     PurchaseOrderAPI,
     PurchaseOrderItemAPI,
+    PurchaseOrderPaymentRecordAPI,
     supplierAPI,
     quotationAPI,
     purchaseOrderAPI,
     purchaseOrderItemAPI,
+    purchaseOrderPaymentRecordAPI,
 } from './supplier';
 
 // 导出客户相关 API

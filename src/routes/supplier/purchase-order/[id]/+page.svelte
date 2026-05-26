@@ -16,6 +16,7 @@
         ShipReceiveModal,
         OrderNotesCard
     } from '$lib/components/order';
+    import OrderPaymentRecords from '$lib/components/OrderPaymentRecords.svelte';
     import { 
         useOrderDetail, 
         useShipModal, 
@@ -236,6 +237,9 @@
 
         <!-- 订单明细 -->
         <OrderItemsTable items={order.items || []} type="purchase" showCurrentStock currency={order.currency || 'CNY'} />
+
+        <!-- 付款记录 -->
+        <OrderPaymentRecords orderId={order.id} currency={order.currency || 'CNY'} />
 
         <!-- 收货进度 -->
         {#if order.progress_percentage !== undefined}

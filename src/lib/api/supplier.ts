@@ -156,9 +156,52 @@ export class PurchaseOrderItemAPI extends BaseAPI<PurchaseOrderItem, unknown> {
     }
 }
 
+
+// ========== Purchase Order Payment Record API ==========
+
+export class PurchaseOrderPaymentRecordAPI extends BaseAPI<any, any, Partial<any>> {
+    constructor() {
+        super('/supplier/purchase-order-payment-records/');
+    }
+
+    async listByOrder(orderId: number): Promise<PaginatedResponse<any>> {
+        return this.client.get<PaginatedResponse<any>>(this.basePath, { purchase_order: orderId.toString() });
+    }
+
+    async create(data: any): Promise<any> {
+        return this.client.post<any>(this.basePath, this.toFormData(data), true);
+    }
+
+    async update(id: number, data: Partial<any>): Promise<any> {
+        return this.client.put<any>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    }
+
+    async patch(id: number, data: Partial<any>): Promise<any> {
+        return this.client.patch<any>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    }
+
+    async delete(id: number): Promise<void> {
+        return this.client.delete(`${this.basePath}${id}/`);
+    }
+
+    private toFormData(data: Partial<any>): FormData {
+        const formData = new FormData();
+        Object.entries(data).forEach(([key, value]) => {
+            if (value === undefined || value === null || value === '') return;
+            if (key === 'attachment' && value instanceof File) {
+                formData.append(key, value);
+                return;
+            }
+            formData.append(key, String(value));
+        });
+        return formData;
+    }
+}
+
 // ========== 导出 API 实例 ==========
 
 export const supplierAPI = new SupplierAPI();
 export const quotationAPI = new QuotationAPI();
 export const purchaseOrderAPI = new PurchaseOrderAPI();
 export const purchaseOrderItemAPI = new PurchaseOrderItemAPI();
+export const purchaseOrderPaymentRecordAPI = new PurchaseOrderPaymentRecordAPI();
