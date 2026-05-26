@@ -1,8 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
-    import { get } from 'svelte/store';
+    import { page } from '$app/state';
     import { shipmentAPI } from '$lib/api';
     import { formatDate, getErrorMessage } from '$lib/utils';
     import type { Shipment, ShipmentFilters } from '$lib/shipmentTypes';
@@ -58,7 +57,7 @@
     ];
 
     onMount(() => {
-        const currentPage = get(page);
+        const currentPage = page;
         const urlParams = new URLSearchParams(currentPage.url.search);
         
         filters.search = urlParams.get('search') || '';

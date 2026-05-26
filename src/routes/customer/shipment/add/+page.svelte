@@ -1,12 +1,11 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
-    import { get } from 'svelte/store';
+    import { page } from '$app/state';
     import ShipmentForm from '$lib/components/ShipmentForm.svelte';
     import type { Shipment } from '$lib/shipmentTypes';
 
     // 获取URL参数
-    const currentPage = get(page);
+    const currentPage = page;
     const orderId = currentPage.url.searchParams.get('order_id');
     const initialOrderId = orderId ? parseInt(orderId) : undefined;
 

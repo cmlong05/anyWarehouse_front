@@ -1,10 +1,10 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import PackageForm from '$lib/components/PackageForm.svelte';
     import type { Package } from '$lib/shipmentTypes';
 
-    let packageId = $derived(parseInt($page.params.id || '0'));
+    const packageId = parseInt(page.params.id || '0');
 
     function handleSuccess(pkg: Package) {
         setTimeout(() => {

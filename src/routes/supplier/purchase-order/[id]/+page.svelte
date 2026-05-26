@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';
-    import { page } from '$app/stores';
+    import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { purchaseOrderAPI } from '$lib/api';
     import type { PurchaseOrder, PurchaseOrderItem } from '$lib';
-    import { safeParseFloat, formatNumber } from '$lib/utils';
+    import { formatNumber } from '$lib/utils';
     import Alert from '$lib/components/Alert.svelte';
     import Loading from '$lib/components/Loading.svelte';
     import { 
@@ -24,7 +24,7 @@
     } from '$lib/composables/useOrderDetail.svelte';
 
     // 获取订单ID
-    let orderId = $derived(parseInt($page.params.id || '0'));
+    const orderId = parseInt(page.params.id || '0');
 
     // 使用共享逻辑
     const orderDetail = useOrderDetail<PurchaseOrder, string>({

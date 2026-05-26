@@ -1,4 +1,8 @@
 <script lang="ts">
+    // OrderInfoGrid is a reusable display component for rendering
+    // a list of order metadata items in a compact info-card layout.
+    // It supports formatted values, priority badges, optional links,
+    // and separators between item groups.
     import type { Snippet } from 'svelte';
     import { PRIORITY_MAP } from '$lib/composables/useOrderDetail.svelte';
 
