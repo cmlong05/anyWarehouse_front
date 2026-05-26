@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { purchaseOrderPaymentRecordAPI, purchaseOrderAPI } from '$lib/api';
   import Loading from '$lib/components/Loading.svelte';
   import { safeParseFloat } from '$lib/utils';
@@ -20,6 +21,7 @@
   let deletingId = $state<number | null>(null);
 
   let order = $state<any | null>(null);
+  let displayCurrency = $derived(order?.currency || currency);
 
   function getTodayLocalDate(): string {
     const now = new Date();
@@ -70,7 +72,6 @@
       purchaseOrderPaymentRecordAPI.listByOrder(orderId),
     ]);
     order = orderRes;
-    if (order?.currency) currency = order.currency;
     records = Array.isArray(res) ? res : (res as any).results ?? [];
   }
 
@@ -98,7 +99,7 @@
       notes: record.notes || '',
       attachment: null,
     };
-    window.scrollTo({ top: document.getElementById('payment-form-section')?.offsetTop ?? 0, behavior: 'smooth' });
+    if (browser) window.scrollTo({ top: document.getElementById('payment-form-section')?.offsetTop ?? 0, behavior: 'smooth' });
   }
 
   async function submit() {
@@ -116,15 +117,15 @@
         purchase_order: orderId,
         received_date: form.received_date,
         amount: parsedAmount,
-        currency: currency || 'CNY',
-        payment_method: form.payment_method || undefined,
-        reference_number: form.reference_number || undefined,
-        notes: form.notes || undefined,
-        attachment: form.attachment || undefined,
+        currency: displayCurrency || 'CNY',
+        payment_method: form.payment_method,
+        reference_number: form.reference_number,
+        notes: form.notes,
+        ...(form.attachment ? { attachment: form.attachment } : {}),
       };
 
       if (editingId) {
-        await purchaseOrderPaymentRecordAPI.update(editingId, payload);
+        await purchaseOrderPaymentRecordAPI.patch(editingId, payload);
         success = '付款记录已更新。';
       } else {
         await purchaseOrderPaymentRecordAPI.create(payload);
@@ -188,11 +189,11 @@
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div class="text-xs text-gray-500 mb-1">已付金额</div>
-        <div class="text-base font-semibold text-gray-900">{order?.currency || currency} {safeParseFloat(order?.received_amount || '0').toFixed(2)}</div>
+        <div class="text-base font-semibold text-gray-900">{order?.currency || displayCurrency} {safeParseFloat(order?.received_amount || '0').toFixed(2)}</div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div class="text-xs text-gray-500 mb-1">未付金额</div>
-        <div class="text-base font-semibold text-gray-900">{order?.currency || currency} {safeParseFloat(order?.balance_due || order?.total_amount || '0').toFixed(2)}</div>
+        <div class="text-base font-semibold text-gray-900">{order?.currency || displayCurrency} {safeParseFloat(order?.balance_due || order?.total_amount || '0').toFixed(2)}</div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div class="text-xs text-gray-500 mb-1">付款进度</div>
