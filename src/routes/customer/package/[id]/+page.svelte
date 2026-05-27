@@ -554,7 +554,15 @@
                                             {item.product_name}
                                         {/if}
                                     </td>
-                                    <td class="text-left text-gray-600">{item.storage_locations?.join(', ') || '-'}</td>
+                                    <td class="text-left text-gray-600">
+                                        {#if item.storage_locations && item.storage_locations.length > 0}
+                                            {#each item.storage_locations as location, index}
+                                                <a href={`/container/${location}`} class="text-blue-600 hover:underline">{location}</a>{index < item.storage_locations.length - 1 ? ', ' : ''}
+                                            {/each}
+                                        {:else}
+                                            -
+                                        {/if}
+                                    </td>
                                     <td class="text-right w-20">{formatNumber(item.quantity)}</td>
                                     <td class="text-sm text-gray-500 pl-8 text-right">
                                         {item.shipment_no || '-'}
