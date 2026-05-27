@@ -7,6 +7,7 @@
     import DualSelectionPanel from './DualSelectionPanel.svelte';
     import Alert from './Alert.svelte';
     import Loading from './Loading.svelte';
+    import Plus from 'lucide-svelte/icons/plus';
 
     interface Props {
         mode: 'create' | 'edit';
@@ -498,6 +499,17 @@
                 >
                     {#snippet available()}
                         {#if availableItems().length > 0}
+                            <div class="flex justify-between items-center gap-2 mb-3">
+                                <div class="text-sm text-gray-600">当前可添加 {formatNumber(availableItems().length)} 条明细</div>
+                                <button 
+                                    type="button"
+                                    class="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center gap-1"
+                                    onclick={fillAllPending}
+                                >
+                                    <Plus class="h-4 w-4" />
+                                    全部添加 ({availableItems().length})
+                                </button>
+                            </div>
                             <table class="w-full border-collapse text-sm">
                                 <thead>
                                     <tr>
