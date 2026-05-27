@@ -313,8 +313,6 @@
         await Promise.all(proxyRows.map(r => applyFifoSilently(r)));
     }
 
-    function getTotalQuantity(): number { return packagePreviewItems.reduce((sum, item) => sum + item.quantity, 0); }
-    function getTotalItems(): number { return packagePreviewItems.length; }
     function generatePackageNo(): string { const date = new Date(); return `PKG${date.toISOString().slice(0,10).replace(/-/g,'')}${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}${String(date.getSeconds()).padStart(2,'0')}`; }
 
     async function handleSubmit() {
@@ -487,8 +485,7 @@
 
         <!-- 双栏布局：使用通用组件 -->
         <div class="bg-gray-50 p-4 rounded-lg mb-4">
-            <h3 class="m-0 mb-4 text-gray-600 text-lg font-semibold">商品明细 <small class="font-normal text-gray-500">(总计: {getTotalItems()} 项, {formatNumber(getTotalQuantity())} 件)</small></h3>
-            
+
             {#if selectedShipmentIds.length > 0}
                 <DualSelectionPanel
                     layout="vertical"
