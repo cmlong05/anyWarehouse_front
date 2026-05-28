@@ -35,9 +35,9 @@
     }
 </script>
 
-<aside class="lg:w-64 flex-shrink-0 lg:sticky lg:top-4 max-h-[calc(100vh-1rem)] overflow-y-auto space-y-4 pr-1">
+<aside class="lg:w-64 flex-shrink-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-1rem)] lg:overflow-y-auto space-y-4 pr-1">
     {#each categories as category}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-shrink-0">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 flex-shrink-0">
             <div
                 class="group px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-t-xl shadow-sm sticky top-0 flex items-center justify-between gap-3 cursor-pointer"
                 role="button"
