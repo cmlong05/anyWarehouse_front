@@ -130,6 +130,12 @@
         ];
     });
 
+    const estimatedWeightDisplay = $derived.by(() => {
+        const order = orderDetail.order;
+        if (!order?.estimated_weight) return undefined;
+        return `${order.estimated_weight} kg`;
+    });
+
     onMount(() => {
         orderDetail.loadOrder();
     });
@@ -394,6 +400,7 @@
                 { label: '下单日期', value: order.order_date },
                 { label: '预计交货', value: order.expected_delivery },
                 { label: '实际交货', value: order.actual_delivery },
+                { label: '预计重量', value: estimatedWeightDisplay },
                 { label: '创建人', value: order.created_by },
             ]}
         >

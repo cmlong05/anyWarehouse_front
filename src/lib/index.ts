@@ -896,6 +896,7 @@ export interface SalesOrder {
     payment_records?: SalesOrderPaymentRecord[];
     item_count?: number;
     total_quantity?: number;
+    estimated_weight?: string;
     total_shipped?: number;
     progress_percentage?: number;
     created_by: string;
