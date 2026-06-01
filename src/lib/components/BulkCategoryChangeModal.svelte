@@ -43,7 +43,7 @@
     }: BulkCategoryChangeModalProps = $props();
 
     let categories = $state<Category[]>([]);
-    let selectedTargetCategoryId = $state<number | null>(null);
+    let selectedTargetCategoryId = $state<number | string | null>(null);
     let mode = $state<ChangeMode>('move');
     let isLoadingCategories = $state(false);
     let isSubmitting = $state(false);
@@ -53,7 +53,6 @@
     let skippedItemsDetail = $state<Array<{ id: number; SKU?: string; name?: string; reason: string }>>([]);
     let resultSourceName = $state('');
     let resultTargetName = $state('');
-    let resultSourceId = $state<number | null>(null);
     let resultTargetId = $state<number | null>(null);
     let resultMode = $state<ChangeMode>('move');
 
@@ -68,17 +67,31 @@
         }))
     );
 
-    function closeModal() {
-        selectedTargetCategoryId = null;
-        mode = 'move';
-        isSubmitting = false;
+    const normalizedSelectedTargetCategoryId = $derived(
+        normalizeTargetCategoryId(selectedTargetCategoryId)
+    );
+
+    const canSubmit = $derived(
+        !isSubmitting && normalizedSelectedTargetCategoryId !== null && selectedItems.length > 0
+    );
+
+    function clearResultPanel() {
         errorMessage = '';
         changedItems = [];
         skippedItemsDetail = [];
         resultSourceName = '';
         resultTargetName = '';
-        resultSourceId = null;
         resultTargetId = null;
+    }
+
+    function closeModal() {
+        if (isSubmitting) {
+            return;
+        }
+
+        selectedTargetCategoryId = null;
+        mode = 'move';
+        clearResultPanel();
         onclose?.();
     }
 
@@ -87,8 +100,21 @@
         return `${indent}${category.name}`;
     }
 
-    async function loadCategories() {
-        if (isLoadingCategories || hasLoadedCategories) {
+    function normalizeTargetCategoryId(value: unknown): number | null {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+
+        const parsed = typeof value === 'number' ? value : Number(value);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+            return null;
+        }
+
+        return parsed;
+    }
+
+    async function loadCategories(force = false) {
+        if (isLoadingCategories || (hasLoadedCategories && !force)) {
             return;
         }
 
@@ -113,8 +139,14 @@
     });
 
     async function handleSubmit() {
-        if (selectedTargetCategoryId === null) {
+        const normalizedTargetCategoryId = normalizedSelectedTargetCategoryId;
+        if (normalizedTargetCategoryId === null) {
             errorMessage = '请选择目标分类';
+            return;
+        }
+
+        if (!availableCategories.some((category) => category.id === normalizedTargetCategoryId)) {
+            errorMessage = '目标分类无效，请重新选择';
             return;
         }
 
@@ -126,25 +158,19 @@
         // 快照提交时的选择，防止父页面刷新后丢失映射关系
         const itemMap = new Map(selectedItems.map((item) => [item.id, item]));
         const itemIds = Array.from(itemMap.keys());
-        const targetCategory = categories.find((c) => c.id === selectedTargetCategoryId);
+        const targetCategory = categories.find((c) => c.id === normalizedTargetCategoryId);
         const submittedSourceName = currentCategoryName;
-        const submittedTargetName = targetCategory?.name ?? `#${selectedTargetCategoryId}`;
+        const submittedTargetName = targetCategory?.name ?? `#${normalizedTargetCategoryId}`;
         const submittedMode = mode;
 
         isSubmitting = true;
-        errorMessage = '';
-        changedItems = [];
-        skippedItemsDetail = [];
-        resultSourceName = '';
-        resultTargetName = '';
-        resultSourceId = null;
-        resultTargetId = null;
+        clearResultPanel();
 
         try {
             const response = await apiClient.post<BulkChangeResponse>('/product/item/bulk_change_category/', {
                 item_ids: itemIds,
                 source_category_id: currentCategoryId,
-                target_category_id: selectedTargetCategoryId,
+                target_category_id: normalizedTargetCategoryId,
                 mode,
             });
 
@@ -170,17 +196,18 @@
             const processed = response.processed_count;
 
             if (processed === 0) {
-                errorMessage = skippedCount > 0
-                    ? `未处理任何物品，跳过 ${skippedCount} 个（可能不在当前分类下）`
-                    : '未处理任何物品';
+                if (skippedCount === 0) {
+                    errorMessage = '未处理任何物品';
+                }
+                // skippedCount > 0 时跳过物品列表已说明原因，不需要额外的错误横条
                 return;
             }
 
             resultSourceName = submittedSourceName;
             resultTargetName = submittedTargetName;
-            resultSourceId = currentCategoryId;
-            resultTargetId = selectedTargetCategoryId;
+            resultTargetId = normalizedTargetCategoryId;
             resultMode = submittedMode;
+            selectedTargetCategoryId = null;
 
             // 不自动关闭弹窗，仅后台刷新页面数据，让操作人员看完结果后手动关闭
             onsuccess?.();
@@ -355,7 +382,7 @@
                     <button
                         class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         onclick={handleSubmit}
-                        disabled={isSubmitting || selectedTargetCategoryId === null || selectedItems.length === 0}
+                        disabled={!canSubmit}
                     >
                         {#if isSubmitting}
                             提交中...
