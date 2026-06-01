@@ -2,7 +2,7 @@
  * 订单详情页共享逻辑
  */
 import { goto } from '$app/navigation';
-import type { SalesOrder, PurchaseOrder } from '$lib';
+import { apiClient } from '$lib/api/client';
 import { getErrorMessage } from '$lib/utils/errors';
 
 // 状态映射配置
@@ -188,16 +188,25 @@ export function useShipModal<T extends ShipItem>(options: {
 }) {
     let showModal = $state(false);
     let quantities = $state<Record<number, number>>({});
+    let containers = $state<Record<number, number | null>>({});
+    let availableStorages = $state<Record<number, any>>({});
     
     function setQuantities(value: Record<number, number>) {
         quantities = value;
+    }
+    function setContainers(value: Record<number, number | null>) {
+        containers = value;
     }
     let notes = $state('');
     let updating = $state(false);
     let error = $state<string | null>(null);
 
-    function openModal(items: T[]) {
+    type ShipModalMode = 'ship' | 'receive';
+
+    async function openModal(items: T[], mode: ShipModalMode = 'ship') {
         quantities = {};
+        containers = {};
+        availableStorages = {};
         items.forEach(item => {
             const pending = Number(item.quantity_pending || 0);
             if (pending > 0) {
@@ -207,6 +216,42 @@ export function useShipModal<T extends ShipItem>(options: {
         notes = '';
         error = null;
         showModal = true;
+
+        if (mode === 'receive') {
+            try {
+                const containersRes = await apiClient.get<{ id: number; fastCode: string }[]>(
+                    '/warehouse/container-brief/'
+                );
+                const storages = containersRes.map((container) => ({
+                    storage_id: 0,
+                    container_id: container.id,
+                    container_code: container.fastCode,
+                    container_mark: '',
+                    container_path: '',
+                    quantity: 0,
+                }));
+                const itemIds = items.filter(i => Number(i.quantity_pending || 0) > 0).map(i => i.id);
+                const nextStorages: Record<number, any> = {};
+                itemIds.forEach((itemId) => {
+                    nextStorages[itemId] = { storages };
+                });
+                availableStorages = nextStorages;
+            } catch (e) {
+                availableStorages = items.filter(i => Number(i.quantity_pending || 0) > 0)
+                    .reduce((acc, item) => ({ ...acc, [item.id]: { storages: [] } }), {} as Record<number, any>);
+            }
+            return;
+        }
+
+        // Fetch available storages for items in background
+        items.filter(i => Number(i.quantity_pending || 0) > 0).forEach(async (item) => {
+            try {
+                const res = await (await import('$lib/api/movement')).getAvailableStoragesForItem(item.id);
+                availableStorages = { ...availableStorages, [item.id]: res };
+            } catch (e) {
+                availableStorages = { ...availableStorages, [item.id]: { storages: [] } };
+            }
+        });
     }
 
     function closeModal() {
@@ -216,7 +261,13 @@ export function useShipModal<T extends ShipItem>(options: {
     async function confirmShip() {
         const shipItems = Object.entries(quantities)
             .filter(([, qty]) => qty > 0)
-            .map(([id, quantity]) => ({ item_id: parseInt(id), quantity }));
+            .map(([id, quantity]) => {
+                const itemId = parseInt(id);
+                const container = containers[itemId];
+                const base: any = { item_id: itemId, quantity };
+                if (container !== undefined && container !== null) base.container_id = container;
+                return base;
+            });
         
         if (shipItems.length === 0) {
             error = '请至少输入一个数量';
@@ -243,6 +294,10 @@ export function useShipModal<T extends ShipItem>(options: {
         get showModal() { return showModal; },
         get quantities() { return quantities; },
         set quantities(value) { quantities = value; },
+        get containers() { return containers; },
+        set containers(value) { containers = value; },
+        get availableStorages() { return availableStorages; },
+        set availableStorages(value) { availableStorages = value; },
         get notes() { return notes; },
         set notes(value: string) { notes = value; },
         get updating() { return updating; },

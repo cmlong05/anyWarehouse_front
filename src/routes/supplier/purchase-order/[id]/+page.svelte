@@ -56,7 +56,7 @@
     // 打开收货弹窗
     function openReceiveModal() {
         if (!orderDetail.order?.items) return;
-        receiveModal.openModal(orderDetail.order.items);
+        receiveModal.openModal(orderDetail.order.items, 'receive');
     }
 
     // 获取可用操作（包含收货按钮）
@@ -271,6 +271,9 @@
     title="订单收货"
     items={orderDetail.order?.items || []}
     quantities={receiveModal.quantities}
+    containers={receiveModal.containers}
+    availableStorages={receiveModal.availableStorages}
+    onContainerChange={(id, v) => receiveModal.containers = { ...receiveModal.containers, [id]: v }}
     notes={receiveModal.notes}
     updating={receiveModal.updating}
     error={receiveModal.error}

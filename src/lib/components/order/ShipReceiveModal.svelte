@@ -1,5 +1,6 @@
 <script lang="ts">
     import Alert from '$lib/components/Alert.svelte';
+    import Svelecte from 'svelecte';
     import { formatNumber } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';
 
@@ -18,6 +19,9 @@
         title: string;
         items: Item[];
         quantities: Record<number, number>;
+        containers?: Record<number, number | null>;
+        onContainerChange?: (itemId: number, containerId: number | null) => void;
+        availableStorages?: Record<number, any>;
         notes: string;
         updating: boolean;
         error: string | null;
@@ -32,6 +36,9 @@
         title,
         items,
         quantities,
+        containers = {},
+        onContainerChange = () => {},
+        availableStorages = {},
         notes,
         updating,
         error,
@@ -40,6 +47,8 @@
         onConfirm,
         onNotesChange,
     }: Props = $props();
+
+    // availableStorages is provided by parent via prop; parent prefetches storages when opening modal
 
     function getProcessedQty(item: Item): number {
         return Number(type === 'ship' ? (item.quantity_shipped || 0) : (item.quantity_received || 0));
@@ -51,6 +60,28 @@
 
     function getTotalQuantity(): number {
         return Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
+    }
+
+    function getContainerOptions(itemId: number): Array<{ value: number; label: string }> {
+        return (availableStorages[itemId]?.storages ?? []).map((s: any) => ({
+            value: s.container_id,
+            label: s.container_mark ? `${s.container_code} - ${s.container_mark}` : s.container_code,
+        }));
+    }
+
+    function parseContainerId(value: unknown): number | null {
+        if (value === null || value === undefined || value === '') return null;
+
+        // Svelecte may emit either primitive values or option objects depending on config.
+        if (typeof value === 'object' && value !== null) {
+            const candidate = (value as { value?: unknown }).value;
+            if (candidate === null || candidate === undefined || candidate === '') return null;
+            const parsedFromObject = Number(candidate);
+            return Number.isFinite(parsedFromObject) ? parsedFromObject : null;
+        }
+
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
     }
 </script>
 
@@ -66,7 +97,7 @@
                 {#if error}
                     <Alert error={{message: error}} onDismiss={() => {}} />
                 {/if}
-                
+
                 <div>
                     <table class="w-full border-collapse text-sm">
                         <thead>
@@ -76,6 +107,9 @@
                                 <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">订购数量</th>
                                 <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">{type === 'ship' ? '已发货' : '已收货'}</th>
                                 <th class="p-3 text-right border-b border-gray-100 bg-gray-50 font-semibold">本次{type === 'ship' ? '发货' : '收货'}</th>
+                                {#if type === 'receive'}
+                                    <th class="p-3 text-left border-b border-gray-100 bg-gray-50 font-semibold">目标容器</th>
+                                {/if}
                             </tr>
                         </thead>
                         <tbody>
@@ -96,6 +130,23 @@
                                             onchange={(v) => quantities[item.id] = v ?? 0}
                                         />
                                     </td>
+                                    {#if type === 'receive'}
+                                        <td class="p-3 text-left border-b border-gray-100">
+                                            <Svelecte
+                                                options={getContainerOptions(item.id)}
+                                                value={containers?.[item.id] ?? null}
+                                                valueAsObject={false}
+                                                emitValues={true}
+                                                valueField="value"
+                                                labelField="label"
+                                                clearable={true}
+                                                searchable={true}
+                                                placeholder="不指定"
+                                                class="svelecte-control"
+                                                onChange={(value: unknown) => onContainerChange(item.id, parseContainerId(value))}
+                                            />
+                                        </td>
+                                    {/if}
                                 </tr>
                             {/each}
                         </tbody>
