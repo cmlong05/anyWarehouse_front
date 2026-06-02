@@ -273,6 +273,7 @@
     quantities={receiveModal.quantities}
     containers={receiveModal.containers}
     availableStorages={receiveModal.availableStorages}
+    allContainers={receiveModal.allContainers}
     onContainerChange={(id, v) => receiveModal.containers = { ...receiveModal.containers, [id]: v }}
     notes={receiveModal.notes}
     updating={receiveModal.updating}

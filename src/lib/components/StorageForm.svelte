@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
+    import { buildContainerRelationSearchOptions } from '$lib/utils';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -26,10 +27,7 @@
 
     let { mode, initialData, containers, itemId, itemSKU, onCancel, onDelete }: Props = $props();
     
-    const selectItems = $derived(containers.map((item: ContainerBriefID) => ({
-        value: item.id,
-        label: item.fastCode
-    })));
+    const selectItems = $derived(buildContainerRelationSearchOptions(containers));
 
     let formData = $state({
         item: '',
@@ -104,7 +102,7 @@
             name="container"
             options={selectItems}
             bind:value={formData.container}
-            searchProps={{ fields: ['label'] }}
+            searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
             required
         />
     </div>

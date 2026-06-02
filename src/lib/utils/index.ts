@@ -31,3 +31,6 @@ export * from './item-price';
 
 // 导出分类下拉选项工具
 export * from './category-options';
+
+// 导出容器下拉选项工具
+export * from './container-options';

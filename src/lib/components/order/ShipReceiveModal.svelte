@@ -1,8 +1,9 @@
 <script lang="ts">
     import Alert from '$lib/components/Alert.svelte';
     import Svelecte from 'svelecte';
-    import { formatNumber } from '$lib/utils';
+    import { formatNumber, buildContainerRelationSearchOptions } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';
+    import type { ContainerBriefID } from '$lib';
 
     interface Item {
         id: number;
@@ -26,6 +27,7 @@
         updating: boolean;
         error: string | null;
         type: 'ship' | 'receive';
+        allContainers?: ContainerBriefID[];
         onClose: () => void;
         onConfirm: () => void;
         onNotesChange: (value: string) => void;
@@ -38,17 +40,28 @@
         quantities,
         containers = {},
         onContainerChange = () => {},
-        availableStorages = {},
         notes,
         updating,
         error,
         type,
+        allContainers = [],
         onClose,
         onConfirm,
         onNotesChange,
     }: Props = $props();
 
     // availableStorages is provided by parent via prop; parent prefetches storages when opening modal
+
+    const containerOptions = $derived(buildContainerRelationSearchOptions(allContainers));
+
+    function hasUnassignedReceiveItems(): boolean {
+        if (type !== 'receive') return false;
+        return items.some(
+            (item) => Number(item.quantity_pending || 0) > 0 &&
+                      (quantities[item.id] ?? 0) > 0 &&
+                      (containers?.[item.id] == null)
+        );
+    }
 
     function getProcessedQty(item: Item): number {
         return Number(type === 'ship' ? (item.quantity_shipped || 0) : (item.quantity_received || 0));
@@ -60,13 +73,6 @@
 
     function getTotalQuantity(): number {
         return Object.values(quantities).reduce((sum, qty) => sum + qty, 0);
-    }
-
-    function getContainerOptions(itemId: number): Array<{ value: number; label: string }> {
-        return (availableStorages[itemId]?.storages ?? []).map((s: any) => ({
-            value: s.container_id,
-            label: s.container_mark ? `${s.container_code} - ${s.container_mark}` : s.container_code,
-        }));
     }
 
     function parseContainerId(value: unknown): number | null {
@@ -133,15 +139,15 @@
                                     {#if type === 'receive'}
                                         <td class="p-3 text-left border-b border-gray-100">
                                             <Svelecte
-                                                options={getContainerOptions(item.id)}
+                                                options={containerOptions}
                                                 value={containers?.[item.id] ?? null}
                                                 valueAsObject={false}
                                                 emitValues={true}
                                                 valueField="value"
                                                 labelField="label"
-                                                clearable={true}
+                                                searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
                                                 searchable={true}
-                                                placeholder="不指定"
+                                                placeholder="请选择容器"
                                                 class="svelecte-control"
                                                 onChange={(value: unknown) => onContainerChange(item.id, parseContainerId(value))}
                                             />
@@ -170,7 +176,7 @@
 
                     <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
                         <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-gray-500 text-white hover:bg-gray-600" onclick={onClose} disabled={updating}>取消</button>
-                        <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700" onclick={onConfirm} disabled={updating || getTotalQuantity() === 0}>
+                        <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700" onclick={onConfirm} disabled={updating || getTotalQuantity() === 0 || hasUnassignedReceiveItems()}>
                             {updating ? '处理中...' : `确认${type === 'ship' ? '发货' : '收货'}`}
                         </button>
                     </div>

@@ -4,6 +4,7 @@
 import { goto } from '$app/navigation';
 import { apiClient } from '$lib/api/client';
 import { getErrorMessage } from '$lib/utils/errors';
+import type { ContainerBriefID } from '$lib';
 
 // 状态映射配置
 export interface StatusConfig {
@@ -190,6 +191,7 @@ export function useShipModal<T extends ShipItem>(options: {
     let quantities = $state<Record<number, number>>({});
     let containers = $state<Record<number, number | null>>({});
     let availableStorages = $state<Record<number, any>>({});
+    let allContainers = $state<ContainerBriefID[]>([]);
     
     function setQuantities(value: Record<number, number>) {
         quantities = value;
@@ -207,6 +209,7 @@ export function useShipModal<T extends ShipItem>(options: {
         quantities = {};
         containers = {};
         availableStorages = {};
+        allContainers = [];
         items.forEach(item => {
             const pending = Number(item.quantity_pending || 0);
             if (pending > 0) {
@@ -219,14 +222,15 @@ export function useShipModal<T extends ShipItem>(options: {
 
         if (mode === 'receive') {
             try {
-                const containersRes = await apiClient.get<{ id: number; fastCode: string }[]>(
+                const containersRes = await apiClient.get<ContainerBriefID[]>(
                     '/warehouse/container-brief/'
                 );
+                allContainers = containersRes;
                 const storages = containersRes.map((container) => ({
                     storage_id: 0,
                     container_id: container.id,
                     container_code: container.fastCode,
-                    container_mark: '',
+                    container_mark: container.mark,
                     container_path: '',
                     quantity: 0,
                 }));
@@ -298,6 +302,7 @@ export function useShipModal<T extends ShipItem>(options: {
         set containers(value) { containers = value; },
         get availableStorages() { return availableStorages; },
         set availableStorages(value) { availableStorages = value; },
+        get allContainers() { return allContainers; },
         get notes() { return notes; },
         set notes(value: string) { notes = value; },
         get updating() { return updating; },

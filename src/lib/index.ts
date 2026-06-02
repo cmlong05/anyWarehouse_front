@@ -232,6 +232,11 @@ export interface Container {
 export interface ContainerBriefID  {
     id: number;
     fastCode: string;
+    mark: string;
+    level: number;
+    lft: number;
+    tree_id: number;
+    parent: number | null;
 }
 export interface ContainerBriefMark  {
     fastCode: string;

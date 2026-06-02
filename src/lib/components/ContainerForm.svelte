@@ -1,6 +1,7 @@
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
 	import { logger } from '$lib/logger';
+    import { buildContainerRelationSearchOptions } from '$lib/utils';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -44,11 +45,13 @@
         onDelete
     }: Props = $props();
 
-    // 转换为 Svelecte 需要的格式
-    const selectItems = $derived(containers.map((item: ContainerBriefID) => ({
-        value: item.fastCode,
-        label: item.fastCode
-    })));
+    // 转换为 Svelecte 需要的格式（层级缩进 + 关联搜索）
+    const selectItems = $derived(
+        buildContainerRelationSearchOptions(
+            containers.filter((c: ContainerBriefID) => mode === 'add' || c.fastCode !== initialData?.fastCode),
+            'fastCode'
+        )
+    );
 
     const getParentFastCode = (parentId: number | null | undefined): string | null => {
         if (!parentId) return null;
@@ -166,7 +169,7 @@
                     inputId="parent"
                     options={selectItems}
                     bind:value={formData.parent}
-                    searchProps={{ fields: ['label'] }}
+                    searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
                     placeholder="选择父容器（可选）"
                     clearable
                 />
