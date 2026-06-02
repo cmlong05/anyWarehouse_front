@@ -22,15 +22,5 @@
 
 位置： [src/lib/components/BulkCategoryChangeModal.svelte](../src/lib/components/BulkCategoryChangeModal.svelte)
 
-
-
-## 目前状态总结
-
-已完成：
-- 抽象层建立完成
-- Item 编辑页已接关系搜索抽象
-- 批量改分类弹窗已接层级显示抽象
-
-未完成：
-- CategoryForm 还未迁移到同一抽象
-- 继续检查
+### C.CategoryForm 
+anyWarehouse_front/src/lib/components/CategoryForm.svelte

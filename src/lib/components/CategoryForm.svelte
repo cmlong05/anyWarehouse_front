@@ -1,6 +1,7 @@
 <!-- 分类新增/编辑共用表单：负责收集分类信息、提交到分类 API，并在成功后跳转到分类详情页。 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
+    import { buildCategoryRelationSearchOptions } from '$lib/utils';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
     import Svelecte from 'svelecte';
@@ -28,9 +29,11 @@
         onDelete
     }: Props = $props();
 
-    const selectItems = $derived(categories
-        .filter((item: Category) => mode === 'add' || item.id !== initialData.id)
-        .map((item: Category) => ({ value: item.id, label: item.name })));
+    const selectItems = $derived(
+        buildCategoryRelationSearchOptions(
+            categories.filter((item: Category) => mode === 'add' || item.id !== initialData.id)
+        )
+    );
 
     let formData = $state({
         name: '',
@@ -103,6 +106,9 @@
                 bind:value={formData.parent}
                 placeholder="选择父分类（可选）"
                 clearable
+                searchable={true}
+                searchProps={{ fields: ['label', 'searchText'] }}
+                class="svelecte-control"
             />
         </div>
     {/if}
