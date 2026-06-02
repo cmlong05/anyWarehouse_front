@@ -2,6 +2,7 @@
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';
     import type { ApiClient } from '$lib/api/client';
+    import { buildCategoryRelationSearchOptions } from '$lib/utils';
     import Svelecte from 'svelecte';
 
     interface SelectedItem {
@@ -61,10 +62,7 @@
     );
 
     const categoryOptions = $derived(
-        availableCategories.map((category) => ({
-            value: category.id,
-            label: formatCategoryName(category),
-        }))
+        buildCategoryRelationSearchOptions(availableCategories)
     );
 
     const normalizedSelectedTargetCategoryId = $derived(
@@ -93,11 +91,6 @@
         mode = 'move';
         clearResultPanel();
         onclose?.();
-    }
-
-    function formatCategoryName(category: Category): string {
-        const indent = '\u00A0\u00A0\u00A0\u00A0'.repeat(Math.max(category.level, 0));
-        return `${indent}${category.name}`;
     }
 
     function normalizeTargetCategoryId(value: unknown): number | null {
@@ -230,7 +223,7 @@
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
          onclick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-        <div class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg bg-white shadow-2xl"
+        <div class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-visible rounded-lg bg-white shadow-2xl"
              onclick={(e) => e.stopPropagation()}>
             <div class="shrink-0 border-b border-gray-200 px-6 py-4">
                 <div class="flex items-start justify-between gap-4">
@@ -249,7 +242,7 @@
                 </div>
             </div>
 
-            <div class="flex-1 space-y-5 overflow-auto px-6 py-5">
+            <div class="flex-1 space-y-5 overflow-visible px-6 py-5">
                 {#if resultTargetId !== null && changedItems.length > 0}
                     <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                         {#if resultMode === 'move'}
@@ -306,6 +299,7 @@
                         placeholder={isLoadingCategories ? '分类加载中...' : '请选择目标分类'}
                         clearable={true}
                         searchable={true}
+                        searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
                         disabled={isSubmitting || isLoadingCategories}
                         class="svelecte-control"
                     />

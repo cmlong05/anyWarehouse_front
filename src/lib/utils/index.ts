@@ -28,3 +28,6 @@ export * from './address';
 
 // 导出物品详情价格计算工具
 export * from './item-price';
+
+// 导出分类下拉选项工具
+export * from './category-options';

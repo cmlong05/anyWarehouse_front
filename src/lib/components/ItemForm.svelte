@@ -3,6 +3,7 @@
     import { goto } from '$app/navigation';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
+    import { buildCategoryRelationSearchOptions } from '$lib/utils';
     import Svelecte from 'svelecte';
     import { FormInput, NumberStepper } from '$lib/components/ui';
 
@@ -52,7 +53,7 @@
         onShowDeleteModal
     }: Props = $props();
 
-    const selectItems = $derived(categories.map((item: Category) => ({ value: item.id, label: item.name })));
+    const selectItems = $derived(buildCategoryRelationSearchOptions(categories));
 
     let formData = $state({
         SKU: '',
@@ -470,7 +471,15 @@
             </div>
             <div class="mb-2">
                 <label for="category-select" class="block text-sm font-medium text-gray-700 mb-1">分类</label>
-                <Svelecte inputId="category-select" options={selectItems} multiple={true} bind:value={formData.category} placeholder="选择商品分类..." class="svelecte-control" />
+                <Svelecte
+                    inputId="category-select"
+                    options={selectItems}
+                    multiple={true}
+                    bind:value={formData.category}
+                    placeholder="选择商品分类..."
+                    searchProps={mode === 'edit' ? { fields: ['label', 'searchText'], skipSort: true } : { fields: ['label'], skipSort: true }}
+                    class="svelecte-control"
+                />
                 
             </div>
         </div>
