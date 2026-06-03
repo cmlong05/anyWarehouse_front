@@ -394,6 +394,9 @@ export type PurchaseOrderStatus = 'draft' | 'pending' | 'approved' | 'ordered' |
 /** 采购订单优先级 */
 export type PurchaseOrderPriority = 'low' | 'normal' | 'high' | 'urgent';
 
+/** 采购订单付款状态 */
+export type PurchaseOrderPaymentStatus = 'unpaid' | 'partial' | 'paid';
+
 /** 采购订单明细 */
 export interface PurchaseOrderItem {
     id: number;
@@ -470,6 +473,7 @@ export interface PurchaseOrderBrief {
     supplier: number;
     supplier_name: string;
     status: PurchaseOrderStatus;
+    payment_status: PurchaseOrderPaymentStatus;
     priority: PurchaseOrderPriority;
     order_date: string;
     expected_delivery: string | null;

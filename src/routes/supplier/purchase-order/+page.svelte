@@ -43,6 +43,7 @@
         { key: 'order_number', title: '订单编号' },
         { key: 'supplier_name', title: '供应商' },
         { key: 'status', title: '状态' },
+        { key: 'payment_status', title: '付款' },
         { key: 'priority', title: '优先级' },
         { key: 'order_date', title: '下单日期' },
         { key: 'expected_delivery', title: '预计交货' },
@@ -51,6 +52,13 @@
     ];
 
     // 状态/优先级徽章函数已从 $lib/utils/orderBadges 导入
+
+    // 付款状态标签
+    function getPaymentStatusLabel(status: string | undefined): string {
+        if (status === 'paid') return '已付款';
+        if (status === 'partial') return '部分付款';
+        return '未付款';
+    }
 
     // 加载供应商列表
     async function loadSuppliers() {
@@ -192,6 +200,14 @@
                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusClass(value as string)}">
                         {getStatusLabel(value as string)}
                     </span>
+                {:else if column.key === 'payment_status'}
+                    <span
+                        class="inline-flex h-4 w-4 rounded-full"
+                        class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
+                        class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
+                        class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
+                        title={getPaymentStatusLabel(value as string)}
+                    ></span>
                 {:else if column.key === 'priority'}
                     <span class="text-gray-700">{getPriorityLabel(value as string)}</span>
                 {:else if column.key === 'expected_delivery'}
