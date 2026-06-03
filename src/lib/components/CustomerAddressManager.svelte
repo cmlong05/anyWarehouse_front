@@ -37,9 +37,16 @@
     });
 
     let formData = $state<CustomerAddressFormData>(emptyForm());
+    let initialFormData = $state<CustomerAddressFormData>(emptyForm());
+    const formFieldKeys = Object.keys(emptyForm()) as (keyof CustomerAddressFormData)[];
+
+    const isFormDirty = $derived.by(() =>
+        formFieldKeys.some((key) => formData[key] !== initialFormData[key])
+    );
 
     function startAdd() {
         formData = emptyForm();
+        initialFormData = { ...formData };
         editingId = null;
         showModal = true;
         error = '';
@@ -64,6 +71,7 @@
             status: addr.status,
             remark: addr.remark || '',
         };
+        initialFormData = { ...formData };
         editingId = addr.id;
         showModal = true;
         error = '';
@@ -73,6 +81,10 @@
         showModal = false;
         editingId = null;
         error = '';
+    }
+
+    function requestCloseModal(force = false) {
+        if (force || !isFormDirty) closeModal();
     }
 
     function validateForm(): string {
@@ -131,7 +143,14 @@
             error = getErrorMessage(err, '加载失败');
         }
     }
+
 </script>
+
+<svelte:window
+    onkeydown={(e) => {
+        if (e.key === 'Escape') requestCloseModal();
+    }}
+/>
 
 <!-- 地址信息标题 + 新增按钮 -->
 <div class="flex items-center justify-between mb-3">
@@ -168,13 +187,15 @@
         role="dialog"
         aria-modal="true"
         tabindex="-1"
-        onclick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
-        onkeydown={(e) => { if (e.key === 'Escape') closeModal(); }}
+        onclick={(e) => { if (e.target === e.currentTarget) requestCloseModal(); }}
+        onkeydown={(e) => {
+            if (e.key === 'Escape') requestCloseModal();
+        }}
     >
         <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
                 <h3 class="font-semibold text-gray-800">{editingId !== null ? '编辑地址' : '新增地址'}</h3>
-                <button type="button" onclick={closeModal} class="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
+                <button type="button" onclick={() => requestCloseModal(true)} class="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
             </div>
             <div class="px-6 py-4">
                 {#if error}
@@ -246,7 +267,7 @@
                 </div>
             </div>
             <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
-                <button type="button" onclick={closeModal} class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm cursor-pointer">取消</button>
+                <button type="button" onclick={() => requestCloseModal(true)} class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm cursor-pointer">取消</button>
                 <button type="button" onclick={() => void handleSave()} disabled={saving} class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                     {saving ? '保存中...' : '保存'}
                 </button>
