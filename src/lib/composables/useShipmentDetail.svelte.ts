@@ -176,8 +176,8 @@ export function useShipmentDetail(shipmentId: () => number) {
         try {
             await packageAPI.addToShipment(selectedPackageId, shipment.id);
             await loadShipment();
-            showLinkPackageModal = false;
             selectedPackageId = null;
+            await loadAvailablePackages();
             return true;
         } catch (err) {
             error = getErrorMessage(err, '关联包裹失败');
@@ -189,6 +189,7 @@ export function useShipmentDetail(shipmentId: () => number) {
 
     // 打开关联包裹弹窗
     function openLinkPackageModal() {
+        selectedPackageId = null;
         showLinkPackageModal = true;
         loadAvailablePackages();
     }

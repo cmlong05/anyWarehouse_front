@@ -3,6 +3,7 @@
     import { logger } from '$lib/logger';
     import type { ItemExternalLink } from '$lib';
     import { externalLinkAPI } from '$lib/api';
+    import { hasChangedFields, shouldDismissModal } from '$lib/utils';
     import Plus from 'lucide-svelte/icons/plus';
 
     const PLATFORM_OPTIONS = [
@@ -43,6 +44,40 @@
     let newLink = $state({ platform: 'aliexpress', link_type: 'own', external_id: '', url: '', label: '' });
     let addingLink = $state(false);
     let showAddForm = $state(false);
+    let initialNewLink = $state({ platform: 'aliexpress', link_type: 'own', external_id: '', url: '', label: '' });
+    const formFields = ['platform', 'link_type', 'external_id', 'url', 'label'] as const;
+
+    const isAddFormDirty = $derived(
+        hasChangedFields(newLink, initialNewLink, formFields)
+    );
+
+    function resetNewLink() {
+        newLink = { platform: 'aliexpress', link_type: 'own', external_id: '', url: '', label: '' };
+        initialNewLink = { ...newLink };
+    }
+
+    function openAddForm() {
+        resetNewLink();
+        showAddForm = true;
+    }
+
+    function closeAddForm() {
+        showAddForm = false;
+        resetNewLink();
+    }
+
+    function handleBackdropClick(event: MouseEvent) {
+        if (shouldDismissModal(event, !isAddFormDirty)) {
+            closeAddForm();
+        }
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (shouldDismissModal(event, !isAddFormDirty)) {
+            event.preventDefault();
+            closeAddForm();
+        }
+    }
 
     $effect(() => {
         count = externalLinks.length;
@@ -79,8 +114,7 @@
                 sort_order: externalLinks.length,
             });
             externalLinks = [...externalLinks, created];
-            newLink = { platform: 'aliexpress', link_type: 'own', external_id: '', url: '', label: '' };
-            showAddForm = false;
+            closeAddForm();
         } catch (e) {
             logger.error('添加外部链接失败:', e);
             alert('添加失败，请检查填写内容');
@@ -105,7 +139,7 @@
         <h2 class="text-lg font-semibold text-gray-900">外部平台链接</h2>
         <button
             type="button"
-            onclick={() => showAddForm = true}
+            onclick={openAddForm}
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
         >
             <Plus class="h-4 w-4" />
@@ -164,10 +198,13 @@
         aria-modal="true"
         aria-labelledby="add-link-dialog-title"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        tabindex="-1"
+        onclick={handleBackdropClick}
+        onkeydown={handleKeydown}
     >
         <div
             class="absolute inset-0 bg-black/40"
-            onclick={() => showAddForm = false}
+            onclick={handleBackdropClick}
             aria-hidden="true"
         ></div>
 
@@ -176,7 +213,7 @@
                 <h3 id="add-link-dialog-title" class="text-base font-semibold text-gray-900">添加外部链接</h3>
                 <button
                     type="button"
-                    onclick={() => showAddForm = false}
+                    onclick={closeAddForm}
                     class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                     aria-label="关闭"
                 >
@@ -248,7 +285,7 @@
             <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
                 <button
                     type="button"
-                    onclick={() => showAddForm = false}
+                    onclick={closeAddForm}
                     class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >取消</button>
                 <button

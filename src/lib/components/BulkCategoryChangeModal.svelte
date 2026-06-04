@@ -1,8 +1,9 @@
+<!-- 描述：批量变更物品分类的模态组件。用于在一个操作中移动或添加多个物品的分类。 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';
     import type { ApiClient } from '$lib/api/client';
-    import { buildCategoryRelationSearchOptions } from '$lib/utils';
+    import { buildCategoryRelationSearchOptions, hasChangedFields, shouldDismissModal } from '$lib/utils';
     import Svelecte from 'svelecte';
 
     interface SelectedItem {
@@ -56,6 +57,11 @@
     let resultTargetName = $state('');
     let resultTargetId = $state<number | null>(null);
     let resultMode = $state<ChangeMode>('move');
+    let hasResultState = $state(false);
+    let initialModalState = $state({
+        selectedTargetCategoryId: null as number | null,
+        mode: 'move' as ChangeMode,
+    });
 
     const availableCategories = $derived(
         categories.filter((category) => category.id !== currentCategoryId)
@@ -73,6 +79,19 @@
         !isSubmitting && normalizedSelectedTargetCategoryId !== null && selectedItems.length > 0
     );
 
+    const isPristine = $derived(
+        !hasChangedFields(
+            {
+                selectedTargetCategoryId: normalizedSelectedTargetCategoryId,
+                mode,
+            },
+            initialModalState,
+            ['selectedTargetCategoryId', 'mode']
+        )
+    );
+
+    const canDismiss = $derived(isPristine && !hasResultState);
+
     function clearResultPanel() {
         errorMessage = '';
         changedItems = [];
@@ -80,6 +99,14 @@
         resultSourceName = '';
         resultTargetName = '';
         resultTargetId = null;
+        hasResultState = false;
+    }
+
+    function resetModalState() {
+        selectedTargetCategoryId = null;
+        mode = 'move';
+        resultMode = 'move';
+        clearResultPanel();
     }
 
     function closeModal() {
@@ -87,9 +114,7 @@
             return;
         }
 
-        selectedTargetCategoryId = null;
-        mode = 'move';
-        clearResultPanel();
+        resetModalState();
         onclose?.();
     }
 
@@ -127,9 +152,27 @@
 
     $effect(() => {
         if (isOpen) {
+            initialModalState = {
+                selectedTargetCategoryId: null,
+                mode: 'move',
+            };
+            resetModalState();
             loadCategories();
         }
     });
+
+    function handleBackdropClick(event: MouseEvent) {
+        if (shouldDismissModal(event, canDismiss)) {
+            closeModal();
+        }
+    }
+
+    function handleModalKeydown(event: KeyboardEvent) {
+        if (shouldDismissModal(event, canDismiss)) {
+            event.preventDefault();
+            closeModal();
+        }
+    }
 
     async function handleSubmit() {
         const normalizedTargetCategoryId = normalizedSelectedTargetCategoryId;
@@ -200,7 +243,13 @@
             resultTargetName = submittedTargetName;
             resultTargetId = normalizedTargetCategoryId;
             resultMode = submittedMode;
+            hasResultState = true;
+            mode = 'move';
             selectedTargetCategoryId = null;
+            initialModalState = {
+                selectedTargetCategoryId: null,
+                mode: 'move',
+            };
 
             // 不自动关闭弹窗，仅后台刷新页面数据，让操作人员看完结果后手动关闭
             onsuccess?.();
@@ -222,7 +271,11 @@
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         onclick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+         onclick={handleBackdropClick}
+         onkeydown={handleModalKeydown}
+         role="dialog"
+         aria-modal="true"
+         tabindex="-1">
         <div class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-visible rounded-lg bg-white shadow-2xl"
              onclick={(e) => e.stopPropagation()}>
             <div class="shrink-0 border-b border-gray-200 px-6 py-4">

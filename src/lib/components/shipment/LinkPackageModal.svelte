@@ -1,5 +1,7 @@
+<!-- 描述：用于将已有包裹关联到发货单的模态对话框组件。 -->
 <script lang="ts">
     import type { Package } from '$lib/shipmentTypes';
+    import { hasChangedFields, shouldDismissModal } from '$lib/utils';
 
     interface Props {
         show: boolean;
@@ -7,18 +9,66 @@
         selectedId: number | null;
         linking: boolean;
         onClose: () => void;
-        onLink: () => void;
+        onLink: () => Promise<boolean> | boolean;
         onSelect: (id: number) => void;
     }
-    
+
     let { show, packages, selectedId, linking, onClose, onLink, onSelect }: Props = $props();
+    let initialSelectedId = $state<number | null>(null);
+    let hasCapturedSnapshot = $state(false);
+    let hasLinkResult = $state(false);
+
+    const isPristine = $derived(
+        !hasChangedFields(
+           { selectedId },
+           { selectedId: initialSelectedId },
+           ['selectedId']
+        )
+    );
+
+    const canDismiss = $derived(isPristine && !hasLinkResult);
+
+    $effect(() => {
+        if (!show) {
+           hasCapturedSnapshot = false;
+           hasLinkResult = false;
+           return;
+        }
+
+        if (!hasCapturedSnapshot) {
+           initialSelectedId = selectedId;
+            hasCapturedSnapshot = true;
+        }
+    });
+
+    function handleBackdropClick(event: MouseEvent) {
+        if (shouldDismissModal(event, canDismiss)) {
+           onClose();
+        }
+    }
+
+    function handleModalKeydown(event: KeyboardEvent) {
+        if (shouldDismissModal(event, canDismiss)) {
+           event.preventDefault();
+           onClose();
+        }
+    }
+
+    async function handleLink() {
+        const success = await onLink();
+        if (success) {
+           initialSelectedId = null;
+           hasLinkResult = true;
+        }
+    }
 </script>
 
 {#if show}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" 
-         onclick={(e) => { if(e.target === e.currentTarget) onClose(); }}
+         onclick={handleBackdropClick}
+         onkeydown={handleModalKeydown}
          role="dialog"
          aria-modal="true"
          tabindex="-1">
@@ -73,7 +123,7 @@
                 </button>
                 <button 
                     class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    onclick={onLink} 
+                    onclick={() => void handleLink()} 
                     disabled={linking || !selectedId || packages.length === 0}
                 >
                     {linking ? '关联中...' : '关联到发货单'}

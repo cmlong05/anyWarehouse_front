@@ -3,7 +3,7 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { trackingNumberAPI } from '$lib/api';
-    import { formatDate, getErrorMessage } from '$lib/utils';
+    import { formatDate, getErrorMessage, hasChangedFields, shouldDismissModal } from '$lib/utils';
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
     import Loading from '$lib/components/Loading.svelte';
     import Alert from '$lib/components/Alert.svelte';
@@ -45,6 +45,13 @@
     // 新建/编辑模态框
     let showFormModal = false;
     let editingId: number | null = null;
+    interface TrackingNumberFormData extends Record<string, unknown> {
+        tracking_no: string;
+        carrier_code: string;
+        carrier_name: string;
+        logistics_status: LogisticsStatus;
+        remark: string;
+    }
     let formData: {
         tracking_no: string;
         carrier_code: string;
@@ -58,6 +65,9 @@
         logistics_status: 'pending',
         remark: ''
     };
+    let initialFormData: TrackingNumberFormData | null = null;
+    let isFormDirty = false;
+    const formFields = ['tracking_no', 'carrier_code', 'carrier_name', 'logistics_status', 'remark'] as const;
     
     // 删除确认
     let showDeleteModal = false;
@@ -74,6 +84,33 @@
     // 详情模态框
     let showDetailModal = false;
     let detailTrackingNumber: TrackingNumber | null = null;
+
+    function captureFormSnapshot(): TrackingNumberFormData {
+        return { ...formData };
+    }
+
+    function closeFormModal() {
+        showFormModal = false;
+        initialFormData = null;
+        isFormDirty = false;
+    }
+
+    function handleFormBackdropClick(event: MouseEvent) {
+        if (shouldDismissModal(event, !isFormDirty)) {
+            closeFormModal();
+        }
+    }
+
+    function handleFormKeydown(event: KeyboardEvent) {
+        if (shouldDismissModal(event, !isFormDirty)) {
+            event.preventDefault();
+            closeFormModal();
+        }
+    }
+
+    $: isFormDirty = initialFormData === null
+        ? false
+        : hasChangedFields(formData, initialFormData, formFields);
 
     onMount(async () => {
         await loadTrackingNumbers();
@@ -118,6 +155,7 @@
             logistics_status: 'pending',
             remark: ''
         };
+        initialFormData = captureFormSnapshot();
         showFormModal = true;
     }
 
@@ -130,6 +168,7 @@
             logistics_status: tn.logistics_status,
             remark: tn.remark || ''
         };
+        initialFormData = captureFormSnapshot();
         showFormModal = true;
     }
 
@@ -142,6 +181,7 @@
             logistics_status: 'pending',
             remark: ''
         };
+        initialFormData = captureFormSnapshot();
         showFormModal = true;
     }
 
@@ -163,7 +203,7 @@
                 await trackingNumberAPI.create(formData);
                 success = '快递单号已创建';
             }
-            showFormModal = false;
+            closeFormModal();
             await loadTrackingNumbers();
         } catch (err) {
             error = getErrorMessage(err, '保存失败');
@@ -474,8 +514,8 @@
         role="dialog"
         aria-modal="true"
         tabindex="-1"
-        on:click|self={() => showFormModal = false}
-        on:keydown={(e) => e.key === 'Escape' && (showFormModal = false)}
+        on:click={handleFormBackdropClick}
+        on:keydown={handleFormKeydown}
     >
         <div class="bg-white rounded-lg shadow-xl max-w-lg w-[90%]">
             <!-- 标题栏 -->
@@ -483,7 +523,7 @@
                 <h3 class="text-gray-900 text-lg font-semibold">{editingId ? '编辑快递单号' : '新建快递单号'}</h3>
                 <button 
                     class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
-                    on:click={() => showFormModal = false}
+                    on:click={closeFormModal}
                     aria-label="关闭"
                 >×</button>
             </div>
@@ -564,7 +604,7 @@
             <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
                 <button 
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
-                    on:click={() => showFormModal = false}
+                    on:click={closeFormModal}
                 >取消</button>
                 <button 
                     class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors text-sm"
