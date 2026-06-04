@@ -1,3 +1,4 @@
+<!-- 打印装箱单 -->
 <script lang="ts">
     import type { Package, PackageItem } from '$lib/shipmentTypes';
     import { formatDate } from '$lib/utils';

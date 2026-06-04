@@ -1,3 +1,4 @@
+<!-- 库存表单 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { buildContainerRelationSearchOptions } from '$lib/utils';

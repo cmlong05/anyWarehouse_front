@@ -1,3 +1,4 @@
+<!-- 计划物品列表 -->
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
     import SortableHeader from '$lib/components/ui/SortableHeader.svelte';

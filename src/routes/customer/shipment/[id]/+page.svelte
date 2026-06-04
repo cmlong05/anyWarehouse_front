@@ -1,3 +1,4 @@
+<!-- 发货单详情页 -->
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { page } from '$app/state';

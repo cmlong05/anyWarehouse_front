@@ -1,3 +1,4 @@
+<!-- 物料组件管理 -->
 <script lang="ts">
     import { useBOMManager, type ComponentFormData } from '$lib/composables/useBOMManager.svelte';
     import { BOMTabs, ComponentList, BOMTreeView, TotalComponents, WhereUsed, AddComponentForm } from '$lib/components/bom';

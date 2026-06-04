@@ -1,3 +1,4 @@
+<!-- 容器详情页 -->
 <script lang="ts">
     import type { ContainerResponse } from '$lib';
     import { formatNumber } from '$lib/utils';

@@ -1,3 +1,4 @@
+<!-- 物料出库确认弹窗 -->
 <script lang="ts">
     interface OutboundPending {
         qty: number;

@@ -1,3 +1,4 @@
+<!-- 应用布局 -->
 <script lang="ts">
 	import '../app.css';
 	import { config } from '$lib/config';

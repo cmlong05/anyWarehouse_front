@@ -1,3 +1,4 @@
+<!-- 报价详情主体 -->
 <script lang="ts">
     interface Props {
         partnerTitle: string;

@@ -1,3 +1,4 @@
+<!-- 合作方信息卡片 -->
 <script lang="ts">
     interface InfoItem {
         label: string;

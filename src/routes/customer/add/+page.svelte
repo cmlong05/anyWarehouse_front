@@ -1,3 +1,4 @@
+<!-- 新增客户页 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';

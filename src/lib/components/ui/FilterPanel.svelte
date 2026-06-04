@@ -1,3 +1,4 @@
+<!-- 筛选面板 -->
 <script lang="ts">
     /**
      * 通用筛选面板组件 - TailwindCSS 版本

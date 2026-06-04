@@ -1,3 +1,4 @@
+<!-- 库存流水页 -->
 <script lang="ts">
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
@@ -266,4 +267,3 @@
         {/if}
     {/if}
 </div>
-

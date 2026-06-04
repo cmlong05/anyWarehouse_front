@@ -1,3 +1,4 @@
+<!-- 发货单表单 -->
 <script lang="ts">
     import { onMount } from 'svelte';
     import { useShipmentForm } from '$lib/composables/useShipmentForm.svelte';

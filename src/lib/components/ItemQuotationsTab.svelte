@@ -1,3 +1,4 @@
+<!-- 物料报价标签页 -->
 <script lang="ts">
     import type { QuotationBrief } from '$lib';
     import { formatNumber } from '$lib/utils';

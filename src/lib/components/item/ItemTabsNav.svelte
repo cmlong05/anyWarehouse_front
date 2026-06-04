@@ -1,3 +1,4 @@
+<!-- 物料标签导航 -->
 <script lang="ts">
     export type ItemDetailTab = 'overview' | 'bom' | 'quotations' | 'variants' | 'platforms';
 

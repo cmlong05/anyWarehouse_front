@@ -1,3 +1,4 @@
+// 加载容器详情数据
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { ContainerResponse } from '$lib';

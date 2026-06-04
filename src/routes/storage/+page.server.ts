@@ -1,3 +1,4 @@
+// 加载库存列表数据
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
 

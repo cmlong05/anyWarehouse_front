@@ -1,3 +1,4 @@
+<!-- 首页 -->
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';

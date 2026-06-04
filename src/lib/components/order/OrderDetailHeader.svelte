@@ -1,3 +1,4 @@
+<!-- 订单详情标题区 -->
 <script lang="ts">
     import type { StatusConfig, StatusTransition } from '$lib/composables/useOrderDetail.svelte';
 

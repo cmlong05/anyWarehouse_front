@@ -1,3 +1,4 @@
+<!-- 销售订单发货面板 -->
 <script lang="ts">
     import { salesOrderAPI } from '$lib/api';
     import type { SalesOrder } from '$lib';

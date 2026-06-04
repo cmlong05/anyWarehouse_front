@@ -1,3 +1,4 @@
+<!-- 批量编辑表格 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { ApiClient } from '$lib/api/client';

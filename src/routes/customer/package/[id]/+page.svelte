@@ -1,3 +1,4 @@
+<!-- 包裹详情页 -->
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';

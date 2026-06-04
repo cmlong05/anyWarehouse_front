@@ -1,3 +1,4 @@
+<!-- 订单物品列表 -->
 <script lang="ts">
     import type { SalesOrderItem } from '$lib/index';
     import { safeParseFloat } from '$lib/utils';

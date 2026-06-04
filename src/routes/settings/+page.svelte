@@ -1,3 +1,4 @@
+<!-- 系统设置页 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';

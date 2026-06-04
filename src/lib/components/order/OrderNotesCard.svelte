@@ -1,3 +1,4 @@
+<!-- 订单备注卡片 -->
 <script lang="ts">
     interface Props {
         notes?: string | null;

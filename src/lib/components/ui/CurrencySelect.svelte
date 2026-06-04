@@ -1,3 +1,4 @@
+<!-- 币种选择器 -->
 <script lang="ts">
     interface Props {
         value?: string;

@@ -1,3 +1,4 @@
+// 加载物料列表数据
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { BaseItem } from '$lib/index';

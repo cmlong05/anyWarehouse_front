@@ -1,3 +1,4 @@
+<!-- 物料调拨确认弹窗 -->
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
 

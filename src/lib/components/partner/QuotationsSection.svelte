@@ -1,3 +1,4 @@
+<!-- 报价区块 -->
 <script lang="ts">
     import Loading from '$lib/components/Loading.svelte';
     import DataTable from '$lib/components/ui/DataTable.svelte';

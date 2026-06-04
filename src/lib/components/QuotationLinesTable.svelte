@@ -1,3 +1,4 @@
+<!-- 报价行表格 -->
 <script lang="ts">
     import Svelecte from 'svelecte';
     import { CurrencySelect, NumberStepper } from '$lib/components/ui';

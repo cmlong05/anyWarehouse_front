@@ -1,3 +1,4 @@
+<!-- 发货单基本信息 -->
 <script lang="ts">
     import type { ShipmentStatus } from '$lib/shipmentTypes';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';

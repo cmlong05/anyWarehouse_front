@@ -1,3 +1,4 @@
+<!-- 新增库存流水页 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
@@ -208,4 +209,3 @@
         </div>
     </form>
 </div>
-

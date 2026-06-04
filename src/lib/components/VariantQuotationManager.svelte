@@ -1,3 +1,4 @@
+<!-- 变体报价管理 -->
 <script lang="ts">
     import { config } from '$lib/config';
     import { logger } from '$lib/logger';

@@ -1,3 +1,4 @@
+<!-- 系统设置页 -->
 <script lang="ts">
     import { onMount } from 'svelte';
     import { systemSettingAPI } from '$lib/api';

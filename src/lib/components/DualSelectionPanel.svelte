@@ -1,3 +1,4 @@
+<!-- 双栏选择面板 -->
 <script lang="ts">
     import type { Snippet } from 'svelte';
     
@@ -71,4 +72,3 @@
         </div>
     {/if}
 </div>
-

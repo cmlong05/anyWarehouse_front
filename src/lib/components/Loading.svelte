@@ -1,3 +1,4 @@
+<!-- 加载 -->
 <script lang="ts">
     interface Props {
         size?: 'small' | 'medium' | 'large';

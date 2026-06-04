@@ -1,3 +1,4 @@
+<!-- 物料库存标签页 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { StorageContainer } from '$lib';

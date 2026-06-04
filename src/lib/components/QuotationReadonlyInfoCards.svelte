@@ -1,3 +1,4 @@
+<!-- 报价只读信息卡片 -->
 <script lang="ts">
     interface Props {
         partnerLabel: string;

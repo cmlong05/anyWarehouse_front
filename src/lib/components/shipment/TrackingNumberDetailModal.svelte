@@ -1,3 +1,4 @@
+<!-- 追踪号详情弹窗 -->
 <script lang="ts">
     import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';

@@ -1,3 +1,4 @@
+<!-- 物料侧边栏 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { CategoryData } from '$lib';

@@ -1,3 +1,4 @@
+<!-- 报价信息卡片 -->
 <script lang="ts">
     interface Props {
         validFrom?: string | null;

@@ -1,3 +1,4 @@
+<!-- 总组件数 -->
 <script lang="ts">
     import type { TotalComponentItem } from '$lib';
 

@@ -1,3 +1,4 @@
+<!-- 编辑采购报价页 -->
 <script lang="ts">
     import { onMount } from 'svelte';
     import { page } from '$app/state';

@@ -1,3 +1,4 @@
+<!-- 销售订单付款面板 -->
 <script lang="ts">
     import { salesOrderPaymentRecordAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';

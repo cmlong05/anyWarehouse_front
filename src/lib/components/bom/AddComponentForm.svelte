@@ -1,3 +1,4 @@
+<!-- 新增BOM组件表单 -->
 <script lang="ts">
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';

@@ -1,3 +1,4 @@
+<!-- 提示 -->
 <script lang="ts">
     export interface ErrorInfo {
         message: string;

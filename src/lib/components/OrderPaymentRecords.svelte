@@ -1,3 +1,4 @@
+<!-- 订单付款记录 -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';

@@ -1,3 +1,4 @@
+// 加载新增库存数据
 import { config } from '$lib/config';
 import { logger } from '$lib/logger';
 

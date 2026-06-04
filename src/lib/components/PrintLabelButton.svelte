@@ -1,3 +1,4 @@
+<!-- 打印标签按钮 -->
 <script lang="ts">
     import Printer from 'lucide-svelte/icons/printer';
     import { printLabel, DEFAULT_LABEL_SIZES, type LabelSize } from '$lib/utils/printLabel';

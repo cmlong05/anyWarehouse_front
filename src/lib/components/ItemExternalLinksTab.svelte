@@ -1,3 +1,4 @@
+<!-- 物料外部链接标签页 -->
 <script lang="ts">
     import { untrack } from 'svelte';
     import { logger } from '$lib/logger';

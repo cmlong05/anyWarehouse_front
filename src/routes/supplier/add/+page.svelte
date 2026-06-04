@@ -1,3 +1,4 @@
+<!-- 新增供应商页 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { supplierAPI } from '$lib/api';

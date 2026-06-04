@@ -1,3 +1,4 @@
+<!-- 物流状态徽标 -->
 <script lang="ts">
     export let status: string;
 

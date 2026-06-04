@@ -1,3 +1,4 @@
+// 加载物料详情数据
 import { logger } from '$lib/logger';
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';

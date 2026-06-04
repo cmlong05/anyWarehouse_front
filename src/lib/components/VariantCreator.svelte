@@ -1,3 +1,4 @@
+<!-- 变体创建器 -->
 <script lang="ts">
     import { config } from '$lib/config';
     import type { ItemAttribute, ItemAttributeValue, BulkCreateVariantsResponse } from '$lib/types/variant';

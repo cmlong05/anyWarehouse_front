@@ -1,3 +1,4 @@
+<!-- 订单金额网格 -->
 <script lang="ts">
     import { safeParseFloat } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';

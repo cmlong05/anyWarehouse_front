@@ -1,3 +1,4 @@
+<!-- 供应商表单 -->
 <script lang="ts">
     import PartyForm from '$lib/components/partner/PartyForm.svelte';
     import { supplierSchema, type SupplierFormData } from '$lib/schemas';

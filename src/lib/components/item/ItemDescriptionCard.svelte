@@ -1,3 +1,4 @@
+<!-- 物料描述卡片 -->
 <script lang="ts">
     interface Props {
         description?: string | null;

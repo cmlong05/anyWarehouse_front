@@ -1,3 +1,4 @@
+<!-- 物料标题卡片 -->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { Item } from '$lib';

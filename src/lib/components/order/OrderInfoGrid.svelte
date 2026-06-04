@@ -1,3 +1,4 @@
+<!-- 订单信息网格 -->
 <script lang="ts">
     // OrderInfoGrid is a reusable display component for rendering
     // a list of order metadata items in a compact info-card layout.

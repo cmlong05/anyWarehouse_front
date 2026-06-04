@@ -1,3 +1,4 @@
+<!-- 合作方表单 -->
 <script lang="ts">
     import { FormInput, FormSelect } from '$lib/components/ui';
     import type { ZodSchema } from 'zod';

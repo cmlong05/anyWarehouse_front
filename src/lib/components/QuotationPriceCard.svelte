@@ -1,3 +1,4 @@
+<!-- 报价价格卡片 -->
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
 

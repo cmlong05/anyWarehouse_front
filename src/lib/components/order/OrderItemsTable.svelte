@@ -1,3 +1,4 @@
+<!-- 订单明细表格 -->
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';

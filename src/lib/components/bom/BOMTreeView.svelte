@@ -1,3 +1,4 @@
+<!-- BOM树视图 -->
 <script lang="ts">
     import type { BOMTreeNode } from '$lib';
     import type { MaxProducibleResult } from '$lib/composables/useBOMManager.svelte';

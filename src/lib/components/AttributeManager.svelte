@@ -1,3 +1,4 @@
+<!-- 属性管理 -->
 <script lang="ts">
     import { attributeAPI } from '$lib/api';
     import { logger } from '$lib/logger';

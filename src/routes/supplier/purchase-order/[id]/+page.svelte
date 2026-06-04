@@ -1,3 +1,4 @@
+<!-- 采购订单详情页 -->
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { onMount } from 'svelte';

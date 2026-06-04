@@ -1,3 +1,4 @@
+<!-- 组件列表 -->
 <script lang="ts">
     import type { ComponentDetail } from '$lib';
     import type { ComponentFormData } from '$lib/composables/useBOMManager.svelte';

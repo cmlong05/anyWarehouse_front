@@ -1,3 +1,4 @@
+<!-- 库存详情页 -->
 <script lang="ts">
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import StorageForm from '$lib/components/StorageForm.svelte';

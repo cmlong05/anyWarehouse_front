@@ -1,3 +1,4 @@
+<!-- 客户地址卡片 -->
 <script lang="ts">
     import type { CustomerAddress } from '$lib';
     import { formatAddressLocationLine, formatAddressPostalLine } from '$lib/utils';

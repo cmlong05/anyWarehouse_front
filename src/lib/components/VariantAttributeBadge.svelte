@@ -1,3 +1,4 @@
+<!-- 变体属性徽标 -->
 <script lang="ts">
     import type { VariantAttribute } from '$lib/utils/variant';
 

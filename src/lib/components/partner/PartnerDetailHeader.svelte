@@ -1,3 +1,4 @@
+<!-- 合作方详情标题区 -->
 <script lang="ts">
     interface Props {
         name: string;
