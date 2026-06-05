@@ -1,4 +1,7 @@
 <!-- 编辑发货单页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';

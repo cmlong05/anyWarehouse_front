@@ -1,4 +1,8 @@
 <!-- 物料变体管理 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
 	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';

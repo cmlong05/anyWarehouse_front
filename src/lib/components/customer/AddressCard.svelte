@@ -1,4 +1,8 @@
 <!-- 客户地址卡片 -->
+<!--
+被依赖：
+- `lib/components/CustomerAddressManager.svelte`
+-->
 <script lang="ts">
     import type { CustomerAddress } from '$lib';
     import { formatAddressLocationLine, formatAddressPostalLine } from '$lib/utils';

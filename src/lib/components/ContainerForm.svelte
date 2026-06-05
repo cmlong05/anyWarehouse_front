@@ -1,4 +1,9 @@
 <!-- 容器表单 -->
+<!--
+被依赖：
+- `routes/container/[slug]/edit/+page.svelte`
+- `routes/container/add/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
 	import { logger } from '$lib/logger';

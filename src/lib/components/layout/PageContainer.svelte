@@ -1,5 +1,37 @@
 <!-- 页面容器 -->
 <!--
+被依赖：
+- `lib/components/layout/index.ts`
+- `routes/container/[slug]/+page.svelte`
+- `routes/container/[slug]/edit/+page.svelte`
+- `routes/container/add/+page.svelte`
+- `routes/customer/+page.svelte`
+- `routes/customer/add/+page.svelte`
+- `routes/customer/package/+page.svelte`
+- `routes/customer/quotation/[id]/+page.svelte`
+- `routes/customer/sales-order/+page.svelte`
+- `routes/customer/sales-order/[id]/edit/+page.svelte`
+- `routes/customer/sales-order/add/+page.svelte`
+- `routes/customer/shipment/+page.svelte`
+- `routes/item/+page.svelte`
+- `routes/item/[slug]/edit/+page.svelte`
+- `routes/item/add/+page.svelte`
+- `routes/item/attributes/+page.svelte`
+- `routes/item/category/[slug]/edit/+page.svelte`
+- `routes/item/category/add/+page.svelte`
+- `routes/storage/+page.svelte`
+- `routes/storage/[slug]/+page.svelte`
+- `routes/storage/add/[slug]/+page.svelte`
+- `routes/supplier/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+- `routes/supplier/[slug]/edit/+page.svelte`
+- `routes/supplier/add/+page.svelte`
+- `routes/supplier/purchase-order/+page.svelte`
+- `routes/supplier/purchase-order/add/+page.svelte`
+- `routes/supplier/purchase-order/edit/+page.svelte`
+- `routes/supplier/quotation/[id]/+page.svelte`
+-->
+<!--
   页面容器组件
   
   提供统一的页面布局容器，支持最大宽度、内边距等配置

@@ -1,4 +1,10 @@
 <!-- 库存表单 -->
+<!--
+被依赖：
+- `routes/storage/+page.svelte`
+- `routes/storage/[slug]/+page.svelte`
+- `routes/storage/add/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { buildContainerRelationSearchOptions } from '$lib/utils';

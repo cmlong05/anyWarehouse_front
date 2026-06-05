@@ -1,4 +1,9 @@
 <!-- 物料表单 -->
+<!--
+被依赖：
+- `routes/item/[slug]/edit/+page.svelte`
+- `routes/item/add/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
@@ -501,4 +506,3 @@
         {#if mode === 'edit' && onShowDeleteModal && initialData?.id}<button type="button" class="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" onclick={handleDeleteClick}>删除</button>{/if}
     </div>
 </form>
-

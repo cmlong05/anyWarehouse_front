@@ -1,4 +1,9 @@
 <!-- 销售订单付款面板 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/order/index.ts`
+-->
 <script lang="ts">
     import { salesOrderPaymentRecordAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';

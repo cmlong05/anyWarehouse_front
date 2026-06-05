@@ -1,4 +1,9 @@
 <!-- 销售订单发货面板 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/order/index.ts`
+-->
 <script lang="ts">
     import { salesOrderAPI } from '$lib/api';
     import type { SalesOrder } from '$lib';

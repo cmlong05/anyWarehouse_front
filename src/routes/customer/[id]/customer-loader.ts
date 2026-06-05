@@ -1,4 +1,7 @@
 // 客户详情数据加载器
+// 被依赖：
+// - `routes/customer/[id]/+page.server.ts`
+// - `routes/customer/[id]/edit/+page.server.ts`
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 

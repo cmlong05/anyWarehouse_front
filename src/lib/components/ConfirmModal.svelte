@@ -1,4 +1,12 @@
 <!-- 确认弹窗 -->
+<!--
+被依赖：
+- `routes/customer/[id]/+page.svelte`
+- `routes/customer/[id]/edit/+page.svelte`
+- `routes/customer/shipment/tracking-number/+page.svelte`
+- `routes/item/[slug]/edit/+page.svelte`
+- `routes/supplier/[slug]/edit/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         isOpen?: boolean;

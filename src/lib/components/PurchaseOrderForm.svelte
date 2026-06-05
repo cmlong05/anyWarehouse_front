@@ -1,4 +1,9 @@
 <!-- 采购订单表单 -->
+<!--
+被依赖：
+- `routes/supplier/purchase-order/add/+page.svelte`
+- `routes/supplier/purchase-order/edit/+page.svelte`
+-->
 <script lang="ts">
     /**
      * 采购订单表单 - 基于通用 OrderForm 组件

@@ -1,4 +1,17 @@
 // ========== Item Variant 物品变体相关接口 ==========
+// 被依赖：
+// - `lib/api/product.ts`
+// - `lib/components/AttributeManager.svelte`
+// - `lib/components/ItemVariantManager.svelte`
+// - `lib/components/OrderForm.svelte`
+// - `lib/components/VariantCreator.svelte`
+// - `lib/components/VariantQuotationManager.svelte`
+// - `lib/components/item/ItemHeaderCard.svelte`
+// - `lib/composables/useQuotationLineForm.svelte.ts`
+// - `lib/utils/preloadItems.ts`
+// - `lib/utils/variant.ts`
+// - `routes/item/[slug]/+page.server.ts`
+// - `routes/item/[slug]/+page.svelte`
 
 /** 物品属性 */
 export interface ItemAttribute {

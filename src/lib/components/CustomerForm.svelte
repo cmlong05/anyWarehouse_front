@@ -1,4 +1,9 @@
 <!-- 客户表单 -->
+<!--
+被依赖：
+- `routes/customer/[id]/edit/+page.svelte`
+- `routes/customer/add/+page.svelte`
+-->
 <script lang="ts">
     import PartyForm from '$lib/components/partner/PartyForm.svelte';
     import { customerSchema, type CustomerFormData } from '$lib/schemas';

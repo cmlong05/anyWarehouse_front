@@ -1,4 +1,7 @@
 <!-- 编辑客户页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';

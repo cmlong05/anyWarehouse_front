@@ -1,4 +1,9 @@
 <!-- BOM标签页 -->
+<!--
+被依赖：
+- `lib/components/ItemComponentManager.svelte`
+- `lib/components/bom/index.ts`
+-->
 <script lang="ts">
     import type { Snippet } from 'svelte';
 

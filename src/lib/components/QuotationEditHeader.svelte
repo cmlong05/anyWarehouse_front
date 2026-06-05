@@ -1,4 +1,9 @@
 <!-- 报价编辑标题区 -->
+<!--
+被依赖：
+- `routes/customer/quotation/[id]/edit/+page.svelte`
+- `routes/supplier/quotation/[id]/edit/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         title: string;

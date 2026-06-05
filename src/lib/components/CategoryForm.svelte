@@ -1,4 +1,9 @@
 <!-- 分类新增/编辑共用表单：负责收集分类信息、提交到分类 API，并在成功后跳转到分类详情页。 -->
+<!--
+被依赖：
+- `routes/item/category/[slug]/edit/+page.svelte`
+- `routes/item/category/add/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import { buildCategoryRelationSearchOptions } from '$lib/utils';

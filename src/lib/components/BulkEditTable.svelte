@@ -1,4 +1,8 @@
 <!-- 批量编辑表格 -->
+<!--
+被依赖：
+- `routes/item/category/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { ApiClient } from '$lib/api';

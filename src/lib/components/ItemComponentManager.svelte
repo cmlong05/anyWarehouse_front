@@ -1,4 +1,8 @@
 <!-- 物料组件管理 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { useBOMManager, type ComponentFormData } from '$lib/composables/useBOMManager.svelte';
     import { BOMTabs, ComponentList, BOMTreeView, TotalComponents, WhereUsed, AddComponentForm } from '$lib/components/bom';

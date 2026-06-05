@@ -1,4 +1,10 @@
 <!-- 合作方信息卡片 -->
+<!--
+被依赖：
+- `lib/components/partner/index.ts`
+- `routes/customer/[id]/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+-->
 <script lang="ts">
     interface InfoItem {
         label: string;

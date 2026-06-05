@@ -1,4 +1,8 @@
 <!-- 物料调拨确认弹窗 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
 

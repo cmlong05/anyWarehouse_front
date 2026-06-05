@@ -1,4 +1,8 @@
 <!-- 物料出库确认弹窗 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     interface OutboundPending {
         qty: number;

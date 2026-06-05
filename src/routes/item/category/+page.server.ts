@@ -1,4 +1,5 @@
 // 加载物料分类列表数据
+// 被依赖：无
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { Category } from '$lib/index';

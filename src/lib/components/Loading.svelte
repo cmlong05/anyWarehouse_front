@@ -1,4 +1,34 @@
 <!-- 加载 -->
+<!--
+被依赖：
+- `lib/components/OrderPaymentRecords.svelte`
+- `lib/components/PackageForm.svelte`
+- `lib/components/ShipmentForm.svelte`
+- `lib/components/partner/OrdersSection.svelte`
+- `lib/components/partner/QuotationsSection.svelte`
+- `routes/customer/package/[id]/+page.svelte`
+- `routes/customer/quotation/[id]/+page.svelte`
+- `routes/customer/quotation/[id]/edit/+page.svelte`
+- `routes/customer/quotation/add/+page.svelte`
+- `routes/customer/sales-order/[id]/+page.svelte`
+- `routes/customer/sales-order/[id]/edit/+page.svelte`
+- `routes/customer/sales-order/add/+page.svelte`
+- `routes/customer/shipment/[id]/+page.svelte`
+- `routes/customer/shipment/[id]/edit/+page.svelte`
+- `routes/customer/shipment/tracking-number/+page.svelte`
+- `routes/settings/address/+page.svelte`
+- `routes/settings/aliexpress/+page.svelte`
+- `routes/settings/pi/+page.svelte`
+- `routes/storage/movement/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+- `routes/supplier/[slug]/edit/+page.svelte`
+- `routes/supplier/purchase-order/[id]/+page.svelte`
+- `routes/supplier/purchase-order/add/+page.svelte`
+- `routes/supplier/purchase-order/edit/+page.svelte`
+- `routes/supplier/quotation/[id]/+page.svelte`
+- `routes/supplier/quotation/[id]/edit/+page.svelte`
+- `routes/supplier/quotation/add/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         size?: 'small' | 'medium' | 'large';

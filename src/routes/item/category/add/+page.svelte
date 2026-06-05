@@ -1,4 +1,7 @@
 <!-- 添加分类 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import CategoryForm from '$lib/components/CategoryForm.svelte';

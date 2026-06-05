@@ -1,4 +1,9 @@
 <!-- 描述：用于将已有包裹关联到发货单的模态对话框组件。 -->
+<!--
+被依赖：
+- `lib/components/shipment/index.ts`
+- `routes/customer/shipment/[id]/+page.svelte`
+-->
 <script lang="ts">
     import type { Package } from '$lib/shipmentTypes';
     import { hasChangedFields, shouldDismissModal } from '$lib/utils';

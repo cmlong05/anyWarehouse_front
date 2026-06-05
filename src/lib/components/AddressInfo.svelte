@@ -1,4 +1,10 @@
 <!-- 地址信息 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/shipment-form/ShippingInfo.svelte`
+- `routes/customer/shipment/[id]/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         title?: string;

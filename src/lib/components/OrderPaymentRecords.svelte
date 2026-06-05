@@ -1,4 +1,8 @@
 <!-- 订单付款记录 -->
+<!--
+被依赖：
+- `routes/supplier/purchase-order/[id]/+page.svelte`
+-->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';

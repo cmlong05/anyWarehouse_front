@@ -1,4 +1,9 @@
 <!-- 订单备注卡片 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/order/index.ts`
+-->
 <script lang="ts">
     interface Props {
         notes?: string | null;

@@ -1,4 +1,5 @@
 // 加载新增库存数据
+// 被依赖：无
 import { config } from '$lib/config';
 import { logger } from '$lib/logger';
 

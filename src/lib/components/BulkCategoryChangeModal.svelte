@@ -1,4 +1,8 @@
 <!-- 描述：批量变更物品分类的模态组件。用于在一个操作中移动或添加多个物品的分类。 -->
+<!--
+被依赖：
+- `routes/item/category/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';

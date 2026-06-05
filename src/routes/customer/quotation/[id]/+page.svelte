@@ -1,4 +1,7 @@
 <!-- 客户报价详情页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { page } from '$app/state';
     import { goto } from '$app/navigation';

@@ -1,4 +1,7 @@
 <!-- 添加商品 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import ItemForm from '$lib/components/ItemForm.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';

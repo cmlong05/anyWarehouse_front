@@ -1,4 +1,9 @@
 <!-- 订单明细表格 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/order/index.ts`
+-->
 <script lang="ts">
     import { safeParseFloat, formatNumber } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';

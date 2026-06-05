@@ -1,4 +1,9 @@
 <!-- 报价信息卡片 -->
+<!--
+被依赖：
+- `routes/customer/quotation/[id]/edit/+page.svelte`
+- `routes/supplier/quotation/[id]/edit/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         validFrom?: string | null;

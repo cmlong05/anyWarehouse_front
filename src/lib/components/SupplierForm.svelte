@@ -1,4 +1,9 @@
 <!-- 供应商表单 -->
+<!--
+被依赖：
+- `routes/supplier/[slug]/edit/+page.svelte`
+- `routes/supplier/add/+page.svelte`
+-->
 <script lang="ts">
     import PartyForm from '$lib/components/partner/PartyForm.svelte';
     import { supplierSchema, type SupplierFormData } from '$lib/schemas';

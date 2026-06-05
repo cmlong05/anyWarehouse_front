@@ -1,4 +1,5 @@
 // 加载库存模块布局数据
+// 被依赖：无
 import { logger } from '$lib/logger';
 import { config } from '$lib/config';
 import type { ContainerBriefID } from '$lib';

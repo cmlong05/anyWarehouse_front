@@ -1,4 +1,7 @@
 <!-- 应用布局 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import type { ContainerBriefID } from '$lib';
 

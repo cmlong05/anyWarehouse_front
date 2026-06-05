@@ -1,4 +1,9 @@
 <!-- 合作方表单 -->
+<!--
+被依赖：
+- `lib/components/CustomerForm.svelte`
+- `lib/components/SupplierForm.svelte`
+-->
 <script lang="ts">
     import { FormInput, FormSelect } from '$lib/components/ui';
     import type { ZodSchema } from 'zod';

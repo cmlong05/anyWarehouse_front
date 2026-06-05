@@ -1,4 +1,8 @@
 <!-- 物料侧边栏 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { CategoryData } from '$lib';

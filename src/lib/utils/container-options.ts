@@ -1,4 +1,6 @@
 // 构建容器搜索选项：展示时保留层级缩进，搜索时补充相关容器名称。
+// 被依赖：
+// - `lib/utils/index.ts`
 // 对标 category-options.ts，用于 Svelecte 父容器/存储位置选择器。
 type ContainerOptionInput = {
     id: number;

@@ -1,4 +1,11 @@
 <!-- 变体属性徽标 -->
+<!--
+被依赖：
+- `lib/components/order/OrderFormItemsSection.svelte`
+- `lib/components/order/OrderItemsTable.svelte`
+- `routes/customer/package/[id]/+page.svelte`
+- `routes/customer/shipment/[id]/+page.svelte`
+-->
 <script lang="ts">
     import type { VariantAttribute } from '$lib/utils/variant';
 

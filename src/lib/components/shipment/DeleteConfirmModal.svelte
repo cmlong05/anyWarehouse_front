@@ -1,4 +1,9 @@
 <!-- 删除确认弹窗 -->
+<!--
+被依赖：
+- `lib/components/shipment/index.ts`
+- `routes/customer/shipment/[id]/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         show: boolean;

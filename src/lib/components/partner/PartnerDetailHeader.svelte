@@ -1,4 +1,10 @@
 <!-- 合作方详情标题区 -->
+<!--
+被依赖：
+- `lib/components/partner/index.ts`
+- `routes/customer/[id]/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         name: string;

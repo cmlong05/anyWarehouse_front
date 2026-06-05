@@ -1,4 +1,10 @@
 <!-- 追踪号详情弹窗 -->
+<!--
+被依赖：
+- `lib/components/shipment/index.ts`
+- `routes/customer/shipment/[id]/+page.svelte`
+- `routes/customer/shipment/tracking-number/+page.svelte`
+-->
 <script lang="ts">
     import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';

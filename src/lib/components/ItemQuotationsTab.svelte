@@ -1,4 +1,8 @@
 <!-- 物料报价标签页 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import type { QuotationBrief } from '$lib';
     import { formatNumber } from '$lib/utils';

@@ -1,4 +1,24 @@
 // ========== Shipment 发货管理相关接口 ==========
+// 被依赖：
+// - `lib/components/PackageForm.svelte`
+// - `lib/components/ShipmentForm.svelte`
+// - `lib/components/TrackingLegForm.svelte`
+// - `lib/components/TrackingLegTimeline.svelte`
+// - `lib/components/shipment-form/BasicInfo.svelte`
+// - `lib/components/shipment/LinkPackageModal.svelte`
+// - `lib/components/shipment/PrintPackingList.svelte`
+// - `lib/components/shipment/TrackingNumberDetailModal.svelte`
+// - `lib/composables/useShipmentDetail.svelte.ts`
+// - `lib/composables/useShipmentForm.svelte.ts`
+// - `routes/customer/package/+page.svelte`
+// - `routes/customer/package/[id]/+page.svelte`
+// - `routes/customer/package/[id]/edit/+page.svelte`
+// - `routes/customer/package/add/+page.svelte`
+// - `routes/customer/shipment/+page.svelte`
+// - `routes/customer/shipment/[id]/+page.svelte`
+// - `routes/customer/shipment/[id]/edit/+page.svelte`
+// - `routes/customer/shipment/add/+page.svelte`
+// - `routes/customer/shipment/tracking-number/+page.svelte`
 
 /** 物流状态 */
 export type LogisticsStatus = 'pending' | 'collected' | 'in_transit' | 'exception' | 'delivered' | 'returned' | 'cancelled';

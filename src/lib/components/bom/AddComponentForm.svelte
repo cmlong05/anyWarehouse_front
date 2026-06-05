@@ -1,4 +1,9 @@
 <!-- 新增BOM组件表单 -->
+<!--
+被依赖：
+- `lib/components/ItemComponentManager.svelte`
+- `lib/components/bom/index.ts`
+-->
 <script lang="ts">
     import Svelecte from 'svelecte';
     import { config } from '$lib/config';

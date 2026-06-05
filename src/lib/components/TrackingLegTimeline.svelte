@@ -1,4 +1,8 @@
 <!-- 追踪轨迹时间线 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/+page.svelte`
+-->
 <script lang="ts">
     import type { PackageTrackingLeg } from '$lib/shipmentTypes';
 

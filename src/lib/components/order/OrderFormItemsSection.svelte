@@ -1,4 +1,9 @@
 <!-- 订单明细表单区 -->
+<!--
+被依赖：
+- `lib/components/OrderForm.svelte`
+- `lib/components/order/index.ts`
+-->
 <script lang="ts">
     import type { OrderFormItem } from '$lib/composables/useOrderForm.svelte';
     import {  formatNumber } from '$lib/utils';

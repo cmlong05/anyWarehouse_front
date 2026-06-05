@@ -1,4 +1,5 @@
 // 加载库存详情数据
+// 被依赖：无
 import { logger } from '$lib/logger';
 import { error } from '@sveltejs/kit';
 import { config } from '$lib/config';

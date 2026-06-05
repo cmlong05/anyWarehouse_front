@@ -1,4 +1,7 @@
 <!-- 物料分类详情页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
     import { ApiClient } from '$lib/api';

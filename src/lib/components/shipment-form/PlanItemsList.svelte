@@ -1,4 +1,9 @@
 <!-- 计划物品列表 -->
+<!--
+被依赖：
+- `lib/components/ShipmentForm.svelte`
+- `lib/components/shipment-form/index.ts`
+-->
 <script lang="ts">
     import { NumberStepper } from '$lib/components/ui';
     import SortableHeader from '$lib/components/ui/SortableHeader.svelte';

@@ -1,4 +1,9 @@
 <!-- 发货单表单 -->
+<!--
+被依赖：
+- `routes/customer/shipment/[id]/edit/+page.svelte`
+- `routes/customer/shipment/add/+page.svelte`
+-->
 <script lang="ts">
     import { onMount } from 'svelte';
     import { useShipmentForm } from '$lib/composables/useShipmentForm.svelte';

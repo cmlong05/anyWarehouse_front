@@ -1,4 +1,8 @@
 <!-- 物料描述卡片 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         description?: string | null;

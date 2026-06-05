@@ -1,4 +1,9 @@
 <!-- 报价行表格 -->
+<!--
+被依赖：
+- `routes/customer/quotation/add/+page.svelte`
+- `routes/supplier/quotation/add/+page.svelte`
+-->
 <script lang="ts">
     import Svelecte from 'svelecte';
     import { CurrencySelect, NumberStepper } from '$lib/components/ui';

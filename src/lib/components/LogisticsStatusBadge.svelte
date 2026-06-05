@@ -1,4 +1,8 @@
 <!-- 物流状态徽标 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/+page.svelte`
+-->
 <script lang="ts">
     export let status: string;
 

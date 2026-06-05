@@ -1,4 +1,5 @@
 // 加载新增物料分类数据
+// 被依赖：无
 import { config } from '$lib/config';
 import { logger } from '$lib/logger';
 import type { Category, CategoryData } from '$lib';

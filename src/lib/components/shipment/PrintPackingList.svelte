@@ -1,4 +1,8 @@
 <!-- 打印装箱单 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/+page.svelte`
+-->
 <script lang="ts">
     import type { Package, PackageItem } from '$lib/shipmentTypes';
     import { formatDate } from '$lib/utils';

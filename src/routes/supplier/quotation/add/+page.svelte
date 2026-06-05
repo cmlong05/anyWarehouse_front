@@ -1,4 +1,7 @@
 <!-- 新增采购报价页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import { onMount, untrack } from 'svelte';
     import { page } from '$app/state';

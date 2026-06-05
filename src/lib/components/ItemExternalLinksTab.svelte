@@ -1,4 +1,8 @@
 <!-- 物料外部链接标签页 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import { untrack } from 'svelte';
     import { logger } from '$lib/logger';

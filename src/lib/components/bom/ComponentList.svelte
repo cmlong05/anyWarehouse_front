@@ -1,4 +1,9 @@
 <!-- 组件列表 -->
+<!--
+被依赖：
+- `lib/components/ItemComponentManager.svelte`
+- `lib/components/bom/index.ts`
+-->
 <script lang="ts">
     import type { ComponentDetail } from '$lib';
     import type { ComponentFormData } from '$lib/composables/useBOMManager.svelte';

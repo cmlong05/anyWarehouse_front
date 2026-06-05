@@ -1,4 +1,10 @@
 <!-- 发货单状态徽标 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/+page.svelte`
+- `routes/customer/shipment/+page.svelte`
+- `routes/customer/shipment/[id]/+page.svelte`
+-->
 <script lang="ts">
     export let status: string;
 

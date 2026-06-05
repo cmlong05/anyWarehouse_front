@@ -1,4 +1,9 @@
 <!-- 使用位置 -->
+<!--
+被依赖：
+- `lib/components/ItemComponentManager.svelte`
+- `lib/components/bom/index.ts`
+-->
 <script lang="ts">
     import type { WhereUsedItem } from '$lib';
 

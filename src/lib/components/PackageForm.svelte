@@ -1,4 +1,9 @@
 <!-- 描述：包裹创建/编辑表单组件，包含发货单选择、物品预览和容器分配逻辑。 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/edit/+page.svelte`
+- `routes/customer/package/add/+page.svelte`
+-->
 <script lang="ts">
     import { packageAPI, shipmentAPI, getAvailableStoragesForItem } from '$lib/api';
     import type { ShipmentBrief, Shipment, ShipmentItem, Package, PackageItem, PackageCreateRequest, PackageItemCreateRequest, PackageItemAllocationCreateRequest } from '$lib/shipmentTypes';

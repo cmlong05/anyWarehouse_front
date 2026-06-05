@@ -1,4 +1,8 @@
 <!-- 追踪轨迹表单 -->
+<!--
+被依赖：
+- `routes/customer/package/[id]/+page.svelte`
+-->
 <script lang="ts">
     import { onMount, onDestroy, tick } from 'svelte';
     import Svelecte from 'svelecte';
@@ -328,5 +332,4 @@
         </button>
     </div>
 </form>
-
 

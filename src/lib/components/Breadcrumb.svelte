@@ -1,4 +1,19 @@
 <!-- 面包屑 -->
+<!--
+被依赖：
+- `routes/customer/[id]/+page.svelte`
+- `routes/customer/[id]/edit/+page.svelte`
+- `routes/customer/add/+page.svelte`
+- `routes/customer/quotation/[id]/+page.svelte`
+- `routes/customer/sales-order/[id]/edit/+page.svelte`
+- `routes/customer/sales-order/add/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+- `routes/supplier/[slug]/edit/+page.svelte`
+- `routes/supplier/add/+page.svelte`
+- `routes/supplier/purchase-order/add/+page.svelte`
+- `routes/supplier/purchase-order/edit/+page.svelte`
+- `routes/supplier/quotation/[id]/+page.svelte`
+-->
 <script lang="ts">
     interface BreadcrumbItem {
         label: string;

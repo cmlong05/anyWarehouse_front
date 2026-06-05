@@ -1,4 +1,9 @@
 <!-- 销售订单表单 -->
+<!--
+被依赖：
+- `routes/customer/sales-order/[id]/edit/+page.svelte`
+- `routes/customer/sales-order/add/+page.svelte`
+-->
 <script lang="ts">
     /**
      * 销售订单表单 - 基于通用 OrderForm 组件

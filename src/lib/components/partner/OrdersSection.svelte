@@ -1,4 +1,10 @@
 <!-- 订单区块 -->
+<!--
+被依赖：
+- `lib/components/partner/index.ts`
+- `routes/customer/[id]/+page.svelte`
+- `routes/supplier/[slug]/+page.svelte`
+-->
 <script lang="ts">
     import Loading from '$lib/components/Loading.svelte';
 

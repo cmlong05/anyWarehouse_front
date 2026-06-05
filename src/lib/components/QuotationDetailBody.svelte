@@ -1,4 +1,9 @@
 <!-- 报价详情主体 -->
+<!--
+被依赖：
+- `routes/customer/quotation/[id]/+page.svelte`
+- `routes/supplier/quotation/[id]/+page.svelte`
+-->
 <script lang="ts">
     interface Props {
         partnerTitle: string;

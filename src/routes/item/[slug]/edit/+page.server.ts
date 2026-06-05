@@ -1,4 +1,5 @@
 // 加载物料编辑数据
+// 被依赖：无
 import { error, redirect } from '@sveltejs/kit';
 import { config } from '$lib/config';
 import type { Category, ItemSet } from '$lib/index';

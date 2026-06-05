@@ -1,4 +1,8 @@
 <!-- 物料标签导航 -->
+<!--
+被依赖：
+- `routes/item/[slug]/+page.svelte`
+-->
 <script lang="ts">
     export type ItemDetailTab = 'overview' | 'bom' | 'quotations' | 'variants' | 'platforms';
 

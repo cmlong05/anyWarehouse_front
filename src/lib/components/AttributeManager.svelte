@@ -1,4 +1,8 @@
 <!-- 属性管理 -->
+<!--
+被依赖：
+- `routes/item/attributes/+page.svelte`
+-->
 <script lang="ts">
     import { attributeAPI } from '$lib/api';
     import { logger } from '$lib/logger';

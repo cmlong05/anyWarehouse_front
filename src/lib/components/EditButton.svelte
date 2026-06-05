@@ -1,4 +1,9 @@
 <!-- 编辑按钮 -->
+<!--
+被依赖：
+- `routes/container/[slug]/+page.svelte`
+- `routes/supplier/quotation/[id]/+page.svelte`
+-->
 <script lang="ts">
   export let href: string | null = null;
   export let onClick: ((event: MouseEvent) => void) | null = null;

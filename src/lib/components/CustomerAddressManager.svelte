@@ -1,4 +1,8 @@
 <!-- 客户地址管理 -->
+<!--
+被依赖：
+- `routes/customer/[id]/+page.svelte`
+-->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { CustomerAddress, CustomerAddressFormData } from '$lib';

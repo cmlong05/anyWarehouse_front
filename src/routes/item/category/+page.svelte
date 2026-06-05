@@ -1,4 +1,7 @@
 <!-- 物料分类列表页 -->
+<!--
+被依赖：无
+-->
 <script lang="ts">
     import type { Category } from '$lib';
     import { Folder, FolderOpen, Plus, ChevronRight, Tag } from 'lucide-svelte';

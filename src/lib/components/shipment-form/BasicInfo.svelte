@@ -1,4 +1,9 @@
 <!-- 发货单基本信息 -->
+<!--
+被依赖：
+- `lib/components/ShipmentForm.svelte`
+- `lib/components/shipment-form/index.ts`
+-->
 <script lang="ts">
     import type { ShipmentStatus } from '$lib/shipmentTypes';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
