@@ -1,7 +1,7 @@
 <!-- 物料分类详情页 -->
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
-    import { ApiClient } from '$lib/api/client';
+    import { ApiClient } from '$lib/api';
     import BulkEditTable from '$lib/components/BulkEditTable.svelte';
     import BulkCategoryChangeModal from '$lib/components/BulkCategoryChangeModal.svelte';
     import type { CategoryData } from '$lib';

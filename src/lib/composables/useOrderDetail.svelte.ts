@@ -2,7 +2,7 @@
  * 订单详情页共享逻辑
  */
 import { goto } from '$app/navigation';
-import { apiClient } from '$lib/api/client';
+import { apiClient } from '$lib/api';
 import { getErrorMessage } from '$lib/utils/errors';
 import type { ContainerBriefID } from '$lib';
 

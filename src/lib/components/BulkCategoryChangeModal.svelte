@@ -2,7 +2,7 @@
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';
-    import type { ApiClient } from '$lib/api/client';
+    import type { ApiClient } from '$lib/api';
     import { buildCategoryRelationSearchOptions, hasChangedFields, shouldDismissModal } from '$lib/utils';
     import Svelecte from 'svelecte';
 

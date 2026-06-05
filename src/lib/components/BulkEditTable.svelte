@@ -1,7 +1,7 @@
 <!-- 批量编辑表格 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
-    import type { ApiClient } from '$lib/api/client';
+    import type { ApiClient } from '$lib/api';
     import NumberStepper from '$lib/components/ui/NumberStepper.svelte';
     import CurrencySelect from '$lib/components/ui/CurrencySelect.svelte';
 
