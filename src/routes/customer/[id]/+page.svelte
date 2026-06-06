@@ -10,7 +10,7 @@
     import { Alert } from '$lib/components';
     import { Breadcrumb, ConfirmModal } from '$lib/components';
     import { PartnerDetailHeader, PartnerInfoCard, OrdersSection, QuotationsSection } from '$lib/components/partner';
-    import CustomerAddressManager from '$lib/components/CustomerAddressManager.svelte';
+    import { CustomerAddressManager } from '$lib/components';
     import { customerAddressAPI } from '$lib/api';
     import type { CustomerAddress } from '$lib';
     

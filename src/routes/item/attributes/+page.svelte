@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import AttributeManager from '$lib/components/AttributeManager.svelte';
+    import { AttributeManager } from '$lib/components';
 </script>
 
 <svelte:head>

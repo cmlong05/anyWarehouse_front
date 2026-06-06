@@ -1,19 +1,19 @@
 <!-- 数据表格 -->
 <!--
 被依赖：
-- `lib/components/AttributeManager.svelte`
-- `lib/components/CategoryForm.svelte`
-- `lib/components/ContainerForm.svelte`
-- `lib/components/CustomerForm.svelte`
-- `lib/components/ItemForm.svelte`
-- `lib/components/OrderForm.svelte`
-- `lib/components/PackageForm.svelte`
-- `lib/components/QuotationLinesTable.svelte`
-- `lib/components/QuotationPriceCard.svelte`
-- `lib/components/StorageForm.svelte`
-- `lib/components/SupplierForm.svelte`
-- `lib/components/VariantCreator.svelte`
-- `lib/components/VariantQuotationManager.svelte`
+- `lib/components/item/AttributeManager.svelte`
+- `lib/components/forms/CategoryForm.svelte`
+- `lib/components/forms/ContainerForm.svelte`
+- `lib/components/forms/CustomerForm.svelte`
+- `lib/components/forms/ItemForm.svelte`
+- `lib/components/order/OrderForm.svelte`
+- `lib/components/forms/PackageForm.svelte`
+- `lib/components/quotation/QuotationLinesTable.svelte`
+- `lib/components/quotation/QuotationPriceCard.svelte`
+- `lib/components/forms/StorageForm.svelte`
+- `lib/components/forms/SupplierForm.svelte`
+- `lib/components/item/VariantCreator.svelte`
+- `lib/components/item/VariantQuotationManager.svelte`
 - `lib/components/bom/AddComponentForm.svelte`
 - `lib/components/bom/ComponentList.svelte`
 - `lib/components/item/ItemInventoryTab.svelte`

@@ -14,7 +14,7 @@
         QuotationBrief,
         OrderFormItem
     } from '$lib';
-    import OrderForm from '$lib/components/OrderForm.svelte';
+    import { OrderForm } from '$lib/components';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { processPreloadItems, type PreloadItem } from '$lib/utils/preloadItems';
     import { buildInitialOrderItems } from '$lib/utils/orderFormData';

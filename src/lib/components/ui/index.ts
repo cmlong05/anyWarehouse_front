@@ -14,3 +14,6 @@ export { default as DataTable } from './DataTable.svelte';
 export { default as SortableHeader } from './SortableHeader.svelte';
 export { default as Pagination } from './Pagination.svelte';
 export { default as FilterPanel } from './FilterPanel.svelte';
+export { default as BulkEditTable } from './BulkEditTable.svelte';
+export { default as DualSelectionPanel } from './DualSelectionPanel.svelte';
+export { default as EditButton } from './EditButton.svelte';

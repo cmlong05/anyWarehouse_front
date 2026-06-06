@@ -19,7 +19,7 @@
         ShipReceiveModal,
         OrderNotesCard
     } from '$lib/components/order';
-    import OrderPaymentRecords from '$lib/components/OrderPaymentRecords.svelte';
+    import { OrderPaymentRecords } from '$lib/components';
     import { 
         useOrderDetail, 
         useShipModal, 

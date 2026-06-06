@@ -3,7 +3,7 @@
 被依赖：无
 -->
 <script lang="ts">
-    import ItemForm from '$lib/components/ItemForm.svelte';
+    import { ItemForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import type { Category, Item } from '$lib';
 

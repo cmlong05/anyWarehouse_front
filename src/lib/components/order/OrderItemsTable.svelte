@@ -1,7 +1,7 @@
 <!-- 订单明细表格 -->
 <!--
 被依赖：
-- `lib/components/OrderForm.svelte`
+- `lib/components/order/OrderForm.svelte`
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">
@@ -15,7 +15,7 @@
         getVariantAttributes,
         type VariantAttribute 
     } from '$lib/utils/variant';
-    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+    import { VariantAttributeBadge } from '$lib/components';
 import DataTable from '$lib/components/ui/DataTable.svelte';
 
     interface ItemDetail {

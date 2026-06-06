@@ -9,8 +9,8 @@
     import { onMount } from 'svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { DataTable } from '$lib/components/ui';
-    import EditButton from '$lib/components/EditButton.svelte';
-    import PrintLabelButton from '$lib/components/PrintLabelButton.svelte';
+    import { EditButton } from '$lib/components';
+    import { PrintLabelButton } from '$lib/components';
     import ChevronRight from 'lucide-svelte/icons/chevron-right';
     import Package from 'lucide-svelte/icons/package';
     import BoxIcon from 'lucide-svelte/icons/box';

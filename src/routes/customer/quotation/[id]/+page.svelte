@@ -8,9 +8,7 @@
     import { onMount } from 'svelte';
     import { customerQuotationAPI } from '$lib/api';
     import type { CustomerQuotation } from '$lib';
-    import { Alert, Loading } from '$lib/components';
-    import { Breadcrumb } from '$lib/components';
-    import QuotationDetailBody from '$lib/components/QuotationDetailBody.svelte';
+    import { Alert, Breadcrumb, Loading, QuotationDetailBody } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<CustomerQuotation | null>(null);

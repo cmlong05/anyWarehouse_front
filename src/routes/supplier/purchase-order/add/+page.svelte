@@ -12,7 +12,7 @@
     import type { PreloadItem } from '$lib/utils/preloadItems';
 	import { Alert, Loading } from '$lib/components';
 	import { Breadcrumb } from '$lib/components';
-    import PurchaseOrderForm from '$lib/components/PurchaseOrderForm.svelte';
+    import { PurchaseOrderForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     // 从URL获取供应商ID

@@ -11,7 +11,7 @@
     import type { PreloadItem } from '$lib/utils/preloadItems';
     import { Alert, Loading } from '$lib/components';
     import { Breadcrumb } from '$lib/components';
-    import SalesOrderForm from '$lib/components/SalesOrderForm.svelte';
+    import { SalesOrderForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     // 从URL获取客户ID

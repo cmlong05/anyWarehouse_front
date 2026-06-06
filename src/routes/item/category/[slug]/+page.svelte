@@ -5,8 +5,8 @@
 <script lang="ts">
     import { invalidateAll } from '$app/navigation';
     import { ApiClient } from '$lib/api';
-    import BulkEditTable from '$lib/components/BulkEditTable.svelte';
-    import BulkCategoryChangeModal from '$lib/components/BulkCategoryChangeModal.svelte';
+    import { BulkEditTable } from '$lib/components';
+    import { BulkCategoryChangeModal } from '$lib/components';
     import type { CategoryData } from '$lib';
     
     let { data } = $props<{ category_details: CategoryData }>();

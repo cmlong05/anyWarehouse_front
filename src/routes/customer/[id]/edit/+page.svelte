@@ -6,7 +6,7 @@
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib';
-    import CustomerForm from '$lib/components/CustomerForm.svelte';
+    import { CustomerForm } from '$lib/components';
     import { Alert } from '$lib/components';
     import { Breadcrumb, ConfirmModal } from '$lib/components';
 

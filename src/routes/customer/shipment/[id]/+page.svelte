@@ -16,7 +16,7 @@
 	import { ShipmentStatusBadge } from '$lib/components';
 	import { Alert, Loading } from '$lib/components';
     import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
-    import AddressInfo from '$lib/components/AddressInfo.svelte';
+    import { AddressInfo } from '$lib/components';
 
     let shipmentId = $derived(parseInt(page.params.id || '0'));
     let skuReferenceDownloading = $state(false);
@@ -255,7 +255,7 @@
     import { isVariantChild, getVariantParentId, getVariantAttributes } from '$lib/utils/variant';
     import SortableHeader from '$lib/components/ui/SortableHeader.svelte';
     import { toggleSortKey } from '$lib/utils/sort';
-    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+    import { VariantAttributeBadge } from '$lib/components';
 
     // 按母版分组物品
     interface GroupedSection {

@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import ContainerForm from '$lib/components/ContainerForm.svelte';
+    import { ContainerForm } from '$lib/components';
     import type { Container, ContainerBriefID } from '$lib';
     import { goto } from '$app/navigation';
     import { config } from '$lib/config';

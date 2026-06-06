@@ -7,3 +7,5 @@ export { default as ShipReceiveModal } from './ShipReceiveModal.svelte';
 export { default as OrderNotesCard } from './OrderNotesCard.svelte';
 export { default as SalesOrderPaymentPanel } from './SalesOrderPaymentPanel.svelte';
 export { default as SalesOrderShipmentsPanel } from './SalesOrderShipmentsPanel.svelte';
+export { default as OrderForm } from './OrderForm.svelte';
+export { default as OrderPaymentRecords } from './OrderPaymentRecords.svelte';

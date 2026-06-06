@@ -1,11 +1,11 @@
 <!-- 物流信息 -->
 <!--
 被依赖：
-- `lib/components/ShipmentForm.svelte`
+- `lib/components/forms/ShipmentForm.svelte`
 - `lib/components/shipment-form/index.ts`
 -->
 <script lang="ts">
-    import AddressInfo from '$lib/components/AddressInfo.svelte';
+    import { AddressInfo } from '$lib/components';
 
     interface Props {
         address?: string;

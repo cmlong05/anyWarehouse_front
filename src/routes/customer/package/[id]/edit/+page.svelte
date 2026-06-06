@@ -5,7 +5,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
-    import PackageForm from '$lib/components/PackageForm.svelte';
+    import { PackageForm } from '$lib/components';
     import type { Package } from '$lib/shipmentTypes';
 
     const packageId = parseInt(page.params.id || '0');

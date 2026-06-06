@@ -6,7 +6,7 @@
 	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import ItemForm from '$lib/components/ItemForm.svelte';
+    import { ItemForm } from '$lib/components';
 	import { ConfirmModal } from '$lib/components';
     import type { Category, ItemSet } from '$lib';
     import { config } from '$lib/config';

@@ -5,7 +5,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
-    import ShipmentForm from '$lib/components/ShipmentForm.svelte';
+    import { ShipmentForm } from '$lib/components';
     import type { Shipment } from '$lib/shipmentTypes';
 
     // 获取URL参数

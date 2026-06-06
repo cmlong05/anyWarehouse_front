@@ -1,7 +1,7 @@
 <!-- 描述：发货/收货数量确认的模态组件，支持容器分配和数量校验。 -->
 <!--
 被依赖：
-- `lib/components/OrderForm.svelte`
+- `lib/components/order/OrderForm.svelte`
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">

@@ -1,7 +1,7 @@
 <!-- 计划物品列表 -->
 <!--
 被依赖：
-- `lib/components/ShipmentForm.svelte`
+- `lib/components/forms/ShipmentForm.svelte`
 - `lib/components/shipment-form/index.ts`
 -->
 <script lang="ts">

@@ -1,7 +1,7 @@
 <!-- 订单明细表单区 -->
 <!--
 被依赖：
-- `lib/components/OrderForm.svelte`
+- `lib/components/order/OrderForm.svelte`
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">
@@ -10,7 +10,7 @@
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { NumberStepper } from '$lib/components/ui';
     import Svelecte from 'svelecte';
-    import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
+    import { VariantAttributeBadge } from '$lib/components';
     import { isVariantChild, getVariantParentId } from '$lib/utils/variant';
 
     interface QuotationOption {

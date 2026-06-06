@@ -1,8 +1,8 @@
 <!-- 订单表单 -->
 <!--
 被依赖：
-- `lib/components/PurchaseOrderForm.svelte`
-- `lib/components/SalesOrderForm.svelte`
+- `lib/components/forms/PurchaseOrderForm.svelte`
+- `lib/components/forms/SalesOrderForm.svelte`
 -->
 <script lang="ts">
     /**
@@ -15,11 +15,11 @@
     import Svelecte from 'svelecte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { formatAddressInline } from '$lib/utils';
-    import { NumberStepper } from './ui';
+    import { NumberStepper } from '../ui';
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
     import { buildVariantAttributes } from '$lib/utils/variant';
-    import AddressInfo from '$lib/components/AddressInfo.svelte';
+    import { AddressInfo } from '$lib/components';
     import { OrderFormItemsSection } from '$lib/components/order';
     
     type OrderType = 'purchase' | 'sales';

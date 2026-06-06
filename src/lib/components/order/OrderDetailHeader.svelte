@@ -1,7 +1,7 @@
 <!-- 订单详情标题区 -->
 <!--
 被依赖：
-- `lib/components/OrderForm.svelte`
+- `lib/components/order/OrderForm.svelte`
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">

@@ -1,16 +1,16 @@
 // place files you want to import through the `$lib` alias in this folder.
 // 被依赖：
-// - `lib/components/BulkCategoryChangeModal.svelte`
-// - `lib/components/CategoryForm.svelte`
-// - `lib/components/ContainerForm.svelte`
-// - `lib/components/CustomerAddressManager.svelte`
-// - `lib/components/ItemComponentManager.svelte`
-// - `lib/components/ItemExternalLinksTab.svelte`
-// - `lib/components/ItemForm.svelte`
-// - `lib/components/ItemQuotationsTab.svelte`
-// - `lib/components/OrderForm.svelte`
-// - `lib/components/StorageForm.svelte`
-// - `lib/components/VariantQuotationManager.svelte`
+// - `lib/components/item/BulkCategoryChangeModal.svelte`
+// - `lib/components/forms/CategoryForm.svelte`
+// - `lib/components/forms/ContainerForm.svelte`
+// - `lib/components/customer/CustomerAddressManager.svelte`
+// - `lib/components/item/ItemComponentManager.svelte`
+// - `lib/components/item/ItemExternalLinksTab.svelte`
+// - `lib/components/forms/ItemForm.svelte`
+// - `lib/components/item/ItemQuotationsTab.svelte`
+// - `lib/components/order/OrderForm.svelte`
+// - `lib/components/forms/StorageForm.svelte`
+// - `lib/components/item/VariantQuotationManager.svelte`
 // - `lib/components/bom/BOMTreeView.svelte`
 // - `lib/components/bom/ComponentList.svelte`
 // - `lib/components/bom/TotalComponents.svelte`

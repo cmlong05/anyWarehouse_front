@@ -1,7 +1,7 @@
 <!-- 发货单基本信息 -->
 <!--
 被依赖：
-- `lib/components/ShipmentForm.svelte`
+- `lib/components/forms/ShipmentForm.svelte`
 - `lib/components/shipment-form/index.ts`
 -->
 <script lang="ts">

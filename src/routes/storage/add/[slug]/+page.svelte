@@ -3,7 +3,7 @@
 被依赖：无
 -->
 <script lang="ts">
-    import StorageForm from '$lib/components/StorageForm.svelte';
+    import { StorageForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import type { ContainerBriefID } from '$lib';
 

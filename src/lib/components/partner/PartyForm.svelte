@@ -1,8 +1,8 @@
 <!-- 合作方表单 -->
 <!--
 被依赖：
-- `lib/components/CustomerForm.svelte`
-- `lib/components/SupplierForm.svelte`
+- `lib/components/forms/CustomerForm.svelte`
+- `lib/components/forms/SupplierForm.svelte`
 -->
 <script lang="ts">
     import { FormInput, FormSelect } from '$lib/components/ui';

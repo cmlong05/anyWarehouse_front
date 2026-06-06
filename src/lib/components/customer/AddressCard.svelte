@@ -1,7 +1,7 @@
 <!-- 客户地址卡片 -->
 <!--
 被依赖：
-- `lib/components/CustomerAddressManager.svelte`
+- `lib/components/customer/CustomerAddressManager.svelte`
 -->
 <script lang="ts">
     import type { CustomerAddress } from '$lib';

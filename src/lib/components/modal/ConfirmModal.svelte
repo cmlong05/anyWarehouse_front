@@ -1,9 +1,9 @@
 <!-- 确认弹窗 -->
 <!--
 被依赖：
-- `lib/components/OrderPaymentRecords.svelte`
-- `lib/components/PackageForm.svelte`
-- `lib/components/ShipmentForm.svelte`
+- `lib/components/order/OrderPaymentRecords.svelte`
+- `lib/components/forms/PackageForm.svelte`
+- `lib/components/forms/ShipmentForm.svelte`
 - `lib/components/index.ts`
 - `lib/components/modal/index.ts`
 - `lib/components/order/ShipReceiveModal.svelte`

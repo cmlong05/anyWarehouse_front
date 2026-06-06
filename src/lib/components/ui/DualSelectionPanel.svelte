@@ -1,8 +1,8 @@
 <!-- 双栏选择面板 -->
 <!--
 被依赖：
-- `lib/components/PackageForm.svelte`
-- `lib/components/ShipmentForm.svelte`
+- `lib/components/forms/PackageForm.svelte`
+- `lib/components/forms/ShipmentForm.svelte`
 -->
 <script lang="ts">
     import type { Snippet } from 'svelte';

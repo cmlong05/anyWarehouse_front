@@ -7,7 +7,7 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { onMount } from 'svelte';
-    import ShipmentForm from '$lib/components/ShipmentForm.svelte';
+    import { ShipmentForm } from '$lib/components';
     import { shipmentAPI } from '$lib/api';
     import type { Shipment } from '$lib/shipmentTypes';
     import { Loading } from '$lib/components';

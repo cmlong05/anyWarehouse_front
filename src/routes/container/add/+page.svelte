@@ -3,7 +3,7 @@
 被依赖：无
 -->
 <script lang="ts">
-    import ContainerForm from '$lib/components/ContainerForm.svelte';
+    import { ContainerForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import type { Container, ContainerBriefID } from '$lib';
 

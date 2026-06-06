@@ -14,10 +14,10 @@
     import { inventoryMovementAPI } from '$lib/api';
     import { useOutboundFlow } from '$lib/composables/useOutboundFlow.svelte';
     import { useInventoryCheck } from '$lib/composables/useInventoryCheck.svelte';
-    import ItemComponentManager from '$lib/components/ItemComponentManager.svelte';
-    import ItemVariantManager from '$lib/components/ItemVariantManager.svelte';
-    import ItemExternalLinksTab from '$lib/components/ItemExternalLinksTab.svelte';
-    import ItemQuotationsTab from '$lib/components/ItemQuotationsTab.svelte';
+    import { ItemComponentManager } from '$lib/components';
+    import { ItemVariantManager } from '$lib/components';
+    import { ItemExternalLinksTab } from '$lib/components';
+    import { ItemQuotationsTab } from '$lib/components';
     import OutboundConfirmModal from '$lib/components/item/OutboundConfirmModal.svelte';
     import TransferConfirmModal from '$lib/components/item/TransferConfirmModal.svelte';
     import ItemDescriptionCard from '$lib/components/item/ItemDescriptionCard.svelte';

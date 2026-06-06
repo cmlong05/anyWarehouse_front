@@ -1,7 +1,7 @@
 <!-- 变体创建器 -->
 <!--
 被依赖：
-- `lib/components/ItemVariantManager.svelte`
+- `lib/components/item/ItemVariantManager.svelte`
 -->
 <script lang="ts">
     import { config } from '$lib/config';

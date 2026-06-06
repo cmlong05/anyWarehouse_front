@@ -8,11 +8,14 @@
     import { onMount } from 'svelte';
     import { customerQuotationAPI } from '$lib/api';
     import type { CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
-    import { Alert, Loading } from '$lib/components';
-    import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
-    import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
-    import QuotationPriceCard from '$lib/components/QuotationPriceCard.svelte';
-    import QuotationMetaCard from '$lib/components/QuotationMetaCard.svelte';
+    import {
+        Alert,
+        Loading,
+        QuotationEditHeader,
+        QuotationMetaCard,
+        QuotationPriceCard,
+        QuotationReadonlyInfoCards
+    } from '$lib/components';
     import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
     
     // 修复 TypeScript 错误：处理 params.id 可能为 undefined 的情况

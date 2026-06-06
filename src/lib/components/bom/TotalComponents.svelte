@@ -1,7 +1,7 @@
 <!-- 总组件数 -->
 <!--
 被依赖：
-- `lib/components/ItemComponentManager.svelte`
+- `lib/components/item/ItemComponentManager.svelte`
 - `lib/components/bom/index.ts`
 -->
 <script lang="ts">

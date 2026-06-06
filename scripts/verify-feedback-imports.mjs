@@ -25,107 +25,119 @@ function toRelative(absPath) {
 	return absPath.replace(srcRoot, '').replace(/^\/+/, '');
 }
 
-const files = collectSourceFiles(srcRoot);
+function escapeRegex(value) {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-const forbiddenAbsolutePatterns = [
-	/from ['"]\$lib\/components\/Alert\.svelte['"]/,
-	/from ['"]\$lib\/components\/Loading\.svelte['"]/,
-	/from ['"]\$lib\/components\/LogisticsStatusBadge\.svelte['"]/,
-	/from ['"]\$lib\/components\/PackageStatusBadge\.svelte['"]/,
-	/from ['"]\$lib\/components\/ShipmentStatusBadge\.svelte['"]/,
-	/from ['"]\$lib\/components\/ConfirmModal\.svelte['"]/,
-	/from ['"]\$lib\/components\/Breadcrumb\.svelte['"]/
-];
-const forbiddenRelativePatterns = [
-	/from ['"]\.\/Alert\.svelte['"]/,
-	/from ['"]\.\/Loading\.svelte['"]/,
-	/from ['"]\.\/LogisticsStatusBadge\.svelte['"]/,
-	/from ['"]\.\/PackageStatusBadge\.svelte['"]/,
-	/from ['"]\.\/ShipmentStatusBadge\.svelte['"]/,
-	/from ['"]\.\/ConfirmModal\.svelte['"]/,
-	/from ['"]\.\/Breadcrumb\.svelte['"]/
+const enforcedComponents = [
+	'Alert',
+	'Loading',
+	'LogisticsStatusBadge',
+	'PackageStatusBadge',
+	'ShipmentStatusBadge',
+	'ConfirmModal',
+	'Breadcrumb',
+	'ItemForm',
+	'SupplierForm',
+	'CustomerForm',
+	'PurchaseOrderForm',
+	'SalesOrderForm',
+	'ShipmentForm',
+	'PackageForm',
+	'StorageForm',
+	'ContainerForm',
+	'CategoryForm',
+	'QuotationMetaCard',
+	'QuotationPriceCard',
+	'QuotationDetailBody',
+	'QuotationReadonlyInfoCards',
+	'QuotationEditHeader',
+	'QuotationLinesTable',
+	'AttributeManager',
+	'AddressInfo',
+	'ItemVariantManager',
+	'ItemQuotationsTab',
+	'ItemExternalLinksTab',
+	'ItemComponentManager',
+	'EditButton',
+	'DualSelectionPanel',
+	'CustomerAddressManager',
+	'BulkEditTable',
+	'BulkCategoryChangeModal',
+	'TrackingLegForm',
+	'PrintLabelButton',
+	'OrderPaymentRecords',
+	'OrderForm',
+	'VariantAttributeBadge',
+	'TrackingLegTimeline',
+	'VariantCreator',
+	'VariantQuotationManager'
 ];
 
+const allowedRelativeImportDirs = [
+	'lib/components/feedback/',
+	'lib/components/status/',
+	'lib/components/modal/',
+	'lib/components/navigation/',
+	'lib/components/forms/',
+	'lib/components/quotation/',
+	'lib/components/customer/',
+	'lib/components/item/',
+	'lib/components/order/',
+	'lib/components/shipment/',
+	'lib/components/ui/'
+];
+
+const namesAlternation = enforcedComponents.map(escapeRegex).join('|');
+const forbiddenAbsolutePattern = new RegExp(`from ['"]\\$lib/components/(?:${namesAlternation})\\.svelte['"]`);
+const forbiddenRelativePattern = new RegExp(`from ['"]\\./(?:${namesAlternation})\\.svelte['"]`);
 const requiredBarrelPattern = /from ['"]\$lib\/components['"]/;
+
+const files = collectSourceFiles(srcRoot);
 const errors = [];
 
 for (const abs of files) {
 	const rel = toRelative(abs);
 	const text = readFileSync(abs, 'utf8');
 
-	if (forbiddenAbsolutePatterns.some((p) => p.test(text))) {
+	if (forbiddenAbsolutePattern.test(text)) {
 		errors.push(`[FORBIDDEN] ${rel} still imports old component path`);
 	}
+
 	if (
-		!rel.startsWith('lib/components/feedback/') &&
-		!rel.startsWith('lib/components/status/') &&
-		!rel.startsWith('lib/components/modal/') &&
-		!rel.startsWith('lib/components/navigation/') &&
-		forbiddenRelativePatterns.some((p) => p.test(text))
+		!allowedRelativeImportDirs.some((prefix) => rel.startsWith(prefix)) &&
+		forbiddenRelativePattern.test(text)
 	) {
 		errors.push(`[FORBIDDEN] ${rel} still imports old component path`);
 	}
 
-	const importsAlert = /import\s+[^;\n]*\bAlert\b[^;\n]*from/.test(text);
-	const importsLoading = /import\s+[^;\n]*\bLoading\b[^;\n]*from/.test(text);
-	const importsLogisticsStatusBadge = /import\s+[^;\n]*\bLogisticsStatusBadge\b[^;\n]*from/.test(text);
-	const importsPackageStatusBadge = /import\s+[^;\n]*\bPackageStatusBadge\b[^;\n]*from/.test(text);
-	const importsShipmentStatusBadge = /import\s+[^;\n]*\bShipmentStatusBadge\b[^;\n]*from/.test(text);
-	const importsConfirmModal = /import\s+[^;\n]*\bConfirmModal\b[^;\n]*from/.test(text);
-	const importsBreadcrumb = /import\s+[^;\n]*\bBreadcrumb\b[^;\n]*from/.test(text);
+	const usedComponents = enforcedComponents.filter((name) =>
+		new RegExp(`import\\s+[^;\\n]*\\b${escapeRegex(name)}\\b[^;\\n]*from\\s+['"]\\$lib/components`).test(text)
+	);
 
-	if (
-		importsAlert ||
-		importsLoading ||
-		importsLogisticsStatusBadge ||
-		importsPackageStatusBadge ||
-		importsShipmentStatusBadge ||
-		importsConfirmModal ||
-		importsBreadcrumb
-	) {
-		if (!requiredBarrelPattern.test(text)) {
-			errors.push(`[ENTRY] ${rel} uses shared components but not from $lib/components`);
-		}
+	if (usedComponents.length === 0) {
+		continue;
+	}
 
-		const namedImportMatches = [...text.matchAll(/import\s+\{([^}]*)\}\s+from\s+['"][^'"]+['"]/g)].map((m) => m[1]);
-		const hasNamedAlert = namedImportMatches.some((m) => /\bAlert\b/.test(m));
-		const hasNamedLoading = namedImportMatches.some((m) => /\bLoading\b/.test(m));
-		const hasNamedLogisticsStatusBadge = namedImportMatches.some((m) => /\bLogisticsStatusBadge\b/.test(m));
-		const hasNamedPackageStatusBadge = namedImportMatches.some((m) => /\bPackageStatusBadge\b/.test(m));
-		const hasNamedShipmentStatusBadge = namedImportMatches.some((m) => /\bShipmentStatusBadge\b/.test(m));
-		const hasNamedConfirmModal = namedImportMatches.some((m) => /\bConfirmModal\b/.test(m));
-		const hasNamedBreadcrumb = namedImportMatches.some((m) => /\bBreadcrumb\b/.test(m));
+	if (!requiredBarrelPattern.test(text)) {
+		errors.push(`[ENTRY] ${rel} uses shared components but not from $lib/components`);
+	}
 
-		if (importsAlert && !hasNamedAlert) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for Alert`);
-		}
-		if (importsLoading && !hasNamedLoading) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for Loading`);
-		}
-		if (importsLogisticsStatusBadge && !hasNamedLogisticsStatusBadge) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for LogisticsStatusBadge`);
-		}
-		if (importsPackageStatusBadge && !hasNamedPackageStatusBadge) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for PackageStatusBadge`);
-		}
-		if (importsShipmentStatusBadge && !hasNamedShipmentStatusBadge) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for ShipmentStatusBadge`);
-		}
-		if (importsConfirmModal && !hasNamedConfirmModal) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for ConfirmModal`);
-		}
-		if (importsBreadcrumb && !hasNamedBreadcrumb) {
-			errors.push(`[IMPORT-FORM] ${rel} should use named import for Breadcrumb`);
+	const namedImportMatches = [...text.matchAll(/import\s+\{([^}]*)\}\s+from\s+['"][^'"]+['"]/g)].map((m) => m[1]);
+	for (const name of usedComponents) {
+		const hasNamed = namedImportMatches.some((m) => new RegExp(`\\b${escapeRegex(name)}\\b`).test(m));
+		if (!hasNamed) {
+			errors.push(`[IMPORT-FORM] ${rel} should use named import for ${name}`);
 		}
 	}
 }
 
 if (errors.length > 0) {
-	console.error('Feedback import policy violations:');
+	console.error('Shared component import policy violations:');
 	for (const err of errors) {
 		console.error(`- ${err}`);
 	}
 	process.exit(1);
 }
 
-console.log('Feedback import policy check passed.');
+console.log('Shared component import policy check passed.');

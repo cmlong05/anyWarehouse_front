@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import CategoryForm from '$lib/components/CategoryForm.svelte';
+    import { CategoryForm } from '$lib/components';
     import type { Category, CategoryData } from '$lib';
 
     let { data } = $props<{ 

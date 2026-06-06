@@ -10,7 +10,7 @@
     import type { AvailableStorage } from '$lib/api/movement';
     import { safeParseFloat, formatNumber, getErrorMessage } from '$lib/utils';
     import { FormInput, NumberStepper } from '$lib/components/ui';
-    import DualSelectionPanel from './DualSelectionPanel.svelte';
+    import DualSelectionPanel from '../ui/DualSelectionPanel.svelte';
     import { Alert, Loading } from '$lib/components';
     import Plus from 'lucide-svelte/icons/plus';
 

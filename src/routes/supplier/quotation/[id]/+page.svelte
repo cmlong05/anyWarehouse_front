@@ -8,10 +8,8 @@
     import { goto } from '$app/navigation';
     import { quotationAPI } from '$lib/api';
     import type { Quotation } from '$lib';
-    import { Alert, Loading } from '$lib/components';
-    import EditButton from '$lib/components/EditButton.svelte';
-    import { Breadcrumb } from '$lib/components';
-    import QuotationDetailBody from '$lib/components/QuotationDetailBody.svelte';
+    import { Alert, Breadcrumb, Loading, QuotationDetailBody } from '$lib/components';
+    import { EditButton } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<Quotation | null>(null);

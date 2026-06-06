@@ -1,9 +1,9 @@
 // ========== Shipment 发货管理相关接口 ==========
 // 被依赖：
-// - `lib/components/PackageForm.svelte`
-// - `lib/components/ShipmentForm.svelte`
-// - `lib/components/TrackingLegForm.svelte`
-// - `lib/components/TrackingLegTimeline.svelte`
+// - `lib/components/forms/PackageForm.svelte`
+// - `lib/components/forms/ShipmentForm.svelte`
+// - `lib/components/shipment/TrackingLegForm.svelte`
+// - `lib/components/shipment/TrackingLegTimeline.svelte`
 // - `lib/components/shipment-form/BasicInfo.svelte`
 // - `lib/components/shipment/LinkPackageModal.svelte`
 // - `lib/components/shipment/PrintPackingList.svelte`
