@@ -8,9 +8,8 @@
     import { onMount } from 'svelte';
     import { purchaseOrderAPI, supplierAPI } from '$lib/api';
     import type { PurchaseOrder, PurchaseOrderUpdateRequest } from '$lib';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
-    import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+import { Alert, Loading } from '$lib/components';
+import { Breadcrumb } from '$lib/components';
     import PurchaseOrderForm from '$lib/components/PurchaseOrderForm.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     

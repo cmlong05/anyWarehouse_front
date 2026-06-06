@@ -11,7 +11,7 @@
     import FormField from '$lib/components/ui/FormField.svelte';
     import Svelecte from 'svelecte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Plus from 'lucide-svelte/icons/plus';
     

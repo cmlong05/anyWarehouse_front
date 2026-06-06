@@ -10,8 +10,7 @@
     import { packageAPI, packageTrackingLegAPI } from '$lib/api';
     import { formatDate, formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package, PackageItem, PackageTrackingLeg } from '$lib/shipmentTypes';
-    import Alert from '$lib/components/Alert.svelte';
-    import Loading from '$lib/components/Loading.svelte';
+import { Alert, Loading } from '$lib/components';
     import PrintPackingList from '$lib/components/shipment/PrintPackingList.svelte';
     import TrackingLegTimeline from '$lib/components/TrackingLegTimeline.svelte';
     import TrackingLegForm from '$lib/components/TrackingLegForm.svelte';
@@ -171,9 +170,7 @@
         getVariantParentInfo 
     } from '$lib/utils/variant';
     import VariantAttributeBadge from '$lib/components/VariantAttributeBadge.svelte';
-    import LogisticsStatusBadge from '$lib/components/LogisticsStatusBadge.svelte';
-    import PackageStatusBadge from '$lib/components/PackageStatusBadge.svelte';
-    import ShipmentStatusBadge from '$lib/components/ShipmentStatusBadge.svelte';
+import { LogisticsStatusBadge, PackageStatusBadge, ShipmentStatusBadge } from '$lib/components';
     import ChevronRight from 'lucide-svelte/icons/chevron-right';
 
     interface PackageItemWithVariant extends PackageItem {

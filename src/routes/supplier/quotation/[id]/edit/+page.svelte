@@ -8,8 +8,7 @@
     import { goto } from '$app/navigation';
     import { quotationAPI } from '$lib/api';
     import type { Quotation, QuotationCreateRequest } from '$lib';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert, Loading } from '$lib/components';
     import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
     import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
     import QuotationPriceCard from '$lib/components/QuotationPriceCard.svelte';

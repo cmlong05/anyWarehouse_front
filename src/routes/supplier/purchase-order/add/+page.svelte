@@ -10,9 +10,8 @@
     import { purchaseOrderAPI, supplierAPI, systemSettingAPI } from '$lib/api';
     import type { Supplier, PurchaseOrderCreateRequest } from '$lib';
     import type { PreloadItem } from '$lib/utils/preloadItems';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
-    import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+import { Alert, Loading } from '$lib/components';
+import { Breadcrumb } from '$lib/components';
     import PurchaseOrderForm from '$lib/components/PurchaseOrderForm.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     

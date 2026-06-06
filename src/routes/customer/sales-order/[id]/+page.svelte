@@ -10,8 +10,7 @@
     import { customerAPI, salesOrderAPI } from '$lib/api';
     import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
     import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
-    import Alert from '$lib/components/Alert.svelte';
-    import Loading from '$lib/components/Loading.svelte';
+import { Alert, Loading } from '$lib/components';
     import { 
         OrderDetailHeader, 
         OrderInfoGrid, 

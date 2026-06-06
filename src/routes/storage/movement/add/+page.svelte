@@ -6,7 +6,7 @@
     import { getErrorMessage } from '$lib/utils/errors';
     import { goto } from '$app/navigation';
     import { inventoryMovementAPI, type MovementType, type InventoryMovementCreateRequest } from '$lib/api';
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert } from '$lib/components';
     import Svelecte from 'svelecte';
     import type { ContainerBriefID } from '$lib';
 

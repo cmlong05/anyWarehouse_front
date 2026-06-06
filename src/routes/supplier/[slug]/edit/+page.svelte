@@ -9,10 +9,8 @@
     import { supplierAPI } from '$lib/api';
     import type { Supplier, SupplierCreateRequest } from '$lib';
     import SupplierForm from '$lib/components/SupplierForm.svelte';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
-    import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import { Alert, Loading } from '$lib/components';
+import { Breadcrumb, ConfirmModal } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let supplier = $state<Supplier | null>(null);

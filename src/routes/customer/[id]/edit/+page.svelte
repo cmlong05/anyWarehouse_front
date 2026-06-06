@@ -7,9 +7,8 @@
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib';
     import CustomerForm from '$lib/components/CustomerForm.svelte';
-    import Alert from '$lib/components/Alert.svelte';
-    import Breadcrumb from '$lib/components/Breadcrumb.svelte';
-    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import { Alert } from '$lib/components';
+import { Breadcrumb, ConfirmModal } from '$lib/components';
 
     interface Props {
         data: { customer: Customer };

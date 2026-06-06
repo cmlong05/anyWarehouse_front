@@ -9,8 +9,7 @@
     import { quotationAPI, supplierAPI } from '$lib/api';
     import type { SupplierBrief, QuotationCreateRequest } from '$lib';
     import { config } from '$lib/config';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert, Loading } from '$lib/components';
     import Svelecte from 'svelecte';
     import QuotationLinesTable from '$lib/components/QuotationLinesTable.svelte';
     import { useQuotationLineForm } from '$lib/composables/useQuotationLineForm.svelte';

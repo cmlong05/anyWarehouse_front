@@ -10,7 +10,7 @@
     import ShipmentForm from '$lib/components/ShipmentForm.svelte';
     import { shipmentAPI } from '$lib/api';
     import type { Shipment } from '$lib/shipmentTypes';
-    import Loading from '$lib/components/Loading.svelte';
+import { Loading } from '$lib/components';
 
     // 获取发货单ID
     let shipmentId = $derived(parseInt(page.params.id || '0'));

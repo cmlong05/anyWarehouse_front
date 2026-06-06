@@ -5,7 +5,7 @@
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert } from '$lib/components';
     import Svelecte from 'svelecte';
     import { buildContainerRelationSearchOptions, formatNumber, hasChangedFields, shouldDismissModal } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';

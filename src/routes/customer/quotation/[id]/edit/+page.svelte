@@ -8,8 +8,7 @@
     import { onMount } from 'svelte';
     import { customerQuotationAPI } from '$lib/api';
     import type { CustomerQuotation, CustomerQuotationCreateRequest } from '$lib';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
+import { Alert, Loading } from '$lib/components';
     import QuotationEditHeader from '$lib/components/QuotationEditHeader.svelte';
     import QuotationReadonlyInfoCards from '$lib/components/QuotationReadonlyInfoCards.svelte';
     import QuotationPriceCard from '$lib/components/QuotationPriceCard.svelte';

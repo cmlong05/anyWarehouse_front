@@ -1,9 +1,14 @@
-<!-- 提示 -->
+<!-- 面包屑 -->
 <!--
 被依赖：
+- `lib/components/OrderPaymentRecords.svelte`
 - `lib/components/PackageForm.svelte`
 - `lib/components/ShipmentForm.svelte`
+- `lib/components/index.ts`
+- `lib/components/navigation/index.ts`
 - `lib/components/order/ShipReceiveModal.svelte`
+- `lib/components/partner/OrdersSection.svelte`
+- `lib/components/partner/QuotationsSection.svelte`
 - `lib/components/shipment/TrackingNumberDetailModal.svelte`
 - `routes/customer/+page.svelte`
 - `routes/customer/[id]/+page.svelte`
@@ -20,7 +25,9 @@
 - `routes/customer/sales-order/add/+page.svelte`
 - `routes/customer/shipment/+page.svelte`
 - `routes/customer/shipment/[id]/+page.svelte`
+- `routes/customer/shipment/[id]/edit/+page.svelte`
 - `routes/customer/shipment/tracking-number/+page.svelte`
+- `routes/item/[slug]/edit/+page.svelte`
 - `routes/settings/address/+page.svelte`
 - `routes/settings/aliexpress/+page.svelte`
 - `routes/settings/pi/+page.svelte`
@@ -39,62 +46,35 @@
 - `routes/supplier/quotation/add/+page.svelte`
 -->
 <script lang="ts">
-    export interface ErrorInfo {
-        message: string;
-        code?: string;
-        details?: string;
+    interface BreadcrumbItem {
+        label: string;
+        href?: string;
     }
     
     interface Props {
-        error?: ErrorInfo | string | null;
-        onDismiss?: () => void;
-        variant?: 'error' | 'warning' | 'info';
+        items: BreadcrumbItem[];
     }
     
-    let { 
-        error, 
-        onDismiss,
-        variant = 'error'
-    }: Props = $props();
-    
-    const errorMessage = $derived(typeof error === 'string' ? error : error?.message);
-    const errorDetails = $derived(typeof error === 'object' ? error?.details : undefined);
-    
-    const variantClasses = {
-        error: 'bg-red-50 border-red-200 text-red-600',
-        warning: 'bg-amber-50 border-amber-200 text-amber-600',
-        info: 'bg-blue-50 border-blue-200 text-blue-600'
-    };
+        let { items }: Props = $props();
 </script>
 
-{#if error && errorMessage}
-    <div class="p-4 mb-4 rounded-md border {variantClasses[variant]}" role="alert">
-        <div class="flex items-start gap-3">
-            <div class="flex-shrink-0 text-xl">
-                {#if variant === 'error'}
-                    ⚠️
-                {:else if variant === 'warning'}
-                    ⚠️
+<nav class="mt-2 mb-2 text-sm" aria-label="Breadcrumb">
+    <ol class="flex items-center gap-2 list-none m-0 p-0">
+        {#each items as item, i}
+            <li class="flex items-center gap-2">
+                {#if item.href}
+                    <a href={item.href} class="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                        {item.label}
+                    </a>
                 {:else}
-                    ℹ️
+                    <span class="text-gray-500 font-medium" aria-current="page">
+                        {item.label}
+                    </span>
                 {/if}
-            </div>
-            <div class="flex-1">
-                <div class="font-medium">{errorMessage}</div>
-                {#if errorDetails}
-                    <div class="mt-1 text-sm opacity-80">{errorDetails}</div>
+                {#if i < items.length - 1}
+                    <span class="text-gray-500 mx-1" aria-hidden="true">&gt;</span>
                 {/if}
-            </div>
-            {#if onDismiss}
-                <button 
-                    type="button" 
-                    class="flex-shrink-0 text-xl opacity-60 hover:opacity-100 transition-opacity" 
-                    onclick={onDismiss}
-                    aria-label="关闭"
-                >
-                    ✕
-                </button>
-            {/if}
-        </div>
-    </div>
-{/if}
+            </li>
+        {/each}
+    </ol>
+</nav>

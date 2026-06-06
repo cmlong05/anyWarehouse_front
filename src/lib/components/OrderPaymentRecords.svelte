@@ -7,7 +7,7 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { purchaseOrderPaymentRecordAPI, purchaseOrderAPI } from '$lib/api';
-  import Loading from '$lib/components/Loading.svelte';
+import { Loading } from '$lib/components';
   import { safeParseFloat } from '$lib/utils';
 
   interface Props {

@@ -7,8 +7,7 @@
     import { goto } from '$app/navigation';
     import { inventoryMovementAPI, type InventoryMovement, type MovementType } from '$lib/api';
     import { formatDate, getErrorMessage } from '$lib/utils';
-    import Alert from '$lib/components/Alert.svelte';
-    import Loading from '$lib/components/Loading.svelte';
+import { Alert, Loading } from '$lib/components';
     import Plus from 'lucide-svelte/icons/plus';
     import Svelecte from 'svelecte';
 

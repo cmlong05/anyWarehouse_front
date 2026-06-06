@@ -9,9 +9,8 @@
     import { trackingNumberAPI } from '$lib/api';
     import { formatDate, getErrorMessage, hasChangedFields, shouldDismissModal } from '$lib/utils';
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
-    import Loading from '$lib/components/Loading.svelte';
-    import Alert from '$lib/components/Alert.svelte';
-    import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import { Alert, Loading } from '$lib/components';
+import { ConfirmModal } from '$lib/components';
     import TrackingNumberDetailModal from '$lib/components/shipment/TrackingNumberDetailModal.svelte';
     import Plus from 'lucide-svelte/icons/plus';
 
