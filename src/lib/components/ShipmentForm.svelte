@@ -9,7 +9,7 @@
     import { useShipmentForm } from '$lib/composables/useShipmentForm.svelte';
     import type { Shipment } from '$lib/shipmentTypes';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
-import { Alert, Loading } from '$lib/components';
+    import { Alert, Loading } from '$lib/components';
     import { BasicInfo, OrderItemsList, PlanItemsList, ShippingInfo } from './shipment-form';
 
     interface Props {

@@ -7,8 +7,8 @@
     import { customerAPI } from '$lib/api';
     import type { CustomerFormData } from '$lib/schemas';
     import CustomerForm from '$lib/components/CustomerForm.svelte';
-import { Alert } from '$lib/components';
-import { Breadcrumb } from '$lib/components';
+    import { Alert } from '$lib/components';
+    import { Breadcrumb } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let loading = $state(false);

@@ -9,7 +9,7 @@
     import type { Supplier } from '$lib';
     import { DataTable, FormInput } from '$lib/components/ui';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
-import { Alert } from '$lib/components';
+    import { Alert } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let suppliers = $state<Supplier[]>([]);

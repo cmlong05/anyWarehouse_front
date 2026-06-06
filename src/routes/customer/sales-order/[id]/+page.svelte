@@ -10,7 +10,7 @@
     import { customerAPI, salesOrderAPI } from '$lib/api';
     import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
     import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
-import { Alert, Loading } from '$lib/components';
+	import { Alert, Loading } from '$lib/components';
     import { 
         OrderDetailHeader, 
         OrderInfoGrid, 

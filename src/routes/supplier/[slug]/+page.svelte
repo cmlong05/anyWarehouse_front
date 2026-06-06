@@ -8,8 +8,8 @@
     import { page } from '$app/state';
     import { supplierAPI } from '$lib/api';
     import type { PurchaseOrderBrief, Supplier, QuotationBrief } from '$lib';
-import { Alert, Loading } from '$lib/components';
-import { Breadcrumb } from '$lib/components';
+	import { Alert, Loading } from '$lib/components';
+	import { Breadcrumb } from '$lib/components';
     import { PageContainer } from '$lib/components/layout';
     import { PartnerDetailHeader, OrdersSection, QuotationsSection } from '$lib/components/partner';
     import { getPurchaseStatusClass as getOrderStatusClass, getPurchaseStatusLabel as getStatusLabel } from '$lib/utils/orderBadges';

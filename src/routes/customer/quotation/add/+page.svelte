@@ -9,7 +9,7 @@
     import { customerQuotationAPI, customerAPI } from '$lib/api';
     import type { CustomerBrief, CustomerQuotationCreateRequest } from '$lib';
     import { config } from '$lib/config';
-import { Alert, Loading } from '$lib/components';
+    import { Alert, Loading } from '$lib/components';
     import Svelecte from 'svelecte';
     import QuotationLinesTable from '$lib/components/QuotationLinesTable.svelte';
     import { useQuotationLineForm } from '$lib/composables/useQuotationLineForm.svelte';

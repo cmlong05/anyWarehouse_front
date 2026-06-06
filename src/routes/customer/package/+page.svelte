@@ -9,7 +9,7 @@
     import { packageAPI } from '$lib/api';
     import { formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package } from '$lib/shipmentTypes';
-import { Alert } from '$lib/components';
+    import { Alert } from '$lib/components';
     import Plus from 'lucide-svelte/icons/plus';
     import PackageCheck from 'lucide-svelte/icons/package-check';
     import PackageOpen from 'lucide-svelte/icons/package-open';

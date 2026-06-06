@@ -9,8 +9,8 @@
     import { salesOrderAPI, customerAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Customer, SalesOrder, SalesOrderUpdateRequest } from '$lib';
-import { Alert, Loading } from '$lib/components';
-import { Breadcrumb } from '$lib/components';
+    import { Alert, Loading } from '$lib/components';
+    import { Breadcrumb } from '$lib/components';
     import SalesOrderForm from '$lib/components/SalesOrderForm.svelte';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     

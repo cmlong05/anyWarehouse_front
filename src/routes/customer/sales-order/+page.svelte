@@ -16,7 +16,7 @@
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
     import { PageContainer } from '$lib/components/layout';
-import { Alert } from '$lib/components';
+	import { Alert } from '$lib/components';
 
     // 客户列表
     let customers = $state<CustomerBrief[]>([]);

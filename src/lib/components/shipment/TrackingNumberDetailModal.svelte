@@ -8,7 +8,7 @@
 <script lang="ts">
     import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';
-import { Alert } from '$lib/components';
+    import { Alert } from '$lib/components';
 
     export let isOpen = false;
     export let trackingNumber: TrackingNumber | null = null;

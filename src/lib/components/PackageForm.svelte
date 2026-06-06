@@ -11,7 +11,7 @@
     import { safeParseFloat, formatNumber, getErrorMessage } from '$lib/utils';
     import { FormInput, NumberStepper } from '$lib/components/ui';
     import DualSelectionPanel from './DualSelectionPanel.svelte';
-import { Alert, Loading } from '$lib/components';
+    import { Alert, Loading } from '$lib/components';
     import Plus from 'lucide-svelte/icons/plus';
 
     interface Props {

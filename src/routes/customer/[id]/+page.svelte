@@ -7,8 +7,8 @@
     import { customerAPI } from '$lib/api';
     import type { Customer, CustomerQuotationBrief } from '$lib';
     import { usePartnerDetail, PARTNER_STATUS_LABELS, PARTNER_LEVEL_LABELS } from '$lib/composables/usePartnerDetail.svelte';
-import { Alert } from '$lib/components';
-import { Breadcrumb, ConfirmModal } from '$lib/components';
+    import { Alert } from '$lib/components';
+    import { Breadcrumb, ConfirmModal } from '$lib/components';
     import { PartnerDetailHeader, PartnerInfoCard, OrdersSection, QuotationsSection } from '$lib/components/partner';
     import CustomerAddressManager from '$lib/components/CustomerAddressManager.svelte';
     import { customerAddressAPI } from '$lib/api';

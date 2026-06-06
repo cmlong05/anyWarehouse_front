@@ -10,10 +10,10 @@
     import { formatDate, getErrorMessage } from '$lib/utils';
     import type { Shipment, ShipmentFilters } from '$lib/shipmentTypes';
     import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
-import { ShipmentStatusBadge } from '$lib/components';
+    import { ShipmentStatusBadge } from '$lib/components';
     import { DataTable, Pagination, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-import { Alert } from '$lib/components';
+    import { Alert } from '$lib/components';
 
     let shipments = $state<Shipment[]>([]);
     let loading = $state(true);

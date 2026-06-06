@@ -10,7 +10,7 @@
     import { purchaseOrderAPI } from '$lib/api';
     import type { PurchaseOrder, PurchaseOrderItem } from '$lib';
     import { formatNumber } from '$lib/utils';
-import { Alert, Loading } from '$lib/components';
+	import { Alert, Loading } from '$lib/components';
     import { 
         OrderDetailHeader, 
         OrderInfoGrid, 

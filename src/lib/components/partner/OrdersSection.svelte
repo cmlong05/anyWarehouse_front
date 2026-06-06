@@ -6,7 +6,7 @@
 - `routes/supplier/[slug]/+page.svelte`
 -->
 <script lang="ts">
-import { Loading } from '$lib/components';
+    import { Loading } from '$lib/components';
 
     interface Order {
         id: number;

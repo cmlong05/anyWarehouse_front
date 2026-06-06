@@ -6,7 +6,7 @@
 - `routes/supplier/[slug]/+page.svelte`
 -->
 <script lang="ts">
-import { Loading } from '$lib/components';
+    import { Loading } from '$lib/components';
     import DataTable from '$lib/components/ui/DataTable.svelte';
     import { NumberStepper } from '$lib/components/ui';
     import { formatNumber, safeParseFloat } from '$lib/utils';

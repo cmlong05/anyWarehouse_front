@@ -13,8 +13,8 @@
     import type { SalesOrder } from '$lib';
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
-import { ShipmentStatusBadge } from '$lib/components';
-import { Alert, Loading } from '$lib/components';
+	import { ShipmentStatusBadge } from '$lib/components';
+	import { Alert, Loading } from '$lib/components';
     import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
     import AddressInfo from '$lib/components/AddressInfo.svelte';
 

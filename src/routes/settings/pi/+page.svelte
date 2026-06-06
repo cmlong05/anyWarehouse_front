@@ -5,7 +5,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { systemSettingAPI } from '$lib/api';
-import { Alert, Loading } from '$lib/components';
+    import { Alert, Loading } from '$lib/components';
 
     let loading = $state(true);
     let saving = $state(false);
