@@ -52,6 +52,8 @@
         cellClass?: string;
         /** 额外的表头 class */
         headerClass?: string;
+        /** 点击该列单元格时不触发行级 onRowClick */
+        noClick?: boolean;
     }
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,6 +71,8 @@
         // 交互
         clickable?: boolean;
         onRowClick?: (item: T) => void;
+        onRowMouseEnter?: (item: T) => void;
+        onRowMouseLeave?: (item: T) => void;
         onHeaderClick?: (columnKey: string) => void;
         sortKey?: string;
         sortDirection?: 'asc' | 'desc';
@@ -94,6 +98,8 @@
         emptyText = '暂无数据',
         clickable = false,
         onRowClick,
+        onRowMouseEnter,
+        onRowMouseLeave,
         onHeaderClick,
         sortKey,
         sortDirection = 'asc',
@@ -114,9 +120,9 @@
     }
     
     function handleRowClick(item: T, event: MouseEvent) {
-        // 当点击的是行内的 <a>/<button> 等可交互元素时，避免行级 onclick
-        // 与链接的 SPA 导航重复触发（否则在快速导航后会落到目标页第一行）
-        if (event.target instanceof Element && event.target.closest('a, button')) {
+        // 当点击的是行内的 <a>/<button>/<input>/<select>/<textarea> 等可交互元素时，
+        // 避免行级 onclick 与链接的 SPA 导航重复触发
+        if (event.target instanceof Element && event.target.closest('a, button, input, select, textarea')) {
             return;
         }
         if (clickable && onRowClick) {
@@ -214,6 +220,8 @@
                             ].filter(Boolean).join(' ')
                         }
                         onclick={(e) => handleRowClick(item, e)}
+                        onmouseenter={() => onRowMouseEnter?.(item)}
+                        onmouseleave={() => onRowMouseLeave?.(item)}
                     >
                         {#each columns as column}
                             <td
@@ -221,10 +229,12 @@
                                     [
                                         'p-3',
                                         column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left',
-                                        column.cellClass ?? ''
+                                        column.cellClass ?? '',
+                                        column.noClick ? 'cursor-default' : ''
                                     ].join(' ')
                                 }
                                 style:width={column.width}
+                                onclick={column.noClick ? (e) => e.stopPropagation() : undefined}
                             >
                                 {#if cellRender}
                                     {@render cellRender({ item, column, value: getValue(item, column.key) })}

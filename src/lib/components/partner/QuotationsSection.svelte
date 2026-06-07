@@ -55,6 +55,7 @@
         align: 'left' | 'center' | 'right';
         headerClass: string;
         cellClass?: string;
+        noClick?: boolean;
     }
 
     let {
@@ -275,10 +276,10 @@
         }
 
         if (row.type === 'quotation' && row.group?.parentId) {
-            return 'bg-sky-50/70 hover:bg-sky-100/80 cursor-default';
+            return 'bg-sky-50/70 hover:bg-sky-100/80 cursor-pointer';
         }
 
-        return 'cursor-default';
+        return 'cursor-pointer';
     }
 
     const columns = $derived.by(() => {
@@ -288,9 +289,9 @@
             { key: 'item_name', title: '物品名称', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
             { key: 'partner_sku', title: '合作方SKU', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
             { key: 'quantity_on_order', title: '在途', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'item_total_storage', title: '库存数量', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'price', title: `单价${currency ? `（${currency}）` : ''}`, sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'quantity', title: '数量', sortable: false, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'item_total_storage', title: '库存数量', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
+            { key: 'price', title: `单价${currency ? `（${currency}）` : ''}`, sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
+            { key: 'quantity', title: '数量', sortable: false, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
         ];
 
         if (showStatus) {
@@ -305,6 +306,32 @@
 
         return baseColumns;
     });
+
+    let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+    let dismissTimer: ReturnType<typeof setTimeout> | null = null;
+    let hintVisible = $state(false);
+    let cursorX = $state(0);
+    let cursorY = $state(0);
+
+    function handleMouseMove(e: MouseEvent) {
+        cursorX = e.clientX;
+        cursorY = e.clientY;
+    }
+
+    function handleRowMouseEnter(row: DisplayRow) {
+        if (row.type === 'group') return;
+        if (!row.quotation) return;
+        hoverTimer = setTimeout(() => {
+            hintVisible = true;
+            dismissTimer = setTimeout(() => { hintVisible = false; }, 2500);
+        }, 1000);
+    }
+
+    function handleRowMouseLeave() {
+        if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+        if (dismissTimer) { clearTimeout(dismissTimer); dismissTimer = null; }
+        hintVisible = false;
+    }
 </script>
 
 <div class="py-4 border-t border-gray-200">
@@ -333,7 +360,16 @@
             <p>{emptyText}</p>
         </div>
     {:else}
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto" role="presentation" onmousemove={handleMouseMove}>
+            {#if hintVisible}
+                <!-- position: fixed with runtime cursor coords — Tailwind cannot express dynamic pixel values -->
+                <div
+                    class="fixed z-50 px-3 py-1.5 bg-gray-800/85 text-white text-xs rounded-md shadow-lg pointer-events-none"
+                    style="left: {cursorX + 14}px; top: {cursorY + 14}px;"
+                >
+                    点击查看报价详情
+                </div>
+            {/if}
             <DataTable
                 data={displayRows}
                 {columns}
@@ -352,6 +388,8 @@
                         onRowClick(row.quotation.id);
                     }
                 }}
+                onRowMouseEnter={handleRowMouseEnter}
+                onRowMouseLeave={handleRowMouseLeave}
                 rowHover={false}
                 loading={false}
                 emptyText={emptyText}
