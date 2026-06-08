@@ -89,9 +89,9 @@
         error = '';
         
         try {
-            await purchaseOrderAPI.create(data);
-            // 创建成功后跳转到供应商详情页
-            goto(`/supplier/${supplier?.id}`);
+            const newOrder = await purchaseOrderAPI.create(data);
+            // 创建成功后跳转到新订单详情页
+            goto(`/supplier/purchase-order/${newOrder.id}`);
         } catch (err) {
             error = err instanceof Error ? err.message : '创建采购订单失败';
             submitting = false;
