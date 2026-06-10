@@ -21,9 +21,16 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     if (categoriesRes.ok) {
         categories = await categoriesRes.json();
     }
+
+    const checkEmptyRes = await fetch(`${config.API_BASE_URL}/product/category/${slug}/check_empty/`);
+    let emptyCheckData: { is_empty: boolean; item_count: number; children_count: number } | null = null;
+    if (checkEmptyRes.ok) {
+        emptyCheckData = await checkEmptyRes.json();
+    }
     
     return { 
         categoryData,
-        categories 
+        categories,
+        emptyCheckData
     };
 };

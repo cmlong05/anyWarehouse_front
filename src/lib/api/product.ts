@@ -15,6 +15,12 @@ import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
 import type { ItemFormData } from '$lib/schemas';
 import type { PaginatedResponse } from './base';
 
+export interface CategoryEmptyCheckResponse {
+    is_empty: boolean;
+    item_count: number;
+    children_count: number;
+}
+
 // ========== Item API ==========
 
 export class ItemAPI extends BaseAPI<Item, ItemFormData> {
@@ -42,6 +48,16 @@ export class ItemAPI extends BaseAPI<Item, ItemFormData> {
     /** 搜索物品 */
     async search(query: string): Promise<{ query: string; count: number; results: Item[] }> {
         return this.client.get(`${this.basePath}search/`, { q: query });
+    }
+
+    /** 检查分类是否为空（无物品、无子分类） */
+    async checkCategoryEmpty(categoryId: number): Promise<CategoryEmptyCheckResponse> {
+        return this.client.get<CategoryEmptyCheckResponse>(`/product/category/${categoryId}/check_empty/`);
+    }
+
+    /** 删除分类 */
+    async deleteCategory(categoryId: number): Promise<void> {
+        return this.client.deleteNoContent(`/product/category/${categoryId}/`);
     }
 }
 

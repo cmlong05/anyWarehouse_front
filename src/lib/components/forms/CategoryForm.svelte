@@ -24,6 +24,11 @@
         categories?: Category[];
         onCancel?: () => void;
         onDelete?: (categoryId: number) => Promise<void>;
+        emptyCheckData?: {
+            is_empty: boolean;
+            item_count: number;
+            children_count: number;
+        } | null;
     }
 
     let {
@@ -31,8 +36,16 @@
         initialData = { name: '', parent: null, top_category: false },
         categories = [],
         onCancel,
-        onDelete
+        onDelete,
+        emptyCheckData = null
     }: Props = $props();
+
+    const canDelete = $derived(mode === 'edit' && !!onDelete && !!initialData.id && !!emptyCheckData?.is_empty);
+    const deleteHint = $derived.by(() => {
+        if (emptyCheckData === null) return '正在检查分类是否可删除';
+        if (emptyCheckData.is_empty) return '该分类为空，可删除';
+        return `无法删除：包含 ${emptyCheckData.item_count} 个物品，${emptyCheckData.children_count} 个子分类`;
+    });
 
     const selectItems = $derived(
         buildCategoryRelationSearchOptions(
@@ -81,10 +94,18 @@
         onCancel ? onCancel() : window.history.back();
     }
 
-    function handleDelete() {
+    async function handleDelete() {
         if (!initialData.id || !onDelete) return;
-        if (!confirm('确定要删除这个分类吗？')) return;
-        Promise.resolve(onDelete(initialData.id)).catch(e => alert('删除失败：' + (e instanceof Error ? e.message : '未知错误')));
+        if (!canDelete) {
+            alert(deleteHint);
+            return;
+        }
+        if (!confirm('确定要删除这个空分类吗？')) return;
+        try {
+            await onDelete(initialData.id);
+        } catch (e) {
+            alert('删除失败：' + (e instanceof Error ? e.message : '未知错误'));
+        }
     }
 </script>
 
@@ -129,7 +150,7 @@
         <button type="submit" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 w-full md:w-auto">{mode === 'add' ? '添加分类' : '保存修改'}</button>
         <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-gray-500 text-white hover:opacity-90 w-full md:w-auto" onclick={handleCancel}>取消</button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-red-600 text-white hover:opacity-90 w-full md:w-auto" onclick={handleDelete}>删除分类</button>
+            <button type="button" class="px-6 py-3 rounded-md text-base font-medium transition-opacity duration-150 bg-red-600 text-white w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90" onclick={handleDelete} disabled={!canDelete} title={deleteHint}>删除分类</button>
         {/if}
     </div>
 </form>
