@@ -121,6 +121,8 @@
     let selectedShippingAddressId = $state<number | ''>('');
     let selectedShippingOption = $state<ShippingAddressOption | undefined>(undefined);
     let hasAppliedInitialShippingAddress = $state(false);
+    let hasAppliedInitialItems = $state(false);
+    let hasAppliedInitialShippingSnapshot = $state(false);
 
     function toDisplayText(value: unknown): string {
         if (value === null || value === undefined) return '';
@@ -256,6 +258,7 @@
     // --------------------------------------------------------
     // 修复：添加条件避免不必要的执行
     $effect(() => {
+        if (hasAppliedInitialItems) return;
         const items = initialData?.items;
         if (Array.isArray(items) && items.length > 0 && formData.items.length === 0) {
             // copy the array so that we don't hold a reference to the
@@ -263,11 +266,17 @@
             // isVariantChild/parentId flags which are important for
             // styling.
             formData.items = items.map(i => ({ ...i }));
+            hasAppliedInitialItems = true;
         }
     });
 
     $effect(() => {
-        if (!initialData) return;
+        if (!initialData || hasAppliedInitialShippingSnapshot) return;
+        const hasInitialSnapshot = Boolean(
+            initialData.shipping_address || initialData.contact_person || initialData.contact_phone
+        );
+        if (!hasInitialSnapshot) return;
+
         if (!formData.shipping_address && initialData.shipping_address) {
             formData.shipping_address = initialData.shipping_address;
         }
@@ -277,6 +286,7 @@
         if (!formData.contact_phone && initialData.contact_phone) {
             formData.contact_phone = initialData.contact_phone;
         }
+        hasAppliedInitialShippingSnapshot = true;
     });
 
     $effect(() => {
@@ -678,7 +688,10 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
         onCurrentItemUnitPriceChange={(v) => { currentItem.unit_price = v ?? 0; }}
         onUpdateItem={(index, field, value) => updateItemField(index, field as 'quantity' | 'unit_price', value as number)}
         onRemoveItem={(index, item) => {
-            if (!item.isVariantChild && item.id) {
+            const hasVariantChildren = Boolean(
+                item.id && formData.items.some((i) => i.parentId === item.id)
+            );
+            if (!item.isVariantChild && item.id && hasVariantChildren) {
                 formData.items = formData.items.filter(i => i.id !== item.id && i.parentId !== item.id);
             } else {
                 removeItem(index);
