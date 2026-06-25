@@ -28,6 +28,7 @@
     let initialLoading = $state(false);
     let error = $state<string | null>(null);
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+    let allocations = $state<Record<number, Record<number, number>>>({});
     let refreshQuantity = $state(1);
     let preview = $state<AssemblyPreview | null>(null);
     let targetContainerId = $state<number | null>(null);
@@ -39,6 +40,7 @@
             preview = initialPreview;
             refreshQuantity = initialPreview.quantity;
             targetContainerId = existingContainerId;
+            buildAllocMap(initialPreview);
             error = null;
         } else if (!show) {
             preview = null;
@@ -46,10 +48,25 @@
         }
     });
 
+    function buildAllocMap(p: AssemblyPreview) {
+        const allocs: Record<number, Record<number, number>> = {};
+        for (const comp of p.components) {
+            allocs[comp.component_item_id] = {};
+            for (const c of comp.containers) {
+                if (c.suggested > 0) {
+                    allocs[comp.component_item_id][c.container_id] = c.suggested;
+                }
+            }
+        }
+        allocations = allocs;
+    }
+
     async function loadPreview(qty: number) {
         error = null;
         try {
-            preview = await itemBOMAPI.getAssemblyPreview(itemId, qty);
+            const result = await itemBOMAPI.getAssemblyPreview(itemId, qty);
+            preview = result;
+            buildAllocMap(result);
         } catch (e: any) {
             error = e?.message || '加载组装预览失败';
         }
@@ -64,16 +81,34 @@
         debounceTimer = setTimeout(() => loadPreview(qty), 400);
     }
 
+    function updateAllocation(compId: number, containerId: number, value: number) {
+        const compAllocs = { ...allocations[compId] };
+        if (value <= 0) {
+            delete compAllocs[containerId];
+        } else {
+            const containerInfo = preview?.components
+                .find(c => c.component_item_id === compId)?.containers
+                .find(c => c.container_id === containerId);
+            const max = containerInfo?.available ?? Infinity;
+            compAllocs[containerId] = Math.min(value, max);
+        }
+        allocations = { ...allocations, [compId]: compAllocs };
+    }
+
+    function getAllocatedTotal(compId: number): number {
+        return Object.values(allocations[compId] || {}).reduce((s, q) => s + q, 0);
+    }
+
     function buildSubmitAllocations(): AssemblyAllocation[] {
-        if (!preview) return [];
         const result: AssemblyAllocation[] = [];
-        for (const comp of preview.components) {
-            for (const c of comp.containers) {
-                if (c.suggested > 0) {
+        for (const [compIdStr, containerMap] of Object.entries(allocations)) {
+            const compId = parseInt(compIdStr);
+            for (const [contIdStr, qty] of Object.entries(containerMap)) {
+                if (qty > 0) {
                     result.push({
-                        component_item_id: comp.component_item_id,
-                        container_id: c.container_id,
-                        quantity: c.suggested,
+                        component_item_id: compId,
+                        container_id: parseInt(contIdStr),
+                        quantity: qty,
                     });
                 }
             }
@@ -174,7 +209,7 @@
 
                     <!-- Component Allocations -->
                     {#each preview.components as comp}
-                        {@const allocatedTotal = comp.containers.reduce((s, c) => s + c.suggested, 0)}
+                        {@const allocatedTotal = getAllocatedTotal(comp.component_item_id)}
                         {@const isComplete = allocatedTotal === comp.total_needed}
                         {@const isOver = allocatedTotal > comp.total_needed}
                         {@const remaining = comp.total_needed - allocatedTotal}
@@ -213,14 +248,20 @@
                                 </thead>
                                 <tbody>
                                     {#each comp.containers as c}
-                                        <tr class="border-b border-gray-50 {c.suggested > 0 ? 'bg-blue-50/30' : ''}">
+                                        {@const allocQty = (allocations[comp.component_item_id] || {})[c.container_id] ?? 0}
+                                        <tr class="border-b border-gray-50 {allocQty > 0 ? 'bg-blue-50/30' : ''}">
                                             <td class="py-2 px-4 font-mono text-gray-700 text-xs">{c.container_fastCode}</td>
                                             <td class="py-2 text-gray-500 text-xs">{c.container_mark || '-'}</td>
                                             <td class="py-2 text-right text-gray-500 text-xs pr-4">{c.available}</td>
                                             <td class="py-2 text-right pr-4">
-                                                <span class="text-xs font-mono {c.suggested > 0 ? 'text-blue-700 font-medium' : 'text-gray-300'}">
-                                                    {c.suggested > 0 ? c.suggested : '-'}
-                                                </span>
+                                                <NumberStepper
+                                                    value={allocQty}
+                                                    min={0}
+                                                    max={c.available}
+                                                    decimalPlaces={0}
+                                                    onchange={(v) => updateAllocation(comp.component_item_id, c.container_id, v ?? 0)}
+                                                    size="sm"
+                                                />
                                             </td>
                                         </tr>
                                     {/each}
