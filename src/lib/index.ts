@@ -1184,3 +1184,61 @@ export type {
     BulkCreateVariantsResponse,
     CreateVariantRequest,
 } from './types/variant';
+
+// ===== Assembly Types =====
+
+export interface AssemblyContainerOption {
+    container_id: number;
+    container_fastCode: string;
+    container_mark: string;
+    available: number;
+    suggested: number;
+}
+
+export interface AssemblyComponentPreview {
+    component_item_id: number;
+    sku: string;
+    name: string;
+    per_unit: number;
+    total_needed: number;
+    available_total: number;
+    containers: AssemblyContainerOption[];
+    sufficient: boolean;
+}
+
+export interface AssemblyPreview {
+    item_id: number;
+    item_sku: string;
+    item_name: string;
+    quantity: number;
+    components: AssemblyComponentPreview[];
+    all_containers: {
+        id: number;
+        fastCode: string;
+        mark: string;
+        level: number;
+        parent: number | null;
+        tree_id: number;
+        lft: number;
+    }[];
+}
+
+export interface AssemblyAllocation {
+    component_item_id: number;
+    container_id: number;
+    quantity: number;
+}
+
+export interface AssemblyRequest {
+    quantity: number;
+    target_container_id: number;
+    allocations: AssemblyAllocation[];
+}
+
+export interface AssemblyResult {
+    item_id: number;
+    quantity: number;
+    target_container_id: number;
+    target_container_fastCode: string;
+    movement_count: number;
+}

@@ -13,9 +13,10 @@
         itemId: number;
         itemSKU: string;
         itemName: string;
+        onAssembly?: () => void;
     }
 
-    let { itemId, itemSKU, itemName }: Props = $props();
+    let { itemId, itemSKU, itemName, onAssembly }: Props = $props();
 
     // 使用BOM管理逻辑 - 使用 $derived 包裹以响应 props 变化
     const bom = $derived(useBOMManager(itemId, itemSKU));
@@ -87,6 +88,15 @@
             >
                 {showAddForm ? '取消' : '添加组件'}
             </button>
+            {#if onAssembly}
+                <button
+                    type="button"
+                    class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded transition-all duration-200 hover:bg-purple-700"
+                    onclick={onAssembly}
+                >
+                    组装成品
+                </button>
+            {/if}
         {/snippet}
     </BOMTabs>
 

@@ -11,7 +11,7 @@
     import { untrack } from 'svelte';
     import { resolveItemDisplayPrice } from '$lib/utils';
     import { getErrorMessage } from '$lib/utils/errors';
-    import { inventoryMovementAPI } from '$lib/api';
+    import { inventoryMovementAPI, itemBOMAPI } from '$lib/api';
     import { useOutboundFlow } from '$lib/composables/useOutboundFlow.svelte';
     import { useInventoryCheck } from '$lib/composables/useInventoryCheck.svelte';
     import { ItemComponentManager } from '$lib/components';
@@ -25,6 +25,7 @@
     import ItemInventoryTab from '$lib/components/item/ItemInventoryTab.svelte';
     import ItemHeaderCard from '$lib/components/item/ItemHeaderCard.svelte';
     import ItemSidebar from '$lib/components/item/ItemSidebar.svelte';
+    import AssemblyModal from '$lib/components/item/AssemblyModal.svelte';
 
     let { data } = $props<{
         data: {
@@ -90,6 +91,9 @@
     let transferPending = $state<TransferPending>(null);
     let transferProcessing = $state(false);
     let transferError = $state('');
+    let showAssembly = $state(false);
+    let assemblyPreview = $state<any>(null);
+    let assemblyLoading = $state(false);
     let transferFlash = $state<Record<number, number>>({});
 
     function requestTransferByDrop(fromStorageId: number, toStorageId: number) {
@@ -200,6 +204,22 @@
     onConfirm={confirmTransfer}
 />
 
+<AssemblyModal
+    itemId={data.itemDetail.item.id}
+    itemSKU={data.itemDetail.item.SKU}
+    itemName={data.itemDetail.item.name}
+    show={showAssembly}
+    initialPreview={assemblyPreview}
+    isLoading={assemblyLoading}
+    existingContainerId={data.itemDetail.storages?.[0]?.container_id ?? null}
+    onClose={() => { showAssembly = false; assemblyPreview = null; }}
+    onSuccess={() => {
+        showAssembly = false;
+        assemblyPreview = null;
+        data = { ...data };
+    }}
+/>
+
 <div class="max-w-7xl mx-auto px-4 pt-3 pb-6">
     <!-- 面包屑导航 -->
     <div class="mb-3 space-y-1">
@@ -280,6 +300,17 @@
                             itemId={data.itemDetail.item.id}
                             itemSKU={data.itemDetail.item.SKU}
                             itemName={data.itemDetail.item.name}
+                            onAssembly={async () => {
+                                assemblyLoading = true;
+                                try {
+                                    assemblyPreview = await itemBOMAPI.getAssemblyPreview(data.itemDetail.item.id, 1);
+                                } catch {
+                                    return;
+                                }
+                                // Turn off loading before showing modal — prevents loading flash
+                                assemblyLoading = false;
+                                showAssembly = true;
+                            }}
                         />
                     {/if}
 

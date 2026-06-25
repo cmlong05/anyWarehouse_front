@@ -10,6 +10,9 @@ import type {
     BOMTreeResponse,
     TotalComponentsResponse,
     WhereUsedResponse,
+    AssemblyPreview,
+    AssemblyRequest,
+    AssemblyResult,
 } from '$lib/index';
 import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
 import type { ItemFormData } from '$lib/schemas';
@@ -102,6 +105,19 @@ export class ItemBOMAPI {
     /** 查询物品被用在哪些地方（逆向BOM） */
     async getWhereUsed(itemId: number): Promise<WhereUsedResponse> {
         return this.client.get<WhereUsedResponse>(`/product/item/${itemId}/where_used/`);
+    }
+
+    /** 获取组装预览（BOM 组件及其库存分配建议） */
+    async getAssemblyPreview(itemId: number, quantity: number = 1): Promise<AssemblyPreview> {
+        return this.client.get<AssemblyPreview>(
+            `/product/item/${itemId}/assembly_preview/`,
+            { quantity: quantity.toString() }
+        );
+    }
+
+    /** 执行组装 */
+    async assembleItem(itemId: number, data: AssemblyRequest): Promise<AssemblyResult> {
+        return this.client.post<AssemblyResult>(`/product/item/${itemId}/assemble/`, data);
     }
 }
 

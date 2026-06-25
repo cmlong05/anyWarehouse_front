@@ -14,3 +14,4 @@ export { default as TransferConfirmModal } from './TransferConfirmModal.svelte';
 export { default as VariantAttributeBadge } from './VariantAttributeBadge.svelte';
 export { default as VariantCreator } from './VariantCreator.svelte';
 export { default as VariantQuotationManager } from './VariantQuotationManager.svelte';
+export { default as AssemblyModal } from './AssemblyModal.svelte';
