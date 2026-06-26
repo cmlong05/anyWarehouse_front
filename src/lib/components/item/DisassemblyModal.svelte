@@ -69,7 +69,7 @@
             preview = result;
             buildAllocMap(result);
         } catch (e: any) {
-            error = e?.message || '加载拆卸预览失败';
+            error = e?.message || '加载拆分预览失败';
         }
     }
 
@@ -142,7 +142,7 @@
             onSuccess();
             onClose();
         } catch (e: any) {
-            error = e?.message || '拆卸失败，请重试';
+            error = e?.message || '拆分失败，请重试';
         } finally {
             processing = false;
         }
@@ -162,7 +162,7 @@
         <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-900">拆卸成品</h2>
+                    <h2 class="text-lg font-semibold text-gray-900">拆分成品</h2>
                     <p class="text-sm text-gray-500">{itemSKU} — {itemName}</p>
                 </div>
                 <button onclick={onClose} class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
@@ -170,7 +170,7 @@
 
             <div class="px-6 py-4 overflow-y-auto flex-1">
                 {#if isLoading}
-                    <div class="text-center py-8 text-gray-500">加载拆卸预览...</div>
+                    <div class="text-center py-8 text-gray-500">加载拆分预览...</div>
                 {:else if error && !preview}
                     <Alert variant="error" error={error} />
                 {:else if preview}
@@ -181,7 +181,7 @@
                     <div class="bg-gray-50 rounded-lg p-4 mb-5">
                         <div class="flex gap-4 items-end">
                             <div class="w-36">
-                                <label class="block text-xs font-medium text-gray-500 mb-1" for="dis-qty">拆卸数量</label>
+                                <label class="block text-xs font-medium text-gray-500 mb-1" for="dis-qty">拆分数量</label>
                                 <NumberStepper id="dis-qty" value={refreshQuantity} min={1} decimalPlaces={0} onchange={onQuantityChange} />
                             </div>
                             <div class="flex-1">
@@ -198,7 +198,7 @@
                                 </select>
                             </div>
                             <div class="text-xs text-gray-400 whitespace-nowrap">
-                                共 {preview.components.length} 种组件 · 拆卸 {refreshQuantity} 件
+                                共 {preview.components.length} 种组件 · 拆分 {refreshQuantity} 件
                             </div>
                         </div>
                     </div>
@@ -302,7 +302,7 @@
             <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between shrink-0">
                 <div class="text-sm text-gray-500">
                     {#if preview}
-                        {preview.components.length} 种组件，拆卸 {refreshQuantity} 件成品
+                        {preview.components.length} 种组件，拆分 {refreshQuantity} 件成品
                     {/if}
                 </div>
                 <div class="flex gap-3">
@@ -312,7 +312,7 @@
                         disabled={processing || !sourceContainerId || !preview}
                         class="px-4 py-2 text-sm text-white bg-amber-600 hover:bg-amber-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {processing ? '拆卸中...' : `拆卸 ${refreshQuantity} 件`}
+                        {processing ? '拆分中...' : `拆分 ${refreshQuantity} 件`}
                     </button>
                 </div>
             </div>

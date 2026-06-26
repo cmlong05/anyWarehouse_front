@@ -104,7 +104,7 @@
                     class="px-3 py-1.5 text-sm bg-amber-600 text-white rounded transition-all duration-200 hover:bg-amber-700"
                     onclick={onDisassembly}
                 >
-                    拆卸
+                    拆分
                 </button>
             {/if}
         {/snippet}
