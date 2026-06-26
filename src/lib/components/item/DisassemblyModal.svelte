@@ -30,6 +30,7 @@
     let sourceContainerId = $state<number | null>(null);
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     let allocations = $state<Record<number, Record<number, number>>>({});
+    let newContainerSelections = $state<Record<number, number | null>>({});
 
     const containerOptions = $derived(
         preview ? buildContainerRelationSearchOptions(preview.all_containers) : []
@@ -85,12 +86,26 @@
         if (value <= 0) {
             delete compAllocs[containerId];
         } else {
-            const max = preview?.components
-                .find(c => c.component_item_id === compId)?.containers
-                .find(c => c.container_id === containerId)?.available ?? Infinity;
-            compAllocs[containerId] = Math.min(value, max);
+            compAllocs[containerId] = value;
         }
         allocations = { ...allocations, [compId]: compAllocs };
+    }
+
+    function availableContainersFor(compId: number) {
+        if (!preview) return [];
+        const used = new Set(Object.keys(allocations[compId] || {}).map(Number));
+        return preview.all_containers
+            .filter(c => !used.has(c.id))
+            .map(c => ({ value: c.id, label: c.fastCode + ' · ' + (c.mark || ''), searchText: c.fastCode + ' ' + c.mark }));
+    }
+
+    function addContainerRow(compId: number) {
+        const cid = newContainerSelections[compId];
+        if (!cid) return;
+        const compAllocs = { ...allocations[compId] ?? {} };
+        compAllocs[cid] = 0;
+        allocations = { ...allocations, [compId]: compAllocs };
+        newContainerSelections = { ...newContainerSelections, [compId]: null };
     }
 
     function getAllocatedTotal(compId: number): number {
@@ -232,7 +247,6 @@
                                                 <NumberStepper
                                                     value={allocQty}
                                                     min={0}
-                                                    max={c.available}
                                                     decimalPlaces={0}
                                                     onchange={(v) => updateAllocation(comp.component_item_id, c.container_id, v ?? 0)}
                                                     size="sm"
@@ -240,8 +254,46 @@
                                             </td>
                                         </tr>
                                     {/each}
+                                    {#each Object.entries(allocations[comp.component_item_id] || {}) as [cidStr, qty]}
+                                        {@const cid = parseInt(cidStr)}
+                                        {#if !comp.containers.some(c => c.container_id === cid)}
+                                            {@const ct = preview.all_containers.find(x => x.id === cid)}
+                                            <tr class="border-b border-gray-50 bg-blue-50/30">
+                                                <td class="py-2 px-4 font-mono text-gray-700 text-xs">{ct?.fastCode || `#${cid}`}</td>
+                                                <td class="py-2 text-gray-500 text-xs">{ct?.mark || '-'}</td>
+                                                <td class="py-2 text-right text-gray-500 text-xs pr-4">-</td>
+                                                <td class="py-2 text-right pr-4">
+                                                    <NumberStepper
+                                                        value={qty}
+                                                        min={0}
+                                                        decimalPlaces={0}
+                                                        onchange={(v) => updateAllocation(comp.component_item_id, cid, v ?? 0)}
+                                                        size="sm"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        {/if}
+                                    {/each}
                                 </tbody>
                             </table>
+
+                            <div class="flex gap-2 mt-2 px-4 pb-2">
+                                <select
+                                    value={newContainerSelections[comp.component_item_id] ?? ''}
+                                    onchange={(e) => newContainerSelections = { ...newContainerSelections, [comp.component_item_id]: parseInt(e.currentTarget.value) || null }}
+                                    class="flex-1 px-2 py-1 border border-gray-300 rounded text-xs"
+                                >
+                                    <option value="">+ 添加容器</option>
+                                    {#each availableContainersFor(comp.component_item_id) as opt}
+                                        <option value={opt.value}>{opt.label}</option>
+                                    {/each}
+                                </select>
+                                <button
+                                    onclick={() => addContainerRow(comp.component_item_id)}
+                                    disabled={!newContainerSelections[comp.component_item_id]}
+                                    class="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                                >添加</button>
+                            </div>
                         </div>
                     {/each}
                 {/if}
