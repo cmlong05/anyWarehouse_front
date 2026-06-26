@@ -26,6 +26,7 @@
     import ItemHeaderCard from '$lib/components/item/ItemHeaderCard.svelte';
     import ItemSidebar from '$lib/components/item/ItemSidebar.svelte';
     import AssemblyModal from '$lib/components/item/AssemblyModal.svelte';
+    import DisassemblyModal from '$lib/components/item/DisassemblyModal.svelte';
 
     let { data } = $props<{
         data: {
@@ -94,6 +95,9 @@
     let showAssembly = $state(false);
     let assemblyPreview = $state<any>(null);
     let assemblyLoading = $state(false);
+    let showDisassembly = $state(false);
+    let disassemblyPreview = $state<any>(null);
+    let disassemblyLoading = $state(false);
     let transferFlash = $state<Record<number, number>>({});
 
     function requestTransferByDrop(fromStorageId: number, toStorageId: number) {
@@ -220,6 +224,22 @@
     }}
 />
 
+<DisassemblyModal
+    itemId={data.itemDetail.item.id}
+    itemSKU={data.itemDetail.item.SKU}
+    itemName={data.itemDetail.item.name}
+    show={showDisassembly}
+    initialPreview={disassemblyPreview}
+    isLoading={disassemblyLoading}
+    existingSourceContainerId={data.itemDetail.storages?.[0]?.container_id ?? null}
+    onClose={() => { showDisassembly = false; disassemblyPreview = null; }}
+    onSuccess={() => {
+        showDisassembly = false;
+        disassemblyPreview = null;
+        data = { ...data };
+    }}
+/>
+
 <div class="max-w-7xl mx-auto px-4 pt-3 pb-6">
     <!-- 面包屑导航 -->
     <div class="mb-3 space-y-1">
@@ -310,6 +330,14 @@
                                 // Turn off loading before showing modal — prevents loading flash
                                 assemblyLoading = false;
                                 showAssembly = true;
+                            }}
+                            onDisassembly={async () => {
+                                disassemblyLoading = true;
+                                try {
+                                    disassemblyPreview = await itemBOMAPI.getDisassemblyPreview(data.itemDetail.item.id, 1);
+                                } catch { return; }
+                                disassemblyLoading = false;
+                                showDisassembly = true;
                             }}
                         />
                     {/if}

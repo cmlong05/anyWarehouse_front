@@ -14,9 +14,10 @@
         itemSKU: string;
         itemName: string;
         onAssembly?: () => void;
+        onDisassembly?: () => void;
     }
 
-    let { itemId, itemSKU, itemName, onAssembly }: Props = $props();
+    let { itemId, itemSKU, itemName, onAssembly, onDisassembly }: Props = $props();
 
     // 使用BOM管理逻辑 - 使用 $derived 包裹以响应 props 变化
     const bom = $derived(useBOMManager(itemId, itemSKU));
@@ -95,6 +96,15 @@
                     onclick={onAssembly}
                 >
                     组装成品
+                </button>
+            {/if}
+            {#if onDisassembly}
+                <button
+                    type="button"
+                    class="px-3 py-1.5 text-sm bg-amber-600 text-white rounded transition-all duration-200 hover:bg-amber-700"
+                    onclick={onDisassembly}
+                >
+                    拆卸
                 </button>
             {/if}
         {/snippet}

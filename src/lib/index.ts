@@ -1242,3 +1242,55 @@ export interface AssemblyResult {
     target_container_fastCode: string;
     movement_count: number;
 }
+
+// ===== Disassembly Types =====
+
+export interface DisassemblyStorage {
+    container_id: number;
+    container_fastCode: string;
+    container_mark: string;
+    quantity: number;
+}
+
+export interface DisassemblyComponentPreview {
+    component_item_id: number;
+    sku: string;
+    name: string;
+    per_unit: number;
+    total_produced: number;
+    available_total: number;
+    containers: AssemblyContainerOption[];
+    sufficient: boolean;
+}
+
+export interface DisassemblyPreview {
+    item_id: number;
+    item_sku: string;
+    item_name: string;
+    quantity: number;
+    storages: DisassemblyStorage[];
+    components: DisassemblyComponentPreview[];
+    all_containers: {
+        id: number;
+        fastCode: string;
+        mark: string;
+        level: number;
+        parent: number | null;
+        tree_id: number;
+        lft: number;
+    }[];
+}
+
+export interface DisassemblyRequest {
+    quantity: number;
+    source_container_id: number;
+    allocations: AssemblyAllocation[];
+}
+
+export interface DisassemblyResult {
+    item_id: number;
+    quantity: number;
+    source_container_id: number;
+    source_container_fastCode: string;
+    movement_count: number;
+}

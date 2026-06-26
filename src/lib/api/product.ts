@@ -13,6 +13,9 @@ import type {
     AssemblyPreview,
     AssemblyRequest,
     AssemblyResult,
+    DisassemblyPreview,
+    DisassemblyRequest,
+    DisassemblyResult,
 } from '$lib/index';
 import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
 import type { ItemFormData } from '$lib/schemas';
@@ -118,6 +121,19 @@ export class ItemBOMAPI {
     /** 执行组装 */
     async assembleItem(itemId: number, data: AssemblyRequest): Promise<AssemblyResult> {
         return this.client.post<AssemblyResult>(`/product/item/${itemId}/assemble/`, data);
+    }
+
+    /** 获取拆卸预览 */
+    async getDisassemblyPreview(itemId: number, quantity: number = 1): Promise<DisassemblyPreview> {
+        return this.client.get<DisassemblyPreview>(
+            `/product/item/${itemId}/disassembly_preview/`,
+            { quantity: quantity.toString() }
+        );
+    }
+
+    /** 执行拆卸 */
+    async disassembleItem(itemId: number, data: DisassemblyRequest): Promise<DisassemblyResult> {
+        return this.client.post<DisassemblyResult>(`/product/item/${itemId}/disassemble/`, data);
     }
 }
 
