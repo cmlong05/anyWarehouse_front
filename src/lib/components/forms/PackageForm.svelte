@@ -197,7 +197,7 @@
             sku: item.sku,
             productName: item.product_name,
             quantity: safeParseFloat(item.quantity),
-            pendingQuantity: safeParseFloat(item.quantity),
+            pendingQuantity: Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed)),
             allocations: [],
         };
         packagePreviewItems = [...packagePreviewItems, newRow];
@@ -305,7 +305,7 @@
                     sku: item.sku,
                     productName: item.product_name,
                     quantity: safeParseFloat(item.quantity),
-                    pendingQuantity: safeParseFloat(item.quantity),
+                    pendingQuantity: Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed)),
                     allocations: [],
                 };
                 newRows.push(row);
@@ -528,7 +528,7 @@
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{shipmentNo}</td>
                                             <td class="p-2 border-b border-gray-200 font-mono text-xs">{item.sku}</td>
                                             <td class="p-2 border-b border-gray-200">{item.product_name}</td>
-                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{formatNumber(item.quantity)}</td>
+                                            <td class="text-right p-2 border-b border-gray-200 text-red-600 font-medium">{formatNumber(Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed)))}</td>
                                             <td class="text-center p-2 border-b border-gray-200">
                                                 <button type="button" class="px-3 py-1 bg-blue-600 text-white rounded text-xs cursor-pointer hover:bg-blue-700 transition-colors" onclick={() => addItemToPreview(shipmentId, item)}>
                                                     添加
