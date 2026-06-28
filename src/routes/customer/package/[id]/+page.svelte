@@ -340,6 +340,7 @@
                             封箱
                         {/if}
                     </button>
+                    {#if pkg?.status !== 'sealed'}
                     <button
                         class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
                         onclick={goToEdit}
@@ -349,6 +350,7 @@
                         </svg>
                         编辑
                     </button>
+                    {/if}
                     <button
                         class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
                         onclick={printPackingList}
@@ -358,6 +360,7 @@
                         </svg>
                         打印装箱单
                     </button>
+                    {#if pkg?.status !== 'sealed'}
                     <button
                         class="inline-flex h-8 items-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
                         onclick={confirmDelete}
@@ -367,6 +370,7 @@
                         </svg>
                         删除
                     </button>
+                    {/if}
                 </div>
             </div>
         </div>

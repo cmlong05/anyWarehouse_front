@@ -5,10 +5,26 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
+    import { onMount } from 'svelte';
     import { PackageForm } from '$lib/components';
+    import { packageAPI } from '$lib/api';
     import type { Package } from '$lib/shipmentTypes';
 
     const packageId = parseInt(page.params.id || '0');
+    let statusChecked = $state(false);
+
+    onMount(async () => {
+        try {
+            const pkg = await packageAPI.get(packageId) as Package;
+            if (pkg.status === 'sealed') {
+                goto(`/customer/package/${packageId}`);
+                return;
+            }
+        } catch {
+            // If we can't load the package, let the form handle the error
+        }
+        statusChecked = true;
+    });
 
     function handleSuccess(pkg: Package) {
         setTimeout(() => {
@@ -25,6 +41,7 @@
     <title>编辑包裹 - AnyWarehouse</title>
 </svelte:head>
 
+{#if statusChecked}
 <div class="container mx-auto px-4 py-6 max-w-5xl">
     <div class="flex items-center gap-3 mb-6">
         <button class="btn btn-ghost btn-sm" onclick={handleCancel} aria-label="返回">
@@ -42,3 +59,4 @@
         onCancel={handleCancel}
     />
 </div>
+{/if}
