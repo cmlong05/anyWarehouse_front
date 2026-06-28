@@ -521,7 +521,7 @@
                             <tr class="bg-gray-50">
                                 <th class="text-left w-32">SKU</th>
                                 <th class="text-left">商品名称</th>
-                                <th class="text-left w-44">存储位置</th>
+                                <th class="text-left w-64">存储位置</th>
                                 <th class="text-right w-20">数量</th>
                                 <th class="text-right pl-8">关联发货单</th>
                             </tr>
@@ -530,49 +530,51 @@
                             {#each groupedSections as section}
                                 {@const item = section.item}
                                 {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(item) : []}
-                                <tr class={getRowClass(section)}>
-                                    <td class="font-mono w-32 {section.type === 'variant' ? 'text-purple-600' : ''}">
-                                        {#if section.type === 'variant'}
-                                            <div class="flex items-center gap-2">
-                                                <ChevronRight class="w-4 h-4 text-purple-400 flex-shrink-0" />
+                                {@const allocs = item.allocations && item.allocations.length > 0 ? item.allocations : [{container: null, container_code: null, container_full_path: null, quantity: item.quantity}]}
+                                {@const allocCount = allocs.length}
+                                {#each allocs as alloc, i}
+                                    <tr class={getRowClass(section)}>
+                                        {#if i === 0}
+                                        <td class="font-mono w-32 {section.type === 'variant' ? 'text-purple-600' : ''}" rowspan={allocCount}>
+                                            {#if section.type === 'variant'}
+                                                <div class="flex items-center gap-2">
+                                                    <ChevronRight class="w-4 h-4 text-purple-400 flex-shrink-0" />
+                                                    {#if getItemDetailPath(item)}
+                                                        <a href={getItemDetailPath(item)} class="text-blue-600 hover:underline">{item.sku}</a>
+                                                    {:else}
+                                                        <span>{item.sku}</span>
+                                                    {/if}
+                                                </div>
+                                            {:else}
                                                 {#if getItemDetailPath(item)}
                                                     <a href={getItemDetailPath(item)} class="text-blue-600 hover:underline">{item.sku}</a>
                                                 {:else}
-                                                    <span>{item.sku}</span>
+                                                    {item.sku}
                                                 {/if}
-                                            </div>
-                                        {:else}
-                                            {#if getItemDetailPath(item)}
-                                                <a href={getItemDetailPath(item)} class="text-blue-600 hover:underline">{item.sku}</a>
-                                            {:else}
-                                                {item.sku}
                                             {/if}
+                                        </td>
+                                        <td rowspan={allocCount}>
+                                            {#if section.type === 'variant'}
+                                                <div class="flex items-center gap-2 pl-4">
+                                                    <span>{item.product_name}</span>
+                                                    <VariantAttributeBadge attributes={variantAttrs} />
+                                                </div>
+                                            {:else}
+                                                {item.product_name}
+                                            {/if}
+                                        </td>
                                         {/if}
-                                    </td>
-                                    <td>
-                                        {#if section.type === 'variant'}
-                                            <div class="flex items-center gap-2 pl-4">
-                                                <span>{item.product_name}</span>
-                                                <VariantAttributeBadge attributes={variantAttrs} />
-                                            </div>
-                                        {:else}
-                                            {item.product_name}
+                                        <td class="text-left text-gray-600">
+                                            <div class="text-sm">{alloc.container_full_path || alloc.container_code || '-'}</div>
+                                        </td>
+                                        <td class="text-right w-20">{formatNumber(alloc.quantity)}</td>
+                                        {#if i === 0}
+                                        <td class="text-sm text-gray-500 pl-8 text-right" rowspan={allocCount}>
+                                            {item.shipment_no || '-'}
+                                        </td>
                                         {/if}
-                                    </td>
-                                    <td class="text-left text-gray-600">
-                                        {#if item.storage_locations && item.storage_locations.length > 0}
-                                            {#each item.storage_locations as location, index}
-                                                <a href={`/container/${location}`} class="text-blue-600 hover:underline">{location}</a>{index < item.storage_locations.length - 1 ? ', ' : ''}
-                                            {/each}
-                                        {:else}
-                                            -
-                                        {/if}
-                                    </td>
-                                    <td class="text-right w-20">{formatNumber(item.quantity)}</td>
-                                    <td class="text-sm text-gray-500 pl-8 text-right">
-                                        {item.shipment_no || '-'}
-                                    </td>
-                                </tr>
+                                    </tr>
+                                {/each}
                             {/each}
                         </tbody>
                     </table>

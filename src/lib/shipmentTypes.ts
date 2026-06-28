@@ -248,6 +248,7 @@ export interface PackageItemAllocation {
     container: number;
     container_code: string;
     container_mark?: string;
+    container_full_path?: string;
     quantity: number;
 }
 
