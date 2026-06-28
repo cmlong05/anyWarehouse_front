@@ -189,6 +189,7 @@
             setTimeout(() => error = '', 2000);
             return;
         }
+        const pending = Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed));
         const newRow: PackagePreviewItem = {
             id: `${shipmentId}-${item.id}-${Date.now()}`,
             shipmentId,
@@ -196,8 +197,8 @@
             itemId,
             sku: item.sku,
             productName: item.product_name,
-            quantity: safeParseFloat(item.quantity),
-            pendingQuantity: Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed)),
+            quantity: pending,
+            pendingQuantity: pending,
             allocations: [],
         };
         packagePreviewItems = [...packagePreviewItems, newRow];
@@ -297,6 +298,7 @@
             const itemId = getShipmentItemId(item);
             if (!itemId) continue;
             if (!packagePreviewItems.find(p => p.itemId === itemId && p.shipmentId === shipmentId)) {
+                const pending = Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed));
                 const row: PackagePreviewItem = {
                     id: `${shipmentId}-${item.id}-${Date.now()}`,
                     shipmentId,
@@ -304,8 +306,8 @@
                     itemId,
                     sku: item.sku,
                     productName: item.product_name,
-                    quantity: safeParseFloat(item.quantity),
-                    pendingQuantity: Math.max(0, safeParseFloat(item.quantity) - safeParseFloat(item.quantity_packed)),
+                    quantity: pending,
+                    pendingQuantity: pending,
                     allocations: [],
                 };
                 newRows.push(row);
