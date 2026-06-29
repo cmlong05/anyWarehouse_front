@@ -238,7 +238,7 @@
                                                 valueField="value"
                                                 labelField="label"
                                                 dropdownClass="!left-auto !right-0"
-                                                searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
+                                                searchProps={{ fields: ['label', 'searchText'] }}
                                                 searchable={true}
                                                 placeholder="请选择容器"
                                                 class="svelecte-control"

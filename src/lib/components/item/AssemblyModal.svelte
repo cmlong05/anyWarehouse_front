@@ -195,7 +195,7 @@
                                     emitValues={true}
                                     valueField="value"
                                     labelField="label"
-                                    searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
+                                    searchProps={{ fields: ['label', 'searchText'] }}
                                     searchable={true}
                                     placeholder="选择成品入库容器"
                                     onChange={(value: unknown) => targetContainerId = (value as number) ?? null}

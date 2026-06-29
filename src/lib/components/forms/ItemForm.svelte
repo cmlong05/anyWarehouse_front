@@ -483,7 +483,7 @@
                     multiple={true}
                     bind:value={formData.category}
                     placeholder="选择商品分类..."
-                    searchProps={mode === 'edit' ? { fields: ['label', 'searchText'], skipSort: true } : { fields: ['label'], skipSort: true }}
+                    searchProps={mode === 'edit' ? { fields: ['label', 'searchText'] } : { fields: ['label'] }}
                     class="svelecte-control"
                 />
                 

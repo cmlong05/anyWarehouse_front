@@ -175,7 +175,7 @@
                     inputId="parent"
                     options={selectItems}
                     bind:value={formData.parent}
-                    searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
+                    searchProps={{ fields: ['label', 'searchText'] }}
                     placeholder="选择父容器（可选）"
                     clearable
                 />

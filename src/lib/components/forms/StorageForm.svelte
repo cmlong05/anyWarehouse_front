@@ -109,7 +109,7 @@
             name="container"
             options={selectItems}
             bind:value={formData.container}
-            searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
+            searchProps={{ fields: ['label', 'searchText'] }}
             required
         />
     </div>

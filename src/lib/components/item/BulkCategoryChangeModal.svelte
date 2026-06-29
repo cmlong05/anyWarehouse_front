@@ -356,7 +356,7 @@
                         placeholder={isLoadingCategories ? '分类加载中...' : '请选择目标分类'}
                         clearable={true}
                         searchable={true}
-                        searchProps={{ fields: ['label', 'searchText'], skipSort: true }}
+                        searchProps={{ fields: ['label', 'searchText'] }}
                         disabled={isSubmitting || isLoadingCategories}
                         class="svelecte-control"
                     />
