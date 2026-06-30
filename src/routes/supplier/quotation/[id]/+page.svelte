@@ -7,14 +7,18 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI } from '$lib/api';
-    import type { Quotation } from '$lib';
-    import { Alert, Breadcrumb, Loading, QuotationDetailBody } from '$lib/components';
-    import { EditButton } from '$lib/components';
+    import type { Quotation, QuotationVersion } from '$lib';
+    import { Alert, Breadcrumb, Loading, QuotationDetailBody, VersionHistoryCard } from '$lib/components';
+    import { EditButton, AdjustPriceModal } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<Quotation | null>(null);
     let loading = $state(true);
     let error = $state('');
+ 
+    let versions = $state<QuotationVersion[]>([]);
+    let versionsLoading = $state(false);
+    let showAdjustModal = $state(false);
     
     const id = $derived(parseInt(page.params.id || '0'));
 
@@ -62,7 +66,22 @@
         }
     }
     
-    onMount(loadQuotation);
+    async function loadVersions() {
+        versionsLoading = true;
+        try {
+            const data = await quotationAPI.getVersions(id);
+            versions = data.versions;
+        } catch (e) {
+            console.error('Failed to load versions', e);
+        } finally {
+            versionsLoading = false;
+        }
+    }
+    
+    onMount(() => {
+        loadQuotation();
+        loadVersions();
+    });
 </script>
 
 <PageContainer maxWidth="xl">
@@ -93,6 +112,9 @@
                 <button class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm" onclick={togglePreferred}>
                     {quotation?.is_preferred ? '取消首选' : '设为首选'}
                 </button>
+                <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm" onclick={() => showAdjustModal = true}>
+                    新建报价
+                </button>
                 <EditButton
                     onClick={editQuotation}
                     action="edit"
@@ -113,7 +135,7 @@
             itemSku={quotation.item_detail?.SKU}
             itemName={quotation.item_detail?.name}
             itemWeight={quotation.item_detail?.weight}
-            price={quotation.price}
+            price={quotation.price ?? ''}
             currency={quotation.currency}
             minQuantity={quotation.min_quantity}
             totalValue={quotation.total_cost}
@@ -125,6 +147,25 @@
             note={quotation.note}
             createdAt={quotation.created_at}
             updatedAt={quotation.updated_at}
+        />
+
+        <div class="mt-6">
+            <VersionHistoryCard
+                versions={versions}
+                currentVersionId={quotation?.current_version?.id ?? null}
+                loading={versionsLoading}
+            />
+        </div>
+
+        <AdjustPriceModal
+            quotation={quotation}
+            open={showAdjustModal}
+            onclose={() => showAdjustModal = false}
+            onsuccess={() => {
+                showAdjustModal = false;
+                loadQuotation();
+                loadVersions();
+            }}
         />
     {/if}
 </PageContainer>

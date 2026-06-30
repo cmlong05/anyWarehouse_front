@@ -20,7 +20,9 @@ export {
 	QuotationLinesTable,
 	QuotationMetaCard,
 	QuotationPriceCard,
-	QuotationReadonlyInfoCards
+	QuotationReadonlyInfoCards,
+	AdjustPriceModal,
+	VersionHistoryCard
 } from './quotation';
 export { AddressInfo, CustomerAddressManager } from './customer';
 export {

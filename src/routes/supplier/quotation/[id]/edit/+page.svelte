@@ -13,10 +13,10 @@
         Loading,
         QuotationEditHeader,
         QuotationMetaCard,
-        QuotationPriceCard,
         QuotationReadonlyInfoCards
     } from '$lib/components';
-    import { loadQuotationEditData, parseRouteId, submitQuotationEditData, validateQuotationPrice } from '$lib/composables/quotationEdit';
+    import { NumberStepper } from '$lib/components/ui';
+    import { loadQuotationEditData, parseRouteId, submitQuotationEditData } from '$lib/composables/quotationEdit';
     
     let quotation = $state<Quotation | null>(null);
     let loading = $state(true);
@@ -32,7 +32,6 @@
     let formData = $state<QuotationCreateRequest>({
         supplier: 0,
         item: null,
-        price: '',
         currency: 'CNY',
         min_quantity: 1,
         lead_time_days: null,
@@ -42,7 +41,7 @@
         note: '',
         partner_sku: ''
     });
-    
+
     async function loadData() {
         await loadQuotationEditData<Quotation, QuotationCreateRequest>({
             quotationId: id(),
@@ -50,7 +49,6 @@
             mapToFormData: (quotationData) => ({
                 supplier: quotationData.supplier,
                 item: quotationData.item,
-                price: quotationData.price,
                 currency: quotationData.currency,
                 min_quantity: quotationData.min_quantity,
                 lead_time_days: quotationData.lead_time_days,
@@ -93,16 +91,16 @@
                     return '请选择物品';
                 }
 
-                return validateQuotationPrice(currentFormData.price, { allowZero: false });
+                return null;
             },
             buildPayload: ({ formData: currentFormData, quotation: currentQuotation }) => ({
                 ...currentFormData,
-                // 编辑时固定关联，不允许变更供应商
                 supplier: currentQuotation?.supplier ?? currentFormData.supplier,
-                // Svelecte 远程模式下可能在未触发搜索时清空 value，回退到原始报价 item
                 item: currentFormData.item ?? currentQuotation?.item ?? null
             }),
-            update: (quotationId, payload) => quotationAPI.update(quotationId, payload),
+            update: async (quotationId, payload) => {
+                await quotationAPI.update(quotationId, payload);
+            },
             onSubmittingChange: (value) => {
                 submitting = value;
             },
@@ -173,22 +171,57 @@
                 </div>
 
                 <div class="lg:col-span-2 space-y-4">
-                    <QuotationPriceCard
-                        price={formData.price}
-                        currency={formData.currency}
-                        minQuantity={formData.min_quantity}
-                        leadTimeDays={formData.lead_time_days}
-                        partnerSku={formData.partner_sku || ''}
-                        currencyEditable={true}
-                        priceStep={0.01}
-                        leadTimeOptional={true}
-                        partnerSkuPlaceholder="供应商自己的物品编码（可选）"
-                        onPriceChange={(v) => formData.price = v !== undefined ? String(v) : ''}
-                        onCurrencyChange={(v) => formData.currency = v}
-                        onMinQuantityChange={(v) => formData.min_quantity = v ?? 1}
-                        onLeadTimeChange={(v) => formData.lead_time_days = v ?? null}
-                        onPartnerSkuChange={(v) => formData.partner_sku = v}
-                    />
+                    <!-- 当前价格（只读） -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500">当前价格</label>
+                            <p class="mt-1 text-2xl font-bold text-gray-900">
+                                {Number(quotation?.current_version?.price ?? '0').toFixed(2)} {quotation?.currency ?? 'CNY'}
+                            </p>
+                            {#if quotation?.current_version?.created_at}
+                                <p class="text-xs text-gray-400 mt-1">
+                                    自 {new Date(quotation.current_version.created_at).toLocaleDateString('zh-CN')} 起
+                                    {#if quotation.current_version.note}
+                                        · {quotation.current_version.note}
+                                    {/if}
+                                </p>
+                            {/if}
+                        </div>
+                    </div>
+
+                    <!-- 元数据编辑 -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="minQuantity" class="block text-sm font-medium text-gray-700">最小订购量</label>
+                                <NumberStepper
+                                    value={formData.min_quantity ?? 1}
+                                    min={1}
+                                    onchange={(v) => formData.min_quantity = v ?? 1}
+                                />
+                            </div>
+                            <div>
+                                <label for="leadTime" class="block text-sm font-medium text-gray-700">交货周期（天）</label>
+                                <NumberStepper
+                                    value={formData.lead_time_days ?? undefined}
+                                    min={0}
+                                    placeholder="选填"
+                                    onchange={(v) => formData.lead_time_days = v ?? null}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label for="partnerSku" class="block text-sm font-medium text-gray-700">合作方SKU</label>
+                            <input
+                                id="partnerSku"
+                                type="text"
+                                bind:value={formData.partner_sku}
+                                maxlength="100"
+                                placeholder="供应商自己的物品编码（可选）"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            />
+                        </div>
+                    </div>
 
                     <QuotationMetaCard
                         validFrom={formData.valid_from || ''}

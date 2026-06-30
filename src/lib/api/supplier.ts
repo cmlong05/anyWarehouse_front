@@ -11,6 +11,7 @@ import type {
     Quotation,
     QuotationBrief,
     QuotationCreateRequest,
+    QuotationVersion,
     QuotationComparisonItem,
     PurchaseOrder,
     PurchaseOrderBrief,
@@ -79,6 +80,20 @@ export class QuotationAPI extends BaseAPI<Quotation, QuotationCreateRequest> {
     /** 设置/取消首选报价 */
     async setPreferred(id: number, isPreferred: boolean = true): Promise<Quotation> {
         return this.client.post<Quotation>(`${this.basePath}${id}/set_preferred/`, { is_preferred: isPreferred });
+    }
+
+    /** 获取报价的所有历史版本 */
+    async getVersions(id: number): Promise<{
+        quotation_id: number;
+        versions: QuotationVersion[];
+        count: number;
+    }> {
+        return this.client.get(`${this.basePath}${id}/versions/`);
+    }
+
+    /** 为报价创建新版本 */
+    async createVersion(id: number, data: { price: string | number; note?: string; created_by?: string }): Promise<Quotation> {
+        return this.client.post<Quotation>(`${this.basePath}${id}/versions/`, data);
     }
 }
 

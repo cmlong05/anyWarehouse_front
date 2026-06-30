@@ -385,6 +385,14 @@ export interface SupplierCreateRequest {
     currency?: string;
 }
 
+export interface QuotationVersion {
+    id: number;
+    price: string;
+    note: string;
+    created_at: string;
+    created_by: string;
+}
+
 /** 报价 */
 export interface Quotation {
     id: number;
@@ -392,7 +400,8 @@ export interface Quotation {
     supplier: number;
     supplier_detail?: SupplierBrief;
     item_detail?: BaseItem & { image?: string; weight?: string };
-    price: string;
+    price?: string;
+    current_version: QuotationVersion | null;
     currency: string;
     min_quantity: number;
     lead_time_days: number | null;
@@ -437,7 +446,8 @@ export interface QuotationBrief {
 export interface QuotationCreateRequest {
     item?: number | null;
     supplier: number;
-    price: string | number;
+    price?: string | number;
+    version_note?: string;
     currency?: string;
     min_quantity?: number;
     lead_time_days?: number | null;
@@ -446,6 +456,7 @@ export interface QuotationCreateRequest {
     note?: string | null;
     is_preferred?: boolean;
     partner_sku?: string;
+    created_by?: string;
 }
 
 /** 供应商及其报价 */
