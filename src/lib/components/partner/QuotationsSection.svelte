@@ -139,7 +139,7 @@
         }
 
         if (quotation.is_variant_template) {
-            return `template-${typeof quotation.item === 'number' ? quotation.item : quotation.id}`;
+            return `parent-${typeof quotation.item === 'number' ? quotation.item : quotation.id}`;
         }
 
         return null;
