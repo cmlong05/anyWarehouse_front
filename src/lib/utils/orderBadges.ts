@@ -69,3 +69,36 @@ export function getPriorityLabel(priority: string): string {
 export function getPriorityClass(priority: string): string {
     return PRIORITY_CLASS[priority] ?? DEFAULT_BADGE;
 }
+
+// Payment status labels — 销售订单用"收款"，采购订单用"付款"
+const PAYMENT_STATUS_PAID_CLASS = 'bg-emerald-100 text-emerald-700';
+const PAYMENT_STATUS_PARTIAL_CLASS = 'bg-amber-100 text-amber-700';
+const PAYMENT_STATUS_UNPAID_CLASS = 'bg-red-100 text-red-700';
+
+export function getSalesPaymentStatusLabel(status: string): string {
+    const map: Record<string, string> = { unpaid: '未收款', partial: '部分收款', paid: '已收款' };
+    return map[status] ?? status;
+}
+
+export function getSalesPaymentStatusClass(status: string): string {
+    const map: Record<string, string> = {
+        unpaid: PAYMENT_STATUS_UNPAID_CLASS,
+        partial: PAYMENT_STATUS_PARTIAL_CLASS,
+        paid: PAYMENT_STATUS_PAID_CLASS,
+    };
+    return map[status] ?? DEFAULT_BADGE;
+}
+
+export function getPurchasePaymentStatusLabel(status: string): string {
+    const map: Record<string, string> = { unpaid: '未付款', partial: '部分付款', paid: '已付款' };
+    return map[status] ?? status;
+}
+
+export function getPurchasePaymentStatusClass(status: string): string {
+    const map: Record<string, string> = {
+        unpaid: PAYMENT_STATUS_UNPAID_CLASS,
+        partial: PAYMENT_STATUS_PARTIAL_CLASS,
+        paid: PAYMENT_STATUS_PAID_CLASS,
+    };
+    return map[status] ?? DEFAULT_BADGE;
+}

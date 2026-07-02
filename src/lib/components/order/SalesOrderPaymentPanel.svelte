@@ -8,6 +8,7 @@
     import { salesOrderPaymentRecordAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';
     import { safeParseFloat } from '$lib/utils';
+    import { getSalesPaymentStatusLabel, getSalesPaymentStatusClass } from '$lib/utils/orderBadges';
 
     interface Props {
         order: SalesOrder;
@@ -44,18 +45,6 @@
             notes: '',
             attachment: null,
         };
-    }
-
-    function getPaymentStatusText(status: string | undefined): string {
-        if (status === 'paid') return '已收款';
-        if (status === 'partial') return '部分收款';
-        return '未收款';
-    }
-
-    function getPaymentStatusClass(status: string | undefined): string {
-        if (status === 'paid') return 'bg-green-100 text-green-700';
-        if (status === 'partial') return 'bg-amber-100 text-amber-700';
-        return 'bg-gray-100 text-gray-700';
     }
 
     function handlePaymentAttachmentChange(event: Event) {
@@ -122,8 +111,8 @@
             <h3 class="text-lg font-semibold text-gray-900">收款信息</h3>
             <p class="text-sm text-gray-500">记录每笔收款，并上传文档或图片作为佐证。</p>
         </div>
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {getPaymentStatusClass(order.payment_status)}">
-            {getPaymentStatusText(order.payment_status)}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {getSalesPaymentStatusClass(order.payment_status)}">
+            {getSalesPaymentStatusLabel(order.payment_status)}
         </span>
     </div>
 
@@ -137,7 +126,7 @@
     <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div class="text-xs text-gray-500 mb-1">收款状态</div>
-            <div class="text-base font-semibold text-gray-900">{getPaymentStatusText(order.payment_status)}</div>
+            <div class="text-base font-semibold text-gray-900">{getSalesPaymentStatusLabel(order.payment_status)}</div>
         </div>
         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
             <div class="text-xs text-gray-500 mb-1">已收金额</div>

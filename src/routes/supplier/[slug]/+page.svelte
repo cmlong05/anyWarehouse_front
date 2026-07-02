@@ -12,7 +12,7 @@
 	import { Breadcrumb } from '$lib/components';
     import { PageContainer } from '$lib/components/layout';
     import { PartnerDetailHeader, OrdersSection, QuotationsSection } from '$lib/components/partner';
-    import { getPurchaseStatusClass as getOrderStatusClass, getPurchaseStatusLabel as getStatusLabel } from '$lib/utils/orderBadges';
+    import { getPurchaseStatusClass as getOrderStatusClass, getPurchaseStatusLabel as getStatusLabel, getPurchasePaymentStatusLabel } from '$lib/utils/orderBadges';
 
     let supplierId = $derived(parseInt(page.params.slug || '0'));
     
@@ -199,6 +199,8 @@
         viewAllHref={`/supplier/purchase-order?supplier_id=${supplier!.id}`}
         getStatusLabel={getStatusLabel}
         getStatusClass={getOrderStatusClass}
+        getPaymentStatusLabel={getPurchasePaymentStatusLabel}
+        paymentStatusTitle="付款"
         onRowClick={(id) => goto(`/supplier/purchase-order/${id}`)}
     />
     

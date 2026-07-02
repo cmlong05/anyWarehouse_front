@@ -10,7 +10,7 @@
     import { salesOrderAPI, customerAPI } from '$lib/api';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { getErrorMessage } from '$lib/utils/errors';
-    import { getSalesStatusClass as getStatusClass, getPriorityClass } from '$lib/utils/orderBadges';
+    import { getSalesStatusClass as getStatusClass, getPriorityClass, getSalesPaymentStatusLabel } from '$lib/utils/orderBadges';
     import type { SalesOrderBrief, CustomerBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
@@ -120,20 +120,6 @@
             urgent: '紧急',
         };
         return map[priority] || priority;
-    }
-
-    // 付款状态标签
-    function getPaymentStatusLabel(status: string | undefined): string {
-        if (status === 'paid') return '已收款';
-        if (status === 'partial') return '部分收款';
-        return '未收款';
-    }
-
-    // 付款状态徽章样式
-    function getPaymentStatusClass(status: string | undefined): string {
-        if (status === 'paid') return 'bg-green-100 text-green-700';
-        if (status === 'partial') return 'bg-amber-100 text-amber-700';
-        return 'bg-gray-100 text-gray-700';
     }
 
     // 加载客户列表
@@ -329,7 +315,7 @@
                         class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
                         class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
                         class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
-                        title={value === 'paid' ? '已收款' : value === 'partial' ? '部分收款' : '未收款'}
+                        title={getSalesPaymentStatusLabel(value as string)}
                     ></span>
                 {:else if column.key === 'priority'}
                     {#if getPriorityClass(value as string)}

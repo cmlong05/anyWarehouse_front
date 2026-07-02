@@ -11,6 +11,7 @@
     import { Breadcrumb, ConfirmModal } from '$lib/components';
     import { PartnerDetailHeader, PartnerInfoCard, OrdersSection, QuotationsSection } from '$lib/components/partner';
     import { CustomerAddressManager } from '$lib/components';
+    import { getSalesPaymentStatusLabel } from '$lib/utils/orderBadges';
     import { customerAddressAPI } from '$lib/api';
     import type { CustomerAddress } from '$lib';
     
@@ -132,6 +133,8 @@
         viewAllHref={`/customer/sales-order?customer_id=${partnerDetail.partner?.id}`}
         getStatusLabel={getStatusLabel}
         getStatusClass={getOrderStatusClass}
+        getPaymentStatusLabel={getSalesPaymentStatusLabel}
+        paymentStatusTitle="收款"
         onRowClick={(id) => goto(`/customer/sales-order/${id}?from=/customer/${data.customer.id}`)}
     />
 

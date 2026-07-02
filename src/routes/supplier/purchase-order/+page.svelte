@@ -9,7 +9,7 @@
     import { page as pageStore } from '$app/state';
     import { purchaseOrderAPI, supplierAPI } from '$lib/api';
     import { getCurrencySymbol } from '$lib/utils/formatters';
-    import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel } from '$lib/utils/orderBadges';
+    import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel, getPurchasePaymentStatusLabel } from '$lib/utils/orderBadges';
     import type { PurchaseOrderBrief, SupplierBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
@@ -56,13 +56,6 @@
     ];
 
     // 状态/优先级徽章函数已从 $lib/utils/orderBadges 导入
-
-    // 付款状态标签
-    function getPaymentStatusLabel(status: string | undefined): string {
-        if (status === 'paid') return '已付款';
-        if (status === 'partial') return '部分付款';
-        return '未付款';
-    }
 
     // 加载供应商列表
     async function loadSuppliers() {
@@ -210,7 +203,7 @@
                         class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
                         class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
                         class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
-                        title={getPaymentStatusLabel(value as string)}
+                        title={getPurchasePaymentStatusLabel(value as string)}
                     ></span>
                 {:else if column.key === 'priority'}
                     <span class="text-gray-700">{getPriorityLabel(value as string)}</span>

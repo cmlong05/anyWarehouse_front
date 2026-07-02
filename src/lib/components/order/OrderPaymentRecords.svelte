@@ -9,6 +9,7 @@
   import { purchaseOrderPaymentRecordAPI, purchaseOrderAPI } from '$lib/api';
   import { Loading } from '$lib/components';
   import { safeParseFloat } from '$lib/utils';
+  import { getPurchasePaymentStatusLabel, getPurchasePaymentStatusClass } from '$lib/utils/orderBadges';
 
   interface Props {
     orderId: number;
@@ -52,18 +53,6 @@
       attachment: null,
     };
     editingId = null;
-  }
-
-  function getPaymentStatusText(status: string | undefined): string {
-    if (status === 'paid') return '已付款';
-    if (status === 'partial') return '部分付款';
-    return '未付款';
-  }
-
-  function getPaymentStatusClass(status: string | undefined): string {
-    if (status === 'paid') return 'bg-green-100 text-green-700';
-    if (status === 'partial') return 'bg-amber-100 text-amber-700';
-    return 'bg-gray-100 text-gray-700';
   }
 
   function handleAttachmentChange(event: Event) {
@@ -172,8 +161,8 @@
       <h3 class="text-lg font-semibold text-gray-900">付款信息</h3>
       <p class="text-sm text-gray-500">记录每笔付款，并上传文档或图片作为佐证。</p>
     </div>
-    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {getPaymentStatusClass(order?.payment_status)}">
-      {getPaymentStatusText(order?.payment_status)}
+    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {getPurchasePaymentStatusClass(order?.payment_status)}">
+      {getPurchasePaymentStatusLabel(order?.payment_status)}
     </span>
   </div>
 
@@ -190,7 +179,7 @@
     <div class="grid grid-cols-1 gap-4 mb-4 md:grid-cols-4">
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div class="text-xs text-gray-500 mb-1">付款状态</div>
-        <div class="text-base font-semibold text-gray-900">{getPaymentStatusText(order?.payment_status)}</div>
+        <div class="text-base font-semibold text-gray-900">{getPurchasePaymentStatusLabel(order?.payment_status)}</div>
       </div>
       <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
         <div class="text-xs text-gray-500 mb-1">已付金额</div>

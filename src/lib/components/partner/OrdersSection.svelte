@@ -13,6 +13,7 @@
         order_number?: string;
         order_date?: string;
         status?: string;
+        payment_status?: string;
         total_amount?: string;
         currency?: string;
     }
@@ -25,10 +26,14 @@
         viewAllHref: string;
         getStatusLabel: (status: string) => string;
         getStatusClass: (status: string) => string;
+        getPaymentStatusLabel?: (status: string) => string;
+        paymentStatusTitle?: string;
         onRowClick: (id: number) => void;
     }
     
-    let { title, orders, loading, emptyText, viewAllHref, getStatusLabel, getStatusClass, onRowClick }: Props = $props();
+    let { title, orders, loading, emptyText, viewAllHref, getStatusLabel, getStatusClass, getPaymentStatusLabel, paymentStatusTitle = '付款状态', onRowClick }: Props = $props();
+    
+    const showPaymentStatus = $derived(orders.some(o => o.payment_status));
 </script>
 
 <div class="py-6 border-t border-gray-200">
@@ -56,6 +61,9 @@
                         <th class="p-3 px-4 text-left border-b border-gray-200 font-semibold text-gray-700 bg-gray-50">订单号</th>
                         <th class="p-3 px-4 text-left border-b border-gray-200 font-semibold text-gray-700 bg-gray-50">下单日期</th>
                         <th class="p-3 px-4 text-left border-b border-gray-200 font-semibold text-gray-700 bg-gray-50">状态</th>
+                        {#if showPaymentStatus}
+                            <th class="p-3 px-4 text-left border-b border-gray-200 font-semibold text-gray-700 bg-gray-50">{paymentStatusTitle}</th>
+                        {/if}
                         <th class="p-3 px-4 text-left border-b border-gray-200 font-semibold text-gray-700 bg-gray-50">金额</th>
                     </tr>
                 </thead>
@@ -69,6 +77,21 @@
                                     {getStatusLabel(order.status || '')}
                                 </span>
                             </td>
+                            {#if showPaymentStatus}
+                                <td class="p-3 px-4 text-center border-b border-gray-200">
+                                    {#if order.payment_status && getPaymentStatusLabel}
+                                        <span
+                                            class="inline-flex h-4 w-4 rounded-full"
+                                            class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={order.payment_status === 'paid'}
+                                            class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={order.payment_status === 'partial'}
+                                            class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={order.payment_status !== 'paid' && order.payment_status !== 'partial'}
+                                            title={getPaymentStatusLabel(order.payment_status)}
+                                        ></span>
+                                    {:else}
+                                        <span class="text-gray-400">-</span>
+                                    {/if}
+                                </td>
+                            {/if}
                             <td class="p-3 px-4 text-right border-b border-gray-200 text-gray-600 font-mono">
                                 {#if order.currency === 'USD'}
                                     ${Number(order.total_amount).toFixed(2)}
