@@ -5,8 +5,12 @@
 <script lang="ts">
 	import '../app.css';
 	import { config } from '$lib/config';
+	import { page } from '$app/stores';
 	
-	let { children } = $props();
+	let { children, data } = $props();
+	
+	const isLoginPage = $derived($page.url.pathname === '/login');
+	const username = $derived(data?.user?.username);
 	
 	interface NavItem {
 		href: string;
@@ -104,6 +108,12 @@
 		mobileMenuOpen = false;
 	}
 	
+	function getCsrfToken(): string {
+		if (typeof document === 'undefined') return '';
+		const match = document.cookie.match(/csrftoken=([^;]+)/);
+		return match ? match[1] : '';
+	}
+	
 	function openDropdown(index: number, triggerEl: HTMLElement) {
 		openDropdownIndex = index;
 		const rect = triggerEl.getBoundingClientRect();
@@ -128,6 +138,9 @@
 	
 </script>
 
+{#if isLoginPage}
+	{@render children()}
+{:else}
 <div class="relative min-h-screen flex flex-col">
 	<nav
 		class={`sticky top-0 z-[30] border-b shadow-sm ${navBorderClass}`}
@@ -136,12 +149,15 @@
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="grid h-12 grid-cols-[1fr_auto_1fr] items-center">
 				<!-- Logo / Brand -->
-				<div class="hidden md:flex justify-self-start items-center">
+				<div class="hidden md:flex justify-self-start items-center gap-2">
 					<a href="/" class="flex items-center text-blue-600 hover:text-blue-700 transition-colors" aria-label="首页">
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
 						</svg>
 					</a>
+					{#if username}
+						<span class="text-xs text-gray-500">{username}</span>
+					{/if}
 				</div>
 				
 				<!-- Desktop Navigation -->
@@ -198,6 +214,28 @@
 							</svg>
 						{/if}
 					</button>
+				</div>
+
+				<!-- Desktop user area (right side) -->
+				<div class="hidden md:flex justify-self-end items-center gap-2">
+					{#if username}
+						<form action={config.API_BASE_URL + '/auth/logout/'} method="POST" class="inline">
+							<button
+								type="submit"
+								onclick={(e) => {
+									e.preventDefault();
+									fetch(config.API_BASE_URL + '/auth/logout/', {
+										method: 'POST',
+										headers: { 'X-CSRFToken': getCsrfToken() },
+										credentials: 'include',
+									}).then(() => { window.location.href = '/login'; });
+								}}
+								class="text-xs text-gray-500 hover:text-red-600 transition-colors px-2 py-1"
+							>
+								登出
+							</button>
+						</form>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -276,3 +314,4 @@
 		</div>
 	</footer>
 </div>
+{/if}

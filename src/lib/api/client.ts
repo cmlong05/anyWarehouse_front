@@ -76,13 +76,22 @@ export class ApiClient {
 
         try {
             const headers: Record<string, string> = {};
-            // 只有非 FormData 请求才设置 Content-Type
             if (!isFormData) {
                 headers['Content-Type'] = 'application/json';
             }
 
+            // Include CSRF token for mutating requests
+            const method = (options.method || 'GET').toUpperCase();
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                const csrfToken = this.getCsrfToken();
+                if (csrfToken) {
+                    headers['X-CSRFToken'] = csrfToken;
+                }
+            }
+
             const response = await fetch(`${this.baseURL}${url}`, {
                 ...options,
+                credentials: 'include',
                 signal: controller.signal,
                 headers: {
                     ...headers,
@@ -91,6 +100,11 @@ export class ApiClient {
             });
 
             clearTimeout(timeoutId);
+
+            if (response.status === 401 && typeof window !== 'undefined') {
+                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+                throw { message: '未登录', status: 401 } as ApiError;
+            }
 
             if (!response.ok) {
                 const error: ApiError = {
@@ -172,6 +186,7 @@ export class ApiClient {
             const response = await fetch(`${this.baseURL}${url}`, {
                 method: 'DELETE',
                 signal: controller.signal,
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -209,6 +224,12 @@ export class ApiClient {
             }
             throw error;
         }
+    }
+
+    private getCsrfToken(): string {
+        if (typeof document === 'undefined') return '';
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
     }
 }
 
