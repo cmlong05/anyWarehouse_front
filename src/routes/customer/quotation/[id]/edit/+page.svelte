@@ -115,6 +115,10 @@
     onMount(loadData);
 </script>
 
+<svelte:head>
+    <title>编辑客户报价 - AnyWarehouse</title>
+</svelte:head>
+
 <div class="min-h-screen bg-gray-50">
     <QuotationEditHeader
         title="编辑客户报价"

@@ -72,6 +72,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>AnyWarehouse - 首页</title>
+</svelte:head>
+
 <svelte:window onclick={handleClickOutside} onkeydown={handleKeyDown} />
 
 <div class="max-w-3xl mx-auto my-8 p-8">

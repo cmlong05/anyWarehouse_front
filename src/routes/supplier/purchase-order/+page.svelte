@@ -96,6 +96,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>采购订单管理</title>
+</svelte:head>
+
 <PageContainer maxWidth="full">
     <PageHeader title="采购订单管理">
         {#snippet actions()}

@@ -11,6 +11,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>系统设置 - AnyWarehouse</title>
+</svelte:head>
+
 <div class="min-h-screen flex items-center justify-center p-6">
     <div class="text-center">
         <p class="text-lg font-medium text-gray-900">正在跳转到设置页面...</p>

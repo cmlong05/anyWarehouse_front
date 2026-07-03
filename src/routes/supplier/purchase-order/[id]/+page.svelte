@@ -114,6 +114,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>{orderDetail.order ? `采购订单详情 - ${orderDetail.order.order_number}` : '采购订单详情'}</title>
+</svelte:head>
+
 <div class="p-6 max-w-6xl mx-auto">
     {#if orderDetail.loading}
         <Loading />

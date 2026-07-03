@@ -84,6 +84,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>{quotation ? `报价详情 - ${quotation.supplier_detail?.name || quotation.id}` : '报价详情'}</title>
+</svelte:head>
+
 <PageContainer maxWidth="xl">
     <Breadcrumb items={breadcrumbs} />
 

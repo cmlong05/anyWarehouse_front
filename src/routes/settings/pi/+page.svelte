@@ -69,6 +69,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>PI 默认设置 - AnyWarehouse</title>
+</svelte:head>
+
 <div class="max-w-4xl mx-auto p-4 sm:p-6">
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">PI 默认设置</h1>

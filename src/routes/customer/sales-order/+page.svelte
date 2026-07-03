@@ -201,6 +201,10 @@
     });
 </script>
 
+<svelte:head>
+    <title>销售订单管理 - AnyWarehouse</title>
+</svelte:head>
+
 <PageContainer py="sm">
     <h1 class="text-2xl font-bold text-gray-900 mb-2">销售订单</h1>
 

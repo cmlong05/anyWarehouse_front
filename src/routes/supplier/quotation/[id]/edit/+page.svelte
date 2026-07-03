@@ -23,7 +23,7 @@
     let submitting = $state(false);
     let error = $state('');
     let success = $state('');
-    
+
     const id = $derived(() => {
         return parseRouteId(page.params.id);
     });
@@ -130,6 +130,10 @@
     onMount(loadData);
 </script>
 
+<svelte:head>
+    <title>编辑采购报价 - AnyWarehouse</title>
+</svelte:head>
+
 <div class="min-h-screen bg-gray-50">
     <QuotationEditHeader
         title="编辑供应商报价"
@@ -174,7 +178,7 @@
                     <!-- 当前价格（只读） -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-500">当前价格</label>
+                            <p class="text-sm font-medium text-gray-500">当前价格</p>
                             <p class="mt-1 text-2xl font-bold text-gray-900">
                                 {Number(quotation?.current_version?.price ?? '0').toFixed(2)} {quotation?.currency ?? 'CNY'}
                             </p>
