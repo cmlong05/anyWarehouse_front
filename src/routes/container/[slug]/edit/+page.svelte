@@ -7,7 +7,7 @@
     import { ContainerForm } from '$lib/components';
     import type { Container, ContainerBriefID } from '$lib';
     import { goto } from '$app/navigation';
-    import { config } from '$lib/config';
+    import { apiClient } from '$lib/api';
 
     let { data } = $props<{ 
         data: {
@@ -17,15 +17,8 @@
     }>();
 
     async function handleDelete(containerId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/container/${data.container.fastCode}/`, {
-            method: 'DELETE',
-        });
+        await apiClient.deleteNoContent(`/warehouse/container/${data.container.fastCode}/`);
 
-        if (!response.ok) {
-            throw new Error('删除失败');
-        }
-
-        // 删除成功后跳转到父容器页面或首页
         if (data.container.parent) {
             // 从containers列表中查找parent的fastCode
             const parentContainer = data.containers.find((c: ContainerBriefID) => c.id === data.container.parent);

@@ -6,10 +6,9 @@
 	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import { ItemForm } from '$lib/components';
-	import { ConfirmModal } from '$lib/components';
+    import { ItemForm, ConfirmModal } from '$lib/components';
     import type { Category, ItemSet } from '$lib';
-    import { config } from '$lib/config';
+    import { apiClient } from '$lib/api';
 
     let { data } = $props<{ 
         data: {
@@ -29,20 +28,7 @@
         error = '';
         
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemData.item.id}/`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                let message = '删除失败';
-                try {
-                    const errData = await response.json();
-                    message = errData.detail || errData.message || message;
-                } catch {
-                    // ignore parse error
-                }
-                throw new Error(message);
-            }
+            await apiClient.deleteNoContent(`/product/item/${data.itemData.item.id}/`);
 
             // 删除成功后跳转到物品所在分类（取第一个分类），如果没有则跳转到物品列表
             const firstCategory = data.itemData.categories?.[0]?.category;

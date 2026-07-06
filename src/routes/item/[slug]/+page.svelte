@@ -7,11 +7,10 @@
     import { goto } from '$app/navigation';
     import type { ItemSet, QuotationBrief, StorageContainer } from '$lib';
     import type { ItemVariantInfo } from '$lib/types/variant';
-    import { config } from '$lib/config';
     import { untrack } from 'svelte';
     import { resolveItemDisplayPrice } from '$lib/utils';
     import { getErrorMessage } from '$lib/utils/errors';
-    import { inventoryMovementAPI, itemBOMAPI } from '$lib/api';
+    import { apiClient, inventoryMovementAPI, itemBOMAPI } from '$lib/api';
     import { useOutboundFlow } from '$lib/composables/useOutboundFlow.svelte';
     import { useInventoryCheck } from '$lib/composables/useInventoryCheck.svelte';
     import { ItemComponentManager } from '$lib/components';
@@ -123,9 +122,7 @@
     }
 
     async function refreshItemDetail() {
-        const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemDetail.item.id}/`);
-        if (!response.ok) throw new Error('刷新库存失败');
-        const itemDetail: ItemSet = await response.json();
+        const itemDetail: ItemSet = await apiClient.get<ItemSet>(`/product/item/${data.itemDetail.item.id}/`);
         data = { ...data, itemDetail };
     }
 
@@ -172,11 +169,8 @@
     // 刷新变体数据
     async function refreshVariantInfo() {
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/item/${data.itemDetail.item.id}/variants/`);
-            if (response.ok) {
-                const variantInfo = await response.json();
-                data = { ...data, variantInfo };
-            }
+            const variantInfo = await apiClient.get(`/product/item/${data.itemDetail.item.id}/variants/`);
+            data = { ...data, variantInfo };
         } catch (e) {
             logger.error('刷新变体数据失败:', e);
         }

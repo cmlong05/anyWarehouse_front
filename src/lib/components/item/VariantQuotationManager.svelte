@@ -4,6 +4,7 @@
 - `lib/components/item/ItemVariantManager.svelte`
 -->
 <script lang="ts">
+    import { apiClient } from '$lib/api';
     import { config } from '$lib/config';
     import { logger } from '$lib/logger';
     import type { ItemVariant } from '$lib/types/variant';
@@ -150,19 +151,9 @@
 
                 try {
                     if (data.existingId) {
-                        // 更新现有报价
-                        await fetch(`${config.API_BASE_URL}/supplier/quotations/${data.existingId}/`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(requestData)
-                        });
+                        await apiClient.patch(`/supplier/quotations/${data.existingId}/`, requestData);
                     } else {
-                        // 创建新报价
-                        await fetch(`${config.API_BASE_URL}/supplier/quotations/`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(requestData)
-                        });
+                        await apiClient.post('/supplier/quotations/', requestData);
                     }
                     successCount++;
                 } catch (err) {

@@ -4,6 +4,7 @@
 - `lib/components/item/ItemVariantManager.svelte`
 -->
 <script lang="ts">
+    import { apiClient } from '$lib/api';
     import { config } from '$lib/config';
     import type { ItemAttribute, ItemAttributeValue, BulkCreateVariantsResponse } from '$lib/types/variant';
     import { NumberStepper } from '$lib/components/ui';
@@ -132,28 +133,18 @@
         createResult = null;
 
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/variants/bulk_create/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    parent_item_id: parentItemId,
-                    attribute_value_groups: combinations,
-                    inherit_price: inheritPrice,
-                    default_price: inheritPrice ? null : (defaultPrice ? parseFloat(defaultPrice) : null)
-                })
+            const result = await apiClient.post<BulkCreateVariantsResponse>('/product/variants/bulk_create/', {
+                parent_item_id: parentItemId,
+                attribute_value_groups: combinations,
+                inherit_price: inheritPrice,
+                default_price: inheritPrice ? null : (defaultPrice ? parseFloat(defaultPrice) : null)
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                createResult = result;
-                if (result && result.errors.length === 0) {
-                    setTimeout(() => {
-                        onSuccess?.();
-                    }, 1500);
-                }
-            } else {
-                const data = await response.json();
-                error = data.error || '创建失败';
+            createResult = result;
+            if (result && (result as BulkCreateVariantsResponse).errors.length === 0) {
+                setTimeout(() => {
+                    onSuccess?.();
+                }, 1500);
             }
         } catch (e) {
             error = '网络错误';

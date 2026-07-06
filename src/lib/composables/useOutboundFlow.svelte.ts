@@ -1,7 +1,7 @@
 /**
  * 出库流程：弹窗确认 + 数量动画 + 删除淡出
  */
-import { config } from '$lib/config';
+import { apiClient } from '$lib/api';
 import { logger } from '$lib/logger';
 import type { StorageContainer } from '$lib';
 
@@ -51,21 +51,12 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
         const { storage, qty, newQty } = pending;
         processing = true;
         try {
-            const response = await fetch(
-                `${config.API_BASE_URL}/warehouse/storage/${storage.id}/`,
-                newQty === 0
-                    ? { method: 'DELETE' }
-                    : {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ quantity: newQty }),
-                      }
-            );
+            let updated: Partial<StorageContainer> | null = null;
 
-            if (!response.ok) {
-                pending = null;
-                alert('出库失败，请稍后重试');
-                return;
+            if (newQty === 0) {
+                await apiClient.deleteNoContent(`/warehouse/storage/${storage.id}/`);
+            } else {
+                updated = await apiClient.patch<StorageContainer>(`/warehouse/storage/${storage.id}/`, { quantity: newQty });
             }
 
             const storages = getStorages();
@@ -90,7 +81,6 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
                     onChange?.();
                 }, 3000);
             } else {
-                const updated = await response.json();
                 quantityValues[storage.id] = 1;
                 pending = null;
                 quantityDelta[storage.id] = qty;
@@ -107,7 +97,10 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
         } catch (error) {
             logger.error('出库错误:', error);
             pending = null;
-            alert('网络错误，请检查网络连接');
+            const message = error && typeof error === 'object' && 'message' in error
+                ? String(error.message)
+                : '出库失败，请稍后重试';
+            alert(message);
         } finally {
             processing = false;
         }

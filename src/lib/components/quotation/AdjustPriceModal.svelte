@@ -72,6 +72,7 @@
                     class="text-gray-400 hover:text-gray-600 transition-colors"
                     onclick={handleClose}
                     disabled={submitting}
+                    aria-label="关闭"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -83,7 +84,7 @@
             <div class="px-6 py-4 space-y-4">
                 <!-- 当前价格 -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-500">当前价格</label>
+                    <span class="block text-sm font-medium text-gray-500">当前价格</span>
                     <p class="mt-1 text-2xl font-bold text-gray-900">
                         {Number(quotation.current_version?.price ?? '0').toFixed(2)} {quotation.currency}
                     </p>

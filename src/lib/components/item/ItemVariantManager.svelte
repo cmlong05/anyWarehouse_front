@@ -7,7 +7,7 @@
 	import { logger } from '$lib/logger';
     import { goto } from '$app/navigation';
     import type { ItemVariantInfo, ItemVariant, ItemAttributeValue } from '$lib/types/variant';
-    import { config } from '$lib/config';
+    import { apiClient } from '$lib/api';
     import VariantCreator from './VariantCreator.svelte';
     import VariantQuotationManager from './VariantQuotationManager.svelte';
 
@@ -84,25 +84,19 @@
         matchError = null;
 
         try {
-            const response = await fetch(`${config.API_BASE_URL}/product/variants/match_variant/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            const data = await apiClient.post<{ matched: boolean; variant: unknown }>(
+                '/product/variants/match_variant/',
+                {
                     parent_item_id: itemId,
                     selections
-                })
-            });
+                },
+            );
 
-            if (response.ok) {
-                const data = await response.json();
-                if (data.matched && data.variant) {
-                    matchedVariant = data.variant;
-                } else {
-                    matchedVariant = null;
-                    matchError = data.message || '未找到匹配的变体';
-                }
+            if (data.matched && data.variant) {
+                matchedVariant = data.variant as unknown as ItemVariant;
             } else {
-                matchError = '匹配失败，请重试';
+                matchedVariant = null;
+                matchError = '未找到匹配的变体';
             }
         } catch (error) {
             logger.error('匹配变体失败:', error);

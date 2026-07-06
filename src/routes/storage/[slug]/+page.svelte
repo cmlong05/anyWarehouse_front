@@ -7,7 +7,7 @@
     import { StorageForm } from '$lib/components';
     import type { StorageStandard, ContainerBriefID } from '$lib';
     import { goto } from '$app/navigation';
-    import { config } from '$lib/config';
+    import { apiClient } from '$lib/api';
 
     let { data } = $props<{ 
         data: {
@@ -17,15 +17,7 @@
     }>();
 
     async function handleDelete(storageId: number) {
-        const response = await fetch(`${config.API_BASE_URL}/warehouse/storage/${storageId}/`, {
-            method: 'DELETE',
-        });
-
-        if (!response.ok) {
-            throw new Error('删除失败');
-        }
-
-        // 删除成功后跳转到物品详情页
+        await apiClient.deleteNoContent(`/warehouse/storage/${storageId}/`);
         goto(`/item/${data.storageDetail.item}`);
     }
 </script>
