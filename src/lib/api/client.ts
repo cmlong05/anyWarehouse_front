@@ -183,13 +183,20 @@ export class ApiClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+
+            const csrfToken = this.getCsrfToken();
+            if (csrfToken) {
+                headers['X-CSRFToken'] = csrfToken;
+            }
+
             const response = await fetch(`${this.baseURL}${url}`, {
                 method: 'DELETE',
                 signal: controller.signal,
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
             });
 
             clearTimeout(timeoutId);
