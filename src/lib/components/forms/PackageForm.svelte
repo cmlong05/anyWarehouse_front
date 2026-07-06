@@ -63,6 +63,7 @@
     let saving = $state(false);
     let error = $state('');
     let success = $state('');
+    let allocErrorModal = $state<string[] | null>(null);
 
     function getShipmentItemId(item: ShipmentItem): number | null {
         return item.item ?? item.item_detail?.id ?? null;
@@ -345,7 +346,7 @@
             }
         }
         if (allocErrors.length > 0) {
-            error = '请先修正容器分配：' + allocErrors.join('；');
+            allocErrorModal = allocErrors;
             return;
         }
 
@@ -678,4 +679,42 @@
             <button type="button" class="px-6 py-3 rounded text-base font-medium cursor-pointer transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed" onclick={handleSubmit} disabled={saving}>{saving ? '保存中...' : mode === 'create' ? '创建包裹' : '更新包裹'}</button>
         </div>
     </div>
+
+    {#if allocErrorModal}
+        <div
+            class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
+            onclick={(e) => e.target === e.currentTarget && (allocErrorModal = null)}
+            onkeydown={(e) => e.key === 'Escape' && (allocErrorModal = null)}
+            role="button"
+            tabindex="-1"
+            aria-label="关闭弹窗"
+        >
+            <div class="bg-white rounded-lg shadow-xl max-w-lg w-[90%]">
+                <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
+                    <h3 class="text-gray-900 text-lg font-semibold">⚠️ 容器分配错误</h3>
+                    <button
+                        class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all"
+                        onclick={() => allocErrorModal = null}
+                    >×</button>
+                </div>
+                <div class="px-6 py-6">
+                    <p class="text-gray-700 mb-4 text-sm">请先修正以下容器分配问题：</p>
+                    <ul class="space-y-1.5">
+                        {#each allocErrorModal as errMsg}
+                            <li class="flex items-start gap-2 text-sm text-red-700 bg-red-50 px-3 py-2 rounded">
+                                <span class="text-red-400 mt-0.5 flex-shrink-0">●</span>
+                                <span>{errMsg}</span>
+                            </li>
+                        {/each}
+                    </ul>
+                </div>
+                <div class="flex justify-end px-6 py-4 border-t border-gray-200">
+                    <button
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+                        onclick={() => allocErrorModal = null}
+                    >知道了</button>
+                </div>
+            </div>
+        </div>
+    {/if}
 {/if}
