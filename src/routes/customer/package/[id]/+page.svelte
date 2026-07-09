@@ -112,6 +112,7 @@
     }
 
     let sealing = $state(false);
+    let syncing = $state(false);
 
     async function toggleSeal() {
         if (!pkg) return;
@@ -128,6 +129,20 @@
             error = getErrorMessage(err, '操作失败');
         } finally {
             sealing = false;
+        }
+    }
+
+    async function syncChecklist() {
+        if (!pkg) return;
+        try {
+            syncing = true;
+            error = '';
+            await packageAPI.syncChecklist(pkg.id);
+            await loadPackage(pkg.id);
+        } catch (err) {
+            error = getErrorMessage(err, '同步失败');
+        } finally {
+            syncing = false;
         }
     }
 
@@ -260,6 +275,26 @@
             return 'bg-gray-100 font-medium';
         }
         return 'hover:bg-gray-50';
+    }
+
+    function getChecklistQtyMap(checklistItems: Package['checklist_items']): Map<number, number | null> {
+        const map = new Map<number, number | null>();
+        if (!checklistItems) return map;
+        for (const cl of checklistItems) {
+            if (cl.package_item != null) map.set(cl.package_item, cl.actual_quantity);
+        }
+        return map;
+    }
+
+    function getChecklistAllocQtyMap(checklistItems: Package['checklist_items']): Map<number, number | null> {
+        const map = new Map<number, number | null>();
+        if (!checklistItems) return map;
+        for (const cl of checklistItems) {
+            for (const a of cl.allocations ?? []) {
+                if (a.package_item_allocation != null) map.set(a.package_item_allocation, a.actual_quantity);
+            }
+        }
+        return map;
     }
 
     function getItemDetailPath(item: PackageItemWithVariant): string | null {
@@ -513,16 +548,50 @@
 
             <!-- 包裹明细 -->
             <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-lg font-bold mb-4">包裹明细</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold">包裹明细</h2>
+                    {#if pkg?.status !== 'sealed'}
+                    <div class="flex gap-2">
+                        <button
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-blue-300 bg-blue-50 px-2 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                            onclick={() => goto(`/customer/package/${pkg?.id}/checklist`)}
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                            </svg>
+                            包装清单
+                        </button>
+                        {#if (pkg?.checklist_items?.length ?? 0) > 0}
+                        <button
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-2 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                            onclick={syncChecklist}
+                            disabled={syncing}
+                        >
+                            {#if syncing}
+                                <svg class="animate-spin h-3.5 w-3.5 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            {/if}
+                            同步清单
+                        </button>
+                        {/if}
+                    </div>
+                    {/if}
+                </div>
                 {#if pkg.items && pkg.items.length > 0}
                     {@const groupedSections = getGroupedSections(pkg.items as PackageItemWithVariant[])}
+                    {@const checklistQtyMap = getChecklistQtyMap(pkg.checklist_items)}
+                    {@const checklistAllocQtyMap = getChecklistAllocQtyMap(pkg.checklist_items)}
                     <table class="table w-full">
                         <thead>
                             <tr class="bg-gray-50">
-                                <th class="text-left w-32">SKU</th>
+                                <th class="text-left w-24">SKU</th>
                                 <th class="text-left">商品名称</th>
-                                <th class="text-left w-64">存储位置</th>
-                                <th class="text-right w-20">数量</th>
+                                <th class="text-left w-48">存储位置</th>
+                                <th class="text-right w-16">数量</th>
+                                <th class="text-right w-16">分配</th>
+                                <th class="text-right w-20">清单</th>
                                 <th class="text-right pl-8">关联发货单</th>
                             </tr>
                         </thead>
@@ -533,6 +602,8 @@
                                 {@const allocs = item.allocations && item.allocations.length > 0 ? item.allocations : [{container: null, container_code: null, container_full_path: null, quantity: item.quantity}]}
                                 {@const allocCount = allocs.length}
                                 {#each allocs as alloc, i}
+                                    {@const realAlloc = 'id' in alloc ? alloc : null}
+                                    {@const clAllocQty = realAlloc ? checklistAllocQtyMap.get(realAlloc.id) : null}
                                     <tr class={getRowClass(section)}>
                                         {#if i === 0}
                                         <td class="font-mono w-32 {section.type === 'variant' ? 'text-purple-600' : ''}" rowspan={allocCount}>
@@ -567,7 +638,17 @@
                                         <td class="text-left text-gray-600">
                                             <div class="text-sm">{alloc.container_full_path || alloc.container_code || '-'}</div>
                                         </td>
-                                        <td class="text-right w-20">{formatNumber(alloc.quantity)}</td>
+                                        {#if i === 0}
+                                        <td class="text-right w-20" rowspan={allocCount}>
+                                            {formatNumber(item.quantity)}
+                                        </td>
+                                        {/if}
+                                        <td class="text-right w-16 text-sm text-gray-500">
+                                            {formatNumber(alloc.quantity)}
+                                        </td>
+                                        <td class="text-right w-20 text-sm {clAllocQty != null && realAlloc && clAllocQty !== safeParseFloat(String(realAlloc.quantity), 0) ? 'text-orange-600 font-medium' : 'text-gray-500'}">
+                                            {clAllocQty != null ? formatNumber(clAllocQty) : '-'}
+                                        </td>
                                         {#if i === 0}
                                         <td class="text-sm text-gray-500 pl-8 text-right" rowspan={allocCount}>
                                             {item.shipment_no || '-'}

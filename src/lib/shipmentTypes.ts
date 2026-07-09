@@ -267,6 +267,44 @@ export interface PackageItemCreateRequest {
     allocations: PackageItemAllocationCreateRequest[];  // 容器分配，总和必须等于 quantity
 }
 
+/** 包裹核查项 */
+export interface PackageChecklistItem {
+    id: number;
+    package: number;
+    package_item: number | null;
+    sku: string;
+    product_name: string;
+    planned_quantity: number;
+    checked: boolean;
+    actual_quantity: number | null;
+    notes: string;
+    sort_order: number;
+    allocations?: PackageChecklistAllocation[];
+    created_at: string;
+    updated_at: string;
+}
+
+/** 包裹核查分配项 */
+export interface PackageChecklistAllocation {
+    id: number;
+    checklist_item: number;
+    package_item_allocation: number | null;
+    container_path: string;
+    planned_quantity: number;
+    checked: boolean;
+    actual_quantity: number | null;
+    sort_order: number;
+    created_at: string;
+    updated_at: string;
+}
+
+/** 核查汇总 */
+export interface ChecklistSummary {
+    total: number;
+    checked: number;
+    discrepancy_count: number;
+}
+
 /** 包裹-发货关联简要信息 */
 export interface PackageShipmentBrief {
     id: number;
@@ -296,6 +334,7 @@ export interface Package {
     /** 关联的发货批次列表（N:M关系） */
     shipments?: PackageShipmentBrief[];
     items?: PackageItem[];
+    checklist_items?: PackageChecklistItem[];
     notes?: string;
     /** 多段物流：聚合状态与段列表 */
     overall_status?: PackageOverallStatus;

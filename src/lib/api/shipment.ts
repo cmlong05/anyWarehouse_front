@@ -27,6 +27,9 @@ import type {
     PackageItemCreateRequest,
     PackageTrackingLeg,
     PackageTrackingLegRequest,
+    PackageChecklistItem,
+    PackageChecklistAllocation,
+    ChecklistSummary,
 } from '$lib/shipmentTypes';
 import type { PaginatedResponse } from './base';
 
@@ -236,6 +239,54 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
     /** 触发服务端重算 overall_status / current_leg_no */
     async recomputeStatus(packageId: number): Promise<{ overall_status: string; overall_status_display: string; current_leg_no: number }> {
         return this.client.post(`${this.basePath}${packageId}/recompute-status/`, {});
+    }
+
+    /** 初始化核查清单（幂等） */
+    async initChecklist(packageId: number): Promise<PackageChecklistItem[]> {
+        return this.client.post<PackageChecklistItem[]>(`${this.basePath}${packageId}/init-checklist/`, {});
+    }
+
+    /** 获取核查清单 */
+    async getChecklist(packageId: number): Promise<PackageChecklistItem[]> {
+        return this.client.get<PackageChecklistItem[]>(`${this.basePath}${packageId}/checklist/`);
+    }
+
+    /** 更新单条核查项 */
+    async updateChecklistItem(
+        packageId: number,
+        itemId: number,
+        data: Partial<Pick<PackageChecklistItem, 'checked' | 'actual_quantity' | 'notes'>>
+    ): Promise<PackageChecklistItem> {
+        return this.client.patch<PackageChecklistItem>(
+            `${this.basePath}${packageId}/checklist/${itemId}/`,
+            data
+        );
+    }
+
+    /** 更新单条分配核查项 */
+    async updateChecklistAllocation(
+        packageId: number,
+        itemId: number,
+        allocId: number,
+        data: Partial<Pick<PackageChecklistAllocation, 'checked' | 'actual_quantity'>>
+    ): Promise<PackageChecklistAllocation> {
+        return this.client.patch<PackageChecklistAllocation>(
+            `${this.basePath}${packageId}/checklist/${itemId}/allocation/${allocId}/`,
+            data
+        );
+    }
+
+    /** 同步核查数量到包裹明细 */
+    async syncChecklist(packageId: number): Promise<{ status: string; message: string; summary: ChecklistSummary }> {
+        return this.client.post<{ status: string; message: string; summary: ChecklistSummary }>(
+            `${this.basePath}${packageId}/sync-checklist/`,
+            {}
+        );
+    }
+
+    /** 获取核查汇总 */
+    async getChecklistSummary(packageId: number): Promise<ChecklistSummary> {
+        return this.client.get<ChecklistSummary>(`${this.basePath}${packageId}/checklist-summary/`);
     }
 }
 
