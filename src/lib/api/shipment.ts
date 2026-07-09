@@ -208,6 +208,7 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
     async getList(params?: {
         search?: string;
         shipment_id?: number;
+        customer_name?: string;
         page?: number;
         page_size?: number;
         ordering?: string;
@@ -215,6 +216,7 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
         const queryParams: Record<string, string> = {};
         if (params?.search) queryParams.search = params.search;
         if (params?.shipment_id) queryParams.shipment_id = params.shipment_id.toString();
+        if (params?.customer_name) queryParams.customer_name = params.customer_name;
         if (params?.page) queryParams.page = params.page.toString();
         if (params?.page_size) queryParams.page_size = params.page_size.toString();
         if (params?.ordering) queryParams.ordering = params.ordering;

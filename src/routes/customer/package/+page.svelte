@@ -19,6 +19,7 @@
     let loading = $state(true);
     let error = $state('');
     let searchQuery = $state('');
+    let customerNameFilter = $state('');
     let totalCount = $state(0);
     let currentPage = $state(1);
     let pageSize = $state(20);
@@ -39,6 +40,7 @@
             error = '';
             const response = await packageAPI.getList({
                 search: searchQuery || undefined,
+                customer_name: customerNameFilter || undefined,
                 page: currentPage,
                 page_size: pageSize,
                 ordering: '-created_at'
@@ -71,6 +73,14 @@
             return '未关联发货单';
         }
         return pkg.shipments.map(s => s.shipment_no).join(', ');
+    }
+
+    function getCustomerNames(pkg: Package): string {
+        if (!pkg.shipments || pkg.shipments.length === 0) {
+            return '-';
+        }
+        const names = [...new Set(pkg.shipments.map(s => s.customer_name).filter(Boolean))];
+        return names.length > 0 ? names.join(', ') : '-';
     }
 
     function formatCompactNumber(value: string | number | undefined | null, decimals = 3): string {
@@ -162,6 +172,7 @@
         { key: 'status', title: '状态', width: '60px' },
         { key: 'sequence_no', title: '序号', width: '60px' },
         { key: 'overall_status', title: '快递', width: '60px', align: 'center' as const },
+        { key: 'customer_name', title: '客户' },
         { key: 'shipments', title: '发货单' },
         { key: 'items_count', title: '商品种类', align: 'right' as const, width: '80px' },
         { key: 'total_quantity', title: '总数量', align: 'right' as const, width: '80px' },
@@ -194,13 +205,20 @@
         <Alert error={{ message: error }} />
     {/if}
 
-    <FilterPanel onReset={() => { searchQuery = ''; handleSearch(); }}>
+    <FilterPanel onReset={() => { searchQuery = ''; customerNameFilter = ''; handleSearch(); }}>
         <FormInput
             label="搜索"
             name="search"
             value={searchQuery}
             placeholder="包裹编号、快递单号..."
             oninput={(v) => { searchQuery = v; handleSearch(); }}
+        />
+        <FormInput
+            label="客户名称"
+            name="customer_name"
+            value={customerNameFilter}
+            placeholder="按客户名称筛选..."
+            oninput={(v) => { customerNameFilter = v; handleSearch(); }}
         />
     </FilterPanel>
 
@@ -247,6 +265,8 @@
                 {/if}
             {:else if column.key === 'shipments'}
                 <span class="text-sm {item.shipments?.length ? '' : 'text-gray-400'}">{getShipmentInfo(item)}</span>
+            {:else if column.key === 'customer_name'}
+                <span class="text-sm {getCustomerNames(item) !== '-' ? '' : 'text-gray-400'}">{getCustomerNames(item)}</span>
             {:else if column.key === 'items_count'}
                 {item.items?.length || 0}
             {:else if column.key === 'total_quantity'}
