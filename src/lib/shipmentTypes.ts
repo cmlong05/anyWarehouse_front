@@ -37,6 +37,8 @@ export interface TrackingNumber {
     linked_packages?: TrackingNumberLinkedPackage[];
     shippo_registered: boolean;
     remark?: string;
+    /** 快递费用 */
+    cost?: string;
     last_synced_at?: string;
     tracking_events?: TrackingEvent[];
     tracking_status_raw?: TrackingStatusRaw;
@@ -86,6 +88,8 @@ export interface TrackingNumberBrief {
     is_linked: boolean;
     shippo_registered?: boolean;
     remark?: string;
+    /** 快递费用 */
+    cost?: string;
     created_at?: string;
 }
 
@@ -96,6 +100,8 @@ export interface TrackingNumberCreateRequest {
     carrier_name: string;
     logistics_status?: LogisticsStatus;
     remark?: string;
+    /** 快递费用 */
+    cost?: string;
 }
 
 /** 物品详情（包含变体信息） */
@@ -329,6 +335,8 @@ export interface Package {
     width?: string;
     height?: string;
     dimensions?: string;
+    /** 运输费用（由关联物流段费用汇总，自动计算） */
+    shipping_cost?: string;
     total_items: number;
     total_quantity: string;
     /** 关联的发货批次列表（N:M关系） */
@@ -415,6 +423,8 @@ export interface PackageBrief {
     width?: string;
     height?: string;
     total_quantity: string;
+    /** 运输费用 */
+    shipping_cost?: string;
     /** 最后一段的快递单号 */
     final_tracking_no?: string | null;
     /** 最后一段的承运商 */

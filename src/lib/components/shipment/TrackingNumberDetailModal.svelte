@@ -167,6 +167,12 @@
                                     {trackingNumber.last_synced_at ? formatDate(trackingNumber.last_synced_at) : '-'}
                                 </p>
                             </div>
+                            {#if trackingNumber.cost}
+                                <div>
+                                    <span class="text-gray-500">费用</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">¥{trackingNumber.cost}</p>
+                                </div>
+                            {/if}
                         </div>
                         {#if trackingNumber.remark}
                             <div class="mt-3 pt-3 border-t border-gray-200">

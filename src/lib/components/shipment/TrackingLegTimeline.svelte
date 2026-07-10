@@ -78,6 +78,9 @@
                 {#if leg.notes}
                     <div class="text-xs text-slate-500 mt-0.5">{leg.notes}</div>
                 {/if}
+                {#if leg.tracking_number_detail?.cost}
+                    <div class="text-xs text-slate-500 mt-0.5">费用: ¥{leg.tracking_number_detail.cost}</div>
+                {/if}
             </li>
         {/each}
     </ol>

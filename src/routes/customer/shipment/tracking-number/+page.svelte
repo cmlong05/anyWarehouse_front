@@ -54,6 +54,7 @@
         carrier_name: string;
         logistics_status: LogisticsStatus;
         remark: string;
+        cost: string;
     }
     let formData: {
         tracking_no: string;
@@ -61,16 +62,18 @@
         carrier_name: string;
         logistics_status: LogisticsStatus;
         remark: string;
+        cost: string;
     } = {
         tracking_no: '',
         carrier_code: '',
         carrier_name: '',
         logistics_status: 'pending',
-        remark: ''
+        remark: '',
+        cost: ''
     };
     let initialFormData: TrackingNumberFormData | null = null;
     let isFormDirty = false;
-    const formFields = ['tracking_no', 'carrier_code', 'carrier_name', 'logistics_status', 'remark'] as const;
+    const formFields = ['tracking_no', 'carrier_code', 'carrier_name', 'logistics_status', 'remark', 'cost'] as const;
     
     // 删除确认
     let showDeleteModal = false;
@@ -156,7 +159,8 @@
             carrier_code: '',
             carrier_name: '',
             logistics_status: 'pending',
-            remark: ''
+            remark: '',
+            cost: ''
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -169,7 +173,8 @@
             carrier_code: tn.carrier_code,
             carrier_name: tn.carrier_name,
             logistics_status: tn.logistics_status,
-            remark: tn.remark || ''
+            remark: tn.remark || '',
+            cost: tn.cost || ''
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -182,7 +187,8 @@
             carrier_code: tn.carrier_code,
             carrier_name: tn.carrier_name,
             logistics_status: 'pending',
-            remark: ''
+            remark: '',
+            cost: tn.cost || ''
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -587,6 +593,20 @@
                             <option value={option.value}>{option.label}</option>
                         {/each}
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="cost">
+                        费用
+                    </label>
+                    <input 
+                        id="cost"
+                        type="text"
+                        inputmode="decimal"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        bind:value={formData.cost}
+                        placeholder="如：150.00"
+                    />
                 </div>
 
                 <div>
