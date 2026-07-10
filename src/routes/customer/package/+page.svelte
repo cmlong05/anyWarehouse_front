@@ -232,7 +232,7 @@
     >
         {#snippet cellRender({ item, column, value }: { item: Package; column: { key: string }; value: unknown })}
             {#if column.key === 'package_no'}
-                <span class="font-medium text-slate-700">{item.package_no}</span>
+                <a href="/customer/package/{item.id}" class="font-medium text-slate-700 hover:text-blue-600">{item.package_no}</a>
             {:else if column.key === 'status'}
                 {#if item.status === 'sealed'}
                     <span class="inline-flex items-center justify-center h-7 w-7 rounded-full bg-green-100 text-green-600" title="已封箱" aria-label="已封箱" role="img">
