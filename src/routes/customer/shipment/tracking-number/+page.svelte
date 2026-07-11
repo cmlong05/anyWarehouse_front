@@ -234,12 +234,18 @@
             return;
         }
 
+        // DRF DateTimeField 不接受空字符串，必须传 null
+        const payload = {
+            ...formData,
+            handover_at: formData.handover_at || null,
+        };
+
         try {
             if (editingId) {
-                await trackingNumberAPI.update(editingId, formData);
+                await trackingNumberAPI.update(editingId, payload);
                 success = '快递单号已更新';
             } else {
-                await trackingNumberAPI.create(formData);
+                await trackingNumberAPI.create(payload);
                 success = '快递单号已创建';
             }
             closeFormModal();
