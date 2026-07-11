@@ -39,6 +39,11 @@ export interface TrackingNumber {
     remark?: string;
     /** 快递费用 */
     cost?: string;
+    /** 物流段信息 */
+    agent_name?: string;
+    from_location?: string;
+    to_location?: string;
+    handover_at?: string | null;
     last_synced_at?: string;
     tracking_events?: TrackingEvent[];
     tracking_status_raw?: TrackingStatusRaw;
@@ -90,6 +95,11 @@ export interface TrackingNumberBrief {
     remark?: string;
     /** 快递费用 */
     cost?: string;
+    /** 物流段信息 */
+    agent_name?: string;
+    from_location?: string;
+    to_location?: string;
+    handover_at?: string | null;
     created_at?: string;
 }
 
@@ -102,6 +112,11 @@ export interface TrackingNumberCreateRequest {
     remark?: string;
     /** 快递费用 */
     cost?: string;
+    /** 物流段信息 */
+    agent_name?: string;
+    from_location?: string;
+    to_location?: string;
+    handover_at?: string | null;
 }
 
 /** 物品详情（包含变体信息） */
@@ -372,10 +387,6 @@ export interface PackageTrackingLeg {
     stage_display?: string;
     tracking_number: number;
     tracking_number_detail?: TrackingNumberBrief;
-    agent_name?: string;
-    from_location?: string;
-    to_location?: string;
-    handover_at?: string | null;
     notes?: string;
     logistics_status?: LogisticsStatus | null;
     logistics_status_display?: string | null;
@@ -389,10 +400,6 @@ export interface PackageTrackingLegRequest {
     tracking_number: number;
     leg_no?: number;
     stage: TrackingLegStage;
-    agent_name?: string;
-    from_location?: string;
-    to_location?: string;
-    handover_at?: string | null;
     notes?: string;
 }
 

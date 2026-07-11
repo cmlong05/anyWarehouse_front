@@ -173,6 +173,24 @@
                                     <p class="font-medium text-gray-900 mt-0.5">¥{trackingNumber.cost}</p>
                                 </div>
                             {/if}
+                            {#if trackingNumber.from_location || trackingNumber.to_location}
+                                <div>
+                                    <span class="text-gray-500">起止地</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">{trackingNumber.from_location || '?'} → {trackingNumber.to_location || '?'}</p>
+                                </div>
+                            {/if}
+                            {#if trackingNumber.agent_name}
+                                <div>
+                                    <span class="text-gray-500">承运方</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">{trackingNumber.agent_name}</p>
+                                </div>
+                            {/if}
+                            {#if trackingNumber.handover_at}
+                                <div>
+                                    <span class="text-gray-500">交接时间</span>
+                                    <p class="font-medium text-gray-900 mt-0.5">{formatDate(trackingNumber.handover_at)}</p>
+                                </div>
+                            {/if}
                         </div>
                         {#if trackingNumber.remark}
                             <div class="mt-3 pt-3 border-t border-gray-200">

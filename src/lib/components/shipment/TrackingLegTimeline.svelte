@@ -66,14 +66,14 @@
                         </a>
                     {/if}
                 </div>
-                {#if leg.from_location || leg.to_location || leg.agent_name}
+                {#if leg.tracking_number_detail?.from_location || leg.tracking_number_detail?.to_location || leg.tracking_number_detail?.agent_name}
                     <div class="text-xs text-slate-500 mt-0.5">
-                        {leg.from_location || '?'} → {leg.to_location || '?'}
-                        {#if leg.agent_name}<span class="ml-2">代理: {leg.agent_name}</span>{/if}
+                        {leg.tracking_number_detail.from_location || '?'} → {leg.tracking_number_detail.to_location || '?'}
+                        {#if leg.tracking_number_detail.agent_name}<span class="ml-2">代理: {leg.tracking_number_detail.agent_name}</span>{/if}
                     </div>
                 {/if}
-                {#if leg.handover_at}
-                    <div class="text-xs text-slate-400 mt-0.5">交接: {new Date(leg.handover_at).toLocaleString()}</div>
+                {#if leg.tracking_number_detail?.handover_at}
+                    <div class="text-xs text-slate-400 mt-0.5">交接: {new Date(leg.tracking_number_detail.handover_at).toLocaleString()}</div>
                 {/if}
                 {#if leg.notes}
                     <div class="text-xs text-slate-500 mt-0.5">{leg.notes}</div>

@@ -58,10 +58,6 @@
         tracking_number: leg?.tracking_number ?? 0,
         leg_no: leg?.leg_no,
         stage: leg?.stage ?? 'first',
-        agent_name: leg?.agent_name ?? '',
-        from_location: leg?.from_location ?? '',
-        to_location: leg?.to_location ?? '',
-        handover_at: leg?.handover_at ?? null,
         notes: leg?.notes ?? '',
     });
     // 文本输入避免 number 输入框上下角标；提交前再转为数字
@@ -288,31 +284,6 @@
             {trackingHint}
         </p>
     {/if}
-
-    <div class="grid grid-cols-2 gap-3">
-        <label class="block">
-            <span class="text-xs text-slate-600">起始地</span>
-            <input type="text" bind:value={form.from_location}
-                class="w-full border rounded px-2 py-1 text-sm" placeholder="如：深圳" />
-        </label>
-        <label class="block">
-            <span class="text-xs text-slate-600">目的地</span>
-            <input type="text" bind:value={form.to_location}
-                class="w-full border rounded px-2 py-1 text-sm" placeholder="如：上海/美国" />
-        </label>
-    </div>
-
-    <label class="block">
-        <span class="text-xs text-slate-600">货运代理 / 承运方</span>
-        <input type="text" bind:value={form.agent_name}
-            class="w-full border rounded px-2 py-1 text-sm" placeholder="如：上海XX货代" />
-    </label>
-
-    <label class="block">
-        <span class="text-xs text-slate-600">交接时间</span>
-        <input type="datetime-local" bind:value={form.handover_at}
-            class="w-full border rounded px-2 py-1 text-sm" />
-    </label>
 
     <label class="block">
         <span class="text-xs text-slate-600">备注</span>

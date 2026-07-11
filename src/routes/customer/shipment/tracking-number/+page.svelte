@@ -55,6 +55,10 @@
         logistics_status: LogisticsStatus;
         remark: string;
         cost: string;
+        agent_name: string;
+        from_location: string;
+        to_location: string;
+        handover_at: string;
     }
     let formData: {
         tracking_no: string;
@@ -63,17 +67,25 @@
         logistics_status: LogisticsStatus;
         remark: string;
         cost: string;
+        agent_name: string;
+        from_location: string;
+        to_location: string;
+        handover_at: string;
     } = {
         tracking_no: '',
         carrier_code: '',
         carrier_name: '',
         logistics_status: 'pending',
         remark: '',
-        cost: ''
+        cost: '',
+        agent_name: '',
+        from_location: '',
+        to_location: '',
+        handover_at: ''
     };
     let initialFormData: TrackingNumberFormData | null = null;
     let isFormDirty = false;
-    const formFields = ['tracking_no', 'carrier_code', 'carrier_name', 'logistics_status', 'remark', 'cost'] as const;
+    const formFields = ['tracking_no', 'carrier_code', 'carrier_name', 'logistics_status', 'cost', 'agent_name', 'from_location', 'to_location', 'handover_at', 'remark'] as const;
     
     // 删除确认
     let showDeleteModal = false;
@@ -152,6 +164,12 @@
         }
     }
 
+    function getCurrentDatetimeLocal(): string {
+        const d = new Date();
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
     function openCreateModal() {
         editingId = null;
         formData = {
@@ -160,7 +178,11 @@
             carrier_name: '',
             logistics_status: 'pending',
             remark: '',
-            cost: ''
+            cost: '',
+            agent_name: '',
+            from_location: '',
+            to_location: '',
+            handover_at: getCurrentDatetimeLocal()
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -174,7 +196,11 @@
             carrier_name: tn.carrier_name,
             logistics_status: tn.logistics_status,
             remark: tn.remark || '',
-            cost: tn.cost || ''
+            cost: tn.cost || '',
+            agent_name: tn.agent_name || '',
+            from_location: tn.from_location || '',
+            to_location: tn.to_location || '',
+            handover_at: tn.handover_at || ''
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -188,7 +214,11 @@
             carrier_name: tn.carrier_name,
             logistics_status: 'pending',
             remark: '',
-            cost: tn.cost || ''
+            cost: tn.cost || '',
+            agent_name: tn.agent_name || '',
+            from_location: tn.from_location || '',
+            to_location: tn.to_location || '',
+            handover_at: tn.handover_at || ''
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
@@ -526,9 +556,9 @@
         on:click={handleFormBackdropClick}
         on:keydown={handleFormKeydown}
     >
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-[90%]">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-[95%] max-h-[90vh] overflow-y-auto">
             <!-- 标题栏 -->
-            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <h3 class="text-gray-900 text-lg font-semibold">{editingId ? '编辑快递单号' : '新建快递单号'}</h3>
                 <button 
                     class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
@@ -539,18 +569,31 @@
 
             <!-- 表单内容 -->
             <div class="px-6 py-5 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="trackingNo">
-                        快递单号 <span class="text-red-500">*</span>
-                    </label>
-                    <input 
-                        id="trackingNo"
-                        type="text" 
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
-                        bind:value={formData.tracking_no}
-                        placeholder="输入快递单号"
-                        disabled={!!editingId}
-                    />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="trackingNo">
+                            快递单号 <span class="text-red-500">*</span>
+                        </label>
+                        <input 
+                            id="trackingNo"
+                            type="text" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
+                            bind:value={formData.tracking_no}
+                            placeholder="输入快递单号"
+                            disabled={!!editingId}
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="handoverAt">
+                            交接时间
+                        </label>
+                        <input 
+                            id="handoverAt"
+                            type="datetime-local"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.handover_at}
+                        />
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -580,33 +623,73 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="logisticsStatus">
-                        物流状态 <span class="text-red-500">*</span>
-                    </label>
-                    <select
-                        id="logisticsStatus"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        bind:value={formData.logistics_status}
-                    >
-                        {#each logisticsFormOptions as option}
-                            <option value={option.value}>{option.label}</option>
-                        {/each}
-                    </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="cost">
+                            费用
+                        </label>
+                        <input 
+                            id="cost"
+                            type="text"
+                            inputmode="decimal"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.cost}
+                            placeholder="如：150.00"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="logisticsStatus">
+                            物流状态 <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="logisticsStatus"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.logistics_status}
+                        >
+                            {#each logisticsFormOptions as option}
+                                <option value={option.value}>{option.label}</option>
+                            {/each}
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1" for="cost">
-                        费用
-                    </label>
-                    <input 
-                        id="cost"
-                        type="text"
-                        inputmode="decimal"
-                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        bind:value={formData.cost}
-                        placeholder="如：150.00"
-                    />
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="fromLocation">
+                            起始地
+                        </label>
+                        <input 
+                            id="fromLocation"
+                            type="text"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.from_location}
+                            placeholder="如：深圳"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="toLocation">
+                            目的地
+                        </label>
+                        <input 
+                            id="toLocation"
+                            type="text"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.to_location}
+                            placeholder="如：上海/美国"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="agentName">
+                            货运代理 / 承运方
+                        </label>
+                        <input 
+                            id="agentName"
+                            type="text"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            bind:value={formData.agent_name}
+                            placeholder="如：上海XX货代"
+                        />
+                    </div>
                 </div>
 
                 <div>
@@ -624,7 +707,7 @@
             </div>
 
             <!-- 底部按钮 -->
-            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 sticky bottom-0 bg-white">
                 <button 
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
                     on:click={closeFormModal}
