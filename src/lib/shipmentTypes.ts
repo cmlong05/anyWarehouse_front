@@ -43,7 +43,7 @@ export interface TrackingNumber {
     agent_name?: string;
     from_location?: string;
     to_location?: string;
-    handover_at?: string | null;
+    handover_at: string;
     last_synced_at?: string;
     tracking_events?: TrackingEvent[];
     tracking_status_raw?: TrackingStatusRaw;
@@ -99,7 +99,7 @@ export interface TrackingNumberBrief {
     agent_name?: string;
     from_location?: string;
     to_location?: string;
-    handover_at?: string | null;
+    handover_at: string;
     created_at?: string;
 }
 
@@ -116,7 +116,7 @@ export interface TrackingNumberCreateRequest {
     agent_name?: string;
     from_location?: string;
     to_location?: string;
-    handover_at?: string | null;
+    handover_at: string;
 }
 
 /** 物品详情（包含变体信息） */

@@ -233,11 +233,14 @@
             error = '请输入承运商名称';
             return;
         }
+        if (!formData.handover_at) {
+            error = '请选择交接时间';
+            return;
+        }
 
-        // DRF DateTimeField 不接受空字符串，必须传 null
         const payload = {
             ...formData,
-            handover_at: formData.handover_at || null,
+            handover_at: formData.handover_at,
         };
 
         try {
@@ -591,13 +594,14 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="handoverAt">
-                            交接时间
+                            交接时间 <span class="text-red-500">*</span>
                         </label>
                         <input 
                             id="handoverAt"
                             type="datetime-local"
                             class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             bind:value={formData.handover_at}
+                            required
                         />
                     </div>
                 </div>
