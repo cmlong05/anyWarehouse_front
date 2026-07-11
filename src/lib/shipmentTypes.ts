@@ -350,6 +350,8 @@ export interface Package {
     width?: string;
     height?: string;
     dimensions?: string;
+    /** 预估运费（人工录入） */
+    estimated_shipping_cost?: string;
     /** 运输费用（由关联物流段费用汇总，自动计算） */
     shipping_cost?: string;
     total_items: number;
@@ -454,6 +456,7 @@ export interface PackageCreateRequest {
     sequence_no: number;
     tare_weight?: number;
     weight_adjustment?: number;
+    estimated_shipping_cost?: number;
     length?: number;
     width?: number;
     height?: number;
@@ -467,6 +470,7 @@ export interface PackageCreateRequest {
 export interface PackageUpdateRequest {
     tare_weight?: number;
     weight_adjustment?: number;
+    estimated_shipping_cost?: number;
     length?: number;
     width?: number;
     height?: number;

@@ -458,6 +458,10 @@
                         <p class="font-medium">{getDisplayDimensions(pkg)}</p>
                     </div>
                     <div>
+                        <span class="text-gray-500 text-sm">预估运费</span>
+                        <p class="font-medium">{pkg.estimated_shipping_cost ? `¥${formatNumber(pkg.estimated_shipping_cost)}` : '-'}</p>
+                    </div>
+                    <div>
                         <span class="text-gray-500 text-sm">运输费用</span>
                         <p class="font-medium">{pkg.shipping_cost ? `¥${formatNumber(pkg.shipping_cost)}` : '-'}</p>
                     </div>

@@ -27,6 +27,7 @@
     let packageNo = $state('');
     let tare_weight = $state<number | null>(null);
     let weight_adjustment = $state<number | null>(null);
+    let estimated_shipping_cost = $state<number | null>(null);
     let length = $state<number | null>(null);
     let width = $state<number | null>(null);
     let height = $state<number | null>(null);
@@ -124,6 +125,7 @@
             packageNo = pkg.package_no;
             tare_weight = pkg.tare_weight ? safeParseFloat(pkg.tare_weight) : null;
             weight_adjustment = pkg.weight_adjustment ? safeParseFloat(pkg.weight_adjustment) : null;
+            estimated_shipping_cost = pkg.estimated_shipping_cost ? safeParseFloat(pkg.estimated_shipping_cost) : null;
             length = pkg.length ? safeParseFloat(pkg.length) : null; width = pkg.width ? safeParseFloat(pkg.width) : null;
             height = pkg.height ? safeParseFloat(pkg.height) : null;
             notes = pkg.notes || ''; existingItems = pkg.items || []; linkedShipments = pkg.shipments || [];
@@ -368,6 +370,7 @@
                 sequence_no: 1,
                 tare_weight: tare_weight ?? undefined, 
                 weight_adjustment: weight_adjustment ?? undefined,
+                estimated_shipping_cost: estimated_shipping_cost ?? undefined,
                 length: length ?? undefined, 
                 width: width ?? undefined, 
                 height: height ?? undefined,
@@ -438,6 +441,17 @@
                         onchange={(v) => weight_adjustment = v ?? null}
                     />
                     <p class="text-xs text-gray-400 mt-1">可为负值，用于手动修正</p>
+                </div>
+                <div>
+                    <label for="estimated_shipping_cost" class="block text-sm text-gray-600 mb-1">预估运费(¥)</label>
+                    <NumberStepper
+                        id="estimated_shipping_cost"
+                        value={estimated_shipping_cost ?? undefined}
+                        min={0}
+                        step={0.01}
+                        decimalPlaces={2}
+                        onchange={(v) => estimated_shipping_cost = v ?? null}
+                    />
                 </div>
                 <div>
                     <label for="length" class="block text-sm text-gray-600 mb-1">长(cm)</label>
