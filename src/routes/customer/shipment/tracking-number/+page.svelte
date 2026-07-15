@@ -218,7 +218,7 @@
             agent_name: tn.agent_name || '',
             from_location: tn.from_location || '',
             to_location: tn.to_location || '',
-            handover_at: tn.handover_at || ''
+            handover_at: getCurrentDatetimeLocal()
         };
         initialFormData = captureFormSnapshot();
         showFormModal = true;
