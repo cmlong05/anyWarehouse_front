@@ -42,6 +42,31 @@
         statusTransitions: SALES_STATUS_TRANSITIONS,
     });
 
+    async function handleStatusChange(status: string) {
+        if (status === 'delivered' && orderDetail.order) {
+            const pendingCount = orderDetail.order.items.filter(
+                i => i.quantity - i.quantity_shipped > 0
+            ).length;
+            if (pendingCount > 0) {
+                if (!confirm(
+                    `还有 ${pendingCount} 条明细未完成发货。\n\n` +
+                    '确定强制完成交付吗？未完成明细将直接标记为已发完，订单金额不变。'
+                )) return;
+                orderDetail.updating = true;
+                try {
+                    const updated = await salesOrderAPI.changeStatus(orderId, 'delivered', undefined, true);
+                    orderDetail.order = updated;
+                } catch (err: any) {
+                    orderDetail.error = err?.message || '强制交付失败';
+                } finally {
+                    orderDetail.updating = false;
+                }
+                return;
+            }
+        }
+        await orderDetail.changeStatus(status as any);
+    }
+
     // 发货弹窗
     const shipModal = useShipModal<SalesOrderItem>({
         onShip: async (items, notes) => {
@@ -350,7 +375,7 @@
                 onEdit={editOrder}
                 onDelete={orderDetail.deleteOrder}
                 onCopy={copyOrder}
-                onStatusChange={(status) => orderDetail.changeStatus(status as string)}
+                onStatusChange={(status) => handleStatusChange(status as string)}
             />
         {#if orderDetail.order}
             {@const rollbackTransitions = orderDetail.getAvailableTransitions().filter(t => t.rollback)}

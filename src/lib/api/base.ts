@@ -158,10 +158,11 @@ export abstract class BaseOrderAPI<T, TCreate, TUpdate, TItem, TStatistics, TSum
      * @param notes 备注（可选）
      * @returns 更新后的订单
      */
-    async changeStatus(orderId: number, status: string, notes?: string): Promise<T> {
+    async changeStatus(orderId: number, status: string, notes?: string, force?: boolean): Promise<T> {
         return this.client.post<T>(`${this.basePath}${orderId}/change_status/`, {
             status,
-            notes
+            notes,
+            ...(force !== undefined ? { force } : {}),
         });
     }
 
