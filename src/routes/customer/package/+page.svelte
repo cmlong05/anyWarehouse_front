@@ -99,6 +99,12 @@
         return volume > 0 ? formatCompactNumber(pkg.volume) : '-';
     }
 
+    function formatCost(value: string | number | undefined | null): string {
+        const num = safeParseFloat(value, NaN);
+        if (Number.isNaN(num) || num === 0) return '-';
+        return `¥${formatNumber(num)}`;
+    }
+
     function formatMonthDay(value: string | Date | undefined | null): string {
         if (!value) return '-';
         const d = value instanceof Date ? value : new Date(value);
@@ -178,6 +184,8 @@
         { key: 'total_quantity', title: '总数量', align: 'right' as const, width: '80px' },
         { key: 'weight', title: '重量 (kg)', align: 'right' as const, width: '90px' },
         { key: 'volume', title: '体积', align: 'right' as const, width: '80px' },
+        { key: 'estimated_shipping_cost', title: '预估运费', align: 'right' as const, width: '90px' },
+        { key: 'shipping_cost', title: '实际运费', align: 'right' as const, width: '90px' },
         { key: 'created_at', title: '创建时间', width: '80px' },
         { key: '_actions', title: '操作', align: 'center' as const, width: '60px' },
     ];
@@ -187,7 +195,7 @@
     <title>包裹管理 - AnyWarehouse</title>
 </svelte:head>
 
-<PageContainer py="sm">
+<PageContainer py="sm" maxWidth="full">
     <PageHeader title="包裹管理" mb="none">
         {#snippet actions()}
             <button
@@ -275,6 +283,10 @@
                 {getDisplayWeight(item)}
             {:else if column.key === 'volume'}
                 {getDisplayVolume(item)}
+            {:else if column.key === 'estimated_shipping_cost'}
+                <span class="text-sm">{formatCost(item.estimated_shipping_cost)}</span>
+            {:else if column.key === 'shipping_cost'}
+                <span class="text-sm">{formatCost(item.shipping_cost)}</span>
             {:else if column.key === 'created_at'}
                 <span class="text-sm text-gray-500 whitespace-nowrap">{formatMonthDay(item.created_at)}</span>
             {:else if column.key === '_actions'}
