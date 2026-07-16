@@ -10,7 +10,8 @@
     import { customerAPI, salesOrderAPI } from '$lib/api';
     import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
     import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
-	import { Alert, Loading } from '$lib/components';
+    import { getErrorMessage } from '$lib/utils/errors';
+	import { Alert, Loading, ConfirmModal } from '$lib/components';
     import { 
         OrderDetailHeader, 
         OrderInfoGrid, 
@@ -41,6 +42,39 @@
         statusMap: SALES_STATUS_MAP,
         statusTransitions: SALES_STATUS_TRANSITIONS,
     });
+
+    // 强制交付二次确认弹窗
+    let showForceModal = $state(false);
+    let forcePendingCount = $state(0);
+
+    async function handleStatusChange(status: string) {
+        if (status === 'delivered' && orderDetail.order) {
+            const pendingCount = orderDetail.order.items.filter(
+                i => i.quantity - i.quantity_processed > 0
+            ).length;
+            if (pendingCount > 0) {
+                const statusLabel = SALES_STATUS_MAP[status]?.label || status;
+                if (!confirm(`确定要将订单状态变更为"${statusLabel}"吗？`)) return;
+                forcePendingCount = pendingCount;
+                showForceModal = true;
+                return;
+            }
+        }
+        await orderDetail.changeStatus(status as any);
+    }
+
+    async function confirmForceDeliver() {
+        orderDetail.updating = true;
+        try {
+            const updated = await salesOrderAPI.changeStatus(orderId, 'delivered', undefined, true);
+            orderDetail.order = updated;
+        } catch (err) {
+            orderDetail.error = getErrorMessage(err, '强制交付失败');
+        } finally {
+            orderDetail.updating = false;
+            showForceModal = false;
+        }
+    }
 
     // 发货弹窗
     const shipModal = useShipModal<SalesOrderItem>({
@@ -350,7 +384,7 @@
                 onEdit={editOrder}
                 onDelete={orderDetail.deleteOrder}
                 onCopy={copyOrder}
-                onStatusChange={(status) => orderDetail.changeStatus(status as string)}
+                onStatusChange={(status) => handleStatusChange(status as string)}
             />
         {#if orderDetail.order}
             {@const rollbackTransitions = orderDetail.getAvailableTransitions().filter(t => t.rollback)}
@@ -588,4 +622,16 @@
     onClose={shipModal.closeModal}
     onConfirm={shipModal.confirmShip}
     onNotesChange={(v) => shipModal.notes = v}
+/>
+
+<!-- 强制交付二次确认弹窗 -->
+<ConfirmModal
+    isOpen={showForceModal}
+    title="强制完成交付"
+    message={`还有 ${forcePendingCount} 条明细未建发货单/未发完。确定强制完成交付吗？明细将保持实际发货数量，订单金额不变。`}
+    confirmText="强制交付"
+    cancelText="取消"
+    loading={orderDetail.updating}
+    onConfirm={confirmForceDeliver}
+    onCancel={() => showForceModal = false}
 />

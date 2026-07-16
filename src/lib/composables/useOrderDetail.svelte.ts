@@ -167,6 +167,7 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
         get error() { return error; },
         set error(value) { error = value; },
         get updating() { return updating; },
+        set updating(value) { updating = value; },
         loadOrder,
         deleteOrder,
         changeStatus,
