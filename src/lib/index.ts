@@ -502,7 +502,7 @@ export interface PurchaseOrderItem {
     sku: string;
     item_name: string;
     quantity: number;
-    quantity_received: number;
+    quantity_processed: number;
     quantity_pending: number;
     unit_price: string;
     line_total: string;
@@ -516,7 +516,7 @@ export interface PurchaseOrderItem {
     };
     expected_delivery: string | null;
     notes: string;
-    is_fully_received: boolean;
+    is_fully_processed: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -657,10 +657,10 @@ export interface ReceiveOrderRequest {
 export interface PurchaseOrderStatistics {
     total_items: number;
     total_quantity: number;
-    total_received: number;
+    total_processed: number;
     total_pending: number;
-    fully_received_items: number;
-    partially_received_items: number;
+    fully_processed_items: number;
+    partially_processed_items: number;
     pending_items: number;
     order_amount: {
         subtotal: string;
@@ -886,7 +886,7 @@ export interface SalesOrderItem {
     item_name: string;
     item_name_en?: string;
     quantity: number;
-    quantity_shipped: number;
+    quantity_processed: number;
     quantity_prepared?: number;  // 已预备（已添加到confirmed/packed发货单但尚未发货）
     quantity_pending?: number;   // 原待发（= 订购 - 已发）
     quantity_pending_real?: number;  // 真实待发（= 订购 - 已发 - 已预备）
@@ -901,7 +901,7 @@ export interface SalesOrderItem {
     };
     expected_delivery: string | null;
     notes: string;
-    is_fully_shipped?: boolean;
+    is_fully_processed?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -1101,10 +1101,10 @@ export interface ShipOrderRequest {
 export interface SalesOrderStatistics {
     total_items: number;
     total_quantity: number;
-    total_shipped: number;
+    total_processed: number;
     total_pending: number;
-    fully_shipped_items: number;
-    partially_shipped_items: number;
+    fully_processed_items: number;
+    partially_processed_items: number;
     pending_items: number;
     order_amount: {
         subtotal: string;

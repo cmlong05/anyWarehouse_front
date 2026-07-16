@@ -146,7 +146,7 @@ export interface ShipmentItem {
     product_name: string;
     item?: number;
     quantity_pending?: string;
-    quantity_shipped?: string;  // 已发货数量（从订单同步）
+    quantity_processed?: string;  // 已发货数量（从订单同步）
     notes?: string;
     item_detail?: ItemDetail;
     created_at: string;

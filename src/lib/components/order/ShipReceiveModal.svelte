@@ -16,8 +16,7 @@
         sku: string;
         item_name: string;
         quantity: string | number;
-        quantity_shipped?: string | number;
-        quantity_received?: string | number;
+        quantity_processed?: string | number;
         quantity_pending?: string | number;
     }
 
@@ -120,7 +119,7 @@
     }
 
     function getProcessedQty(item: Item): number {
-        return Number(type === 'ship' ? (item.quantity_shipped || 0) : (item.quantity_received || 0));
+        return Number(item.quantity_processed || 0);
     }
 
     function getPendingQty(item: Item): number {

@@ -87,13 +87,13 @@
         if (!order?.items) return [];
 
         return order.items.map((item) => {
-            const shipped = safeParseFloat(item.quantity_shipped);
+            const processed = safeParseFloat(item.quantity_processed);
             const prepared = safeParseFloat(item.quantity_prepared);
             const pendingReal = safeParseFloat(item.quantity_pending_real);
 
             return {
                 ...item,
-                quantity_shipped: shipped + prepared,
+                quantity_processed: processed + prepared,
                 quantity_pending: pendingReal,
             };
         });

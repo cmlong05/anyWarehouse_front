@@ -38,13 +38,11 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         item_name: string;
         item_name_en?: string;
         quantity: string | number;
-        quantity_shipped?: string | number;
-        quantity_received?: string | number;
+        quantity_processed?: string | number;
         quantity_pending?: string | number;
         unit_price?: string | number;
         line_total?: string | number;
-        is_fully_shipped?: boolean;
-        is_fully_received?: boolean;
+        is_fully_processed?: boolean;
         item_detail?: ItemDetail;
     }
 
@@ -118,7 +116,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         if (key === 'currentStock') {
             return item.item_detail?.total_storage ?? 0;
         }
-        if (key === 'quantity' || key === 'quantity_shipped' || key === 'quantity_pending') {
+        if (key === 'quantity' || key === 'quantity_processed' || key === 'quantity_pending') {
             return safeParseFloat(item[key] as string | number);
         }
         const rawValue = (item as unknown as Record<string, unknown>)[key as string];
@@ -167,7 +165,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     const l = $derived({ ...defaultLabels, ...labels } as Required<Labels>);
 
     function getShippedQty(item: OrderItem): number {
-        return safeParseFloat(type === 'sales' ? item.quantity_shipped : item.quantity_received);
+        return safeParseFloat(item.quantity_processed);
     }
 
     function getPendingQty(item: OrderItem): number {
@@ -175,7 +173,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     }
 
     function isFullyProcessed(item: OrderItem): boolean {
-        return type === 'sales' ? !!item.is_fully_shipped : !!item.is_fully_received;
+        return !!item.is_fully_processed;
     }
 
     function getCurrentStock(section: GroupedSection): number | null {
@@ -263,8 +261,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                     const avgUnit = totalQty > 0
                         ? totalLine / totalQty
                         : variants.reduce((sum, v) => sum + safeParseFloat(v.unit_price), 0) / variants.length;
-                    const allShipped = variants.every((v) => !!v.is_fully_shipped);
-                    const allReceived = variants.every((v) => !!v.is_fully_received);
+                    const allProcessed = variants.every((v) => !!v.is_fully_processed);
                     result.push({
                         type: 'parent',
                         item: {
@@ -273,17 +270,15 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             sku: firstVariant.item_detail?.parent_item_sku || '',
                             item_name: firstVariant.item_detail?.parent_item_name || '',
                             quantity: totalQty.toString(),
-                            quantity_shipped: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_shipped), 0).toString(),
-                            quantity_received: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_received), 0).toString(),
+                            quantity_processed: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_processed), 0).toString(),
                             quantity_pending: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_pending), 0).toString(),
                             unit_price: avgUnit.toString(),
                             line_total: totalLine.toString(),
-                            is_fully_shipped: allShipped,
-                            is_fully_received: allReceived,
+                            is_fully_processed: allProcessed,
                         } as OrderItem,
                         parentId,
                         variantCount: variants.length,
-                        allVariantsProcessed: type === 'sales' ? allShipped : allReceived,
+                        allVariantsProcessed: allProcessed,
                     });
                     
                     // 插入变体子项
@@ -337,7 +332,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
 
         cols.push(
             { key: 'quantity', title: l.quantity, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: type === 'sales' ? 'quantity_shipped' : 'quantity_received', title: type === 'sales' ? l.shipped : l.received, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+            { key: 'quantity_processed', title: type === 'sales' ? l.shipped : l.received, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
             { key: 'quantity_pending', title: type === 'sales' ? l.pendingShip : l.pendingReceive, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' }
         );
 
@@ -477,9 +472,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                         {/if}
                     {:else if column.key === 'quantity'}
                         {formatNumber(rowItem.quantity)}
-                    {:else if column.key === 'quantity_shipped'}
-                        {formatNumber(shipped)}
-                    {:else if column.key === 'quantity_received'}
+                    {:else if column.key === 'quantity_processed'}
                         {formatNumber(shipped)}
                     {:else if column.key === 'quantity_pending'}
                         <span class={pending > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}>{formatNumber(pending)}</span>

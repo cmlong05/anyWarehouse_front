@@ -180,8 +180,7 @@ export interface ShipItem {
     id: number;
     quantity_pending?: number | string;
     quantity?: number | string;
-    quantity_shipped?: number | string;
-    quantity_received?: number | string;
+    quantity_processed?: number | string;
 }
 
 export function useShipModal<T extends ShipItem>(options: {

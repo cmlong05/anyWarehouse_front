@@ -13,7 +13,7 @@ export interface ShipmentPlanItem {
     sku: string;
     itemName: string;
     quantityOrdered: number;
-    quantityShipped: number;
+    quantityProcessed: number;
     quantityPrepared: number;
     quantityPendingReal: number;
     quantityPlan: number;
@@ -123,8 +123,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                 planItems = shipment.items.map(item => {
                     const orderItem = availableOrderItems.find(oi => oi.sku === item.sku);
                     const qty = safeParseFloat(item.quantity);
-                    const qtyShipped = safeParseFloat(item.quantity_shipped);
-                    const editableQty = qty - qtyShipped;  // 不再需要 quantity_packed
+                    const qtyProcessed = safeParseFloat(item.quantity_processed);
+                    const editableQty = qty - qtyProcessed;  // 不再需要 quantity_packed
                     
                     return {
                         id: `plan_${item.id}_${Date.now()}`,
@@ -132,7 +132,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                         sku: item.sku,
                         itemName: item.product_name,
                         quantityOrdered: Math.round(safeParseFloat(orderItem?.quantity, qty)),
-                        quantityShipped: Math.round(qtyShipped),
+                        quantityProcessed: Math.round(qtyProcessed),
                         quantityPrepared: Math.round(safeParseFloat(orderItem?.quantity_prepared)),
                         quantityPendingReal: Math.round(editableQty > 0 ? editableQty : 0),
                         quantityPlan: Math.round(editableQty > 0 ? editableQty : 0),
@@ -261,7 +261,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
             sku: orderItem.sku,
             itemName: orderItem.item_name,
             quantityOrdered: Math.round(safeParseFloat(orderItem.quantity)),
-            quantityShipped: Math.round(safeParseFloat(orderItem.quantity_shipped)),
+            quantityProcessed: Math.round(safeParseFloat(orderItem.quantity_processed)),
             quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
             quantityPendingReal: Math.round(pendingReal),
             quantityPlan: defaultPlanQty,
@@ -285,7 +285,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     sku: orderItem.sku,
                     itemName: orderItem.item_name,
                     quantityOrdered: Math.round(safeParseFloat(orderItem.quantity)),
-                    quantityShipped: Math.round(safeParseFloat(orderItem.quantity_shipped)),
+                    quantityProcessed: Math.round(safeParseFloat(orderItem.quantity_processed)),
                     quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
                     quantityPendingReal: Math.round(pendingReal),
                     quantityPlan: defaultPlanQty,
