@@ -887,6 +887,7 @@ export interface SalesOrderItem {
     item_name_en?: string;
     quantity: number;
     quantity_processed: number;
+    quantity_in_shipments?: number;  // 已建发货单：所有非取消发货单的 ShipmentItem 计划数量之和
     quantity_prepared?: number;  // 已预备（已添加到confirmed/packed发货单但尚未发货）
     quantity_pending?: number;   // 原待发（= 订购 - 已发）
     quantity_pending_real?: number;  // 真实待发（= 订购 - 已发 - 已预备）

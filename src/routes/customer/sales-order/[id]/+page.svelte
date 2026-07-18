@@ -120,17 +120,11 @@
         const order = orderDetail.order;
         if (!order?.items) return [];
 
-        return order.items.map((item) => {
-            const processed = safeParseFloat(item.quantity_processed);
-            const prepared = safeParseFloat(item.quantity_prepared);
-            const pendingReal = safeParseFloat(item.quantity_pending_real);
-
-            return {
-                ...item,
-                quantity_processed: processed + prepared,
-                quantity_pending: pendingReal,
-            };
-        });
+        return order.items.map((item) => ({
+            ...item,
+            quantity_processed: safeParseFloat(item.quantity_in_shipments ?? 0),
+            quantity_pending: safeParseFloat(item.quantity_pending_real),
+        }));
     });
 
     const shippingInfoItems = $derived.by(() => {
@@ -268,10 +262,13 @@
     });
 
     // 反向同步：按行由发货单推进订单数量
+    const TERMINAL_STATUSES = ['delivered', 'cancelled'];
+    let isTerminal = $derived(TERMINAL_STATUSES.includes(orderDetail.order?.status ?? ''));
     let reverseSyncLoading = $state<Record<string, boolean>>({});
     let reverseSyncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
     let reverseSyncError = $state<string | null>(null);
 
+    //反向同步：按行由发货单推进订单数量变更
     async function reverseSyncItem(item: { sku: string }) {
         if (!orderId || reverseSyncLoading[item.sku]) return;
         reverseSyncResult = null;
@@ -281,7 +278,15 @@
             const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku, allowDecrease: true });
             reverseSyncResult = result;
             if (result.updated_items.length > 0) {
-                await orderDetail.loadOrder();
+                // 直接原地更新 orderDetail.order.items 中对应行的 quantity，
+                // 避免 loadOrder({ silent: true }) 因 $derived.by 无法追踪
+                // 普通对象 getter 内 $state 变更而导致 UI 不刷新的问题。
+                for (const updated of result.updated_items) {
+                    const target = orderDetail.order?.items?.find(i => i.sku === updated.sku);
+                    if (target) {
+                        target.quantity = parseInt(updated.new_qty);
+                    }
+                }
             }
         } catch (e: unknown) {
             reverseSyncError = e instanceof Error ? e.message : '同步失败，请重试';
@@ -354,7 +359,7 @@
             </button>
             <button 
                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                onclick={orderDetail.loadOrder}
+                onclick={() => orderDetail.loadOrder()}
             >
                 重试
             </button>
@@ -546,7 +551,7 @@
                 pending: '待处理',
                 noItems: '暂无明细项',
             }}
-            onReverseSync={reverseSyncItem}
+            onReverseSync={isTerminal ? undefined : reverseSyncItem}
             reverseSyncLoading={reverseSyncLoading}
         />
 

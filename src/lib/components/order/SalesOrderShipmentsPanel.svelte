@@ -37,7 +37,7 @@
         syncError = null;
         syncLoading = true;
         try {
-            const result = await salesOrderAPI.syncQuantities(order.id, { allowDecrease: true });
+            const result = await salesOrderAPI.syncQuantities(order.id, { allowDecrease: false });
             syncResult = result;
             if (result.updated_items.length > 0) {
                 await onOrderReload();
@@ -70,7 +70,7 @@
                     </svg>
                     同步中...
                 {:else}
-                    🔄 同步订单数量
+                    🔄 同步全部订单数量（只增不减）
                 {/if}
             </button>
         </div>

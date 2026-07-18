@@ -39,6 +39,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         item_name_en?: string;
         quantity: string | number;
         quantity_processed?: string | number;
+        quantity_in_shipments?: number;  // 已建发货单：与同步口径一致
         quantity_pending?: string | number;
         unit_price?: string | number;
         line_total?: string | number;
@@ -116,7 +117,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         if (key === 'currentStock') {
             return item.item_detail?.total_storage ?? 0;
         }
-        if (key === 'quantity' || key === 'quantity_processed' || key === 'quantity_pending') {
+        if (key === 'quantity' || key === 'quantity_processed' || key === 'quantity_in_shipments' || key === 'quantity_pending') {
             return safeParseFloat(item[key] as string | number);
         }
         const rawValue = (item as unknown as Record<string, unknown>)[key as string];
@@ -165,7 +166,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     const l = $derived({ ...defaultLabels, ...labels } as Required<Labels>);
 
     function getShippedQty(item: OrderItem): number {
-        return safeParseFloat(item.quantity_processed);
+        return safeParseFloat(item.quantity_in_shipments ?? item.quantity_processed);
     }
 
     function getPendingQty(item: OrderItem): number {
@@ -270,7 +271,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             sku: firstVariant.item_detail?.parent_item_sku || '',
                             item_name: firstVariant.item_detail?.parent_item_name || '',
                             quantity: totalQty.toString(),
-                            quantity_processed: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_processed), 0).toString(),
+                            quantity_in_shipments: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_in_shipments ?? 0), 0),
                             quantity_pending: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_pending), 0).toString(),
                             unit_price: avgUnit.toString(),
                             line_total: totalLine.toString(),

@@ -125,7 +125,7 @@
         <Alert error={orderDetail.error} onDismiss={() => orderDetail.error = null} />
         <div class="flex gap-4 mt-4">
             <button class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" onclick={orderDetail.goBack}>返回列表</button>
-            <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" onclick={orderDetail.loadOrder}>重试</button>
+            <button class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" onclick={() => orderDetail.loadOrder()}>重试</button>
         </div>
     {:else if orderDetail.order}
         {@const order = orderDetail.order}

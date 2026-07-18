@@ -101,7 +101,7 @@ export interface UseOrderDetailReturn<T, S> {
     loading: boolean;
     error: string | null;
     updating: boolean;
-    loadOrder: () => Promise<void>;
+    loadOrder: (opts?: { silent?: boolean }) => Promise<void>;
     deleteOrder: () => Promise<void>;
     changeStatus: (newStatus: S) => Promise<void>;
     goBack: () => void;
@@ -116,15 +116,16 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
     let error = $state<string | null>(null);
     let updating = $state(false);
 
-    async function loadOrder() {
-        loading = true;
+    async function loadOrder(opts?: { silent?: boolean }) {
+        // silent 模式：后台刷新数据，不触发整页 Loading 状态
+        if (!opts?.silent) loading = true;
         error = null;
         try {
             order = await options.api.get(options.orderId);
         } catch (err) {
             error = getErrorMessage(err, '加载订单失败');
         } finally {
-            loading = false;
+            if (!opts?.silent) loading = false;
         }
     }
 
