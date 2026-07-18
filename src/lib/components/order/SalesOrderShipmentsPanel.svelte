@@ -70,7 +70,7 @@
                     </svg>
                     同步中...
                 {:else}
-                    🔄 同步全部订单数量（只增不减）
+                    <span class="inline-block" style="transform: scaleX(-1)">↩️</span> 同步全部订单数量（只增不减）
                 {/if}
             </button>
         </div>
