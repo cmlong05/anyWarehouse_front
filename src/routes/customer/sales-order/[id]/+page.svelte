@@ -278,9 +278,8 @@
             const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku, allowDecrease: true });
             reverseSyncResult = result;
             if (result.updated_items.length > 0) {
-                // 直接原地更新 orderDetail.order.items 中对应行的 quantity，
-                // 避免 loadOrder({ silent: true }) 因 $derived.by 无法追踪
-                // 普通对象 getter 内 $state 变更而导致 UI 不刷新的问题。
+                // 原地更新 item.quantity，确保 $derived.by 中的表格数据立即刷新
+                // （Svelte 5 的 $derived.by 可能无法追踪通过 getter 访问的 $state 变更）
                 for (const updated of result.updated_items) {
                     const target = orderDetail.order?.items?.find(i => i.sku === updated.sku);
                     if (target) {
@@ -288,6 +287,9 @@
                     }
                 }
             }
+            // 重新加载完整订单，刷新 total_amount 等订单级汇总字段
+            // silent 模式：不触发整页 Loading，仅局部更新
+            await orderDetail.loadOrder({ silent: true });
         } catch (e: unknown) {
             reverseSyncError = e instanceof Error ? e.message : '同步失败，请重试';
         } finally {
