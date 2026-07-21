@@ -269,7 +269,7 @@
             <ItemDescriptionCard description={data.itemDetail.item.description} />
 
             <!-- 标签页内容 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
                 <ItemTabsNav
                     {activeTab}
                     {isVariantTemplate}
