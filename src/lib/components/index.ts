@@ -30,6 +30,7 @@ export {
 	BulkCategoryChangeModal,
 	ItemComponentManager,
 	ItemExternalLinksTab,
+	ItemAssociationsTab,
 	ItemQuotationsTab,
 	ItemVariantManager,
 	VariantAttributeBadge,

@@ -16,6 +16,7 @@
     import { ItemComponentManager } from '$lib/components';
     import { ItemVariantManager } from '$lib/components';
     import { ItemExternalLinksTab } from '$lib/components';
+    import { ItemAssociationsTab } from '$lib/components';
     import { ItemQuotationsTab } from '$lib/components';
     import OutboundConfirmModal from '$lib/components/item/OutboundConfirmModal.svelte';
     import TransferConfirmModal from '$lib/components/item/TransferConfirmModal.svelte';
@@ -39,6 +40,7 @@
     }>();
 
     let platformLinkCount = $state(untrack(() => data.itemDetail.item.external_links?.length ?? 0));
+    let associationCount = $state(untrack(() => data.itemDetail.item.associated_items?.length ?? 0));
 
     // 判断是否为变体母版（处理字符串和布尔值）
     const isVariantTemplate = $derived(
@@ -276,6 +278,7 @@
                     hasVariantTab={isVariantTemplate || Boolean(data.variantInfo?.is_variant)}
                     variantCount={data.variantInfo?.variants?.length ?? 0}
                     {platformLinkCount}
+                    {associationCount}
                     onChange={(tab) => { activeTab = tab; }}
                 />
 
@@ -353,6 +356,14 @@
                             ebayBaseUrl={data.ebayBaseUrl}
                             initialLinks={data.itemDetail.item.external_links ?? []}
                             bind:count={platformLinkCount}
+                        />
+                    {/if}
+
+                    {#if activeTab === 'associations'}
+                        <ItemAssociationsTab
+                            itemId={data.itemDetail.item.id}
+                            initialItems={data.itemDetail.item.associated_items ?? []}
+                            bind:count={associationCount}
                         />
                     {/if}
                 </div>

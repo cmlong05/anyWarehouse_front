@@ -229,6 +229,12 @@ export interface Item extends BaseItem  {
         sku_suffix: string;
         attributes: { id: number; attribute_code: string; attribute_name: string; name: string; color_hex?: string | null }[];
     } | null;
+    associated_items?: {
+        id: number;
+        SKU: string;
+        name: string;
+        total_storage: number;
+    }[];
 }
 
 export interface ItemSet{

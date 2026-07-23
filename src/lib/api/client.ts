@@ -123,7 +123,10 @@ export class ApiClient {
                 throw error;
             }
 
-            return await response.json();
+            // 处理空响应体（204 No Content 等）
+            const text = await response.text();
+            if (!text) return undefined as T;
+            return JSON.parse(text);
         } catch (error) {
             clearTimeout(timeoutId);
             

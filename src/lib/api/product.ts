@@ -27,6 +27,13 @@ export interface CategoryEmptyCheckResponse {
     children_count: number;
 }
 
+export interface ItemAssociationBrief {
+    id: number;
+    SKU: string;
+    name: string;
+    total_storage: number;
+}
+
 // ========== Item API ==========
 
 export class ItemAPI extends BaseAPI<Item, ItemFormData> {
@@ -64,6 +71,24 @@ export class ItemAPI extends BaseAPI<Item, ItemFormData> {
     /** 删除分类 */
     async deleteCategory(categoryId: number): Promise<void> {
         return this.client.deleteNoContent(`/product/category/${categoryId}/`);
+    }
+
+    /** 获取配套物品 */
+    async getAssociations(itemId: number): Promise<ItemAssociationBrief[]> {
+        return this.client.get(`/product/items/${itemId}/associations/`);
+    }
+
+    /** 添加配套物品 */
+    async addAssociations(itemId: number, itemIds: number[]): Promise<void> {
+        return this.client.post(`/product/items/${itemId}/associations/`, { item_ids: itemIds });
+    }
+
+    /** 移除配套物品 */
+    async removeAssociations(itemId: number, itemIds: number[]): Promise<void> {
+        return this.client['request']<void>(`/product/items/${itemId}/associations/`, {
+            method: 'DELETE',
+            body: JSON.stringify({ item_ids: itemIds }),
+        });
     }
 }
 

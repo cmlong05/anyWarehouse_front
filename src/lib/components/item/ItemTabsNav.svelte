@@ -4,7 +4,7 @@
 - `routes/item/[slug]/+page.svelte`
 -->
 <script lang="ts">
-    export type ItemDetailTab = 'overview' | 'bom' | 'quotations' | 'variants' | 'platforms';
+    export type ItemDetailTab = 'overview' | 'bom' | 'quotations' | 'variants' | 'platforms' | 'associations';
 
     interface Props {
         activeTab: ItemDetailTab;
@@ -12,6 +12,7 @@
         hasVariantTab: boolean;
         variantCount?: number;
         platformLinkCount?: number;
+        associationCount?: number;
         onChange: (tab: ItemDetailTab) => void;
     }
 
@@ -21,6 +22,7 @@
         hasVariantTab,
         variantCount = 0,
         platformLinkCount = 0,
+        associationCount = 0,
         onChange,
     }: Props = $props();
 
@@ -53,10 +55,16 @@
             {/if}
         </button>
     {/if}
-    <button type="button" onclick={() => onChange('platforms')} class={tabClass('platforms', true)}>
+    <button type="button" onclick={() => onChange('platforms')} class={tabClass('platforms')}>
         销售平台
         {#if platformLinkCount > 0}
             <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">{platformLinkCount}</span>
+        {/if}
+    </button>
+    <button type="button" onclick={() => onChange('associations')} class={tabClass('associations', true)}>
+        关联物品
+        {#if associationCount > 0}
+            <span class="ml-1.5 px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">{associationCount}</span>
         {/if}
     </button>
 </div>

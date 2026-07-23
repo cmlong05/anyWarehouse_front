@@ -59,6 +59,8 @@ export {
     itemBOMAPI,
 } from './product';
 
+export type { ItemAssociationBrief } from './product';
+
 // 导出发货相关 API
 export {
     TrackingNumberAPI,

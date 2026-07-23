@@ -1,5 +1,6 @@
 export { default as AttributeManager } from './AttributeManager.svelte';
 export { default as BulkCategoryChangeModal } from './BulkCategoryChangeModal.svelte';
+export { default as ItemAssociationsTab } from './ItemAssociationsTab.svelte';
 export { default as ItemComponentManager } from './ItemComponentManager.svelte';
 export { default as ItemDescriptionCard } from './ItemDescriptionCard.svelte';
 export { default as ItemExternalLinksTab } from './ItemExternalLinksTab.svelte';
