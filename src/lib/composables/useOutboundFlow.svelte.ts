@@ -118,5 +118,13 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
         request,
         cancel,
         confirm,
+        reset() {
+            pending = null;
+            processing = false;
+            quantityValues = {};
+            quantityFlash = {};
+            quantityDelta = {};
+            removingIds = new Set();
+        },
     };
 }

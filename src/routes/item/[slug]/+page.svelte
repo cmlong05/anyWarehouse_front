@@ -103,6 +103,34 @@
     let disassemblyPreview = $state<any>(null);
     let disassemblyLoading = $state(false);
     let transferFlash = $state<Record<number, number>>({});
+    let bomVersion = $state(0);
+
+    // 当路由切换到新物品时重置本地状态
+    let _itemId = $state(untrack(() => data.itemDetail.item.id));
+    $effect(() => {
+        const newId = data.itemDetail.item.id;
+        if (newId !== _itemId) {
+            _itemId = newId;
+            currentStorages = [...data.itemDetail.storages];
+            currentTotalStorage = data.itemDetail.item.total_storage ?? 0;
+            platformLinkCount = data.itemDetail.item.external_links?.length ?? 0;
+            associationCount = data.itemDetail.item.associated_items?.length ?? 0;
+            activeTab = (
+                data.itemDetail.item.is_variant_template === true ||
+                data.itemDetail.item.is_variant_template === 'true' ||
+                data.itemDetail.item.is_variant_template === 1
+            ) ? 'variants' : 'overview';
+            transferFlash = {};
+            bomVersion = 0;
+            showAssembly = false;
+            assemblyPreview = null;
+            showDisassembly = false;
+            disassemblyPreview = null;
+            transferPending = null;
+            transferError = '';
+            outbound.reset();
+        }
+    });
 
     function requestTransferByDrop(fromStorageId: number, toStorageId: number) {
         const source = currentStorages.find((s: StorageContainer) => s.id === fromStorageId);
@@ -229,6 +257,7 @@
         showAssembly = false;
         assemblyPreview = null;
         await refreshInventory();
+        bomVersion++;
     }}
 />
 
@@ -245,6 +274,7 @@
         showDisassembly = false;
         disassemblyPreview = null;
         await refreshInventory();
+        bomVersion++;
     }}
 />
 
@@ -329,6 +359,7 @@
                             itemId={data.itemDetail.item.id}
                             itemSKU={data.itemDetail.item.SKU}
                             itemName={data.itemDetail.item.name}
+                            {bomVersion}
                             onAssembly={async () => {
                                 assemblyLoading = true;
                                 try {

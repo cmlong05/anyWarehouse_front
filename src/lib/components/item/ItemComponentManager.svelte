@@ -15,9 +15,11 @@
         itemName: string;
         onAssembly?: () => void;
         onDisassembly?: () => void;
+        /** 递增以触发 BOM 数据刷新（组装/拆分后） */
+        bomVersion?: number;
     }
 
-    let { itemId, itemSKU, itemName, onAssembly, onDisassembly }: Props = $props();
+    let { itemId, itemSKU, itemName, onAssembly, onDisassembly, bomVersion = 0 }: Props = $props();
 
     // 使用BOM管理逻辑 - 使用 $derived 包裹以响应 props 变化
     const bom = $derived(useBOMManager(itemId, itemSKU));
@@ -61,8 +63,10 @@
         return bom.filterSearchResults(results);
     }
 
-    // 监听 itemId 变化，自动重新加载数据
+    // 监听 itemId 或 bomVersion 变化，自动重新加载数据
     $effect(() => {
+        // 引用 bomVersion 以建立依赖
+        void bomVersion;
         if (itemId) {
             bom.loadData();
         }
