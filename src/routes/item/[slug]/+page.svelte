@@ -58,9 +58,12 @@
         )) ? 'variants' : 'overview'
     );
 
+    // 库存数据独立管理，避免通过 data 传播触发整页刷新
+    let currentStorages = $state<StorageContainer[]>(untrack(() => [...data.itemDetail.storages]));
+    let currentTotalStorage = $state(untrack(() => data.itemDetail.item.total_storage ?? 0));
+
     const outbound = useOutboundFlow({
-        getStorages: () => data.itemDetail.storages,
-        onChange: () => { data = { ...data }; },
+        getStorages: () => currentStorages,
     });
 
     const inventoryCheck = useInventoryCheck({
@@ -102,8 +105,8 @@
     let transferFlash = $state<Record<number, number>>({});
 
     function requestTransferByDrop(fromStorageId: number, toStorageId: number) {
-        const source = data.itemDetail.storages.find((s: StorageContainer) => s.id === fromStorageId);
-        const target = data.itemDetail.storages.find((s: StorageContainer) => s.id === toStorageId);
+        const source = currentStorages.find((s: StorageContainer) => s.id === fromStorageId);
+        const target = currentStorages.find((s: StorageContainer) => s.id === toStorageId);
         if (!source || !target || source.id === target.id || source.quantity <= 0) return;
         transferError = '';
         transferPending = {
@@ -126,6 +129,15 @@
     async function refreshItemDetail() {
         const itemDetail: ItemSet = await apiClient.get<ItemSet>(`/product/item/${data.itemDetail.item.id}/`);
         data = { ...data, itemDetail };
+        // 同步库存状态
+        currentStorages = [...itemDetail.storages];
+        currentTotalStorage = itemDetail.item.total_storage ?? 0;
+    }
+
+    async function refreshInventory() {
+        const refreshed: ItemSet = await apiClient.get<ItemSet>(`/product/item/${data.itemDetail.item.id}/`);
+        currentStorages = [...refreshed.storages];
+        currentTotalStorage = refreshed.item.total_storage ?? 0;
     }
 
     async function confirmTransfer(quantity: number) {
@@ -179,8 +191,8 @@
     }
 
     $effect(() => {
-        if (data.itemDetail?.storages) {
-            outbound.ensureQuantityValues(data.itemDetail.storages);
+        if (currentStorages.length > 0) {
+            outbound.ensureQuantityValues(currentStorages);
         }
     });
 </script>
@@ -211,12 +223,12 @@
     show={showAssembly}
     initialPreview={assemblyPreview}
     isLoading={assemblyLoading}
-    existingContainerId={data.itemDetail.storages?.[0]?.container_id ?? null}
+    existingContainerId={currentStorages?.[0]?.container_id ?? null}
     onClose={() => { showAssembly = false; assemblyPreview = null; }}
-    onSuccess={() => {
+    onSuccess={async () => {
         showAssembly = false;
         assemblyPreview = null;
-        data = { ...data };
+        await refreshInventory();
     }}
 />
 
@@ -227,12 +239,12 @@
     show={showDisassembly}
     initialPreview={disassemblyPreview}
     isLoading={disassemblyLoading}
-    existingSourceContainerId={data.itemDetail.storages?.[0]?.container_id ?? null}
+    existingSourceContainerId={currentStorages?.[0]?.container_id ?? null}
     onClose={() => { showDisassembly = false; disassemblyPreview = null; }}
-    onSuccess={() => {
+    onSuccess={async () => {
         showDisassembly = false;
         disassemblyPreview = null;
-        data = { ...data };
+        await refreshInventory();
     }}
 />
 
@@ -265,7 +277,7 @@
                 {isVariantTemplate}
                 variantInfo={data.variantInfo}
                 {displayPrice}
-                totalStock={data.itemDetail.item.total_storage ?? 0}
+                totalStock={currentTotalStorage}
             />
 
             <ItemDescriptionCard description={data.itemDetail.item.description} />
@@ -289,7 +301,7 @@
                             inventoryCheckedAt={data.itemDetail.item.inventory_checked_at}
                             inventoryCheckedFlash={inventoryCheck.flash}
                             isInventoryChecking={inventoryCheck.isChecking}
-                            storages={data.itemDetail.storages}
+                            storages={currentStorages}
                             quantityValues={outbound.quantityValues}
                             quantityFlash={outbound.quantityFlash}
                             quantityDelta={outbound.quantityDelta}
