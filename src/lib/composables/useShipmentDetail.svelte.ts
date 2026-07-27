@@ -33,9 +33,7 @@ export function getShipmentActions(): Record<string, ShipmentActionConfig[]> {
             { action: 'sync', label: '同步', variant: 'outline', confirmMessage: '确认要根据包裹实际装箱情况同步发货明细吗？' },
             { action: 'ship', label: '发货', variant: 'primary', confirmMessage: '确认要发货吗？' },
         ],
-        shipped: [
-            { action: 'deliver', label: '签收', variant: 'primary', confirmMessage: '确认已签收？' },
-        ],
+        shipped: [],
     };
 }
 
@@ -114,9 +112,6 @@ export function useShipmentDetail(shipmentId: () => number) {
                     break;
                 case 'ship':
                     await shipmentAPI.ship(shipment.id);
-                    break;
-                case 'deliver':
-                    await shipmentAPI.deliver(shipment.id);
                     break;
                 case 'cancel':
                     await shipmentAPI.cancel(shipment.id);

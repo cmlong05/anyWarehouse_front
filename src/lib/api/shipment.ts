@@ -134,11 +134,6 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
         return this.client.post<Shipment>(`${this.basePath}${id}/ship/`, data || {});
     }
 
-    /** 签收 */
-    async deliver(id: number): Promise<Shipment> {
-        return this.client.post<Shipment>(`${this.basePath}${id}/deliver/`, {});
-    }
-
     /** 取消发货单 */
     async cancel(id: number, reason?: string): Promise<Shipment> {
         return this.client.post<Shipment>(`${this.basePath}${id}/cancel/`, { reason });
