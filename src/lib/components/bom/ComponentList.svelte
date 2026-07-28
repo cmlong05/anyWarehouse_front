@@ -88,8 +88,9 @@
                     <div class="flex-1">
                         <div class="flex items-center gap-2 mb-1">
                             <a href="/item/{component.child_item}" class="font-medium text-blue-600 hover:underline">
-                                {component.child_item_detail.SKU} - {component.child_item_detail.name}
+                                {component.child_item_detail.SKU}
                             </a>
+                            <span class="font-medium"> - {component.child_item_detail.name}</span>
                             <span class="bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">× {component.quantity}</span>
                         </div>
                         {#if component.note}
