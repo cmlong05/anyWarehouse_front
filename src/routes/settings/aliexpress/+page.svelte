@@ -13,9 +13,13 @@
     let success = $state<string | null>(null);
 
     let aliexpressBaseUrl = $state('');
+    let aliexpressUrlSuffix = $state('');
     let ebayBaseUrl = $state('');
+    let ebayUrlSuffix = $state('');
     let savedAliexpressBaseUrl = $state('');
+    let savedAliexpressUrlSuffix = $state('');
     let savedEbayBaseUrl = $state('');
+    let savedEbayUrlSuffix = $state('');
     let aliexpressSampleId = $state('1005001234567890');
     let ebaySampleId = $state('123456789012');
     let updatedAt = $state('');
@@ -29,24 +33,28 @@
 
     const trimmedAliexpress = $derived(aliexpressBaseUrl.trim());
     const trimmedEbay = $derived(ebayBaseUrl.trim());
+    const trimmedAliexpressSuffix = $derived(aliexpressUrlSuffix.trim());
+    const trimmedEbaySuffix = $derived(ebayUrlSuffix.trim());
     const aliexpressUrlError = $derived(validateUrl(trimmedAliexpress));
     const ebayUrlError = $derived(validateUrl(trimmedEbay));
 
     const isDirty = $derived(
         trimmedAliexpress !== savedAliexpressBaseUrl ||
-        trimmedEbay !== savedEbayBaseUrl
+        trimmedAliexpressSuffix !== savedAliexpressUrlSuffix ||
+        trimmedEbay !== savedEbayBaseUrl ||
+        trimmedEbaySuffix !== savedEbayUrlSuffix
     );
     const canSave = $derived(isDirty && !aliexpressUrlError && !ebayUrlError && !saving);
 
-    function buildPreviewUrl(base: string, externalId: string, urlError: string | null): string {
+    function buildPreviewUrl(base: string, externalId: string, urlError: string | null, suffix: string = ''): string {
         const id = externalId.trim();
         if (!base || !id || urlError) return '';
         const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-        return `${normalizedBase}${encodeURIComponent(id)}`;
+        return `${normalizedBase}${encodeURIComponent(id)}${suffix}`;
     }
 
-    const aliexpressPreviewUrl = $derived(buildPreviewUrl(trimmedAliexpress, aliexpressSampleId, aliexpressUrlError));
-    const ebayPreviewUrl = $derived(buildPreviewUrl(trimmedEbay, ebaySampleId, ebayUrlError));
+    const aliexpressPreviewUrl = $derived(buildPreviewUrl(trimmedAliexpress, aliexpressSampleId, aliexpressUrlError, trimmedAliexpressSuffix));
+    const ebayPreviewUrl = $derived(buildPreviewUrl(trimmedEbay, ebaySampleId, ebayUrlError, trimmedEbaySuffix));
 
     function handleInput() {
         if (success) success = null;
@@ -54,7 +62,9 @@
 
     function resetChanges() {
         aliexpressBaseUrl = savedAliexpressBaseUrl;
+        aliexpressUrlSuffix = savedAliexpressUrlSuffix;
         ebayBaseUrl = savedEbayBaseUrl;
+        ebayUrlSuffix = savedEbayUrlSuffix;
         error = null;
         success = null;
     }
@@ -66,8 +76,12 @@
             const data = await systemSettingAPI.get();
             aliexpressBaseUrl = data.aliexpress_item_base_url || '';
             savedAliexpressBaseUrl = aliexpressBaseUrl.trim();
+            aliexpressUrlSuffix = data.aliexpress_item_url_suffix || '';
+            savedAliexpressUrlSuffix = aliexpressUrlSuffix.trim();
             ebayBaseUrl = data.ebay_item_base_url || '';
             savedEbayBaseUrl = ebayBaseUrl.trim();
+            ebayUrlSuffix = data.ebay_item_url_suffix || '';
+            savedEbayUrlSuffix = ebayUrlSuffix.trim();
             updatedAt = data.updated_at || '';
             updatedBy = data.updated_by_username || '-';
         } catch (err) {
@@ -87,12 +101,18 @@
         try {
             const data = await systemSettingAPI.update({
                 aliexpress_item_base_url: trimmedAliexpress,
+                aliexpress_item_url_suffix: trimmedAliexpressSuffix,
                 ebay_item_base_url: trimmedEbay,
+                ebay_item_url_suffix: trimmedEbaySuffix,
             });
             aliexpressBaseUrl = data.aliexpress_item_base_url || '';
             savedAliexpressBaseUrl = aliexpressBaseUrl.trim();
+            aliexpressUrlSuffix = data.aliexpress_item_url_suffix || '';
+            savedAliexpressUrlSuffix = aliexpressUrlSuffix.trim();
             ebayBaseUrl = data.ebay_item_base_url || '';
             savedEbayBaseUrl = ebayBaseUrl.trim();
+            ebayUrlSuffix = data.ebay_item_url_suffix || '';
+            savedEbayUrlSuffix = ebayUrlSuffix.trim();
             updatedAt = data.updated_at || updatedAt;
             updatedBy = data.updated_by_username || updatedBy;
             success = '平台链接设置已保存';
@@ -160,6 +180,25 @@
                         仅当链接平台为 AliExpress 且未填写完整 URL 时使用。留空表示禁用自动拼接。
                     </p>
                 </div>
+                <div>
+                    <label for="aliexpressUrlSuffix" class="block text-sm text-gray-700 mb-1">URL 后缀</label>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-400">{'.../'}<code class="text-xs">{'{external_id}'}</code></span>
+                        <input
+                            id="aliexpressUrlSuffix"
+                            type="text"
+                            autocomplete="off"
+                            spellcheck="false"
+                            class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300"
+                            bind:value={aliexpressUrlSuffix}
+                            oninput={handleInput}
+                            placeholder=".html"
+                        />
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        拼接在 external_id 后面的后缀，例如 AliExpress 通常需要 .html。
+                    </p>
+                </div>
                 <div class="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">
                     <div>
                         <label for="aliexpressSampleId" class="block text-xs font-medium text-gray-600 mb-1">预览 external_id</label>
@@ -213,6 +252,25 @@
                     {/if}
                     <p id="ebayHelp" class="mt-1 text-xs text-gray-500">
                         仅当链接平台为 eBay 且未填写完整 URL 时使用。留空表示禁用自动拼接。
+                    </p>
+                </div>
+                <div>
+                    <label for="ebayUrlSuffix" class="block text-sm text-gray-700 mb-1">URL 后缀</label>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-400">{'.../'}<code class="text-xs">{'{external_id}'}</code></span>
+                        <input
+                            id="ebayUrlSuffix"
+                            type="text"
+                            autocomplete="off"
+                            spellcheck="false"
+                            class="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-300"
+                            bind:value={ebayUrlSuffix}
+                            oninput={handleInput}
+                            placeholder="留空，通常不需要后缀"
+                        />
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        拼接在 external_id 后面的后缀，eBay 通常不需要。
                     </p>
                 </div>
                 <div class="rounded-md border border-gray-200 bg-gray-50 p-3 space-y-2">

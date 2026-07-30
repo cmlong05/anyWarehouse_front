@@ -35,7 +35,9 @@
             bestPrice: { price: string; supplier: string; quotation_id: number } | null;
             variantInfo: ItemVariantInfo | null;
             aliexpressBaseUrl?: string;
+            aliexpressUrlSuffix?: string;
             ebayBaseUrl?: string;
+            ebayUrlSuffix?: string;
         }
     }>();
 
@@ -396,7 +398,9 @@
                         <ItemExternalLinksTab
                             itemId={data.itemDetail.item.id}
                             aliexpressBaseUrl={data.aliexpressBaseUrl}
+                            aliexpressUrlSuffix={data.aliexpressUrlSuffix}
                             ebayBaseUrl={data.ebayBaseUrl}
+                            ebayUrlSuffix={data.ebayUrlSuffix}
                             initialLinks={data.itemDetail.item.external_links ?? []}
                             bind:count={platformLinkCount}
                         />

@@ -49,17 +49,21 @@ export async function load({ params, fetch }: { params: { slug: string }, fetch:
     }
 
     let aliexpressBaseUrl = '';
+    let aliexpressUrlSuffix = '';
     let ebayBaseUrl = '';
+    let ebayUrlSuffix = '';
     try {
         const settingsRes = await fetch(`${config.API_BASE_URL}/index/system-settings/`);
         if (settingsRes.ok) {
             const settingsData = await settingsRes.json();
             aliexpressBaseUrl = settingsData.aliexpress_item_base_url || '';
+            aliexpressUrlSuffix = settingsData.aliexpress_item_url_suffix || '';
             ebayBaseUrl = settingsData.ebay_item_base_url || '';
+            ebayUrlSuffix = settingsData.ebay_item_url_suffix || '';
         }
     } catch (e) {
         logger.error('Failed to fetch system settings:', e);
     }
     
-    return { itemDetail, quotations, bestPrice, variantInfo, aliexpressBaseUrl, ebayBaseUrl };
+    return { itemDetail, quotations, bestPrice, variantInfo, aliexpressBaseUrl, aliexpressUrlSuffix, ebayBaseUrl, ebayUrlSuffix };
 }

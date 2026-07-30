@@ -34,13 +34,17 @@
     let {
         itemId,
         aliexpressBaseUrl = '',
+        aliexpressUrlSuffix = '',
         ebayBaseUrl = '',
+        ebayUrlSuffix = '',
         initialLinks = [],
         count = $bindable(0),
     }: {
         itemId: number;
         aliexpressBaseUrl?: string;
+        aliexpressUrlSuffix?: string;
         ebayBaseUrl?: string;
+        ebayUrlSuffix?: string;
         initialLinks?: ItemExternalLink[];
         count?: number;
     } = $props();
@@ -94,13 +98,13 @@
             const base = aliexpressBaseUrl.trim();
             if (!base) return '#';
             const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-            return `${normalizedBase}${link.external_id}`;
+            return `${normalizedBase}${link.external_id}${aliexpressUrlSuffix}`;
         }
         if (link.platform === 'ebay' && link.external_id) {
             const base = ebayBaseUrl.trim();
             if (!base) return '#';
             const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-            return `${normalizedBase}${link.external_id}`;
+            return `${normalizedBase}${link.external_id}${ebayUrlSuffix}`;
         }
         return '#';
     }
