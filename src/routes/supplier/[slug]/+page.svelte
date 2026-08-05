@@ -125,7 +125,7 @@
     <title>{supplier?.name || '供应商详情'}</title>
 </svelte:head>
 
-<PageContainer maxWidth="lg">
+<PageContainer maxWidth="xl">
     {#if loading}
         <Loading text="加载中..." />
     {:else if !supplier}

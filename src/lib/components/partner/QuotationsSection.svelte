@@ -284,14 +284,14 @@
 
     const columns = $derived.by(() => {
         const baseColumns: TableColumn[] = [
-            { key: 'line_number', title: '#', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'relative' },
-            { key: 'item_sku', title: 'SKU', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', cellClass: 'font-mono' },
-            { key: 'item_name', title: '物品名称', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
-            { key: 'partner_sku', title: '合作方SKU', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'quantity_on_order', title: '在途', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'item_total_storage', title: '库存数量', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
-            { key: 'price', title: `单价${currency ? `（${currency}）` : ''}`, sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
-            { key: 'quantity', title: '数量', sortable: false, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer', noClick: true },
+            { key: 'line_number', title: '#', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'relative whitespace-nowrap' },
+            { key: 'item_sku', title: 'SKU', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'font-mono whitespace-nowrap' },
+            { key: 'item_name', title: '物品名称', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap max-w-[20ch] overflow-hidden text-ellipsis' },
+            { key: 'partner_sku', title: '合作方SKU', sortable: true, align: 'left' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
+            { key: 'quantity_on_order', title: '在途', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', cellClass: 'whitespace-nowrap' },
+            { key: 'item_total_storage', title: '库存数量', sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', noClick: true, cellClass: 'whitespace-nowrap' },
+            { key: 'price', title: `单价${currency ? `（${currency}）` : ''}`, sortable: true, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', noClick: true, cellClass: 'whitespace-nowrap' },
+            { key: 'quantity', title: '数量', sortable: false, align: 'right' as const, headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap', noClick: true, cellClass: 'whitespace-nowrap' },
         ];
 
         if (showStatus) {
@@ -300,7 +300,8 @@
                 title: '状态',
                 sortable: false,
                 align: 'center' as const,
-                headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer'
+                headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer whitespace-nowrap',
+                cellClass: 'whitespace-nowrap'
             });
         }
 
@@ -448,12 +449,12 @@
                         {/if}
                     {:else if column.key === 'item_name'}
                         {#if row.type === 'group' && row.group}
-                            {row.group.parentName}
+                            <span title={row.group.parentName} class="block truncate">{row.group.parentName}</span>
                         {:else}
                             <div>
-                                {quotation?.item_name || '-'}
+                                <span title={quotation?.item_name || ''} class="block truncate">{quotation?.item_name || '-'}</span>
                                 {#if quotation?.note}
-                                    <div class="text-xs text-gray-500 mt-1">备注：{quotation.note}</div>
+                                    <div class="text-xs text-gray-500 mt-1 truncate" title={quotation.note}>备注：{quotation.note}</div>
                                 {/if}
                             </div>
                         {/if}

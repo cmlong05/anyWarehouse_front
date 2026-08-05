@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+html {
+  font-size: 20px; /* 全局基准字号：默认 16px，提升到 20px 让整体更大 */
+}
+
 /* CSS 自定义属性 */
 :root {
   /* 颜色系统 */
