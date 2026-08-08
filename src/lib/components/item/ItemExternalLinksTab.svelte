@@ -9,6 +9,7 @@
     import type { ItemExternalLink } from '$lib';
     import { externalLinkAPI } from '$lib/api';
     import { hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { DeleteConfirmModal } from '$lib/components/shipment';
     import Plus from 'lucide-svelte/icons/plus';
 
     const PLATFORM_OPTIONS = [
@@ -55,6 +56,9 @@
     let showAddForm = $state(false);
     let initialNewLink = $state({ platform: 'aliexpress', link_type: 'own', external_id: '', url: '', label: '' });
     const formFields = ['platform', 'link_type', 'external_id', 'url', 'label'] as const;
+    let showDeleteConfirm = $state(false);
+    let deletingLink = $state(false);
+    let linkToDelete = $state<ItemExternalLink | null>(null);
 
     const isAddFormDirty = $derived(
         hasChangedFields(newLink, initialNewLink, formFields)
@@ -133,13 +137,31 @@
     }
 
     async function handleDeleteLink(id: number) {
+        const link = externalLinks.find((l) => l.id === id);
+        if (!link) return;
+        linkToDelete = link;
+        showDeleteConfirm = true;
+    }
+
+    async function confirmDeleteLink() {
+        if (!linkToDelete) return;
+        deletingLink = true;
         try {
-            await externalLinkAPI.delete(id);
-            externalLinks = externalLinks.filter((l) => l.id !== id);
+            await externalLinkAPI.delete(linkToDelete.id);
+            externalLinks = externalLinks.filter((l) => l.id !== linkToDelete!.id);
+            showDeleteConfirm = false;
+            linkToDelete = null;
         } catch (e) {
             logger.error('删除外部链接失败:', e);
             alert('删除失败，请稍后重试');
+        } finally {
+            deletingLink = false;
         }
+    }
+
+    function cancelDeleteLink() {
+        showDeleteConfirm = false;
+        linkToDelete = null;
     }
 </script>
 
@@ -307,3 +329,12 @@
         </div>
     </div>
 {/if}
+
+<DeleteConfirmModal
+    show={showDeleteConfirm}
+    title="确认删除外部链接"
+    itemName={linkToDelete?.external_id || linkToDelete?.url || ''}
+    deleting={deletingLink}
+    onCancel={cancelDeleteLink}
+    onConfirm={confirmDeleteLink}
+/>
