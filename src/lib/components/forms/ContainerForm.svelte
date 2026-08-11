@@ -148,7 +148,7 @@
         if (!confirmed) return;
 
         Promise.resolve(onDelete(initialData.id)).catch((error) => {
-            alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
+            alert('删除失败：' + getErrorMessage(error, '未知错误'));
         });
     }
 </script>
