@@ -188,7 +188,8 @@ export interface Shipment {
     packages?: PackageBrief[];
     total_packages: number;
     total_items: number;
-    total_weight: string;
+    /** 预估重量（按发货明细的物品重量×数量求和，kg） */
+    estimated_weight: string;
     /** 实际运费（按包裹重量分摊） */
     shipping_cost?: string;
     shipping_address?: string;

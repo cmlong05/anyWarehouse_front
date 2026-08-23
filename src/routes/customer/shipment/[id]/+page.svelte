@@ -529,6 +529,14 @@
                                 : '-'}
                         </p>
                     </div>
+                    <div>
+                        <span class="text-gray-500 text-sm block">预估重量</span>
+                        <p class="font-medium text-gray-900">
+                            {shipment.estimated_weight != null && shipment.estimated_weight !== ''
+                                ? `${formatNumber(shipment.estimated_weight, 3)} kg`
+                                : '-'}
+                        </p>
+                    </div>
                 </div>
                 {#if shipment.notes}
                     <div class="mt-4 pt-4 border-t border-gray-100">
