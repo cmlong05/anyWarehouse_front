@@ -189,6 +189,8 @@ export interface Shipment {
     total_packages: number;
     total_items: number;
     total_weight: string;
+    /** 实际运费（按包裹重量分摊） */
+    shipping_cost?: string;
     shipping_address?: string;
     contact_person?: string;
     contact_phone?: string;

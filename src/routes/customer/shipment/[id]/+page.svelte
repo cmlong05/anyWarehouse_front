@@ -521,6 +521,14 @@
                             {shipment.order_detail?.customer_name || '-'}
                         </a>
                     </div>
+                    <div>
+                        <span class="text-gray-500 text-sm block">实际运费</span>
+                        <p class="font-medium text-gray-900">
+                            {shipment.shipping_cost != null && shipment.shipping_cost !== ''
+                                ? `${getCurrencySymbol(shipment.order_detail?.currency)}${formatNumber(shipment.shipping_cost, 2)}`
+                                : '-'}
+                        </p>
+                    </div>
                 </div>
                 {#if shipment.notes}
                     <div class="mt-4 pt-4 border-t border-gray-100">
