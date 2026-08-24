@@ -14,7 +14,7 @@
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
 	import { ShipmentStatusBadge } from '$lib/components';
-	import { Alert, Loading } from '$lib/components';
+	import { Alert, Loading, ErrorModal } from '$lib/components';
     import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
     import { AddressInfo } from '$lib/components';
 
@@ -34,7 +34,7 @@
     }
 
     let lineSyncLoading = $state<Record<number, boolean>>({});
-    let lineSyncError = $state<string | null>(null);
+    let actionError = $state<string | null>(null);
     let lineSyncMessage = $state<string | null>(null);
     let rowSyncMessage = $state<string | null>(null);
     let bulkSyncLoading = $state(false);
@@ -55,14 +55,14 @@
         run: () => Promise<void>;
     }): Promise<void> {
         if (opts.confirm && !confirm(opts.confirm)) return;
-        lineSyncError = null;
+        actionError = null;
         if (opts.target === 'row') rowSyncMessage = null;
         else lineSyncMessage = null;
         opts.setLoading(true);
         try {
             await opts.run();
         } catch (err: unknown) {
-            lineSyncError = getErrorMessage(err, opts.errorFallback);
+            actionError = getErrorMessage(err, opts.errorFallback);
         } finally {
             opts.setLoading(false);
         }
@@ -625,9 +625,6 @@
                         {/if}
                     </div>
                 </div>
-                {#if lineSyncError}
-                    <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">⚠️ {lineSyncError}</div>
-                {/if}
                 {#if lineSyncMessage}
                     <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">✅ {lineSyncMessage}</div>
                 {/if}
@@ -823,6 +820,9 @@
         <p class="text-center text-gray-400 py-8">发货批次不存在</p>
     {/if}
 </div>
+
+<!-- 错误提示弹窗 -->
+<ErrorModal message={actionError} onClose={() => (actionError = null)} />
 
 <!-- 删除确认弹窗 -->
 <DeleteConfirmModal
