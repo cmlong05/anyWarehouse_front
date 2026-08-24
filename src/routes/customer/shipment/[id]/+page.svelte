@@ -8,7 +8,7 @@
     import { useShipmentDetail, SHIPMENT_ACTIONS } from '$lib/composables/useShipmentDetail.svelte';
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { getCurrencySymbol } from '$lib/utils/formatters';
-    import { SHIPMENT_STATUS_CHOICES } from '$lib/shipmentTypes';
+    import { SHIPMENT_STATUS_CHOICES, SHIPMENT_EDITABLE_STATUSES } from '$lib/shipmentTypes';
     import type { PackageItem, ShipmentItem } from '$lib/shipmentTypes';
     import type { SalesOrder } from '$lib';
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
@@ -415,16 +415,18 @@
                                 {act.label}
                             </button>
                         {/each}
-                        <button
-                            type="button"
-                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
-                            onclick={shipmentDetail.goToEdit}
-                        >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            编辑
-                        </button>
+                        {#if SHIPMENT_EDITABLE_STATUSES.includes(shipmentDetail.shipment.status)}
+                            <button
+                                type="button"
+                                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2 text-xs font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                                onclick={shipmentDetail.goToEdit}
+                            >
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                编辑
+                            </button>
+                        {/if}
                         <button
                             type="button"
                             class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"

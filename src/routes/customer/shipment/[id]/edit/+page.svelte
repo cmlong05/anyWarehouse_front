@@ -9,6 +9,7 @@
     import { onMount } from 'svelte';
     import { ShipmentForm } from '$lib/components';
     import { shipmentAPI } from '$lib/api';
+    import { SHIPMENT_EDITABLE_STATUSES } from '$lib/shipmentTypes';
     import type { Shipment } from '$lib/shipmentTypes';
     import { Loading } from '$lib/components';
 
@@ -27,9 +28,8 @@
         
         try {
             const shipment = await shipmentAPI.get(shipmentId);
-            // 只有草稿或已同步状态可以编辑
-            const editableStatuses = ['draft', 'synced'];
-            if (!editableStatuses.includes(shipment.status)) {
+            // 与后端 views_shipment._check_editable 保持一致
+            if (!SHIPMENT_EDITABLE_STATUSES.includes(shipment.status)) {
                 // 不可编辑，重定向到详情页
                 goto(`/customer/shipment/${shipmentId}`, { replaceState: true });
                 return;

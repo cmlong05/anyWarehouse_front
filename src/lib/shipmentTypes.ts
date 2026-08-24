@@ -26,6 +26,9 @@ export type LogisticsStatus = 'pending' | 'collected' | 'in_transit' | 'exceptio
 /** 发货单状态 */
 export type ShipmentStatus = 'draft' | 'synced' | 'confirmed' | 'packed' | 'shipped' | 'delivered' | 'cancelled';
 
+/** 可编辑状态（与后端 views_shipment._check_editable 保持一致） */
+export const SHIPMENT_EDITABLE_STATUSES: ShipmentStatus[] = ['draft', 'confirmed', 'packed', 'synced'];
+
 /** 快递单号 */
 export interface TrackingNumber {
     id: number;
