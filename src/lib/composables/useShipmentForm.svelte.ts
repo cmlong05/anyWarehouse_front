@@ -12,6 +12,8 @@ export interface ShipmentPlanItem {
     orderItemId: number;
     sku: string;
     itemName: string;
+    /** 关联的 Item 主键 ID，提交时用于建立 item FK（不依赖 SKU 快照） */
+    itemId?: number;
     quantityOrdered: number;
     quantityProcessed: number;
     quantityPrepared: number;
@@ -131,6 +133,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                         orderItemId: orderItem?.id || 0,
                         sku: item.sku,
                         itemName: item.product_name,
+                        itemId: orderItem?.item ?? item.item_detail?.id,
                         quantityOrdered: Math.round(safeParseFloat(orderItem?.quantity, qty)),
                         quantityProcessed: Math.round(qtyProcessed),
                         quantityPrepared: Math.round(safeParseFloat(orderItem?.quantity_prepared)),
@@ -260,6 +263,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
             orderItemId: orderItem.id,
             sku: orderItem.sku,
             itemName: orderItem.item_name,
+            itemId: orderItem.item ?? orderItem.item_detail?.id,
             quantityOrdered: Math.round(safeParseFloat(orderItem.quantity)),
             quantityProcessed: Math.round(safeParseFloat(orderItem.quantity_processed)),
             quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
@@ -284,6 +288,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     orderItemId: orderItem.id,
                     sku: orderItem.sku,
                     itemName: orderItem.item_name,
+                    itemId: orderItem.item ?? orderItem.item_detail?.id,
                     quantityOrdered: Math.round(safeParseFloat(orderItem.quantity)),
                     quantityProcessed: Math.round(safeParseFloat(orderItem.quantity_processed)),
                     quantityPrepared: Math.round(orderItem.quantity_prepared || 0),
@@ -331,7 +336,8 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                     order: selectedOrderId!,
                     sku: item.sku,
                     quantity: item.quantityPlan,
-                    product_name: item.itemName
+                    product_name: item.itemName,
+                    item: item.itemId ?? undefined,
                 }));
 
             if (options.mode === 'create') {
