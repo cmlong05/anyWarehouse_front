@@ -143,10 +143,12 @@
                         productName: item.product_name,
                         quantity: safeParseFloat(item.quantity),
                         pendingQuantity: safeParseFloat(item.quantity),
-                        allocations: (item.allocations || []).map(a => ({
-                            container: a.container,
-                            quantity: a.quantity,
-                        })),
+                        allocations: (item.allocations || [])
+                            .filter(a => a.quantity > 0)
+                            .map(a => ({
+                                container: a.container,
+                                quantity: a.quantity,
+                            })),
                     };
                 });
             }
