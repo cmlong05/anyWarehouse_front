@@ -21,7 +21,7 @@
   ```svelte
   <div class="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow">
   ```
-- 主题色、间距、字号统一走 `tailwind.config.js`，不要硬编码 hex 色值
+- 主题色、间距、字号统一走 Tailwind v4 CSS-first 配置（`src/app.css` 中的 `--color-*` 等 CSS 变量，无 tailwind.config.js），不要硬编码 hex 色值
 - 条件样式用 `class:` 指令或模板字符串拼 class，不要切换 `style`：
   ```svelte
   <button class:bg-blue-500={active} class:bg-gray-200={!active}>
@@ -90,7 +90,7 @@
 
 ## 工具函数
 
-- 数值解析使用 `src/lib/utils.ts` 的 `safeParseFloat()` / `safeParseInt()`
+- 数值解析使用 `src/lib/utils/` 的 `safeParseFloat()` / `safeParseInt()`（定义在 `base.ts`，由 `index.ts` 导出）
 - ❌ 不要直接 `parseFloat` / `parseInt`（NaN 会污染计算）
 
 ---
