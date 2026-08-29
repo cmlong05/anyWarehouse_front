@@ -99,11 +99,16 @@
                 <span class="text-gray-400 px-2 select-none">...</span>
             {:else}
                 <button
-                    class="min-w-[2rem] h-8 px-2 border border-gray-200 bg-white rounded-md text-sm cursor-pointer transition-all duration-150 ease-in-out flex items-center justify-center hover:bg-gray-100 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="min-w-[2rem] h-8 px-2 border rounded-md text-sm cursor-pointer transition-all duration-150 ease-in-out flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     class:bg-blue-500={p === page}
+                    class:bg-white={p !== page}
                     class:border-blue-500={p === page}
+                    class:border-gray-200={p !== page}
                     class:text-white={p === page}
                     class:hover:bg-blue-600={p === page}
+                    class:hover:bg-gray-100={p !== page}
+                    class:hover:border-blue-500={p === page}
+                    class:hover:border-gray-300={p !== page}
                     onclick={() => goToPage(p)}
                     disabled={disabled}
                     aria-label="第 {p} 页"
