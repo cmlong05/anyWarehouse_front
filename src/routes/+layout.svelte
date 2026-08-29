@@ -6,6 +6,10 @@
 	import '../app.css';
 	import { config } from '$lib/config';
 	import { page } from '$app/stores';
+	import { themeState, cycleThemeMode } from '$lib/stores/theme.svelte';
+	import Sun from 'lucide-svelte/icons/sun';
+	import Moon from 'lucide-svelte/icons/moon';
+	import SunMoon from 'lucide-svelte/icons/sun-moon';
 	
 	let { children, data } = $props();
 	
@@ -78,9 +82,9 @@
 	let dropdownPos = $state<{ top: number; left: number }>({ top: 0, left: 0 });
 	// 关闭定时器 ID
 	let closeTimeoutId: ReturnType<typeof setTimeout> | null = null;
-	// 根据环境设置导航栏样式
+	// 根据环境设置导航栏样式（颜色走 CSS 变量，暗色主题自动适配）
 	const isDevEnvironment = config.ENVIRONMENT === 'development';
-	const navBackgroundColor = isDevEnvironment ? '#fee2e2' : '#ffffff';
+	const navBackgroundColor = isDevEnvironment ? 'var(--color-nav-bg-dev)' : 'var(--color-nav-bg)';
 	const navBorderClass = isDevEnvironment ? 'border-red-300' : 'border-gray-200';
 	// 当前下拉菜单的子项（从 navItems 中派生）
 	let currentDropdownChildren = $derived(
@@ -139,6 +143,20 @@
 </script>
 
 {#if isLoginPage}
+	<button
+		onclick={cycleThemeMode}
+		title={themeState.mode === 'auto' ? '主题：自动（跟随时间）' : themeState.mode === 'light' ? '主题：浅色' : '主题：深色'}
+		class="fixed top-3 right-3 z-50 p-2 rounded-full bg-white shadow-md text-gray-500 hover:text-gray-800 transition-colors"
+		aria-label="切换主题"
+	>
+		{#if themeState.mode === 'light'}
+			<Sun class="w-5 h-5" />
+		{:else if themeState.mode === 'dark'}
+			<Moon class="w-5 h-5" />
+		{:else}
+			<SunMoon class="w-5 h-5" />
+		{/if}
+	</button>
 	{@render children()}
 {:else}
 <div class="relative min-h-screen flex flex-col">
@@ -195,7 +213,21 @@
 				</div>
 				
 				<!-- Mobile Menu Button -->
-				<div class="flex items-center justify-self-end md:hidden">
+				<div class="flex items-center justify-self-end md:hidden gap-1">
+					<button
+						onclick={cycleThemeMode}
+						title={themeState.mode === 'auto' ? '主题：自动（跟随时间）' : themeState.mode === 'light' ? '主题：浅色' : '主题：深色'}
+						class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
+						aria-label="切换主题"
+					>
+						{#if themeState.mode === 'light'}
+							<Sun class="block h-5 w-5" />
+						{:else if themeState.mode === 'dark'}
+							<Moon class="block h-5 w-5" />
+						{:else}
+							<SunMoon class="block h-5 w-5" />
+						{/if}
+					</button>
 					<button 
 						onclick={toggleMobileMenu}
 						class="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-colors"
@@ -218,6 +250,20 @@
 
 				<!-- Desktop user area (right side) -->
 				<div class="hidden md:flex justify-self-end items-center gap-2">
+					<button
+						onclick={cycleThemeMode}
+						title={themeState.mode === 'auto' ? '主题：自动（跟随时间）' : themeState.mode === 'light' ? '主题：浅色' : '主题：深色'}
+						class="p-2 rounded-md text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+						aria-label="切换主题"
+					>
+						{#if themeState.mode === 'light'}
+							<Sun class="w-4 h-4" />
+						{:else if themeState.mode === 'dark'}
+							<Moon class="w-4 h-4" />
+						{:else}
+							<SunMoon class="w-4 h-4" />
+						{/if}
+					</button>
 					{#if username}
 						<form action={config.API_BASE_URL + '/auth/logout/'} method="POST" class="inline">
 							<button

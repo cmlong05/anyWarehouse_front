@@ -51,6 +51,10 @@ html {
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* 导航栏背景（生产 / 开发提醒色） */
+  --color-nav-bg: #ffffff;
+  --color-nav-bg-dev: #fee2e2;
 }
 
 /* 重置和基础样式 */
@@ -82,6 +86,15 @@ body {
 
     body {
         background: white !important;
+        color: #111827 !important;
+    }
+
+    /* 打印始终用浅色，避免暗色主题把卡片/文字打成深色 */
+    [data-theme='dark'] .bg-white,
+    [data-theme='dark'] .text-gray-800,
+    [data-theme='dark'] .text-gray-900 {
+        background-color: white !important;
+        color: #111827 !important;
     }
 }
 
@@ -283,5 +296,206 @@ body {
 }
 *::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ========== 暗色主题 ==========
+ * 通过 <html data-theme="dark"> 启用（见 app.html 内联脚本 / src/lib/stores/theme.svelte.ts）。
+ * Tailwind v4 工具类引用 var(--color-*)，覆写变量即可全局适配；
+ * 与"文字/背景共用变量"冲突的类（如 text-gray-500 与 bg-gray-500）用类级覆写。 */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* 中性灰：浅阶用于背景/边框（可安全变量覆写） */
+  --color-gray-50: #111827;
+  --color-gray-100: #1a2029;
+  --color-gray-200: #2d3748;
+  --color-gray-300: #4a5568;
+  --color-gray-400: #9ca3af;
+  --color-slate-50: #111827;
+  --color-slate-100: #1a2029;
+  --color-slate-200: #2d3748;
+  --color-slate-300: #4a5568;
+
+  /* 语义色浅阶（徽章/提示底，深色调） */
+  --color-blue-50: #1e3a5f;
+  --color-blue-100: #1e3a5f;
+  --color-blue-200: #2b4a6e;
+  --color-green-50: #0f2e22;
+  --color-green-100: #12352a;
+  --color-green-200: #1b4a3a;
+  --color-red-50: #3b1216;
+  --color-red-100: #4a171c;
+  --color-red-200: #6b2229;
+  --color-amber-50: #3a2c0c;
+  --color-amber-100: #4a3a12;
+  --color-amber-200: #5f4c1a;
+  --color-yellow-50: #3a330c;
+  --color-yellow-100: #4a4212;
+  --color-yellow-200: #5f541a;
+  --color-purple-50: #2e1f4a;
+  --color-purple-100: #3b2a5f;
+  --color-purple-200: #503a7a;
+  --color-sky-50: #0c2a3a;
+  --color-sky-100: #10384d;
+  --color-sky-200: #1a4d6b;
+  --color-orange-50: #3a220c;
+  --color-orange-100: #4a2d12;
+  --color-orange-200: #5f3a1a;
+  --color-indigo-50: #1e244a;
+  --color-indigo-100: #2a3163;
+  --color-indigo-200: #3a4380;
+  --color-emerald-50: #0f2e22;
+  --color-emerald-100: #12352a;
+  --color-emerald-200: #1b4a3a;
+  --color-rose-50: #3b1216;
+  --color-rose-100: #4a171c;
+  --color-rose-200: #6b2229;
+
+  /* 导航栏背景（生产 / 开发提醒色） */
+  --color-nav-bg: #1f2937;
+  --color-nav-bg-dev: #7f1d1d;
+
+  /* Svelecte 内部 CSS 变量（第三方组件） */
+  --sv-bg: #1f2937;
+  --sv-control-bg: #1f2937;
+  --sv-dropdown-bg: #1f2937;
+  --sv-dropdown-active-bg: #374151;
+  --sv-item-selected-bg: #2d3748;
+  --sv-item-btn-bg: #374151;
+  --sv-item-btn-bg-hover: #4b5568;
+  --sv-icon-color: #9ca3af;
+  --sv-icon-color-hover: #d1d5db;
+  --sv-border: 1px solid #4b5568;
+  --sv-dropdown-border: 1px solid #4b5568;
+  --sv-placeholder-color: #6b7280;
+  --sv-item-btn-color: #e5e7eb;
+  --sv-create-kbd-bg: #374151;
+}
+
+[data-theme='dark'] body {
+  background-color: #111827;
+  /* body 默认色 var(--color-gray-800) 在暗色下不可见，直接提亮，
+     让未显式指定 text-* 类的文本（表格单元格等）继承浅色 */
+  color: #dde4ec;
+}
+
+/* 白色卡片/弹窗背景 → 深色表面（不动 --color-white，text-white 仍为白字） */
+[data-theme='dark'] .bg-white {
+  background-color: #1f2937;
+}
+[data-theme='dark'] .bg-white\/95 {
+  background-color: rgba(31, 41, 55, 0.95);
+}
+[data-theme='dark'] .odd\:bg-white:nth-child(odd) {
+  background-color: #1f2937;
+}
+
+/* 文字色提亮（灰色系；与 bg-gray-500+ 按钮共用变量，故类级覆写） */
+[data-theme='dark'] .text-gray-300 { color: #9ca3af; }
+[data-theme='dark'] .text-gray-400 { color: #9ca3af; }
+[data-theme='dark'] .text-gray-500 { color: #a3aeb9; }
+[data-theme='dark'] .text-gray-600 { color: #b6c0ca; }
+[data-theme='dark'] .text-gray-700 { color: #c9d2dc; }
+[data-theme='dark'] .text-gray-800 { color: #dde4ec; }
+[data-theme='dark'] .text-gray-900 { color: #f1f4f8; }
+
+[data-theme='dark'] .text-slate-400 { color: #94a3b8; }
+[data-theme='dark'] .text-slate-500 { color: #a3b1c4; }
+[data-theme='dark'] .text-slate-600 { color: #b4c1d1; }
+[data-theme='dark'] .text-slate-700 { color: #c6d2e0; }
+[data-theme='dark'] .text-slate-800 { color: #d9e2ec; }
+[data-theme='dark'] .text-slate-900 { color: #edf2f7; }
+
+/* 语义色文字提亮（徽章/链接/错误提示，在深底上可读） */
+[data-theme='dark'] .text-blue-500 { color: #60a5fa; }
+[data-theme='dark'] .text-blue-600 { color: #93c5fd; }
+[data-theme='dark'] .text-blue-700 { color: #bfdbfe; }
+[data-theme='dark'] .text-blue-800 { color: #dbeafe; }
+[data-theme='dark'] .text-blue-900 { color: #eff6ff; }
+[data-theme='dark'] .text-green-500 { color: #34d399; }
+[data-theme='dark'] .text-green-600 { color: #6ee7b7; }
+[data-theme='dark'] .text-green-700 { color: #a7f3d0; }
+[data-theme='dark'] .text-green-800 { color: #d1fae5; }
+[data-theme='dark'] .text-green-900 { color: #ecfdf5; }
+[data-theme='dark'] .text-red-500 { color: #f87171; }
+[data-theme='dark'] .text-red-600 { color: #fca5a5; }
+[data-theme='dark'] .text-red-700 { color: #fecaca; }
+[data-theme='dark'] .text-red-800 { color: #fee2e2; }
+[data-theme='dark'] .text-red-900 { color: #fef2f2; }
+[data-theme='dark'] .text-amber-500 { color: #fbbf24; }
+[data-theme='dark'] .text-amber-600 { color: #fcd34d; }
+[data-theme='dark'] .text-amber-700 { color: #fde68a; }
+[data-theme='dark'] .text-amber-800 { color: #fef3c7; }
+[data-theme='dark'] .text-yellow-500 { color: #facc15; }
+[data-theme='dark'] .text-yellow-600 { color: #fde047; }
+[data-theme='dark'] .text-yellow-700 { color: #fef08a; }
+[data-theme='dark'] .text-yellow-800 { color: #fef9c3; }
+[data-theme='dark'] .text-purple-500 { color: #a78bfa; }
+[data-theme='dark'] .text-purple-600 { color: #c4b5fd; }
+[data-theme='dark'] .text-purple-700 { color: #ddd6fe; }
+[data-theme='dark'] .text-purple-800 { color: #ede9fe; }
+[data-theme='dark'] .text-sky-500 { color: #38bdf8; }
+[data-theme='dark'] .text-sky-600 { color: #7dd3fc; }
+[data-theme='dark'] .text-sky-700 { color: #bae6fd; }
+[data-theme='dark'] .text-sky-800 { color: #e0f2fe; }
+[data-theme='dark'] .text-orange-500 { color: #fb923c; }
+[data-theme='dark'] .text-orange-600 { color: #fdba74; }
+[data-theme='dark'] .text-orange-700 { color: #fed7aa; }
+[data-theme='dark'] .text-orange-800 { color: #ffedd5; }
+[data-theme='dark'] .text-indigo-500 { color: #818cf8; }
+[data-theme='dark'] .text-indigo-600 { color: #a5b4fc; }
+[data-theme='dark'] .text-indigo-700 { color: #c7d2fe; }
+[data-theme='dark'] .text-indigo-800 { color: #e0e7ff; }
+[data-theme='dark'] .text-emerald-500 { color: #34d399; }
+[data-theme='dark'] .text-emerald-600 { color: #6ee7b7; }
+[data-theme='dark'] .text-emerald-700 { color: #a7f3d0; }
+[data-theme='dark'] .text-emerald-800 { color: #d1fae5; }
+[data-theme='dark'] .text-rose-500 { color: #fb7185; }
+[data-theme='dark'] .text-rose-600 { color: #fda4af; }
+[data-theme='dark'] .text-rose-700 { color: #fecdd3; }
+[data-theme='dark'] .text-rose-800 { color: #ffe4e6; }
+
+/* hover 文字提亮（导航/链接/表格 hover 语义色） */
+[data-theme='dark'] .hover\:text-gray-600:hover { color: #b6c0ca; }
+[data-theme='dark'] .hover\:text-gray-700:hover { color: #c9d2dc; }
+[data-theme='dark'] .hover\:text-gray-800:hover { color: #dde4ec; }
+[data-theme='dark'] .hover\:text-gray-900:hover { color: #f1f4f8; }
+[data-theme='dark'] .hover\:text-blue-400:hover { color: #93c5fd; }
+[data-theme='dark'] .hover\:text-blue-600:hover { color: #93c5fd; }
+[data-theme='dark'] .hover\:text-blue-700:hover { color: #bfdbfe; }
+[data-theme='dark'] .hover\:text-blue-800:hover { color: #dbeafe; }
+[data-theme='dark'] .hover\:text-blue-900:hover { color: #eff6ff; }
+[data-theme='dark'] .hover\:text-red-500:hover { color: #f87171; }
+[data-theme='dark'] .hover\:text-red-600:hover { color: #fca5a5; }
+[data-theme='dark'] .hover\:text-red-700:hover { color: #fecaca; }
+[data-theme='dark'] .hover\:text-red-800:hover { color: #fee2e2; }
+[data-theme='dark'] .hover\:text-green-800:hover { color: #d1fae5; }
+[data-theme='dark'] .hover\:text-slate-600:hover { color: #b4c1d1; }
+[data-theme='dark'] .hover\:text-slate-800:hover { color: #d9e2ec; }
+[data-theme='dark'] .hover\:text-purple-800:hover { color: #ede9fe; }
+[data-theme='dark'] .hover\:text-emerald-800:hover { color: #d1fae5; }
+[data-theme='dark'] .hover\:text-amber-800:hover { color: #fef3c7; }
+
+/* 表单/步进器（app.css 内硬编码白色背景的组件） */
+[data-theme='dark'] .input-number {
+  background: #1f2937;
+  color: #dde4ec;
+}
+[data-theme='dark'] .number-stepper {
+  background: #1f2937;
+}
+[data-theme='dark'] .stepper-btn {
+  background: #374151;
+  color: #c9d2dc;
+}
+[data-theme='dark'] .stepper-btn:hover:not(:disabled) {
+  background: #4b5568;
+  color: #f1f4f8;
+}
+[data-theme='dark'] .stepper-input {
+  color: #dde4ec;
+}
+[data-theme='dark'] .input-number::placeholder {
+  color: #6b7280;
 }
 
