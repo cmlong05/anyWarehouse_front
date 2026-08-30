@@ -80,7 +80,7 @@
                         {formatValue(item)}
                     </a>
                 {:else}
-                    <span class="font-medium text-gray-900">{formatValue(item)}</span>
+                    <span class="font-medium text-gray-900 break-words">{formatValue(item)}</span>
                 {/if}
             </div>
             {/if}
