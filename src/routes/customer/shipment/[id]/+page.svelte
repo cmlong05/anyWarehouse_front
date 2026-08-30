@@ -159,6 +159,21 @@
         }
     }
 
+    let shippingNoteDownloading = $state(false);
+
+    async function downloadShippingNote() {
+        if (shippingNoteDownloading || !shipmentDetail.shipment) return;
+        shippingNoteDownloading = true;
+        try {
+            await shipmentAPI.downloadShippingNote(shipmentDetail.shipment.id, 'en', shipmentDetail.shipment.shipment_no);
+        } catch (err: unknown) {
+            logger.error('发货单生成失败', err);
+            alert('发货单生成失败，请稍后重试。');
+        } finally {
+            shippingNoteDownloading = false;
+        }
+    }
+
     const SYNC_EDITABLE_STATUSES = ['draft', 'confirmed', 'packed', 'synced', 'shipped'];
 
     function canSyncLine(item: ShipmentItem): boolean {
@@ -244,11 +259,6 @@
     async function handleAction(action: string, confirmMessage: string) {
         if (!confirm(confirmMessage)) return;
         await shipmentDetail.executeAction(action);
-    }
-
-    // 打印发货单
-    function printShipment() {
-        window.print();
     }
 
     // 变体相关
@@ -386,8 +396,8 @@
     <title>发货详情 - {shipmentDetail.shipment?.shipment_no || '加载中...'} - AnyWarehouse</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gray-100 p-4 print:bg-white print:p-0">
-    <div class="max-w-5xl mx-auto mb-4 border-b border-slate-200 pb-4 print:hidden">
+<div class="min-h-screen bg-gray-100 p-4">
+    <div class="max-w-5xl mx-auto mb-4 border-b border-slate-200 pb-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="flex min-w-0 flex-1 flex-col gap-2">
                 <div class="flex items-center gap-3">
@@ -429,13 +439,23 @@
                         {/if}
                         <button
                             type="button"
-                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
-                            onclick={printShipment}
+                            class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            onclick={downloadShippingNote}
+                            disabled={shippingNoteDownloading}
                         >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4H9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z" />
-                            </svg>
-                            打印
+                            {#if shippingNoteDownloading}
+                                <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                生成中...
+                            {:else}
+                                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6M9 12h6M9 16h4" />
+                                </svg>
+                                发货单
+                            {/if}
                         </button>
                         <button
                             type="button"
@@ -488,9 +508,9 @@
         {@const shipment = shipmentDetail.shipment}
         
         <!-- 发货单文档 -->
-        <div class="max-w-5xl mx-auto space-y-6 print:max-w-full print:m-0">
+        <div class="max-w-5xl mx-auto space-y-6">
             <!-- 基本信息 -->
-            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
+            <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">基本信息</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
@@ -549,7 +569,7 @@
             </div>
 
             <!-- 关联订单 -->
-            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
+            <div class="bg-white rounded-lg shadow p-6">
                 <h2 class="text-lg font-bold text-gray-900 mb-4">关联订单</h2>
                 {#if shipment.order}
                     <a 
@@ -581,14 +601,14 @@
             </div>
 
             <!-- 发货计划明细 -->
-            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
+            <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-bold text-gray-900">发货计划明细</h2>
                     <div class="flex items-center gap-2">
                         {#if hasUnpackedLine()}
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
+                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick={pruneUnpackedItems}
                                 disabled={pruneLoading}
                                 title="删除所有未打包（quantity_packed = 0）的发货明细行"
@@ -607,7 +627,7 @@
                         {#if hasSyncableLine()}
                             <button
                                 type="button"
-                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed print:hidden"
+                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick={syncAllShipmentItems}
                                 disabled={bulkSyncLoading}
                                 title="按已封箱包裹同步所有发货明细的计划数量"
@@ -754,10 +774,10 @@
             </div>
 
             <!-- 包裹列表 -->
-            <div class="bg-white rounded-lg shadow print:shadow-none print:border print:border-gray-200 p-6">
+            <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-900">包裹列表</h2>
-                    <div class="flex gap-2 print:hidden">
+                    <div class="flex gap-2">
                         <button 
                             class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                             onclick={() => shipmentDetail.openLinkPackageModal()}
@@ -845,28 +865,3 @@
     onSelect={(id) => shipmentDetail.selectedPackageId = id}
 />
 
-<style>
-    /* 隐藏浏览器打印的页眉页脚 */
-    @page {
-        margin: 0;
-    }
-    
-    @media print {
-        /* 隐藏导航栏 */
-        :global(nav),
-        :global(.sticky) {
-            display: none !important;
-        }
-        
-        /* 页面边距 */
-        :global(body) {
-            margin: 1cm;
-        }
-        
-        /* 链接样式 */
-        :global(a) {
-            text-decoration: none !important;
-            color: inherit !important;
-        }
-    }
-</style>

@@ -159,6 +159,11 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
         await this._downloadPDF(`${this.basePath}${id}/sku_reference/?locale=${locale}`, `SKU-REFERENCE-${shipmentNo}.pdf`);
     }
 
+    /** 下载发货单 PDF（客户基本信息 + 发货内容，无价格，全英文，服务端生成） */
+    async downloadShippingNote(id: number, locale = 'en', shipmentNo: string): Promise<void> {
+        await this._downloadPDF(`${this.basePath}${id}/shipping_note/?locale=${locale}`, `SHIPPING-NOTE-${shipmentNo}.pdf`);
+    }
+
     private async _downloadPDF(path: string, filename: string): Promise<void> {
         await downloadPdf(path, filename);
     }
