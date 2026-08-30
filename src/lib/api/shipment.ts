@@ -290,6 +290,11 @@ export class PackageAPI extends BaseAPI<Package, PackageCreateRequest, PackageUp
     async getChecklistSummary(packageId: number): Promise<ChecklistSummary> {
         return this.client.get<ChecklistSummary>(`${this.basePath}${packageId}/checklist-summary/`);
     }
+
+    /** 下载装箱单 PDF（仅关键信息，全英文，服务端生成） */
+    async downloadPackingList(packageId: number, locale = 'en', packageNo: string): Promise<void> {
+        await downloadPdf(`${this.basePath}${packageId}/packing_list/?locale=${locale}`, `PACKING-LIST-${packageNo}.pdf`);
+    }
 }
 
 // ========== Package Tracking Leg API（多段物流） ==========

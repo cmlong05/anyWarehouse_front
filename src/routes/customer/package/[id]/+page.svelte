@@ -11,7 +11,6 @@
     import { formatDate, formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package, PackageItem, PackageTrackingLeg } from '$lib/shipmentTypes';
 	import { Alert, Loading } from '$lib/components';
-    import PrintPackingList from '$lib/components/shipment/PrintPackingList.svelte';
     import { TrackingLegTimeline } from '$lib/components';
     import { TrackingLegForm } from '$lib/components';
 
@@ -329,8 +328,19 @@
             : '-';
     }
 
-    function printPackingList() {
-        window.print();
+    let packingListDownloading = $state(false);
+
+    async function downloadPackingList() {
+        if (packingListDownloading || !pkg) return;
+        packingListDownloading = true;
+        try {
+            await packageAPI.downloadPackingList(pkg.id, 'en', pkg.package_no);
+        } catch (err: unknown) {
+            logger.error('装箱单生成失败', err);
+            alert('装箱单生成失败，请稍后重试。');
+        } finally {
+            packingListDownloading = false;
+        }
     }
 </script>
 
@@ -338,9 +348,7 @@
     <title>包裹详情 - {pkg?.package_no || '加载中...'} - AnyWarehouse</title>
 </svelte:head>
 
-<PrintPackingList {pkg} />
-
-<div class="container mx-auto px-4 py-6 no-print">
+<div class="container mx-auto px-4 py-6">
     <!-- 顶部头部，与销售订单样式一致 -->
     <div class="mb-4 border-b border-slate-200 pb-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
@@ -387,13 +395,23 @@
                     </button>
                     {/if}
                     <button
-                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100"
-                        onclick={printPackingList}
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-slate-50 px-2 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        onclick={downloadPackingList}
+                        disabled={packingListDownloading}
                     >
-                        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2m2 4H9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z" />
-                        </svg>
-                        打印装箱单
+                        {#if packingListDownloading}
+                            <svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                            </svg>
+                            生成中...
+                        {:else}
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 8h6M9 12h6M9 16h4" />
+                            </svg>
+                            装箱单
+                        {/if}
                     </button>
                     {#if pkg?.status !== 'sealed'}
                     <button

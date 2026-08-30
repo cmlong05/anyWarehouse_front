@@ -6,7 +6,6 @@
 // - `lib/components/shipment/TrackingLegTimeline.svelte`
 // - `lib/components/shipment-form/BasicInfo.svelte`
 // - `lib/components/shipment/LinkPackageModal.svelte`
-// - `lib/components/shipment/PrintPackingList.svelte`
 // - `lib/components/shipment/TrackingNumberDetailModal.svelte`
 // - `lib/composables/useShipmentDetail.svelte.ts`
 // - `lib/composables/useShipmentForm.svelte.ts`
