@@ -44,6 +44,10 @@ export function buildInitialOrderItems(
             quotation: item.quotation || null,
             expected_delivery: item.expected_delivery || null,
             notes: item.notes || '',
+            // 编辑已有订单时从 item_detail 补齐变体属性，否则颜色徽标缺失（与新建流程的 variantAttributes 对齐）
+            variantAttributes: (item.item_detail?.variant_attributes ?? []).map(
+                (attr: { value: string; color?: string }) => ({ value: attr.value, color: attr.color })
+            ),
             item_detail: item.item_detail
                 ? {
                     ...item.item_detail,

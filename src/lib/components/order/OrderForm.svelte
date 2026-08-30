@@ -350,13 +350,27 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
             price: string;
             item_is_variant_template?: boolean;
             is_variant_template?: boolean;
+            is_variant?: boolean;
+            parent_item_id?: number | null;
+            parent_item_name?: string;
+            parent_item_sku?: string;
         } | undefined;
         
         if (!quotation) return;
         
+        const isTemplate = isVariantTemplate(quotation);
+        
+        // 单个变体子项报价（非母版展开）：插入到同一母版分组的位置，而不是列表底部
+        if (!isTemplate && quotation.is_variant && quotation.parent_item_id) {
+            await addVariantChildItem(quotation);
+            // 重置当前项和选择
+            selectedQuotation = undefined;
+            resetCurrentItem();
+            return;
+        }
+        
         // 添加主项
         const parentId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const isTemplate = isVariantTemplate(quotation);
         const newItem: OrderFormItem = {
             id: parentId,
             item: currentItem.item || null,
@@ -436,6 +450,73 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
         // 重置当前项和选择
         selectedQuotation = undefined;
         resetCurrentItem();
+    }
+
+    // 添加单个变体子项报价：标记为变体子项并挂到同一母版分组下，
+    // 而不是作为普通行追加到列表底部
+    async function addVariantChildItem(quotation: {
+        id: number;
+        item?: number;
+        item_name_en?: string;
+        is_variant?: boolean;
+        parent_item_id?: number | null;
+        parent_item_name?: string;
+        parent_item_sku?: string;
+    }) {
+        const parentItemId = quotation.parent_item_id!;
+        
+        // 从母版的变体列表中补充属性徽标信息（与母版展开逻辑一致）
+        let variantAttributes: Array<{ value: string; color?: string }> = [];
+        try {
+            const variants = await fetchItemVariants(parentItemId);
+            const variant = variants.find(v => v.variant_item === quotation.item);
+            variantAttributes = buildVariantAttributes(variant?.attribute_values_detail);
+        } catch {
+            // 获取失败仅缺少属性徽标，不影响添加
+        }
+        
+        const childItem: OrderFormItem = {
+            id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            item: currentItem.item || null,
+            sku: currentItem.sku || '',
+            item_name: currentItem.item_name || '',
+            item_name_en: currentItem.item_name_en || '',
+            quantity: currentItem.quantity || 1,
+            unit_price: currentItem.unit_price || 0,
+            quotation: currentItem.quotation || null,
+            expected_delivery: currentItem.expected_delivery || null,
+            notes: currentItem.notes || '',
+            isVariantChild: true,
+            variantAttributes,
+            item_detail: {
+                is_variant: true,
+                parent_item_id: parentItemId,
+                parent_item_name: quotation.parent_item_name || '',
+                parent_item_sku: quotation.parent_item_sku || '',
+            },
+        };
+        
+        // 本次会话中已添加过该母版（表单级分组）→ 挂到该分组下
+        const parentRow = formData.items.find(i => !i.isVariantChild && i.item === parentItemId);
+        if (parentRow?.id) {
+            childItem.parentId = parentRow.id;
+            let lastIndex = formData.items.indexOf(parentRow);
+            formData.items.forEach((it, idx) => {
+                if (it.parentId === parentRow.id) lastIndex = idx;
+            });
+            formData.items = [...formData.items.slice(0, lastIndex + 1), childItem, ...formData.items.slice(lastIndex + 1)];
+            return;
+        }
+        
+        // 已存在同一母版的子项 → 插到最后一个后面；否则追加到末尾
+        let insertIndex = formData.items.length;
+        for (let i = formData.items.length - 1; i >= 0; i--) {
+            if (formData.items[i].item_detail?.parent_item_id === parentItemId) {
+                insertIndex = i + 1;
+                break;
+            }
+        }
+        formData.items = [...formData.items.slice(0, insertIndex), childItem, ...formData.items.slice(insertIndex)];
     }
     
     function handleSubmit(e: Event) {

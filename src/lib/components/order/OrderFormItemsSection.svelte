@@ -395,9 +395,9 @@
                             </td>
                             <td class="px-4 py-3 align-top">
                                 {#if section.type === 'variant'}
-                                    <div class="space-y-1">
-                                        <div class="text-gray-900">{item.item_name || '-'}</div>
-                                        <VariantAttributeBadge attributes={item.variantAttributes || []} class="mt-0.5" />
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-900">{item.item_name || '-'}</span>
+                                        <VariantAttributeBadge attributes={item.variantAttributes || []} />
                                     </div>
                                 {:else if section.type === 'parent'}
                                     <div class="text-gray-700">{item.item_name || '-'}</div>
