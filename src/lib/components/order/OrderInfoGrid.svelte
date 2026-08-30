@@ -76,7 +76,7 @@
                         {formatValue(item)}
                     </span>
                 {:else if item.href}
-                    <a href={item.href} class={item.linkClass || 'font-medium text-gray-900'}>
+                    <a href={item.href} class="{item.linkClass || 'font-medium text-gray-900'} break-words">
                         {formatValue(item)}
                     </a>
                 {:else}
