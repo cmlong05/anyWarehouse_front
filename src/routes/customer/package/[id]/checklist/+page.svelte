@@ -29,9 +29,14 @@
                 ? allocs.every(a => a.checked)
                 : i.checked;
         }).length,
-        discrepancy_count: items.filter(
-            i => i.actual_quantity !== null && i.actual_quantity !== i.planned_quantity
-        ).length,
+        // 口径与卡片/封箱校验一致：行级实点 = 各库位实点之和（无库位时取行实点）
+        discrepancy_count: items.filter(i => {
+            const allocs = i.allocations ?? [];
+            const actual = allocs.length > 0
+                ? allocs.reduce((sum, a) => sum + (a.actual_quantity ?? a.planned_quantity), 0)
+                : i.actual_quantity;
+            return actual === null || actual !== i.planned_quantity;
+        }).length,
     });
 
     let readonly = $derived(pkg?.status === 'sealed');

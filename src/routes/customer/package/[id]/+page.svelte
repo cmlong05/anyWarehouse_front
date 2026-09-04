@@ -113,8 +113,60 @@
     let sealing = $state(false);
     let syncing = $state(false);
 
+    let sealBlocked = $state(false);
+    let sealBlockMessage = $state('');
+
+    type ChecklistGate =
+        | { status: 'not_initialized' }
+        | { status: 'blocked'; reasons: string[] }
+        | { status: 'ok' };
+
+    /** 封箱前核查门禁：清单未初始化 / 存在未核查项 / 实点≠计划，并给出具体原因。
+     *  口径与后端 seal 校验一致（有库位分配的行须逐库位勾选"已核查"，行实点=各库位实点之和）。 */
+    function getChecklistGate(checklistItems: Package['checklist_items']): ChecklistGate {
+        if (!checklistItems || checklistItems.length === 0) return { status: 'not_initialized' };
+        const reasons: string[] = [];
+        for (const cl of checklistItems) {
+            const allocs = cl.allocations ?? [];
+            if (allocs.length > 0) {
+                const unchecked = allocs.filter(a => !a.checked);
+                if (unchecked.length > 0) {
+                    const locations = unchecked
+                        .map(a => `${a.container_path || '未知库位'}（计划 ${a.planned_quantity}）`)
+                        .join('、');
+                    reasons.push(`${cl.sku}：${unchecked.length}/${allocs.length} 个库位未勾选核查：${locations}`);
+                }
+                const actual = allocs.reduce((sum, a) => sum + (a.actual_quantity ?? a.planned_quantity), 0);
+                if (actual !== cl.planned_quantity) {
+                    reasons.push(`${cl.sku}：计划 ${cl.planned_quantity}，实际 ${actual}（${actual < cl.planned_quantity ? '少' : '多'}${Math.abs(actual - cl.planned_quantity)} 件）`);
+                }
+            } else {
+                if (!cl.checked) {
+                    reasons.push(`${cl.sku}：未核查（计划 ${cl.planned_quantity} 件）`);
+                }
+                if (cl.actual_quantity === null || cl.actual_quantity !== cl.planned_quantity) {
+                    reasons.push(cl.actual_quantity === null
+                        ? `${cl.sku}：计划 ${cl.planned_quantity}，实际未录入`
+                        : `${cl.sku}：计划 ${cl.planned_quantity}，实际 ${cl.actual_quantity}（${cl.actual_quantity < cl.planned_quantity ? '少' : '多'}${Math.abs(cl.actual_quantity - cl.planned_quantity)} 件）`);
+                }
+            }
+        }
+        return reasons.length > 0 ? { status: 'blocked', reasons } : { status: 'ok' };
+    }
+
     async function toggleSeal() {
         if (!pkg) return;
+        // 清单未初始化 / 未完成核查 / 实际与计划不一致 → 禁止封箱并弹窗提示
+        if (pkg.status !== 'sealed') {
+            const gate = getChecklistGate(pkg.checklist_items);
+            if (gate.status !== 'ok') {
+                sealBlockMessage = gate.status === 'not_initialized'
+                    ? `该包裹尚未初始化包装清单，无法封箱。\n包装清单还未生成：本包裹共 ${pkg.items?.length ?? 0} 个商品待核查。\n请先进入"包装清单"生成清单，逐项点勾"已核查"后再封箱。`
+                    : `包裹核查未完成或存在数量差异，无法封箱：\n${gate.reasons.join('\n')}\n\n请到包装清单逐项点勾"已核查"；若实际数量与计划不同且确认无误，请回到本页点击"同步清单"后再封箱。`;
+                sealBlocked = true;
+                return;
+            }
+        }
         try {
             sealing = true;
             error = '';
@@ -125,7 +177,14 @@
             }
             await loadPackage(pkg.id);
         } catch (err) {
-            error = getErrorMessage(err, '操作失败');
+            const msg = getErrorMessage(err, '操作失败');
+            if (msg.includes('数量差异') || msg.includes('未核查') || msg.includes('尚未初始化包装清单')) {
+                // 服务端兜底（如其它端已改动导致本页数据过期）
+                sealBlockMessage = msg;
+                sealBlocked = true;
+            } else {
+                error = msg;
+            }
         } finally {
             sealing = false;
         }
@@ -712,6 +771,38 @@
                 <button class="btn btn-ghost" onclick={cancelDelete}>取消 (N)</button>
                 <button class="btn btn-error" onclick={executeDelete} disabled={deleting}>
                     {deleting ? '删除中...' : '确认删除 (Y)'}
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- 封箱被拦截提示弹窗（实际与计划不一致） -->
+{#if sealBlocked}
+    <div
+        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+    >
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h3 class="font-bold text-lg mb-2">无法封箱</h3>
+            <p class="text-gray-600 whitespace-pre-line break-words leading-relaxed">{sealBlockMessage}</p>
+            <div class="flex justify-end gap-3 mt-6">
+                <button
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                    onclick={() => { sealBlocked = false; }}
+                >
+                    知道了
+                </button>
+                <button
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
+                    onclick={() => {
+                        sealBlocked = false;
+                        goto(`/customer/package/${pkg?.id}/checklist`);
+                    }}
+                >
+                    去包装清单
                 </button>
             </div>
         </div>
