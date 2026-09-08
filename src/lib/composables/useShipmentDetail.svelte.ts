@@ -17,11 +17,11 @@ export interface ShipmentActionConfig {
 export function getShipmentActions(): Record<string, ShipmentActionConfig[]> {
     return {
         draft: [
-            { action: 'confirm', label: '确认', variant: 'primary', confirmMessage: '确认要确认此发货单吗？确认后不可修改明细。' },
+            { action: 'confirm', label: '确认', variant: 'primary', confirmMessage: '确认要确认此发货单吗？确认后仍可修改发货明细。' },
             { action: 'sync', label: '同步包裹数量', variant: 'outline', confirmMessage: '确认要根据包裹实际装箱情况同步发货明细吗？' },
         ],
         synced: [
-            { action: 'confirm', label: '确认', variant: 'primary', confirmMessage: '确认要确认此发货单吗？确认后不可修改明细。' },
+            { action: 'confirm', label: '确认', variant: 'primary', confirmMessage: '确认要确认此发货单吗？确认后仍可修改发货明细。' },
             { action: 'sync', label: '同步包裹数量', variant: 'outline', confirmMessage: '确认要根据包裹实际装箱情况同步发货明细吗？' },
         ],
         confirmed: [
