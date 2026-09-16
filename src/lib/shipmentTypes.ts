@@ -530,16 +530,6 @@ export interface ShipmentConfirmRequest {
     confirmed_by?: string;
 }
 
-/** 打包发货单请求 */
-export interface ShipmentPackRequest {
-    packed_by?: string;
-}
-
-/** 发货请求 */
-export interface ShipmentShipRequest {
-    shipped_by?: string;
-}
-
 /** 发货列表筛选器 */
 export interface ShipmentFilters {
     search?: string;

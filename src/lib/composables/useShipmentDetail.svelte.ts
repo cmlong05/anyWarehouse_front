@@ -26,12 +26,9 @@ export function getShipmentActions(): Record<string, ShipmentActionConfig[]> {
         ],
         confirmed: [
             { action: 'sync', label: '同步', variant: 'outline', confirmMessage: '确认要根据包裹实际装箱情况同步发货明细吗？' },
-            { action: 'pack', label: '打包', variant: 'primary', confirmMessage: '确认已打包完成？' },
-            { action: 'ship', label: '发货', variant: 'outline', confirmMessage: '确认要发货吗？' },
         ],
         packed: [
             { action: 'sync', label: '同步', variant: 'outline', confirmMessage: '确认要根据包裹实际装箱情况同步发货明细吗？' },
-            { action: 'ship', label: '发货', variant: 'primary', confirmMessage: '确认要发货吗？' },
         ],
         shipped: [],
     };
@@ -106,12 +103,6 @@ export function useShipmentDetail(shipmentId: () => number) {
             switch (action) {
                 case 'confirm':
                     await shipmentAPI.confirm(shipment.id);
-                    break;
-                case 'pack':
-                    await shipmentAPI.pack(shipment.id);
-                    break;
-                case 'ship':
-                    await shipmentAPI.ship(shipment.id);
                     break;
                 case 'cancel':
                     await shipmentAPI.cancel(shipment.id);

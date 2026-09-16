@@ -13,8 +13,6 @@ import type {
     ShipmentCreateRequest,
     ShipmentUpdateRequest,
     ShipmentConfirmRequest,
-    ShipmentPackRequest,
-    ShipmentShipRequest,
     SyncItemsResponse,
     ShipmentFilters,
     ShipmentItem,
@@ -122,16 +120,6 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
     /** 确认发货单 */
     async confirm(id: number, data?: ShipmentConfirmRequest): Promise<Shipment> {
         return this.client.post<Shipment>(`${this.basePath}${id}/confirm/`, data || {});
-    }
-
-    /** 打包发货单 */
-    async pack(id: number, data?: ShipmentPackRequest): Promise<Shipment> {
-        return this.client.post<Shipment>(`${this.basePath}${id}/pack/`, data || {});
-    }
-
-    /** 发货 */
-    async ship(id: number, data?: ShipmentShipRequest): Promise<Shipment> {
-        return this.client.post<Shipment>(`${this.basePath}${id}/ship/`, data || {});
     }
 
     /** 取消发货单 */
