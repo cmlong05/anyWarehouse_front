@@ -72,6 +72,11 @@
             loading = true;
             error = '';
             pkg = await packageAPI.get(id);
+            // 清单与包裹明细对账：编辑明细会重写库位分配但不触碰清单，
+            // 这里补齐/刷新后再渲染"清单"列与封箱门禁，避免基于过期数据
+            pkg.checklist_items = await packageAPI
+                .initChecklist(id)
+                .catch(() => pkg?.checklist_items);
         } catch (err) {
             error = getErrorMessage(err, '加载包裹详情失败');
             logger.error('Load error:', err);
