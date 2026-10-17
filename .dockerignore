@@ -13,4 +13,3 @@ dist
 build
 *.local
 npm-debug.log
-bun.lockb
