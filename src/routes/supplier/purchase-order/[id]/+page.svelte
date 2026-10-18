@@ -141,7 +141,7 @@
                 showMeta={false}
                 updating={orderDetail.updating}
                 canEdit={canEditOrder(order.status)}
-                canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
+                canDelete={['draft', 'pending', 'approved', 'ordered', 'partial', 'cancelled'].includes(order.status)}
                 onBack={orderDetail.goBack}
                 onEdit={editOrder}
                 onDelete={orderDetail.deleteOrder}
