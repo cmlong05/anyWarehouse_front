@@ -37,7 +37,7 @@ export const PURCHASE_STATUS_MAP: Record<string, StatusConfig> = {
     approved: { label: '已批准', class: 'status-approved' },
     ordered: { label: '已下单', class: 'status-ordered' },
     partial: { label: '部分到货', class: 'status-partial' },
-    received: { label: '已完成', class: 'status-received' },
+    received: { label: '已收货', class: 'status-received' },
     cancelled: { label: '已取消', class: 'status-cancelled' },
 };
 

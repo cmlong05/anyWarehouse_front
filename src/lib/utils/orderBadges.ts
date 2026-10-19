@@ -19,7 +19,7 @@ const PURCHASE_STATUS_LABEL: Record<string, string> = {
     approved: '已批准',
     ordered: '已下单',
     partial: '部分到货',
-    received: '已完成',
+    received: '已收货',
     cancelled: '已取消',
 };
 

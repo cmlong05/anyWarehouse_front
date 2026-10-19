@@ -29,7 +29,7 @@ export const PARTNER_STATUS_LABELS: Record<string, string> = {
     'delivered': '已交付',
     'cancelled': '已取消',
     'ordered': '已下单',
-    'received': '已完成',
+    'received': '已收货',
 };
 
 export const PARTNER_LEVEL_LABELS: Record<string, string> = {

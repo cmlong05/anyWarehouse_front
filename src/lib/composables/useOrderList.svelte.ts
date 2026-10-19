@@ -224,7 +224,7 @@ export const ORDER_STATUS_OPTIONS = {
         { value: 'approved', label: '已批准' },
         { value: 'ordered', label: '已下单' },
         { value: 'partial', label: '部分到货' },
-        { value: 'received', label: '已完成' },
+        { value: 'received', label: '已收货' },
         { value: 'cancelled', label: '已取消' },
     ],
     sales: [
@@ -260,7 +260,7 @@ export const PURCHASE_STATUS_MAP: Record<string, { label: string; class: string 
     approved: { label: '已批准', class: 'badge-info' },
     ordered: { label: '已下单', class: 'badge-primary' },
     partial: { label: '部分到货', class: 'badge-success' },
-    received: { label: '已完成', class: 'badge-primary' },
+    received: { label: '已收货', class: 'badge-primary' },
     cancelled: { label: '已取消', class: 'badge-error' },
 };
 

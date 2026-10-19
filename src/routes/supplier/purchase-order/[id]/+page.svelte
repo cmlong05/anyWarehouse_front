@@ -10,6 +10,7 @@
     import { purchaseOrderAPI } from '$lib/api';
     import type { PurchaseOrder, PurchaseOrderItem } from '$lib';
     import { formatNumber } from '$lib/utils';
+    import { getPurchasePaymentStatusLabel } from '$lib/utils/orderBadges';
 	import { Alert, Loading } from '$lib/components';
     import { 
         OrderDetailHeader, 
@@ -155,6 +156,7 @@
             items={[
                 { label: '订单号', value: order.order_number },
                 { label: '订单状态', value: PURCHASE_STATUS_MAP[order.status]?.label || order.status },
+                { label: '付款状态', value: getPurchasePaymentStatusLabel(order.payment_status) },
                 { label: '供应商', value: order.supplier_detail?.name, href: `/supplier/${order.supplier}` },
                 { label: '优先级', value: order.priority, format: 'priority' },
                 { label: '下单日期', value: order.order_date },

@@ -9,7 +9,7 @@
     import { page as pageStore } from '$app/state';
     import { purchaseOrderAPI, supplierAPI } from '$lib/api';
     import { getCurrencySymbol } from '$lib/utils/formatters';
-    import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel, getPurchasePaymentStatusLabel } from '$lib/utils/orderBadges';
+    import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel, getPurchasePaymentStatusLabel, getPurchasePaymentStatusClass } from '$lib/utils/orderBadges';
     import type { PurchaseOrderBrief, SupplierBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
@@ -202,13 +202,9 @@
                         {getStatusLabel(value as string)}
                     </span>
                 {:else if column.key === 'payment_status'}
-                    <span
-                        class="inline-flex h-4 w-4 rounded-full"
-                        class:bg-[radial-gradient(circle,_rgba(34,197,94,1)_5%,_rgba(34,197,94,0)_90%)]={value === 'paid'}
-                        class:bg-[radial-gradient(circle,_rgba(250,204,21,1)_5%,_rgba(250,204,21,0)_90%)]={value === 'partial'}
-                        class:bg-[radial-gradient(circle,_rgba(148,163,184,1)_5%,_rgba(148,163,184,0)_90%)]={value !== 'paid' && value !== 'partial'}
-                        title={getPurchasePaymentStatusLabel(value as string)}
-                    ></span>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {getPurchasePaymentStatusClass(value as string)}">
+                        {getPurchasePaymentStatusLabel(value as string)}
+                    </span>
                 {:else if column.key === 'priority'}
                     <span class="text-gray-700">{getPriorityLabel(value as string)}</span>
                 {:else if column.key === 'expected_delivery'}
