@@ -67,10 +67,7 @@
         error = '';
         
         try {
-            await purchaseOrderAPI.update(order.id, {
-                ...data,
-                status: 'pending',
-            });
+            await purchaseOrderAPI.update(order.id, data);
             // 更新成功后跳转到订单详情页
             goto(`/supplier/purchase-order/${order.id}`);
         } catch (err) {
