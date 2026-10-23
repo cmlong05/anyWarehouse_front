@@ -930,6 +930,8 @@ export interface ShipmentBrief {
     id: number;
     shipment_no: string;
     status: string;
+    is_synced?: boolean;
+    synced_at?: string;
     total_packages: number;
     created_at: string;
 }

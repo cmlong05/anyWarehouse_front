@@ -22,6 +22,7 @@
             packed: 'bg-yellow-100 text-yellow-700',
             shipped: 'bg-green-100 text-green-700',
             delivered: 'bg-indigo-100 text-indigo-700',
+            synced: 'bg-purple-100 text-purple-700',
             cancelled: 'bg-red-100 text-red-700',
         };
         return classes[status] || 'bg-gray-100 text-gray-600';
@@ -103,9 +104,16 @@
                         <span class="font-medium text-gray-900">
                             {shipment.shipment_no}
                         </span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
-                            {shipment.status === 'draft' ? '草稿' : shipment.status === 'confirmed' ? '已确认' : shipment.status === 'packed' ? '已打包' : shipment.status === 'shipped' ? '已发货' : shipment.status === 'delivered' ? '已签收' : shipment.status === 'cancelled' ? '已取消' : shipment.status === 'synced' ? '已同步' : shipment.status}
-                        </span>
+                        <div class="flex items-center gap-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {getShipmentStatusClass(shipment.status)}">
+                                {shipment.status === 'draft' ? '草稿' : shipment.status === 'confirmed' ? '已确认' : shipment.status === 'packed' ? '已打包' : shipment.status === 'shipped' ? '已发货' : shipment.status === 'delivered' ? '已签收' : shipment.status === 'cancelled' ? '已取消' : shipment.status === 'synced' ? '已同步' : shipment.status}
+                            </span>
+                            {#if shipment.is_synced && shipment.status !== 'synced'}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                    已同步
+                                </span>
+                            {/if}
+                        </div>
                     </div>
                     <div class="flex flex-col gap-1 text-sm text-gray-600">
                         <span>包裹: {shipment.total_packages}</span>

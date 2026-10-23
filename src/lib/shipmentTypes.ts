@@ -214,6 +214,8 @@ export interface ShipmentBrief {
     id: number;
     shipment_no: string;
     status: ShipmentStatus;
+    is_synced?: boolean;
+    synced_at?: string;
     order_detail?: ShipmentOrderInfo | null;
     total_packages: number;
     total_items: number;
