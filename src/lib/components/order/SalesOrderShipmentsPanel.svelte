@@ -29,7 +29,7 @@
     }
 
     let syncLoading = $state(false);
-    let syncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
+    let syncResult = $state<{ message: string; updated_items: { item_id: number; sku: string; old_qty: string; new_qty: string }[] } | null>(null);
     let syncError = $state<string | null>(null);
 
     async function syncQuantities() {

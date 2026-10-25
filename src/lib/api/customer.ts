@@ -157,16 +157,16 @@ export class SalesOrderAPI extends BaseOrderAPI<
      *
      * @param orderId 订单ID
      * @param options allowDecrease: 是否允许减少（仅当发货数量低于订单数量时才生效）
-     *                sku: 仅同步指定 SKU 的明细
+     *                itemId: 仅同步指定物品对应的订单行
      */
-    async syncQuantities(orderId: number, options?: { allowDecrease?: boolean; sku?: string }): Promise<{
+    async syncQuantities(orderId: number, options?: { allowDecrease?: boolean; itemId?: number }): Promise<{
         status: string;
         message: string;
-        updated_items: { sku: string; old_qty: string; new_qty: string }[];
+        updated_items: { item_id: number; sku: string; old_qty: string; new_qty: string }[];
     }> {
         const body: Record<string, any> = {};
         if (options?.allowDecrease) body.allow_decrease = true;
-        if (options?.sku) body.sku = options.sku;
+        if (options?.itemId !== undefined) body.item_id = options.itemId;
         return this.client.post(`${this.basePath}${orderId}/sync_quantities/`, body);
     }
 

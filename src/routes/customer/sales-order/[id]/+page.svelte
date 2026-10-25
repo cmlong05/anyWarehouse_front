@@ -264,24 +264,25 @@
     // 反向同步：按行由发货单推进订单数量
     const TERMINAL_STATUSES = ['delivered', 'cancelled'];
     let isTerminal = $derived(TERMINAL_STATUSES.includes(orderDetail.order?.status ?? ''));
-    let reverseSyncLoading = $state<Record<string, boolean>>({});
-    let reverseSyncResult = $state<{ message: string; updated_items: { sku: string; old_qty: string; new_qty: string }[] } | null>(null);
+    let reverseSyncLoading = $state<Record<number, boolean>>({});
+    let reverseSyncResult = $state<{ message: string; updated_items: { item_id: number; sku: string; old_qty: string; new_qty: string }[] } | null>(null);
     let reverseSyncError = $state<string | null>(null);
 
     //反向同步：按行由发货单推进订单数量变更
-    async function reverseSyncItem(item: { sku: string }) {
-        if (!orderId || reverseSyncLoading[item.sku]) return;
+    async function reverseSyncItem(item: { item: number | null }) {
+        const itemId = item.item;
+        if (!orderId || itemId === null || reverseSyncLoading[itemId]) return;
         reverseSyncResult = null;
         reverseSyncError = null;
-        reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: true };
+        reverseSyncLoading = { ...reverseSyncLoading, [itemId]: true };
         try {
-            const result = await salesOrderAPI.syncQuantities(orderId, { sku: item.sku, allowDecrease: true });
+            const result = await salesOrderAPI.syncQuantities(orderId, { itemId, allowDecrease: true });
             reverseSyncResult = result;
             if (result.updated_items.length > 0) {
                 // 原地更新 item.quantity，确保 $derived.by 中的表格数据立即刷新
                 // （Svelte 5 的 $derived.by 可能无法追踪通过 getter 访问的 $state 变更）
                 for (const updated of result.updated_items) {
-                    const target = orderDetail.order?.items?.find(i => i.sku === updated.sku);
+                    const target = orderDetail.order?.items?.find(i => i.item === updated.item_id);
                     if (target) {
                         target.quantity = parseInt(updated.new_qty);
                     }
@@ -293,7 +294,7 @@
         } catch (e: unknown) {
             reverseSyncError = e instanceof Error ? e.message : '同步失败，请重试';
         } finally {
-            reverseSyncLoading = { ...reverseSyncLoading, [item.sku]: false };
+            reverseSyncLoading = { ...reverseSyncLoading, [itemId]: false };
         }
     }
 
