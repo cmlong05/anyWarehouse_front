@@ -54,6 +54,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         currentStock?: string;
         quantity?: string;
         shipped?: string;
+        actualShipped?: string;
         received?: string;
         pendingShip?: string;
         pendingReceive?: string;
@@ -151,6 +152,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         currentStock: '现有库存',
         quantity: '数量',
         shipped: '已发货',
+        actualShipped: '已发数量',
         received: '已到货',
         pendingShip: '待发货',
         pendingReceive: '待到货',
@@ -166,8 +168,12 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     // 使用 $derived 使标签对象具有响应性
     const l = $derived({ ...defaultLabels, ...labels } as Required<Labels>);
 
-    function getShippedQty(item: OrderItem): number {
+    function getShipmentPlannedQty(item: OrderItem): number {
         return safeParseFloat(item.quantity_in_shipments ?? item.quantity_processed);
+    }
+
+    function getActualShippedQty(item: OrderItem): number {
+        return safeParseFloat(item.quantity_processed);
     }
 
     function getPendingQty(item: OrderItem): number {
@@ -272,6 +278,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             sku: firstVariant.item_detail?.parent_item_sku || '',
                             item_name: firstVariant.item_detail?.parent_item_name || '',
                             quantity: totalQty.toString(),
+                            quantity_processed: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_processed), 0),
                             quantity_in_shipments: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_in_shipments ?? 0), 0),
                             quantity_pending: variants.reduce((sum, v) => sum + safeParseFloat(v.quantity_pending), 0).toString(),
                             unit_price: avgUnit.toString(),
@@ -332,11 +339,26 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
             });
         }
 
-        cols.push(
-            { key: 'quantity', title: l.quantity, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'quantity_processed', title: type === 'sales' ? l.shipped : l.received, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
-            { key: 'quantity_pending', title: type === 'sales' ? l.pendingShip : l.pendingReceive, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' }
-        );
+        cols.push({
+            key: 'quantity',
+            title: l.quantity,
+            sortable: true,
+            align: 'right',
+            headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer',
+        });
+
+        if (type === 'sales') {
+            cols.push(
+                { key: 'quantity_in_shipments', title: l.shipped, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+                { key: 'quantity_processed', title: l.actualShipped, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+                { key: 'quantity_pending', title: l.pendingShip, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' }
+            );
+        } else {
+            cols.push(
+                { key: 'quantity_processed', title: l.received, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' },
+                { key: 'quantity_pending', title: l.pendingReceive, sortable: true, align: 'right', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold cursor-pointer' }
+            );
+        }
 
         if (showPrices) {
             cols.push(
@@ -411,7 +433,8 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
             >
                 {#snippet cellRender({ item: section, column, value }: { item: GroupedSection; column: { key: string }; value: unknown })}
                     {@const rowItem = section.item}
-                    {@const shipped = getShippedQty(rowItem)}
+                    {@const shipmentPlanned = getShipmentPlannedQty(rowItem)}
+                    {@const actualShipped = getActualShippedQty(rowItem)}
                     {@const pending = getPendingQty(rowItem)}
                     {@const variantAttrs = section.type === 'variant' ? getVariantAttributes(rowItem) : []}
                     {@const currentStock = getCurrentStock(section)}
@@ -474,8 +497,12 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                         {/if}
                     {:else if column.key === 'quantity'}
                         {formatNumber(rowItem.quantity)}
+                    {:else if column.key === 'quantity_in_shipments'}
+                        {formatNumber(shipmentPlanned)}
                     {:else if column.key === 'quantity_processed'}
-                        {formatNumber(shipped)}
+                        <span class={actualShipped !== shipmentPlanned ? 'text-red-600 font-semibold' : ''}>
+                            {formatNumber(actualShipped)}
+                        </span>
                     {:else if column.key === 'quantity_pending'}
                         <span class={pending > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}>{formatNumber(pending)}</span>
                     {:else if column.key === 'unit_price'}
@@ -485,13 +512,13 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                     {:else if column.key === 'status'}
                         {#if isFullyProcessed(rowItem)}
                             <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">{l.completed}</span>
-                        {:else if shipped > 0}
+                        {:else if actualShipped > 0}
                             <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">{l.partial}</span>
                         {:else}
                             <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
                         {/if}
                     {:else if column.key === 'action'}
-                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipped !== safeParseFloat(rowItem.quantity)}
+                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipmentPlanned !== safeParseFloat(rowItem.quantity)}
                             <button
                                 type="button"
                                 class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

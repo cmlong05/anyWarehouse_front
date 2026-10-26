@@ -122,7 +122,6 @@
 
         return order.items.map((item) => ({
             ...item,
-            quantity_processed: safeParseFloat(item.quantity_in_shipments ?? 0),
             quantity_pending: safeParseFloat(item.quantity_pending_real),
         }));
     });
@@ -545,6 +544,7 @@
                 currentStock: '现有库存',
                 quantity: '数量',
                 shipped: '已建发货单',
+                actualShipped: '已发数量',
                 pendingShip: '待建发货单',
                 unitPrice: '单价',
                 subtotal: '小计',
