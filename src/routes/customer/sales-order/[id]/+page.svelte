@@ -17,6 +17,8 @@
         OrderInfoGrid, 
         OrderAmountGrid, 
         OrderItemsTable,
+        OrderSyncOptionsModal,
+        OrderSyncResultModal,
         ShipReceiveModal,
         SalesOrderPaymentPanel,
         SalesOrderShipmentsPanel,
@@ -260,23 +262,67 @@
         }
     });
 
-    // 反向同步：按行由发货单推进订单数量
+    // 对齐：按行由发货单推进订单数量
     const TERMINAL_STATUSES = ['delivered', 'cancelled'];
     let isTerminal = $derived(TERMINAL_STATUSES.includes(orderDetail.order?.status ?? ''));
     let reverseSyncLoading = $state<Record<number, boolean>>({});
-    let reverseSyncResult = $state<{ message: string; updated_items: { item_id: number; sku: string; old_qty: string; new_qty: string }[] } | null>(null);
-    let reverseSyncError = $state<string | null>(null);
+    let syncAllLoading = $state(false);
+    let showSyncAllOptions = $state(false);
+    let syncAllAllowDecrease = $state(false);
+    let syncFeedback = $state<{
+        type: 'success' | 'error';
+        title: string;
+        message: string;
+        updatedItems: { item_id: number; sku: string; old_qty: string; new_qty: string }[];
+    } | null>(null);
+
+    async function openSyncAllOptions() {
+        if (syncAllLoading) return;
+        syncAllAllowDecrease = false;
+        showSyncAllOptions = true;
+    }
+
+    async function confirmSyncAll() {
+        const allowDecrease = syncAllAllowDecrease;
+        showSyncAllOptions = false;
+        await syncAllQuantities(allowDecrease);
+    }
+
+    async function syncAllQuantities(allowDecrease: boolean) {
+        if (!orderId || syncAllLoading) return;
+        syncFeedback = null;
+        syncAllLoading = true;
+        try {
+            const result = await salesOrderAPI.syncQuantities(orderId, { allowDecrease });
+            if (result.updated_items.length > 0) {
+                await orderDetail.loadOrder({ silent: true });
+            }
+            syncFeedback = {
+                type: 'success',
+                title: '全部明细对齐完成',
+                message: result.message,
+                updatedItems: result.updated_items
+            };
+        } catch (e: unknown) {
+            syncFeedback = {
+                type: 'error',
+                title: '全部明细对齐失败',
+                message: getErrorMessage(e, '对齐失败，请重试'),
+                updatedItems: []
+            };
+        } finally {
+            syncAllLoading = false;
+        }
+    }
 
     //反向同步：按行由发货单推进订单数量变更
     async function reverseSyncItem(item: { item: number | null }) {
         const itemId = item.item;
         if (!orderId || itemId === null || reverseSyncLoading[itemId]) return;
-        reverseSyncResult = null;
-        reverseSyncError = null;
+        syncFeedback = null;
         reverseSyncLoading = { ...reverseSyncLoading, [itemId]: true };
         try {
             const result = await salesOrderAPI.syncQuantities(orderId, { itemId, allowDecrease: true });
-            reverseSyncResult = result;
             if (result.updated_items.length > 0) {
                 // 原地更新 item.quantity，确保 $derived.by 中的表格数据立即刷新
                 // （Svelte 5 的 $derived.by 可能无法追踪通过 getter 访问的 $state 变更）
@@ -290,8 +336,19 @@
             // 重新加载完整订单，刷新 total_amount 等订单级汇总字段
             // silent 模式：不触发整页 Loading，仅局部更新
             await orderDetail.loadOrder({ silent: true });
+            syncFeedback = {
+                type: 'success',
+                title: '明细对齐完成',
+                message: result.message,
+                updatedItems: result.updated_items
+            };
         } catch (e: unknown) {
-            reverseSyncError = e instanceof Error ? e.message : '同步失败，请重试';
+            syncFeedback = {
+                type: 'error',
+                title: '明细对齐失败',
+                message: e instanceof Error ? e.message : '同步失败，请重试',
+                updatedItems: []
+            };
         } finally {
             reverseSyncLoading = { ...reverseSyncLoading, [itemId]: false };
         }
@@ -556,25 +613,9 @@
             }}
             onReverseSync={isTerminal ? undefined : reverseSyncItem}
             reverseSyncLoading={reverseSyncLoading}
+            onSyncAll={order.shipments?.length ? openSyncAllOptions : undefined}
+            {syncAllLoading}
         />
-
-        {#if reverseSyncError}
-            <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-                ⚠️ {reverseSyncError}
-            </div>
-        {/if}
-        {#if reverseSyncResult}
-            <div class="mb-4 p-3 rounded-lg text-sm {reverseSyncResult.updated_items.length > 0 ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-gray-50 border border-gray-200 text-gray-600'}">
-                ✅ {reverseSyncResult.message}
-                {#if reverseSyncResult.updated_items.length > 0}
-                    <ul class="mt-2 space-y-1">
-                        {#each reverseSyncResult.updated_items as item}
-                            <li class="ml-4">SKU: <span class="font-mono font-medium">{item.sku}</span> — {item.old_qty} → <span class="font-semibold">{item.new_qty}</span></li>
-                        {/each}
-                    </ul>
-                {/if}
-            </div>
-        {/if}
 
         <!-- 生成发货单按钮 -->
         {#if ['confirmed', 'partial'].includes(order.status)}
@@ -589,7 +630,7 @@
             </div>
         {/if}
 
-        <SalesOrderShipmentsPanel {order} onOrderReload={orderDetail.loadOrder} />
+        <SalesOrderShipmentsPanel {order} />
 
         <SalesOrderPaymentPanel {order} onOrderReload={orderDetail.loadOrder} />
 
@@ -642,4 +683,21 @@
     loading={orderDetail.updating}
     onConfirm={confirmForceDeliver}
     onCancel={() => showForceModal = false}
+/>
+
+<OrderSyncOptionsModal
+    isOpen={showSyncAllOptions}
+    allowDecrease={syncAllAllowDecrease}
+    onAllowDecreaseChange={(allowDecrease) => syncAllAllowDecrease = allowDecrease}
+    onConfirm={confirmSyncAll}
+    onCancel={() => showSyncAllOptions = false}
+/>
+
+<OrderSyncResultModal
+    isOpen={syncFeedback !== null}
+    title={syncFeedback?.title}
+    message={syncFeedback?.message}
+    updatedItems={syncFeedback?.updatedItems}
+    error={syncFeedback?.type === 'error'}
+    onClose={() => syncFeedback = null}
 />

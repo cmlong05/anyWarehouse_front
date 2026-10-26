@@ -40,7 +40,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         item_name_en?: string;
         quantity: string | number;
         quantity_processed?: string | number;
-        quantity_in_shipments?: number;  // 已建发货单：与同步口径一致
+        quantity_in_shipments?: number;
         quantity_pending?: string | number;
         unit_price?: string | number;
         line_total?: string | number;
@@ -87,13 +87,16 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         labels?: Labels;
         currency?: string;
         /**
-         * 对单行执行“反向同步”（将订单数量减少到已发货数量）
+         * 对单行执行对齐（将订单数量对齐到发货计划数量）
          */
         onReverseSync?: (item: OrderItem) => Promise<void>;
         /**
          * 加载状态：key 为 item_id
          */
         reverseSyncLoading?: Record<number, boolean>;
+        /** 对齐全部订单明细的数量 */
+        onSyncAll?: () => Promise<void>;
+        syncAllLoading?: boolean;
     }
     
     let {
@@ -104,7 +107,9 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         labels = {},
         currency = 'CNY',
         onReverseSync,
-        reverseSyncLoading = {}
+        reverseSyncLoading = {},
+        onSyncAll,
+        syncAllLoading = false
     }: Props = $props();
     let sortKey = $state<SortKey>('line_number');
     let sortDirection = $state<'asc' | 'desc'>('asc');
@@ -369,8 +374,15 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
 
         cols.push({ key: 'status', title: l.status, sortable: false, align: 'center', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' });
 
-        if (onReverseSync && type === 'sales') {
-            cols.push({ key: 'action', title: '', sortable: false, align: 'center', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' });
+        if (type === 'sales' && (onReverseSync || onSyncAll)) {
+            cols.push({
+                key: 'action',
+                title: '',
+                width: '7rem',
+                sortable: false,
+                align: 'center',
+                headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold'
+            });
         }
 
         return cols;
@@ -431,6 +443,29 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                 wrapperClass="bg-transparent shadow-none rounded-none"
                 tableClass="w-full border-collapse text-sm"
             >
+                {#snippet headerCellRender({ column }: { column: { key: string } })}
+                    {#if column.key === 'action' && onSyncAll}
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50"
+                            onclick={onSyncAll}
+                            disabled={syncAllLoading}
+                            title="全部订单明细对齐发货单"
+                            aria-label="全部订单明细对齐发货单"
+                        >
+                            {#if syncAllLoading}
+                                <svg class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                对齐中...
+                            {:else}
+                                <span class="text-base leading-none">↩️</span>
+                            {/if}
+                        </button>
+                    {/if}
+                {/snippet}
+
                 {#snippet cellRender({ item: section, column, value }: { item: GroupedSection; column: { key: string }; value: unknown })}
                     {@const rowItem = section.item}
                     {@const shipmentPlanned = getShipmentPlannedQty(rowItem)}
@@ -524,8 +559,8 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                                 class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 onclick={() => onReverseSync(rowItem)}
                                 disabled={rowItem.item === null || reverseSyncLoading[rowItem.item]}
-                                title="将订单数量同步为发货单数量"
-                                aria-label="反向同步，将订单数量同步为发货单数量"
+                                title="将订单数量对齐到发货单数量"
+                                aria-label="将订单数量对齐到发货单数量"
                             >
                                 {#if rowItem.item !== null && reverseSyncLoading[rowItem.item]}
                                     <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
