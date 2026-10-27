@@ -520,11 +520,19 @@ export interface TrackingNumberOrderInfo {
     total_quantity: string;
 }
 
-/** 同步发货明细响应 */
+/** 同步对齐发货明细响应 */
+export interface ShipmentSyncUpdatedItem {
+    shipment_item_id: number;
+    item_id: number | null;
+    sku: string;
+    old_qty: string;
+    new_qty: string;
+}
+
 export interface SyncItemsResponse {
     status: string;
     message: string;
-    items: ShipmentItem[];
+    updated_items: ShipmentSyncUpdatedItem[];
 }
 
 /** 确认发货单请求 */

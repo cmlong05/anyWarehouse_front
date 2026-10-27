@@ -9,13 +9,18 @@
     import { formatDate, safeParseFloat, formatNumber } from '$lib/utils';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { SHIPMENT_STATUS_CHOICES, SHIPMENT_EDITABLE_STATUSES } from '$lib/shipmentTypes';
-    import type { PackageItem, ShipmentItem } from '$lib/shipmentTypes';
+    import type { PackageItem, ShipmentItem, ShipmentSyncUpdatedItem } from '$lib/shipmentTypes';
     import type { SalesOrder } from '$lib';
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
 	import { ShipmentStatusBadge } from '$lib/components';
 	import { Alert, Loading, ErrorModal } from '$lib/components';
-    import { DeleteConfirmModal, LinkPackageModal } from '$lib/components/shipment';
+    import {
+        DeleteConfirmModal,
+        LinkPackageModal,
+        ShipmentSyncOptionsModal,
+        ShipmentSyncResultModal,
+    } from '$lib/components/shipment';
     import { AddressInfo } from '$lib/components';
 
     let shipmentId = $derived(parseInt(page.params.id || '0'));
@@ -38,6 +43,13 @@
     let lineSyncMessage = $state<string | null>(null);
     let rowSyncMessage = $state<string | null>(null);
     let bulkSyncLoading = $state(false);
+    let showSyncAllOptions = $state(false);
+    let syncFeedback = $state<{
+        type: 'success' | 'error';
+        title: string;
+        message: string;
+        updatedItems: ShipmentSyncUpdatedItem[];
+    } | null>(null);
     let pruneLoading = $state(false);
     let rowPruneLoading = $state<Record<number, boolean>>({});
 
@@ -95,12 +107,6 @@
         });
     }
 
-    function hasSyncableLine(): boolean {
-        const items = shipmentDetail.shipment?.items;
-        if (!items?.length) return false;
-        return items.some(canSyncLine);
-    }
-
     function hasUnpackedLine(): boolean {
         const status = shipmentDetail.shipment?.status;
         if (!status || !SYNC_EDITABLE_STATUSES.includes(status)) return false;
@@ -109,22 +115,93 @@
         return items.some(it => safeParseFloat(it.quantity_packed || '0') === 0);
     }
 
-    async function syncAllShipmentItems() {
+    // 打开全部对齐确认弹窗。
+    function openSyncAllOptions() {
         if (bulkSyncLoading || !shipmentDetail.shipment) return;
-        const shipmentId = shipmentDetail.shipment.id;
-        await runShipmentAction({
-            confirm: '按已封箱包裹同步所有发货明细的计划数量？',
-            target: 'batch',
-            errorFallback: '同步失败，请重试',
-            setLoading: v => (bulkSyncLoading = v),
-            run: async () => {
-                const resp = await shipmentAPI.syncItems(shipmentId);
-                for (const it of resp.items) shipmentDetail.updateShipmentItem(it);
-                lineSyncMessage = resp.message || `已同步 ${resp.items.length} 条发货明细`;
+        showSyncAllOptions = true;
+    }
+
+    // 关闭确认弹窗并执行全部对齐。
+    async function confirmSyncAll() {
+        showSyncAllOptions = false;
+        await syncAllShipmentItems();
+    }
+    //通用对齐函数
+    async function runAlignmentAction(opts: {
+        setLoading: (loading: boolean) => void;
+        successTitle: string;
+        errorTitle: string;
+        execute: () => Promise<{ message: string; updatedItems: ShipmentSyncUpdatedItem[] }>;
+    }): Promise<void> {
+        syncFeedback = null;
+        opts.setLoading(true);
+        try {
+            const result = await opts.execute();
+            syncFeedback = {
+                type: 'success',
+                title: opts.successTitle,
+                message: result.message,
+                updatedItems: result.updatedItems,
+            };
+        } catch (err: unknown) {
+            syncFeedback = {
+                type: 'error',
+                title: opts.errorTitle,
+                message: getErrorMessage(err, '对齐失败，请重试'),
+                updatedItems: [],
+            };
+        } finally {
+            opts.setLoading(false);
+        }
+    }
+
+    //单行对齐
+    async function syncShipmentItemRow(item: ShipmentItem) {
+        if (lineSyncLoading[item.id]) return;
+        await runAlignmentAction({
+            setLoading: loading => {
+                lineSyncLoading = setRowLoading(lineSyncLoading, item.id, loading);
+            },
+            successTitle: '明细对齐完成',
+            errorTitle: '明细对齐失败',
+            execute: async () => {
+                const updated = await shipmentItemAPI.sync(item.id);
+                shipmentDetail.updateShipmentItem(updated);
+                return {
+                    message: `SKU ${item.sku} 已对齐`,
+                    updatedItems: [{
+                        shipment_item_id: item.id,
+                        item_id: item.item ?? null,
+                        sku: updated.sku,
+                        old_qty: item.quantity,
+                        new_qty: updated.quantity,
+                    }],
+                };
             },
         });
     }
 
+    // 全部对齐
+    async function syncAllShipmentItems() {
+        if (bulkSyncLoading || !shipmentDetail.shipment) return;
+        const shipmentId = shipmentDetail.shipment.id;
+        await runAlignmentAction({
+            setLoading: loading => (bulkSyncLoading = loading),
+            successTitle: '全部明细对齐完成',
+            errorTitle: '全部明细对齐失败',
+            execute: async () => {
+                const resp = await shipmentAPI.syncItems(shipmentId);
+                if (resp.updated_items.length > 0) {
+                    await shipmentDetail.loadShipment(undefined, { silent: true });
+                }
+                return {
+                    message: resp.message,
+                    updatedItems: resp.updated_items,
+                };
+            },
+        });
+    }
+    //剔除未打包行
     async function pruneUnpackedItems() {
         if (pruneLoading || !shipmentDetail.shipment) return;
         const shipmentId = shipmentDetail.shipment.id;
@@ -145,7 +222,7 @@
             },
         });
     }
-
+    //SKU对照表
     async function downloadSkuReference() {
         if (skuReferenceDownloading || !shipmentDetail.shipment) return;
         skuReferenceDownloading = true;
@@ -158,9 +235,8 @@
             skuReferenceDownloading = false;
         }
     }
-
+    //发货单
     let shippingNoteDownloading = $state(false);
-
     async function downloadShippingNote() {
         if (shippingNoteDownloading || !shipmentDetail.shipment) return;
         shippingNoteDownloading = true;
@@ -174,32 +250,17 @@
         }
     }
 
-    const SYNC_EDITABLE_STATUSES = ['draft', 'confirmed', 'packed', 'synced', 'shipped'];
+    const SYNC_EDITABLE_STATUSES = ['draft', 'confirmed', 'packed', 'synced', 'shipped', 'delivered'];
 
     function canSyncLine(item: ShipmentItem): boolean {
         const status = shipmentDetail.shipment?.status;
         if (!status || !SYNC_EDITABLE_STATUSES.includes(status)) return false;
         const packed = safeParseFloat(item.quantity_packed || '0');
         const planned = safeParseFloat(item.quantity);
-        // 只有在实际打包 > 0 且与计划不一致时才能同步。
+        // 只有在实际打包 > 0 且与计划不一致时才能同步对齐。
         // packed === 0 的行请用“编辑数量”或“删除行”，避免误操作清零。
         return packed > 0 && packed !== planned;
     }
-
-    async function syncShipmentItemRow(item: ShipmentItem) {
-        if (lineSyncLoading[item.id]) return;
-        await runShipmentAction({
-            target: 'row',
-            errorFallback: '同步失败，请重试',
-            setLoading: v => (lineSyncLoading = setRowLoading(lineSyncLoading, item.id, v)),
-            run: async () => {
-                const updated = await shipmentItemAPI.sync(item.id);
-                shipmentDetail.updateShipmentItem(updated);
-                rowSyncMessage = `SKU ${item.sku} 已同步`;
-            },
-        });
-    }
-
     // 监听ID变化加载数据
     $effect(() => {
         if (shipmentId && !isNaN(shipmentId)) {
@@ -236,9 +297,7 @@
     function getAvailableActions() {
         const status = shipmentDetail.shipment?.status;
         if (!status) return [];
-        
         // 创建数组副本，避免修改原配置
-        // 同步操作已移至「发货计划明细」区块，顶部不再展示
         const actions = [...(SHIPMENT_ACTIONS[status] || [])].filter(a => a.action !== 'sync');
 
     // 非草稿状态添加取消按钮（除已发货、已完成和已取消外）
@@ -522,7 +581,7 @@
                         <p class="mt-1 flex items-center gap-2">
                             <ShipmentStatusBadge status={shipment.status} />
                             {#if shipment.is_synced}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">已同步</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">已对齐</span>
                             {/if}
                         </p>
                     </div>
@@ -624,25 +683,23 @@
                                 {/if}
                             </button>
                         {/if}
-                        {#if hasSyncableLine()}
-                            <button
-                                type="button"
-                                class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                onclick={syncAllShipmentItems}
-                                disabled={bulkSyncLoading}
-                                title="按已封箱包裹同步所有发货明细的计划数量"
-                            >
-                                {#if bulkSyncLoading}
-                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                    </svg>
-                                    同步中...
-                                {:else}
-                                    🔄 一键同步
-                                {/if}
-                            </button>
-                        {/if}
+                        <button
+                            type="button"
+                            class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium bg-orange-50 border border-orange-200 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            onclick={openSyncAllOptions}
+                            disabled={bulkSyncLoading}
+                            title="全部发货明细对齐已封箱包裹"
+                        >
+                            {#if bulkSyncLoading}
+                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                对齐中...
+                            {:else}
+                                🔄
+                            {/if}
+                        </button>
                     </div>
                 </div>
                 {#if lineSyncMessage}
@@ -726,7 +783,7 @@
                                                     class="inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                     onclick={() => syncShipmentItemRow(item)}
                                                     disabled={lineSyncLoading[item.id]}
-                                                    title="按已封箱包裹数量同步此行计划数量"
+                                                    title="按已封箱包裹数量对齐此行计划数量"
                                                 >
                                                     {#if lineSyncLoading[item.id]}
                                                         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -734,7 +791,7 @@
                                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                                         </svg>
                                                     {:else}
-                                                        🔄 同步
+                                                        🔄 
                                                     {/if}
                                                 </button>
                                             {:else if section.type !== 'parent' && canPruneLine(item)}
@@ -863,5 +920,20 @@
     onClose={() => { shipmentDetail.showLinkPackageModal = false; shipmentDetail.selectedPackageId = null; }}
     onLink={shipmentDetail.linkPackage}
     onSelect={(id) => shipmentDetail.selectedPackageId = id}
+/>
+
+<ShipmentSyncOptionsModal
+    isOpen={showSyncAllOptions}
+    onConfirm={confirmSyncAll}
+    onCancel={() => showSyncAllOptions = false}
+/>
+
+<ShipmentSyncResultModal
+    isOpen={syncFeedback !== null}
+    title={syncFeedback?.title}
+    message={syncFeedback?.message}
+    updatedItems={syncFeedback?.updatedItems}
+    error={syncFeedback?.type === 'error'}
+    onClose={() => syncFeedback = null}
 />
 

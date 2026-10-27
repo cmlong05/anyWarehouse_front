@@ -56,18 +56,18 @@ export function useShipmentDetail(shipmentId: () => number) {
     let linkingPackage = $state(false);
     let selectedPackageId = $state<number | null>(null);
 
-    async function loadShipment(id?: number) {
+    async function loadShipment(id?: number, options?: { silent?: boolean }) {
         const targetId = id || shipmentId();
         if (!targetId || isNaN(targetId)) return;
         
         try {
-            loading = true;
+            if (!options?.silent) loading = true;
             error = '';
             shipment = await shipmentAPI.get(targetId);
         } catch (err) {
             error = getErrorMessage(err, '加载发货批次失败');
         } finally {
-            loading = false;
+            if (!options?.silent) loading = false;
         }
     }
 

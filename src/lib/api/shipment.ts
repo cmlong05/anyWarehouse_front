@@ -127,7 +127,7 @@ export class ShipmentAPI extends BaseAPI<Shipment, ShipmentCreateRequest, Shipme
         return this.client.post<Shipment>(`${this.basePath}${id}/cancel/`, { reason });
     }
 
-    /** 同步发货明细 */
+    /** 将发货计划数量对齐到已封箱包裹数量 */
     async syncItems(id: number): Promise<SyncItemsResponse> {
         return this.client.post<SyncItemsResponse>(`${this.basePath}${id}/sync_items/`, {});
     }
