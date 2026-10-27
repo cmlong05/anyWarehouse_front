@@ -7,7 +7,7 @@
     import { goto } from '$app/navigation';
     import { customerAPI } from '$lib/api';
     import type { Customer } from '$lib/schemas';
-    import { DataTable, FilterPanel, FormInput } from '$lib/components/ui';
+    import { DataTable, FilterPanel, FormInput, Pagination } from '$lib/components/ui';
     import FormField from '$lib/components/ui/FormField.svelte';
     import Svelecte from 'svelecte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
@@ -24,7 +24,10 @@
     let statusFilter = $state<any[]>(['ACTIVE']);
     let sortKey = $state<keyof Customer>('code');
     let sortDirection = $state<'asc' | 'desc'>('asc');
-    let initialLoad = $state(true);
+    let currentPage = $state(1);
+    let totalCount = $state(0);
+    let totalPages = $state(1);
+    const pageSize = 20;
     
     const levelOptions = [
         { value: 'VIP', label: 'VIP客户' },
@@ -72,7 +75,16 @@
         loading = true;
         error = '';
         try {
-            const params: { search?: string; level?: string; status?: string } = {};
+            const params: {
+                search?: string;
+                level?: string;
+                status?: string;
+                page: number;
+                page_size: number;
+            } = {
+                page: currentPage,
+                page_size: pageSize,
+            };
             if (searchQuery) params.search = searchQuery;
             if (levelFilter.length > 0 && levelFilter.length < levelOptions.length) {
                 const levels = levelFilter.map(v => typeof v === 'string' ? v : (v && v.value) ? v.value : undefined).filter(Boolean);
@@ -83,13 +95,17 @@
                 if (statuses.length) params.status = statuses.join(',');
             }
             
-            const result = await customerAPI.list(params);
-            if (result && typeof result === 'object' && 'results' in result) {
-                customers = (result as { results: Customer[] }).results;
-            } else if (Array.isArray(result)) {
+            const result = await customerAPI.list(params) as
+                | Customer[]
+                | { results: Customer[]; count?: number };
+            if (Array.isArray(result)) {
                 customers = result;
+                totalCount = result.length;
+                totalPages = 1;
             } else {
-                customers = [];
+                customers = result.results;
+                totalCount = result.count ?? customers.length;
+                totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
             }
         } catch (err) {
             error = err instanceof Error ? err.message : '加载客户列表失败';
@@ -106,6 +122,12 @@
         searchQuery = '';
         levelFilter = ['VIP', 'NORMAL'];
         statusFilter = ['ACTIVE'];
+        currentPage = 1;
+        loadCustomers();
+    }
+
+    function applyFilters() {
+        currentPage = 1;
         loadCustomers();
     }
 
@@ -115,17 +137,8 @@
         sortDirection = next.sortDirection;
     }
     
-    onMount(async () => {
-        await loadCustomers();
-        initialLoad = false;
-    });
-
-    // 监听筛选条件变化，初始加载后重新查询
-    $effect(() => {
-        if (initialLoad) return;
-        if (levelFilter || statusFilter) {
-            loadCustomers();
-        }
+    onMount(() => {
+        loadCustomers();
     });
 </script>
 
@@ -158,7 +171,7 @@
             name="search"
             value={searchQuery}
             placeholder="搜索客户编号、名称、联系人..."
-            onchange={(v) => { searchQuery = v; loadCustomers(); }}
+            onchange={(v) => { searchQuery = v; applyFilters(); }}
         />
         
         <FormField label="等级" for="level-filter">
@@ -174,6 +187,7 @@
                     valueField="value"
                     labelField="label"
                     placeholder="选择等级"
+                    onChange={applyFilters}
                 />
             </div>
         </FormField>
@@ -191,6 +205,7 @@
                     valueField="value"
                     labelField="label"
                     placeholder="选择状态"
+                    onChange={applyFilters}
                 />
             </div>
         </FormField>
@@ -254,7 +269,15 @@
         </DataTable>
         
         <div class="mt-4 text-sm text-gray-500">
-            共 {sortedCustomers.length} 个客户
+            共 {totalCount} 个客户
         </div>
+        <Pagination
+            page={currentPage}
+            {totalCount}
+            {totalPages}
+            disabled={loading}
+            showInfo={false}
+            onPageChange={(p) => { currentPage = p; loadCustomers(); }}
+        />
     {/if}
 </PageContainer>
