@@ -58,8 +58,9 @@
         paymentError = null;
         paymentSuccess = null;
 
-        const amount = Number(paymentForm.amount);
-        if (!Number.isFinite(amount) || amount <= 0) {
+        const rawAmount = String(paymentForm.amount).trim();
+        const amount = Number(rawAmount);
+        if (rawAmount === '' || !Number.isFinite(amount)) {
             paymentError = '请输入有效的收款金额。';
             return;
         }
@@ -109,7 +110,7 @@
     <div class="flex flex-col gap-2 mb-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h3 class="text-lg font-semibold text-gray-900">收款信息</h3>
-            <p class="text-sm text-gray-500">记录每笔收款，并上传文档或图片作为佐证。</p>
+            <p class="text-sm text-gray-500">记录每笔收款、退款或备注，并上传文档或图片作为佐证。</p>
         </div>
         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {getSalesPaymentStatusClass(order.payment_status)}">
             {getSalesPaymentStatusLabel(order.payment_status)}
@@ -146,7 +147,7 @@
         <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
             <div
                 class="h-full rounded-full bg-green-500 transition-all"
-                style={`width: ${Math.min(order.payment_progress_percentage || 0, 100)}%`}
+                style={`width: ${Math.max(0, Math.min(order.payment_progress_percentage || 0, 100))}%`}
             ></div>
         </div>
     </div>
@@ -159,7 +160,7 @@
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-amount">收款金额</label>
-                <input id="payment-amount" type="number" min="0" step="0.01" bind:value={paymentForm.amount} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="0.00" />
+                <input id="payment-amount" type="number" step="0.01" bind:value={paymentForm.amount} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="0.00" />
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-method">收款方式</label>
