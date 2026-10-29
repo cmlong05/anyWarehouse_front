@@ -247,6 +247,12 @@ body {
   font-size: var(--font-size-xs);
 }
 
+/* 匹配同排 py-2 + text-sm 输入框在 20px 根字号下的 47px 总高度 */
+.stepper-form .stepper-btn,
+.stepper-form .stepper-input {
+  height: 45px;
+}
+
 .stepper-lg .stepper-btn {
   width: 36px;
   height: 40px;

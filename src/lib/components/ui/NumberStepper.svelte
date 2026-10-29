@@ -46,7 +46,7 @@
         decimalPlaces?: number;
         placeholder?: string;
         disabled?: boolean;
-        size?: 'sm' | 'md' | 'lg';
+        size?: 'sm' | 'md' | 'lg' | 'form';
         class?: string;
         onchange?: (value: number | null | undefined) => void;
     }
@@ -70,6 +70,7 @@
         sm: 'stepper-sm',
         md: '',
         lg: 'stepper-lg',
+        form: 'stepper-form',
     }[size]);
     
     // 输入框的显示值（允许临时编辑）

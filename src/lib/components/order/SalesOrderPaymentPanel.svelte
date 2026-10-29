@@ -7,6 +7,7 @@
 <script lang="ts">
     import { salesOrderPaymentRecordAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';
+    import { NumberStepper } from '$lib/components/ui';
     import { safeParseFloat } from '$lib/utils';
     import { getSalesPaymentStatusLabel, getSalesPaymentStatusClass } from '$lib/utils/orderBadges';
 
@@ -29,7 +30,7 @@
 
     let paymentForm = $state({
         received_date: getTodayLocalDate(),
-        amount: '',
+        amount: null as number | null,
         payment_method: '',
         reference_number: '',
         notes: '',
@@ -39,7 +40,7 @@
     function resetPaymentForm() {
         paymentForm = {
             received_date: getTodayLocalDate(),
-            amount: '',
+            amount: null,
             payment_method: '',
             reference_number: '',
             notes: '',
@@ -52,15 +53,23 @@
         paymentForm.attachment = target.files?.[0] ?? null;
     }
 
+    function openPaymentDatePicker(event: MouseEvent) {
+        const input = event.currentTarget as HTMLInputElement;
+        try {
+            input.showPicker();
+        } catch {
+            // 不支持showPicker时，或已打开原生选择器时，保留日期输入框的默认交互。
+        }
+    }
+
     async function createPaymentRecord() {
         if (paymentSaving) return;
 
         paymentError = null;
         paymentSuccess = null;
 
-        const rawAmount = String(paymentForm.amount).trim();
-        const amount = Number(rawAmount);
-        if (rawAmount === '' || !Number.isFinite(amount)) {
+        const amount = paymentForm.amount;
+        if (amount === null || !Number.isFinite(amount)) {
             paymentError = '请输入有效的收款金额。';
             return;
         }
@@ -156,11 +165,20 @@
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-date">收款日期</label>
-                <input id="payment-date" type="date" bind:value={paymentForm.received_date} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                <input id="payment-date" type="date" bind:value={paymentForm.received_date} onclick={openPaymentDatePicker} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-amount">收款金额</label>
-                <input id="payment-amount" type="number" step="0.01" bind:value={paymentForm.amount} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="0.00" />
+                <NumberStepper
+                    id="payment-amount"
+                    bind:value={paymentForm.amount}
+                    min={-9999999999.99}
+                    max={9999999999.99}
+                    step={0.01}
+                    decimalPlaces={2}
+                    placeholder="0.00"
+                    size="form"
+                />
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-method">收款方式</label>
