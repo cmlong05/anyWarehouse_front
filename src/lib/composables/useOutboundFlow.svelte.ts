@@ -4,6 +4,7 @@
 import { apiClient } from '$lib/api';
 import { logger } from '$lib/logger';
 import type { StorageContainer } from '$lib';
+import { canOutboundStorage } from '$lib/utils';
 
 export type OutboundPending = {
     storage: StorageContainer;
@@ -37,6 +38,7 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
     }
 
     function request(storage: StorageContainer) {
+        if (!canOutboundStorage(storage)) return;
         const qty = quantityValues[storage.id] ?? 1;
         if (isNaN(qty) || qty <= 0 || qty > storage.quantity) return;
         pending = { storage, qty, newQty: storage.quantity - qty };
@@ -49,6 +51,11 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
     async function confirm() {
         if (!pending || processing) return;
         const { storage, qty, newQty } = pending;
+        if (!canOutboundStorage(storage)) {
+            pending = null;
+            alert('当前存储已锁定，请先解锁后再出库');
+            return;
+        }
         processing = true;
         try {
             let updated: Partial<StorageContainer> | null = null;

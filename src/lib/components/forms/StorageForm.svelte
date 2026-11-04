@@ -13,6 +13,7 @@
     import Svelecte from 'svelecte';
     import { goto } from '$app/navigation';
     import { FormInput, NumberStepper } from '$lib/components/ui';
+    import { buildStorageMutationData } from '$lib/utils/storageForm';
 
     interface Props {
         mode: 'add' | 'edit';
@@ -24,6 +25,7 @@
             quantity: string | number;
             text: string;
             sample: boolean;
+            is_locked?: boolean;
         };
         containers: ContainerBriefID[];
         itemId?: string;
@@ -41,7 +43,8 @@
         container: '',
         quantity: '',
         text: '',
-        sample: false
+        sample: false,
+        is_locked: false
     });
     
     // 当 initialData 或 itemId/itemSKU 变化时更新表单数据
@@ -51,6 +54,7 @@
         formData.quantity = String(initialData?.quantity || '');
         formData.text = initialData?.text || '';
         formData.sample = initialData?.sample || false;
+        formData.is_locked = initialData?.is_locked || false;
     });
 
     const displayItem = $derived(mode === 'edit' 
@@ -60,13 +64,7 @@
     async function handleSubmit(event: Event) {
         event.preventDefault();
         
-        const submitData = {
-            item: Number(formData.item),
-            container: Number(formData.container),
-            quantity: Number(formData.quantity),
-            text: formData.text || '',
-            sample: formData.sample
-        };
+        const submitData = buildStorageMutationData(formData);
 
         try {
             if (mode === 'add') {
@@ -134,10 +132,14 @@
         oninput={(v) => formData.text = v}
     />
 
-    <div class="flex items-center mb-4">
+    <div class="flex flex-col gap-3 mb-4 sm:flex-row sm:gap-8">
         <label class="flex items-center gap-2 cursor-pointer font-normal">
             <input type="checkbox" name="sample" bind:checked={formData.sample} class="w-5 h-5" />
             <span>样品（不计入库存）</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer font-normal">
+            <input type="checkbox" name="is_locked" bind:checked={formData.is_locked} class="w-5 h-5" />
+            <span>锁定（禁止出库）</span>
         </label>
     </div>
 
@@ -145,7 +147,15 @@
         <button type="submit" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-blue-600 text-white hover:opacity-90 w-full md:w-auto">{mode === 'add' ? '添加存储' : '保存修改'}</button>
         <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-gray-500 text-white hover:opacity-90 w-full md:w-auto" onclick={handleCancel}>取消</button>
         {#if mode === 'edit' && onDelete}
-            <button type="button" class="px-6 py-3 rounded-md cursor-pointer text-base font-medium transition-opacity duration-150 bg-red-600 text-white hover:opacity-90 w-full md:w-auto" onclick={handleDeleteClick}>删除存储</button>
+            <button
+                type="button"
+                class="px-6 py-3 rounded-md text-base font-medium transition-opacity duration-150 bg-red-600 text-white hover:opacity-90 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600 w-full md:w-auto"
+                onclick={handleDeleteClick}
+                disabled={formData.is_locked}
+                title={formData.is_locked ? '已锁定，请先解锁后再删除' : ''}
+            >
+                删除存储
+            </button>
         {/if}
     </div>
 </form>

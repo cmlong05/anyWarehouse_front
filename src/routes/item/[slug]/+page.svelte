@@ -28,7 +28,7 @@
     import AssemblyModal from '$lib/components/item/AssemblyModal.svelte';
     import DisassemblyModal from '$lib/components/item/DisassemblyModal.svelte';
 
-    let { data } = $props<{
+    let { data }: {
         data: {
             itemDetail: ItemSet;
             quotations: QuotationBrief[];
@@ -39,25 +39,16 @@
             ebayBaseUrl?: string;
             ebayUrlSuffix?: string;
         }
-    }>();
+    } = $props();
 
     let platformLinkCount = $state(untrack(() => data.itemDetail.item.external_links?.length ?? 0));
     let associationCount = $state(untrack(() => data.itemDetail.item.associated_items?.length ?? 0));
 
-    // 判断是否为变体母版（处理字符串和布尔值）
-    const isVariantTemplate = $derived(
-        data.itemDetail.item.is_variant_template === true ||
-        data.itemDetail.item.is_variant_template === 'true' ||
-        data.itemDetail.item.is_variant_template === 1
-    );
+    const isVariantTemplate = $derived(data.itemDetail.item.is_variant_template === true);
 
     // 默认标签：母版显示变体，普通Item显示库存
     let activeTab = $state<ItemDetailTab>(
-        untrack(() => (
-            data.itemDetail.item.is_variant_template === true ||
-            data.itemDetail.item.is_variant_template === 'true' ||
-            data.itemDetail.item.is_variant_template === 1
-        )) ? 'variants' : 'overview'
+        untrack(() => data.itemDetail.item.is_variant_template === true) ? 'variants' : 'overview'
     );
 
     // 库存数据独立管理，避免通过 data 传播触发整页刷新
@@ -117,11 +108,7 @@
             currentTotalStorage = data.itemDetail.item.total_storage ?? 0;
             platformLinkCount = data.itemDetail.item.external_links?.length ?? 0;
             associationCount = data.itemDetail.item.associated_items?.length ?? 0;
-            activeTab = (
-                data.itemDetail.item.is_variant_template === true ||
-                data.itemDetail.item.is_variant_template === 'true' ||
-                data.itemDetail.item.is_variant_template === 1
-            ) ? 'variants' : 'overview';
+            activeTab = data.itemDetail.item.is_variant_template === true ? 'variants' : 'overview';
             transferFlash = {};
             bomVersion = 0;
             showAssembly = false;
@@ -138,6 +125,10 @@
         const source = currentStorages.find((s: StorageContainer) => s.id === fromStorageId);
         const target = currentStorages.find((s: StorageContainer) => s.id === toStorageId);
         if (!source || !target || source.id === target.id || source.quantity <= 0) return;
+        if (source.is_locked) {
+            transferError = '当前存储已锁定，请先解锁后再移库';
+            return;
+        }
         transferError = '';
         transferPending = {
             fromStorageId: source.id,
@@ -213,7 +204,9 @@
     // 刷新变体数据
     async function refreshVariantInfo() {
         try {
-            const variantInfo = await apiClient.get(`/product/item/${data.itemDetail.item.id}/variants/`);
+            const variantInfo = await apiClient.get<ItemVariantInfo>(
+                `/product/item/${data.itemDetail.item.id}/variants/`
+            );
             data = { ...data, variantInfo };
         } catch (e) {
             logger.error('刷新变体数据失败:', e);

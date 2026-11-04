@@ -278,6 +278,7 @@ export interface StorageStandard {
     quantity: number;
     text: string;
     sample: boolean;
+    is_locked: boolean;
     date_added: string;
     volume: number;
     weight: number;
@@ -299,6 +300,7 @@ export interface StorageContainer {
     container_fastCode: string;
     mark: string;
     quantity: number;
+    is_locked: boolean;
 }
 
 // 容器类型

@@ -37,3 +37,6 @@ export * from './container-options';
 
 // 导出弹窗工具
 export * from './modal';
+
+// 导出 Storage 锁定状态工具
+export * from './storageLock';

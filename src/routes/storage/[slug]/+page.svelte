@@ -9,12 +9,12 @@
     import { goto } from '$app/navigation';
     import { apiClient } from '$lib/api';
 
-    let { data } = $props<{ 
+    let { data }: { 
         data: {
             storageDetail: StorageStandard & { itemSKU?: string }; 
             containers: ContainerBriefID[];
         }
-    }>();
+    } = $props();
 
     async function handleDelete(storageId: number) {
         await apiClient.deleteNoContent(`/warehouse/storage/${storageId}/`);
@@ -38,7 +38,8 @@
             container: data.storageDetail.container,
             quantity: data.storageDetail.quantity,
             text: data.storageDetail.text,
-            sample: data.storageDetail.sample
+            sample: data.storageDetail.sample,
+            is_locked: data.storageDetail.is_locked,
         }}
         containers={data.containers}
         onDelete={handleDelete}

@@ -6,9 +6,10 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
     import type { StorageContainer } from '$lib';
-    import { formatDate, formatNumber } from '$lib/utils';
+    import { canOutboundStorage, formatDate, formatNumber } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';
     import Plus from 'lucide-svelte/icons/plus';
+    import Lock from 'lucide-svelte/icons/lock';
 
     interface Props {
         isVariantTemplate: boolean;
@@ -61,7 +62,7 @@
     }
 
     function handleDragStart(e: DragEvent, storage: StorageContainer) {
-        if (storage.quantity <= 0) {
+        if (!canOutboundStorage(storage)) {
             e.preventDefault();
             return;
         }
@@ -147,7 +148,7 @@
                 <tbody class="divide-y divide-gray-200">
                     {#each storages as storage}
                         <tr
-                            draggable={storage.quantity > 0 ? 'true' : 'false'}
+                            draggable={canOutboundStorage(storage) ? 'true' : 'false'}
                             ondragstart={(e) => handleDragStart(e, storage)}
                             ondragover={(e) => handleDragOver(e, storage)}
                             ondrop={(e) => handleDrop(e, storage)}
@@ -157,19 +158,27 @@
                             ondragend={handleDragEnd}
                             onmouseenter={() => handleRowMouseEnter(storage.id)}
                             onmouseleave={handleRowMouseLeave}
-                            class="transition-opacity duration-[3000ms] {removingIds.has(storage.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'} {dragOverStorageId === storage.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : 'hover:bg-gray-50'} {dragFromStorageId === storage.id ? 'opacity-60' : ''} {storage.quantity > 0 ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'}"
+                            class="transition-opacity duration-[3000ms] {removingIds.has(storage.id) ? 'opacity-0 pointer-events-none' : 'opacity-100'} {dragOverStorageId === storage.id ? 'bg-blue-50 ring-2 ring-inset ring-blue-300' : 'hover:bg-gray-50'} {dragFromStorageId === storage.id ? 'opacity-60' : ''} {canOutboundStorage(storage) ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed'}"
                         >
                             <td class="px-2 sm:px-4 py-3">
-                                <a
-                                    href="/container/{storage.container_fastCode}"
-                                    class="font-medium text-blue-600 hover:underline"
-                                    onclick={(e) => {
-                                        e.preventDefault();
-                                        goto(`/container/${storage.container_fastCode}`, { noScroll: true });
-                                    }}
-                                >
-                                    {storage.container_fastCode}
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a
+                                        href="/container/{storage.container_fastCode}"
+                                        class="font-medium text-blue-600 hover:underline"
+                                        onclick={(e) => {
+                                            e.preventDefault();
+                                            goto(`/container/${storage.container_fastCode}`, { noScroll: true });
+                                        }}
+                                    >
+                                        {storage.container_fastCode}
+                                    </a>
+                                    {#if storage.is_locked}
+                                        <span class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-800">
+                                            <Lock class="h-3 w-3" />
+                                            已锁定
+                                        </span>
+                                    {/if}
+                                </div>
                             </td>
                             <td class="px-2 sm:px-4 py-3">
                                 {#if storage.mark}
@@ -210,10 +219,13 @@
                                         step={1}
                                         decimalPlaces={0}
                                         size="sm"
+                                        disabled={storage.is_locked}
                                     />
                                     <button
                                         onclick={() => onOutbound(storage)}
-                                        class="px-2 sm:px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors whitespace-nowrap shrink-0"
+                                        disabled={!canOutboundStorage(storage)}
+                                        title={storage.is_locked ? '已锁定，请先解锁后再出库' : ''}
+                                        class="px-2 sm:px-3 py-1.5 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 transition-colors whitespace-nowrap shrink-0 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
                                     >
                                         出库
                                     </button>
