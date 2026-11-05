@@ -170,6 +170,16 @@ export class SalesOrderAPI extends BaseOrderAPI<
         return this.client.post(`${this.basePath}${orderId}/sync_quantities/`, body);
     }
 
+    /** 剔除订购及发货数量均为 0 的订单明细。 */
+    async pruneZeroItems(orderId: number, itemIds: number[]): Promise<{
+        status: string;
+        message: string;
+        removed_ids: number[];
+        removed_skus: string[];
+    }> {
+        return this.client.post(`${this.basePath}${orderId}/prune_zero_items/`, { ids: itemIds });
+    }
+
     /** 按客户统计 */
     async getByCustomer(customerId: number): Promise<{
         total_orders: number;

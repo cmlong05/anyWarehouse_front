@@ -5,7 +5,7 @@
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">
-    import { safeParseFloat, formatNumber } from '$lib/utils';
+    import { safeParseFloat, formatNumber, canPruneZeroOrderItem } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';
     import { toggleSortKey } from '$lib/utils/sort';
 
@@ -33,6 +33,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
     }
 
     interface OrderItem {
+        id: number;
         item: number | null;
         line_number: number;
         sku: string;
@@ -97,6 +98,11 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         /** 对齐全部订单明细的数量 */
         onSyncAll?: () => Promise<void>;
         syncAllLoading?: boolean;
+        /** 订单状态，用于判断零数量明细是否可剔除 */
+        orderStatus?: string;
+        /** 剔除订购及发货数量均为 0 的明细 */
+        onPruneZeroItem?: (item: OrderItem) => void | Promise<void>;
+        pruneZeroLoading?: Record<number, boolean>;
     }
     
     let {
@@ -109,7 +115,10 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
         onReverseSync,
         reverseSyncLoading = {},
         onSyncAll,
-        syncAllLoading = false
+        syncAllLoading = false,
+        orderStatus = '',
+        onPruneZeroItem,
+        pruneZeroLoading = {},
     }: Props = $props();
     let sortKey = $state<SortKey>('line_number');
     let sortDirection = $state<'asc' | 'desc'>('asc');
@@ -374,7 +383,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
 
         cols.push({ key: 'status', title: l.status, sortable: false, align: 'center', headerClass: 'border-b border-gray-100 bg-gray-50 font-semibold' });
 
-        if (type === 'sales' && (onReverseSync || onSyncAll)) {
+        if (type === 'sales' && (onReverseSync || onSyncAll || onPruneZeroItem)) {
             cols.push({
                 key: 'action',
                 title: '',
@@ -553,7 +562,26 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                             <span class="inline-block whitespace-nowrap px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{l.pending}</span>
                         {/if}
                     {:else if column.key === 'action'}
-                        {#if onReverseSync && type === 'sales' && section.type !== 'parent' && shipmentPlanned !== safeParseFloat(rowItem.quantity)}
+                        {#if onPruneZeroItem && section.type !== 'parent' && canPruneZeroOrderItem(rowItem, orderStatus)}
+                            <button
+                                type="button"
+                                class="inline-flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onclick={() => onPruneZeroItem?.(rowItem)}
+                                disabled={pruneZeroLoading[rowItem.id]}
+                                title="剔除数量为 0 且尚未发货的明细"
+                                aria-label="剔除该零数量明细"
+                            >
+                                {#if pruneZeroLoading[rowItem.id]}
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                    </svg>
+                                {:else}
+                                    <span class="text-base leading-none">🧹</span>
+                                {/if}
+                                剔除
+                            </button>
+                        {:else if onReverseSync && type === 'sales' && section.type !== 'parent' && shipmentPlanned !== safeParseFloat(rowItem.quantity)}
                             <button
                                 type="button"
                                 class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

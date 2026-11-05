@@ -40,3 +40,6 @@ export * from './modal';
 
 // 导出 Storage 锁定状态工具
 export * from './storageLock';
+
+// 导出销售订单明细操作工具
+export * from './salesOrder';

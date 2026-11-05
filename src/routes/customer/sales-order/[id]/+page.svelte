@@ -266,6 +266,8 @@
     const TERMINAL_STATUSES = ['delivered', 'cancelled'];
     let isTerminal = $derived(TERMINAL_STATUSES.includes(orderDetail.order?.status ?? ''));
     let reverseSyncLoading = $state<Record<number, boolean>>({});
+    let pruneZeroLoading = $state<Record<number, boolean>>({});
+    let pendingPruneItem = $state<{ id: number; line_number: number; sku: string } | null>(null);
     let syncAllLoading = $state(false);
     let showSyncAllOptions = $state(false);
     let syncAllAllowDecrease = $state(false);
@@ -351,6 +353,39 @@
             };
         } finally {
             reverseSyncLoading = { ...reverseSyncLoading, [itemId]: false };
+        }
+    }
+
+    function requestPruneZeroItem(item: { id: number; line_number: number; sku: string }) {
+        if (pruneZeroLoading[item.id]) return;
+        pendingPruneItem = item;
+    }
+
+    async function confirmPruneZeroItem() {
+        const item = pendingPruneItem;
+        if (!orderId || !item || pruneZeroLoading[item.id]) return;
+
+        pruneZeroLoading = { ...pruneZeroLoading, [item.id]: true };
+        syncFeedback = null;
+        try {
+            const result = await salesOrderAPI.pruneZeroItems(orderId, [item.id]);
+            await orderDetail.loadOrder({ silent: true });
+            syncFeedback = {
+                type: 'success',
+                title: '明细剔除完成',
+                message: result.message,
+                updatedItems: [],
+            };
+        } catch (e: unknown) {
+            syncFeedback = {
+                type: 'error',
+                title: '明细剔除失败',
+                message: getErrorMessage(e, '剔除失败，请重试'),
+                updatedItems: [],
+            };
+        } finally {
+            pruneZeroLoading = { ...pruneZeroLoading, [item.id]: false };
+            pendingPruneItem = null;
         }
     }
 
@@ -615,6 +650,9 @@
             reverseSyncLoading={reverseSyncLoading}
             onSyncAll={order.shipments?.length ? openSyncAllOptions : undefined}
             {syncAllLoading}
+            orderStatus={order.status}
+            onPruneZeroItem={requestPruneZeroItem}
+            {pruneZeroLoading}
         />
 
         <!-- 生成发货单按钮 -->
@@ -683,6 +721,24 @@
     loading={orderDetail.updating}
     onConfirm={confirmForceDeliver}
     onCancel={() => showForceModal = false}
+/>
+
+<ConfirmModal
+    isOpen={pendingPruneItem !== null}
+    title="剔除零数量明细"
+    message={pendingPruneItem
+        ? `确认剔除第 ${pendingPruneItem.line_number} 行？该行订购数量为 0，且尚未发货。`
+        : ''}
+    itemName={pendingPruneItem?.sku ?? ''}
+    confirmText="确认剔除"
+    cancelText="取消"
+    loading={pendingPruneItem !== null && Boolean(pruneZeroLoading[pendingPruneItem.id])}
+    onConfirm={confirmPruneZeroItem}
+    onCancel={() => {
+        if (!pendingPruneItem || !pruneZeroLoading[pendingPruneItem.id]) {
+            pendingPruneItem = null;
+        }
+    }}
 />
 
 <OrderSyncOptionsModal
