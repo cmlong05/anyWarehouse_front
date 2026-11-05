@@ -8,6 +8,7 @@
     import type { BaseItem } from '$lib';
     import { DataTable, FormInput } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     
     let { data } = $props<{ items: BaseItem[]; searchQuery: string }>();
     
@@ -77,9 +78,9 @@
     }
     
     // jump to customer quotation page
-    function goToCustomerQuotation() {
+    async function goToCustomerQuotation() {
         if (selectedItems.size === 0) {
-            alert('请先选择至少一个物品');
+            await showAlert('请先选择至少一个物品', { title: '尚未选择物品', variant: 'warning' });
             return;
         }
         const itemIds = Array.from(selectedItems).join(',');
@@ -87,9 +88,9 @@
     }
     
     // jump to supplier quotation page
-    function goToSupplierQuotation() {
+    async function goToSupplierQuotation() {
         if (selectedItems.size === 0) {
-            alert('请先选择至少一个物品');
+            await showAlert('请先选择至少一个物品', { title: '尚未选择物品', variant: 'warning' });
             return;
         }
         const itemIds = Array.from(selectedItems).join(',');

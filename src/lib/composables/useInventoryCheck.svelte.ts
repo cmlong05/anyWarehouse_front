@@ -3,6 +3,7 @@
  */
 import { apiClient } from '$lib/api';
 import { logger } from '$lib/logger';
+import { showAlert } from '$lib/stores/dialog.svelte';
 import type { Item } from '$lib';
 
 export interface InventoryCheckOptions {
@@ -31,7 +32,7 @@ export function useInventoryCheck({ getItemId, onSuccess }: InventoryCheckOption
             const message = error && typeof error === 'object' && 'message' in error
                 ? String(error.message)
                 : '盘点失败，请稍后重试';
-            alert(message);
+            await showAlert(message, { title: '盘点失败', variant: 'error' });
         } finally {
             isChecking = false;
         }

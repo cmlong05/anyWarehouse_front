@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
     import { buildContainerRelationSearchOptions } from '$lib/utils';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
@@ -74,7 +75,10 @@
             }
             await goto(`/item/${submitData.item}`);
         } catch (error) {
-            alert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${getErrorMessage(error, '未知错误')}`);
+            await showAlert(`${mode === 'add' ? '创建' : '更新'}存储失败: ${getErrorMessage(error, '未知错误')}`, {
+                title: '保存失败',
+                variant: 'error',
+            });
         }
     }
 
@@ -82,10 +86,20 @@
         onCancel ? onCancel() : window.history.back();
     }
 
-    function handleDeleteClick() {
+    async function handleDeleteClick() {
         if (!initialData?.id || !onDelete) return;
-        if (!confirm('确定要删除这个存储记录吗？这个操作不可撤销。')) return;
-        Promise.resolve(onDelete(initialData.id)).catch(e => alert('删除失败：' + (e instanceof Error ? e.message : '未知错误')));
+        if (!(await showConfirm('确定要删除这个存储记录吗？这个操作不可撤销。', {
+            title: '确认删除存储记录',
+            variant: 'danger',
+        }))) return;
+        try {
+            await onDelete(initialData.id);
+        } catch (e) {
+            await showAlert('删除失败：' + (e instanceof Error ? e.message : '未知错误'), {
+                title: '删除失败',
+                variant: 'error',
+            });
+        }
     }
 </script>
 

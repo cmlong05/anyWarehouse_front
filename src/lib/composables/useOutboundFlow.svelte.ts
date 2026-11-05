@@ -3,6 +3,7 @@
  */
 import { apiClient } from '$lib/api';
 import { logger } from '$lib/logger';
+import { showAlert } from '$lib/stores/dialog.svelte';
 import type { StorageContainer } from '$lib';
 import { canOutboundStorage } from '$lib/utils';
 
@@ -53,7 +54,10 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
         const { storage, qty, newQty } = pending;
         if (!canOutboundStorage(storage)) {
             pending = null;
-            alert('当前存储已锁定，请先解锁后再出库');
+            await showAlert('当前存储已锁定，请先解锁后再出库', {
+                title: '无法出库',
+                variant: 'warning',
+            });
             return;
         }
         processing = true;
@@ -107,7 +111,7 @@ export function useOutboundFlow({ getStorages, onChange }: OutboundFlowOptions) 
             const message = error && typeof error === 'object' && 'message' in error
                 ? String(error.message)
                 : '出库失败，请稍后重试';
-            alert(message);
+            await showAlert(message, { title: '出库失败', variant: 'error' });
         } finally {
             processing = false;
         }

@@ -7,6 +7,7 @@
 	import { config } from '$lib/config';
 	import { page } from '$app/stores';
 	import { themeState, cycleThemeMode } from '$lib/stores/theme.svelte';
+	import { DialogHost } from '$lib/components/modal';
 	import Sun from 'lucide-svelte/icons/sun';
 	import Moon from 'lucide-svelte/icons/moon';
 	import SunMoon from 'lucide-svelte/icons/sun-moon';
@@ -361,3 +362,5 @@
 	</footer>
 </div>
 {/if}
+
+<DialogHost />

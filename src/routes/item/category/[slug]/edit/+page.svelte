@@ -8,6 +8,7 @@
     import type { Category, CategoryData } from '$lib';
     import { itemAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     import { goto } from '$app/navigation';
 
     let { data } = $props<{ 
@@ -28,7 +29,10 @@
             await itemAPI.deleteCategory(categoryId);
             await goto('/item/category');
         } catch (error) {
-            alert(`删除失败: ${getErrorMessage(error, '未知错误')}`);
+            await showAlert(`删除失败: ${getErrorMessage(error, '未知错误')}`, {
+                title: '删除失败',
+                variant: 'error',
+            });
         }
     }
 </script>

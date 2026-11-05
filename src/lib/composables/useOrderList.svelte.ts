@@ -6,6 +6,7 @@
 import type { PaginatedResponse } from '$lib/api/base';
 import { logger } from '$lib/logger';
 import { getErrorMessage } from '$lib/utils/errors';
+import { showConfirm } from '$lib/stores/dialog.svelte';
 
 export interface ListFilters {
     status?: string;
@@ -112,7 +113,10 @@ export function useOrderList<B>(
      * 删除订单
      */
     async function deleteItem(id: number, confirmMessage = '确定要删除此订单吗？'): Promise<boolean> {
-        if (!confirm(confirmMessage)) return false;
+        if (!(await showConfirm(confirmMessage, {
+            title: '确认删除订单',
+            variant: 'danger',
+        }))) return false;
         
         try {
             await api.delete(id);

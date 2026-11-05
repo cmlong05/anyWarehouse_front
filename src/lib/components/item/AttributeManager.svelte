@@ -7,6 +7,7 @@
     import { attributeAPI } from '$lib/api';
     import { logger } from '$lib/logger';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     import type { ItemAttribute, ItemAttributeValue } from '$lib/types/variant';
     import { FormInput, NumberStepper } from '$lib/components/ui';
 
@@ -92,7 +93,7 @@
             // 重新加载确保数据同步
             await loadAttributes();
         } catch (e) {
-            alert('创建属性失败: ' + getErrorMessage(e));
+            await showAlert('创建属性失败: ' + getErrorMessage(e), { title: '创建失败', variant: 'error' });
         }
     }
 
@@ -122,7 +123,7 @@
             // 重新加载确保数据同步
             await loadAttributeValues();
         } catch (e) {
-            alert('创建属性值失败: ' + getErrorMessage(e));
+            await showAlert('创建属性值失败: ' + getErrorMessage(e), { title: '创建失败', variant: 'error' });
         }
     }
 
@@ -175,7 +176,7 @@
             attributes = attributes.map(a => a.id === attrId ? updatedAttr : a);
             cancelEditAttribute();
         } catch (e) {
-            alert('修改属性失败: ' + getErrorMessage(e));
+            await showAlert('修改属性失败: ' + getErrorMessage(e), { title: '保存失败', variant: 'error' });
         }
     }
 
@@ -214,7 +215,7 @@
             attributeValues = attributeValues.map(v => v.id === valueId ? updatedValue : v);
             cancelEditValue();
         } catch (e) {
-            alert('修改属性值失败: ' + getErrorMessage(e));
+            await showAlert('修改属性值失败: ' + getErrorMessage(e), { title: '保存失败', variant: 'error' });
         }
     }
 
@@ -226,7 +227,7 @@
             });
             attributes = attributes.map(a => a.id === attr.id ? updatedAttr : a);
         } catch (e) {
-            alert('操作失败: ' + getErrorMessage(e));
+            await showAlert('操作失败: ' + getErrorMessage(e), { title: '操作失败', variant: 'error' });
         }
     }
 
@@ -238,7 +239,7 @@
             });
             attributeValues = attributeValues.map(v => v.id === value.id ? updatedValue : v);
         } catch (e) {
-            alert('操作失败: ' + getErrorMessage(e));
+            await showAlert('操作失败: ' + getErrorMessage(e), { title: '操作失败', variant: 'error' });
         }
     }
 </script>

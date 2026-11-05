@@ -11,6 +11,7 @@
     import type { CustomerAddress, SalesOrder, SalesOrderItem } from '$lib';
     import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
 	import { Alert, Loading, ConfirmModal } from '$lib/components';
     import { 
         OrderDetailHeader, 
@@ -56,7 +57,10 @@
             ).length;
             if (pendingCount > 0) {
                 const statusLabel = SALES_STATUS_MAP[status]?.label || status;
-                if (!confirm(`确定要将订单状态变更为"${statusLabel}"吗？`)) return;
+                if (!(await showConfirm(`确定要将订单状态变更为"${statusLabel}"吗？`, {
+                    title: '确认状态变更',
+                    variant: 'warning',
+                }))) return;
                 forcePendingCount = pendingCount;
                 showForceModal = true;
                 return;
@@ -402,7 +406,7 @@
             await salesOrderAPI.downloadPI(orderDetail.order.id, 'en', orderDetail.order.order_number);
         } catch (e) {
             logger.error('PDF 生成失败', e);
-            alert('PDF 生成失败，请稍后重试。');
+            await showAlert('PDF 生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             piDownloading = false;
         }
@@ -415,7 +419,7 @@
             await salesOrderAPI.downloadInvoice(orderDetail.order.id, 'en', orderDetail.order.order_number);
         } catch (e) {
             logger.error('PDF 生成失败', e);
-            alert('PDF 生成失败，请稍后重试。');
+            await showAlert('PDF 生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             invoiceDownloading = false;
         }
@@ -428,7 +432,7 @@
             await salesOrderAPI.downloadSkuReference(orderDetail.order.id, 'en', orderDetail.order.order_number);
         } catch (e) {
             logger.error('SKU 对照表生成失败', e);
-            alert('SKU 对照表生成失败，请稍后重试。');
+            await showAlert('SKU 对照表生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             skuReferenceDownloading = false;
         }

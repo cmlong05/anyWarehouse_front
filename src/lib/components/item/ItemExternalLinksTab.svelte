@@ -9,6 +9,7 @@
     import type { ItemExternalLink } from '$lib';
     import { externalLinkAPI } from '$lib/api';
     import { hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     import { DeleteConfirmModal } from '$lib/components/shipment';
     import Plus from 'lucide-svelte/icons/plus';
 
@@ -130,7 +131,7 @@
             closeAddForm();
         } catch (e) {
             logger.error('添加外部链接失败:', e);
-            alert('添加失败，请检查填写内容');
+            await showAlert('添加失败，请检查填写内容', { title: '添加失败', variant: 'error' });
         } finally {
             addingLink = false;
         }
@@ -153,7 +154,7 @@
             linkToDelete = null;
         } catch (e) {
             logger.error('删除外部链接失败:', e);
-            alert('删除失败，请稍后重试');
+            await showAlert('删除失败，请稍后重试', { title: '删除失败', variant: 'error' });
         } finally {
             deletingLink = false;
         }

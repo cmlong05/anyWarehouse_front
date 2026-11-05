@@ -11,6 +11,7 @@
     import type { ItemAssociationBrief } from '$lib/api/product';
     import type { BaseItem } from '$lib';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     import { ConfirmModal } from '$lib/components';
     import Plus from 'lucide-svelte/icons/plus';
 
@@ -67,7 +68,7 @@
             const all = await itemAPI.getAssociations(itemId);
             associatedItems = all;
         } catch (err) {
-            alert(getErrorMessage(err, '添加失败'));
+            await showAlert(getErrorMessage(err, '添加失败'), { title: '添加失败', variant: 'error' });
         } finally {
             adding = false;
         }
@@ -85,7 +86,7 @@
             await itemAPI.removeAssociations(itemId, [pendingRemoveId]);
             associatedItems = associatedItems.filter((a) => a.id !== pendingRemoveId);
         } catch (err) {
-            alert(getErrorMessage(err, '移除失败'));
+            await showAlert(getErrorMessage(err, '移除失败'), { title: '移除失败', variant: 'error' });
         } finally {
             removing = false;
             pendingRemoveId = null;

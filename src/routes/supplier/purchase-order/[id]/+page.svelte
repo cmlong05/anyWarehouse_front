@@ -11,6 +11,7 @@
     import type { PurchaseOrder, PurchaseOrderItem } from '$lib';
     import { formatNumber } from '$lib/utils';
     import { getPurchasePaymentStatusLabel } from '$lib/utils/orderBadges';
+    import { showAlert } from '$lib/stores/dialog.svelte';
 	import { Alert, Loading } from '$lib/components';
     import { 
         OrderDetailHeader, 
@@ -91,7 +92,7 @@
             await purchaseOrderAPI.downloadPO(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
         } catch (e) {
             logger.error('采购单生成失败', e);
-            alert('采购单生成失败，请稍后重试。');
+            await showAlert('采购单生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             poDownloading = false;
         }
@@ -104,7 +105,7 @@
             await purchaseOrderAPI.downloadSkuReference(orderDetail.order.id, 'zh-CN', orderDetail.order.order_number);
         } catch (e) {
             logger.error('SKU 对照表生成失败', e);
-            alert('SKU 对照表生成失败，请稍后重试。');
+            await showAlert('SKU 对照表生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             skuReferenceDownloading = false;
         }

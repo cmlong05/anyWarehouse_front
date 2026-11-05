@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
     import { buildCategoryRelationSearchOptions } from '$lib/utils';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
@@ -86,7 +87,10 @@
             // 添加/编辑成功后跳转到分类详情页
             await goto(`/item/category/${result.id}`);
         } catch (error) {
-            alert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${getErrorMessage(error, '未知错误')}`);
+            await showAlert(`${mode === 'add' ? '创建' : '更新'}分类失败: ${getErrorMessage(error, '未知错误')}`, {
+                title: '保存失败',
+                variant: 'error',
+            });
         }
     }
 
@@ -97,14 +101,20 @@
     async function handleDelete() {
         if (!initialData.id || !onDelete) return;
         if (!canDelete) {
-            alert(deleteHint);
+            await showAlert(deleteHint, { title: '无法删除分类', variant: 'warning' });
             return;
         }
-        if (!confirm('确定要删除这个空分类吗？')) return;
+        if (!(await showConfirm('确定要删除这个空分类吗？', {
+            title: '确认删除分类',
+            variant: 'danger',
+        }))) return;
         try {
             await onDelete(initialData.id);
         } catch (e) {
-            alert('删除失败：' + (e instanceof Error ? e.message : '未知错误'));
+            await showAlert('删除失败：' + (e instanceof Error ? e.message : '未知错误'), {
+                title: '删除失败',
+                variant: 'error',
+            });
         }
     }
 </script>

@@ -8,6 +8,7 @@
  */
 
 import labelTemplate from './printLabel.template.html?raw';
+import { showAlert } from '$lib/stores/dialog.svelte';
 
 export interface LabelSize {
     id: string;
@@ -180,7 +181,10 @@ export async function printLabel(options: PrintLabelOptions): Promise<boolean> {
 
     const w = window.open('', '_blank', 'width=640,height=640');
     if (!w) {
-        alert('无法打开打印窗口，请允许弹出窗口');
+        await showAlert('无法打开打印窗口，请允许弹出窗口', {
+            title: '打印失败',
+            variant: 'error',
+        });
         return false;
     }
 

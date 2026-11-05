@@ -9,6 +9,7 @@
     import { page } from '$app/state';
     import { packageAPI, packageTrackingLegAPI } from '$lib/api';
     import { formatDate, formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
     import type { Package, PackageItem, PackageTrackingLeg } from '$lib/shipmentTypes';
 	import { Alert, Loading } from '$lib/components';
     import { TrackingLegTimeline } from '$lib/components';
@@ -34,12 +35,15 @@
     }
 
     async function deleteLeg(leg: PackageTrackingLeg) {
-        if (!confirm(`删除第 ${leg.leg_no} 段物流？`)) return;
+        if (!(await showConfirm(`删除第 ${leg.leg_no} 段物流？`, {
+            title: '确认删除物流段',
+            variant: 'danger',
+        }))) return;
         try {
             await packageTrackingLegAPI.delete(leg.id);
             if (pkg) await loadPackage(pkg.id);
         } catch (e) {
-            alert(getErrorMessage(e, '删除失败'));
+            await showAlert(getErrorMessage(e, '删除失败'), { title: '删除失败', variant: 'error' });
         }
     }
 
@@ -54,7 +58,7 @@
                 current_leg_no: result.current_leg_no,
             };
         } catch (e) {
-            alert(getErrorMessage(e, '重算失败'));
+            await showAlert(getErrorMessage(e, '重算失败'), { title: '重算失败', variant: 'error' });
         }
     }
 
@@ -401,7 +405,7 @@
             await packageAPI.downloadPackingList(pkg.id, 'en', pkg.package_no);
         } catch (err: unknown) {
             logger.error('装箱单生成失败', err);
-            alert('装箱单生成失败，请稍后重试。');
+            await showAlert('装箱单生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             packingListDownloading = false;
         }

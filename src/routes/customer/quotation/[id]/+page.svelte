@@ -7,6 +7,7 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { customerQuotationAPI } from '$lib/api';
+    import { showConfirm } from '$lib/stores/dialog.svelte';
     import type { CustomerQuotation } from '$lib';
     import { Alert, Breadcrumb, Loading, QuotationDetailBody } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
@@ -39,7 +40,10 @@
     async function deleteQuotation() {
         if (!quotation) return;
         
-        if (!confirm(`确定要删除此报价吗？\n\n客户: ${quotation.customer_detail?.name}\n物品: ${quotation.item_detail?.SKU || '-'}\n价格: ${quotation.price} ${quotation.currency}`)) {
+        if (!(await showConfirm(`确定要删除此报价吗？\n\n客户: ${quotation.customer_detail?.name}\n物品: ${quotation.item_detail?.SKU || '-'}\n价格: ${quotation.price} ${quotation.currency}`, {
+            title: '确认删除报价',
+            variant: 'danger',
+        }))) {
             return;
         }
         

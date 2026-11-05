@@ -7,6 +7,7 @@
     import { getErrorMessage } from '$lib/utils/errors';
     import type { CustomerAddress, CustomerAddressFormData } from '$lib';
     import { customerAddressAPI } from '$lib/api';
+    import { showConfirm } from '$lib/stores/dialog.svelte';
     import AddressCard from '$lib/components/customer/AddressCard.svelte';
 
     interface Props {
@@ -121,7 +122,10 @@
     }
 
     async function handleDelete(id: number) {
-        if (!confirm('确认删除该地址？')) return;
+        if (!(await showConfirm('确认删除该地址？', {
+            title: '确认删除地址',
+            variant: 'danger',
+        }))) return;
         try {
             await customerAddressAPI.delete(id);
             await reload();

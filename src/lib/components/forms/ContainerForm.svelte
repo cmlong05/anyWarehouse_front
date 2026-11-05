@@ -10,6 +10,7 @@
     import { buildContainerRelationSearchOptions } from '$lib/utils';
     import type { ContainerBriefID } from '$lib';
     import { apiClient } from '$lib/api';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
     import Svelecte from 'svelecte';
     import { goto } from '$app/navigation';
     import { FormInput, NumberStepper } from '$lib/components/ui';
@@ -129,7 +130,10 @@
             await goto(`/container/${result.fastCode || submitData.fastCode}`);
         } catch (error) {
             logger.error('Submit error:', error);
-            alert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${getErrorMessage(error, '未知错误')}`);
+            await showAlert(`${mode === 'add' ? '创建' : '更新'}容器失败: ${getErrorMessage(error, '未知错误')}`, {
+                title: '保存失败',
+                variant: 'error',
+            });
         }
     }
 
@@ -141,15 +145,23 @@
         }
     }
 
-    function handleDelete() {
+    async function handleDelete() {
         if (!initialData.id || !onDelete) return;
         
-        const confirmed = confirm('确定要删除这个容器吗？这个操作将同时删除所有子容器和存储记录，且不可撤销。');
+        const confirmed = await showConfirm('确定要删除这个容器吗？这个操作将同时删除所有子容器和存储记录，且不可撤销。', {
+            title: '确认删除容器',
+            variant: 'danger',
+        });
         if (!confirmed) return;
 
-        Promise.resolve(onDelete(initialData.id)).catch((error) => {
-            alert('删除失败：' + getErrorMessage(error, '未知错误'));
-        });
+        try {
+            await onDelete(initialData.id);
+        } catch (error) {
+            await showAlert('删除失败：' + getErrorMessage(error, '未知错误'), {
+                title: '删除失败',
+                variant: 'error',
+            });
+        }
     }
 </script>
 

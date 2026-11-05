@@ -13,6 +13,7 @@
     import type { SalesOrder } from '$lib';
     import { salesOrderAPI, shipmentAPI, shipmentItemAPI } from '$lib/api';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
 	import { ShipmentStatusBadge } from '$lib/components';
 	import { Alert, Loading, ErrorModal } from '$lib/components';
     import {
@@ -66,7 +67,10 @@
         errorFallback: string;
         run: () => Promise<void>;
     }): Promise<void> {
-        if (opts.confirm && !confirm(opts.confirm)) return;
+        if (opts.confirm && !(await showConfirm(opts.confirm, {
+            title: '确认操作',
+            variant: 'warning',
+        }))) return;
         actionError = null;
         if (opts.target === 'row') rowSyncMessage = null;
         else lineSyncMessage = null;
@@ -230,7 +234,7 @@
             await shipmentAPI.downloadSkuReference(shipmentDetail.shipment.id, 'zh-CN', shipmentDetail.shipment.shipment_no);
         } catch (err: unknown) {
             logger.error('SKU 对照表生成失败', err);
-            alert('SKU 对照表生成失败，请稍后重试。');
+            await showAlert('SKU 对照表生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             skuReferenceDownloading = false;
         }
@@ -244,7 +248,7 @@
             await shipmentAPI.downloadShippingNote(shipmentDetail.shipment.id, 'en', shipmentDetail.shipment.shipment_no);
         } catch (err: unknown) {
             logger.error('发货单生成失败', err);
-            alert('发货单生成失败，请稍后重试。');
+            await showAlert('发货单生成失败，请稍后重试。', { title: '生成失败', variant: 'error' });
         } finally {
             shippingNoteDownloading = false;
         }
@@ -316,7 +320,10 @@
 
     // 执行操作前确认
     async function handleAction(action: string, confirmMessage: string) {
-        if (!confirm(confirmMessage)) return;
+        if (!(await showConfirm(confirmMessage, {
+            title: '确认操作',
+            variant: 'warning',
+        }))) return;
         await shipmentDetail.executeAction(action);
     }
 

@@ -7,6 +7,7 @@
     import { useBOMManager, type ComponentFormData } from '$lib/composables/useBOMManager.svelte';
     import { BOMTabs, ComponentList, BOMTreeView, TotalComponents, WhereUsed, AddComponentForm } from '$lib/components/bom';
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert, showConfirm } from '$lib/stores/dialog.svelte';
     import type { BaseItem } from '$lib';
 
     interface Props {
@@ -34,7 +35,7 @@
             await bom.addComponent(childItemId, data);
             showAddForm = false;
         } catch (err) {
-            alert(getErrorMessage(err));
+            await showAlert(getErrorMessage(err), { title: '添加组件失败', variant: 'error' });
         }
     }
 
@@ -43,17 +44,20 @@
         try {
             await bom.updateComponent(id, data);
         } catch (err) {
-            alert(getErrorMessage(err));
+            await showAlert(getErrorMessage(err), { title: '更新组件失败', variant: 'error' });
         }
     }
 
     // 处理删除组件
     async function handleDelete(id: number) {
-        if (!confirm('确定要删除这个组件关系吗？')) return;
+        if (!(await showConfirm('确定要删除这个组件关系吗？', {
+            title: '确认删除组件关系',
+            variant: 'danger',
+        }))) return;
         try {
             await bom.deleteComponent(id);
         } catch (err) {
-            alert(getErrorMessage(err));
+            await showAlert(getErrorMessage(err), { title: '删除组件失败', variant: 'error' });
         }
     }
 

@@ -4,6 +4,7 @@
 import { goto } from '$app/navigation';
 import { apiClient } from '$lib/api';
 import { getErrorMessage } from '$lib/utils/errors';
+import { showConfirm } from '$lib/stores/dialog.svelte';
 import type { ContainerBriefID } from '$lib';
 
 // 状态映射配置
@@ -130,7 +131,10 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
     }
 
     async function deleteOrder() {
-        if (!confirm('确定要删除此订单吗？此操作不可恢复。')) return;
+        if (!(await showConfirm('确定要删除此订单吗？此操作不可恢复。', {
+            title: '确认删除订单',
+            variant: 'danger',
+        }))) return;
         try {
             await options.api.delete(options.orderId);
             goto(options.listPath);
@@ -141,7 +145,10 @@ export function useOrderDetail<T extends { id: number; status: string }, S>(
 
     async function changeStatus(newStatus: S) {
         const statusLabel = options.statusMap[String(newStatus)]?.label || String(newStatus);
-        if (!confirm(`确定要将订单状态变更为"${statusLabel}"吗？`)) return;
+        if (!(await showConfirm(`确定要将订单状态变更为"${statusLabel}"吗？`, {
+            title: '确认状态变更',
+            variant: 'warning',
+        }))) return;
         
         updating = true;
         try {

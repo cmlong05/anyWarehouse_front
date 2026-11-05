@@ -7,6 +7,7 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { quotationAPI } from '$lib/api';
+    import { showConfirm } from '$lib/stores/dialog.svelte';
     import type { Quotation, QuotationVersion } from '$lib';
     import { Alert, Breadcrumb, Loading, QuotationDetailBody, VersionHistoryCard } from '$lib/components';
     import { EditButton, AdjustPriceModal } from '$lib/components';
@@ -45,7 +46,10 @@
     }
     
     async function deleteQuotation() {
-        if (!confirm('确定要删除此报价吗？此操作无法撤销。')) {
+        if (!(await showConfirm('确定要删除此报价吗？此操作无法撤销。', {
+            title: '确认删除报价',
+            variant: 'danger',
+        }))) {
             return;
         }
         try {

@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
     import { getErrorMessage } from '$lib/utils/errors';
+    import { showAlert } from '$lib/stores/dialog.svelte';
     import { goto } from '$app/navigation';
     import type { Category } from '$lib';
     import { apiClient } from '$lib/api';
@@ -195,11 +196,17 @@
         onShowDeleteModal?.();
     }
 
-    function handleImageUpload(event: Event) {
+    async function handleImageUpload(event: Event) {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (!file) return;
-        if (!file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
-        if (file.size > 5 * 1024 * 1024) { alert('图片文件不能超过5MB'); return; }
+        if (!file.type.startsWith('image/')) {
+            await showAlert('请选择图片文件', { title: '文件格式错误', variant: 'warning' });
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            await showAlert('图片文件不能超过5MB', { title: '文件过大', variant: 'warning' });
+            return;
+        }
         
         selectedFile = file;
         imageError = false;
@@ -272,10 +279,16 @@
                 result = await apiClient.post<{ id: number }>('/product/item/', submitData, true);
             }
 
-            alert(mode === 'edit' ? '更新成功！' : '添加成功！');
+            await showAlert(mode === 'edit' ? '更新成功！' : '添加成功！', {
+                title: '操作成功',
+                variant: 'success',
+            });
             await goto(`/item/${mode === 'edit' ? initialData?.id : result.id}`);
         } catch (error) {
-            alert(`提交失败: ${getErrorMessage(error, '未知错误')}`);
+            await showAlert(`提交失败: ${getErrorMessage(error, '未知错误')}`, {
+                title: '提交失败',
+                variant: 'error',
+            });
         } finally {
             formLoading = false;
         }
