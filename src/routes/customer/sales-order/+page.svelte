@@ -14,7 +14,7 @@
     import type { SalesOrderBrief, CustomerBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
     import { sortByKey, toggleSortKey } from '$lib/utils/sort';
-    import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
+    import { DataTable, DateInput, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
     import { PageContainer } from '$lib/components/layout';
 	import { Alert } from '$lib/components';
 
@@ -262,16 +262,14 @@
             onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
         />
         
-        <FormInput
-            type="date"
+        <DateInput
             label="下单日期"
             name="date_from"
             value={orderList.filters.date_from || ''}
             onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
         />
         
-        <FormInput
-            type="date"
+        <DateInput
             label="到"
             name="date_to"
             value={orderList.filters.date_to || ''}

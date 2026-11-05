@@ -15,7 +15,7 @@
     import Svelecte from 'svelecte';
     import { getCurrencySymbol } from '$lib/utils/formatters';
     import { formatAddressInline } from '$lib/utils';
-    import { NumberStepper } from '../ui';
+    import { DateInput, NumberStepper } from '../ui';
     import { config } from '$lib/config';
     import type { ItemVariant } from '$lib/types/variant';
     import { buildVariantAttributes } from '$lib/utils/variant';
@@ -562,12 +562,11 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
                 <label for="order_date" class="text-sm font-medium text-gray-700">
                     下单日期 <span class="text-red-500">*</span>
                 </label>
-                <input
-                    type="date"
+                <DateInput
                     id="order_date"
-                    bind:value={formData.order_date}
+                    value={formData.order_date}
                     disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    oninput={(value) => formData.order_date = value}
                 />
                 {#if errors.order_date}
                     <span class="text-xs text-red-500">{errors.order_date}</span>
@@ -576,12 +575,11 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
             
             <div class="space-y-1.5">
                 <label for="expected_delivery" class="text-sm font-medium text-gray-700">预计交货日期</label>
-                <input
-                    type="date"
+                <DateInput
                     id="expected_delivery"
-                    bind:value={formData.expected_delivery}
+                    value={formData.expected_delivery}
                     disabled={loading}
-                    class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    oninput={(value) => formData.expected_delivery = value}
                 />
                 {#if errors.expected_delivery}
                     <span class="text-xs text-red-500">{errors.expected_delivery}</span>

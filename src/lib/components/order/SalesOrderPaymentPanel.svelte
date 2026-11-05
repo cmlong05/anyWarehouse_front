@@ -7,7 +7,7 @@
 <script lang="ts">
     import { salesOrderPaymentRecordAPI } from '$lib/api';
     import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';
-    import { NumberStepper } from '$lib/components/ui';
+    import { DateInput, NumberStepper } from '$lib/components/ui';
     import { safeParseFloat } from '$lib/utils';
     import { getSalesPaymentStatusLabel, getSalesPaymentStatusClass } from '$lib/utils/orderBadges';
 
@@ -51,15 +51,6 @@
     function handlePaymentAttachmentChange(event: Event) {
         const target = event.currentTarget as HTMLInputElement;
         paymentForm.attachment = target.files?.[0] ?? null;
-    }
-
-    function openPaymentDatePicker(event: MouseEvent) {
-        const input = event.currentTarget as HTMLInputElement;
-        try {
-            input.showPicker();
-        } catch {
-            // 不支持showPicker时，或已打开原生选择器时，保留日期输入框的默认交互。
-        }
     }
 
     async function createPaymentRecord() {
@@ -165,7 +156,7 @@
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-date">收款日期</label>
-                <input id="payment-date" type="date" bind:value={paymentForm.received_date} onclick={openPaymentDatePicker} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+                <DateInput id="payment-date" bind:value={paymentForm.received_date} />
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-amount">收款金额</label>

@@ -8,6 +8,7 @@
   import { browser } from '$app/environment';
   import { purchaseOrderPaymentRecordAPI, purchaseOrderAPI } from '$lib/api';
   import { Loading } from '$lib/components';
+  import { DateInput } from '$lib/components/ui';
   import { safeParseFloat } from '$lib/utils';
   import { getPurchasePaymentStatusLabel, getPurchasePaymentStatusClass } from '$lib/utils/orderBadges';
 
@@ -211,7 +212,7 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-date">付款日期</label>
-          <input id="payment-date" type="date" bind:value={form.received_date} class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" />
+          <DateInput id="payment-date" bind:value={form.received_date} />
         </div>
         <div>
           <label class="mb-1 block text-sm font-medium text-gray-700" for="payment-amount">付款金额</label>

@@ -11,6 +11,7 @@
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
     import { Alert, Loading } from '$lib/components';
     import { ConfirmModal } from '$lib/components';
+    import { DateInput } from '$lib/components/ui';
     import { BaseModal } from '$lib/components/modal';
     import TrackingNumberDetailModal from '$lib/components/shipment/TrackingNumberDetailModal.svelte';
     import Plus from 'lucide-svelte/icons/plus';
@@ -569,10 +570,9 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1" for="handoverAt">
                             交接时间 <span class="text-red-500">*</span>
                         </label>
-                        <input 
+                        <DateInput
                             id="handoverAt"
                             type="datetime-local"
-                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             bind:value={formData.handover_at}
                             required
                         />

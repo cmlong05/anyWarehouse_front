@@ -5,6 +5,8 @@
 - `routes/supplier/quotation/[id]/edit/+page.svelte`
 -->
 <script lang="ts">
+    import { DateInput } from '$lib/components/ui';
+
     interface Props {
         validFrom?: string | null;
         validUntil?: string | null;
@@ -57,24 +59,20 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
             <label for="valid_from" class="block text-sm font-medium text-gray-700 mb-2">有效期开始</label>
-            <input
-                type="date"
+            <DateInput
                 id="valid_from"
                 value={validFrom || ''}
-                oninput={(e) => onValidFromChange((e.currentTarget as HTMLInputElement).value)}
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                oninput={onValidFromChange}
             />
         </div>
 
         {#if showValidUntil}
             <div>
                 <label for="valid_until" class="block text-sm font-medium text-gray-700 mb-2">有效期结束</label>
-                <input
-                    type="date"
+                <DateInput
                     id="valid_until"
                     value={validUntil || ''}
-                    oninput={(e) => onValidUntilChange?.((e.currentTarget as HTMLInputElement).value)}
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    oninput={(value) => onValidUntilChange?.(value)}
                 />
             </div>
         {/if}

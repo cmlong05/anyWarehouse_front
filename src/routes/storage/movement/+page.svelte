@@ -8,6 +8,7 @@
     import { inventoryMovementAPI, type InventoryMovement, type MovementType } from '$lib/api';
     import { formatDate, getErrorMessage } from '$lib/utils';
     import { Alert, Loading } from '$lib/components';
+    import { DateInput } from '$lib/components/ui';
     import Plus from 'lucide-svelte/icons/plus';
     import Svelecte from 'svelecte';
 
@@ -141,18 +142,14 @@
             </label>
             <label class="flex flex-col gap-1 text-sm text-gray-700">
                 起始日期
-                <input
-                    type="date"
+                <DateInput
                     bind:value={filterDateFrom}
-                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
             </label>
             <label class="flex flex-col gap-1 text-sm text-gray-700">
                 截止日期
-                <input
-                    type="date"
+                <DateInput
                     bind:value={filterDateTo}
-                    class="px-3 py-2 border border-gray-300 rounded-md min-w-[140px] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
             </label>
             <div class="flex gap-2">

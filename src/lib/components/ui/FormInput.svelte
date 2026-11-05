@@ -49,7 +49,7 @@
         fullWidth?: boolean;
         
         // 输入配置
-        type?: 'text' | 'email' | 'tel' | 'number' | 'password' | 'date';
+        type?: 'text' | 'email' | 'tel' | 'number' | 'password';
         value: string | number;
         placeholder?: string;
         disabled?: boolean;

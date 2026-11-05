@@ -12,7 +12,7 @@
     import { getPurchaseStatusClass as getStatusClass, getPurchaseStatusLabel as getStatusLabel, getPriorityLabel, getPurchasePaymentStatusLabel, getPurchasePaymentStatusClass } from '$lib/utils/orderBadges';
     import type { PurchaseOrderBrief, SupplierBrief } from '$lib';
     import { useOrderList, ORDER_STATUS_OPTIONS, PRIORITY_OPTIONS } from '$lib/composables/useOrderList.svelte';
-    import { DataTable, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
+    import { DataTable, DateInput, Pagination, FilterPanel, FormSelect, FormInput } from '$lib/components/ui';
 	import { Alert } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import Plus from 'lucide-svelte/icons/plus';
@@ -152,16 +152,14 @@
             onchange={(v) => { orderList.filters.order_number = v; orderList.applyFilters(); }}
         />
         
-        <FormInput
-            type="date"
+        <DateInput
             label="下单日期从"
             name="date_from"
             value={orderList.filters.date_from || ''}
             onchange={(v) => { orderList.filters.date_from = v; orderList.applyFilters(); }}
         />
         
-        <FormInput
-            type="date"
+        <DateInput
             label="到"
             name="date_to"
             value={orderList.filters.date_to || ''}

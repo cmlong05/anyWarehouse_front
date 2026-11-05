@@ -43,3 +43,6 @@ export * from './storageLock';
 
 // 导出销售订单明细操作工具
 export * from './salesOrder';
+
+// 导出原生日期输入工具
+export * from './dateInput';

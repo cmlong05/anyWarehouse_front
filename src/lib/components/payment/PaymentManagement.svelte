@@ -3,7 +3,7 @@
     import { Alert } from '$lib/components/feedback';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { ConfirmModal } from '$lib/components/modal';
-    import { DataTable, FilterPanel, FormInput, FormSelect, Pagination } from '$lib/components/ui';
+    import { DataTable, DateInput, FilterPanel, FormInput, FormSelect, Pagination } from '$lib/components/ui';
     import {
         customerAPI,
         purchaseOrderPaymentRecordAPI,
@@ -281,17 +281,15 @@
             placeholder="银行 / 现金 / PayPal"
             oninput={(value) => (paymentMethodFilter = value)}
         />
-        <FormInput
+        <DateInput
             label="开始日期"
             name="payment-date-from"
-            type="date"
             value={dateFromFilter}
             onchange={(value) => (dateFromFilter = value)}
         />
-        <FormInput
+        <DateInput
             label="结束日期"
             name="payment-date-to"
-            type="date"
             value={dateToFilter}
             onchange={(value) => (dateToFilter = value)}
         />

@@ -2,7 +2,7 @@
     import { superForm } from 'sveltekit-superforms';
     import { zod4Client } from 'sveltekit-superforms/adapters';
     import { BaseModal } from '$lib/components/modal';
-    import { FormInput, FormSelect } from '$lib/components/ui';
+    import { DateInput, FormInput, FormSelect } from '$lib/components/ui';
     import {
         purchaseOrderAPI,
         purchaseOrderPaymentRecordAPI,
@@ -339,10 +339,9 @@
                 error={$errors.orderId?.[0]}
                 onchange={(value) => setField('orderId', value)}
             />
-            <FormInput
+            <DateInput
                 label={`${copy.noun}日期`}
                 name="payment-date"
-                type="date"
                 required
                 value={$form.receivedDate}
                 error={$errors.receivedDate?.[0]}
