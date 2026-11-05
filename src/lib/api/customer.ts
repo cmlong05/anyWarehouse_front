@@ -242,6 +242,13 @@ export class SalesOrderPaymentRecordAPI extends BaseAPI<
         return this.client.get<PaginatedResponse<SalesOrderPaymentRecord>>(this.basePath, { sales_order: orderId.toString() });
     }
 
+    async listForManagement(params: QueryParams): Promise<PaginatedResponse<SalesOrderPaymentRecord>> {
+        return this.client.get<PaginatedResponse<SalesOrderPaymentRecord>>(
+            this.basePath,
+            this.buildQueryParams(params)
+        );
+    }
+
     async create(data: SalesOrderPaymentRecordCreateRequest): Promise<SalesOrderPaymentRecord> {
         return this.client.post<SalesOrderPaymentRecord>(this.basePath, this.toFormData(data), true);
     }
@@ -257,7 +264,7 @@ export class SalesOrderPaymentRecordAPI extends BaseAPI<
     private toFormData(data: Partial<SalesOrderPaymentRecordCreateRequest>): FormData {
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
-            if (value === undefined || value === null || value === '') return;
+            if (value === undefined || value === null) return;
             if (key === 'attachment' && value instanceof File) {
                 formData.append(key, value);
                 return;

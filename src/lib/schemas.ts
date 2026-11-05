@@ -183,6 +183,21 @@ export type SupplierFormData = z.infer<typeof supplierSchema>;
 export type CustomerFormData = z.infer<typeof customerSchema>;
 export type CustomerAddressFormData = z.infer<typeof customerAddressSchema>;
 
+export const paymentRecordFormSchema = z.object({
+    partnerId: z.string().min(1, '请选择客户或供应商'),
+    orderId: z.string().min(1, '请选择订单'),
+    receivedDate: z.string().min(1, '请选择收付款日期'),
+    amount: z.string().refine(
+        (value) => value.trim() !== '' && Number.isFinite(Number(value)),
+        '请输入有效金额'
+    ),
+    paymentMethod: z.string().max(50, '付款方式不能超过50个字符'),
+    referenceNumber: z.string().max(100, '流水号/凭证号不能超过100个字符'),
+    notes: z.string().max(2000, '备注不能超过2000个字符')
+});
+
+export type PaymentRecordFormData = z.infer<typeof paymentRecordFormSchema>;
+
 // ========== Partner / Party interfaces ==========
 export interface Party {
     id: number;

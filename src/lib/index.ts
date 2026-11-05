@@ -501,6 +501,42 @@ export type PurchaseOrderPriority = 'low' | 'normal' | 'high' | 'urgent';
 /** 采购订单付款状态 */
 export type PurchaseOrderPaymentStatus = 'unpaid' | 'partial' | 'paid';
 
+/** 采购订单付款记录 */
+export interface PurchaseOrderPaymentRecord {
+    id: number;
+    purchase_order: number;
+    received_date: string;
+    amount: string;
+    currency: string;
+    payment_method: string;
+    reference_number: string;
+    attachment?: string | null;
+    attachment_url?: string | null;
+    attachment_name?: string;
+    attachment_is_image?: boolean;
+    notes: string;
+    created_by?: string;
+    created_at: string;
+    updated_at: string;
+    order_number: string;
+    supplier_id: number;
+    supplier_name: string;
+    order_status: PurchaseOrderStatus;
+    order_total_amount: string;
+}
+
+/** 采购订单付款记录创建请求 */
+export interface PurchaseOrderPaymentRecordCreateRequest {
+    purchase_order: number;
+    received_date: string;
+    amount: number;
+    currency?: string;
+    payment_method?: string;
+    reference_number?: string;
+    attachment?: File | null;
+    notes?: string;
+}
+
 /** 采购订单明细 */
 export interface PurchaseOrderItem {
     id: number;
@@ -955,6 +991,11 @@ export interface SalesOrderPaymentRecord {
     created_by?: string;
     created_at: string;
     updated_at: string;
+    order_number: string;
+    customer_id: number;
+    customer_name: string;
+    order_status: SalesOrderStatus;
+    order_total_amount: string;
 }
 
 /** 销售订单收款记录创建请求 */

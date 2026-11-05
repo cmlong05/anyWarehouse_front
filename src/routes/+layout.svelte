@@ -48,7 +48,8 @@
 			label: '供应商',
 			children: [
 				{ href: '/supplier', label: '供应商列表' },
-				{ href: '/supplier/purchase-order', label: '采购订单' }
+				{ href: '/supplier/purchase-order', label: '采购订单' },
+				{ href: '/supplier/payment-records', label: '付款管理' }
 			]
 		},
 		{
@@ -57,6 +58,7 @@
 			children: [
 				{ href: '/customer', label: '客户列表' },
 				{ href: '/customer/sales-order', label: '销售订单' },
+				{ href: '/customer/payment-records', label: '收款管理' },
 				{ href: '/customer/shipment', label: '发货管理' },
 				{ href: '/customer/package', label: '包裹管理' },
 				{ href: '/customer/shipment/tracking-number', label: '快递单号' }

@@ -22,6 +22,8 @@ import type {
     PurchaseOrderSummary,
     ReceiveOrderRequest,
     PurchaseOrderPriority,
+    PurchaseOrderPaymentRecord,
+    PurchaseOrderPaymentRecordCreateRequest,
 } from '$lib/index';
 import type { PaginatedResponse, QueryParams } from './base';
 
@@ -174,25 +176,36 @@ export class PurchaseOrderItemAPI extends BaseAPI<PurchaseOrderItem, unknown> {
 
 // ========== Purchase Order Payment Record API ==========
 
-export class PurchaseOrderPaymentRecordAPI extends BaseAPI<any, any, Partial<any>> {
+export class PurchaseOrderPaymentRecordAPI extends BaseAPI<
+    PurchaseOrderPaymentRecord,
+    PurchaseOrderPaymentRecordCreateRequest,
+    Partial<PurchaseOrderPaymentRecordCreateRequest>
+> {
     constructor() {
         super('/supplier/purchase-order-payment-records/');
     }
 
-    async listByOrder(orderId: number): Promise<PaginatedResponse<any>> {
-        return this.client.get<PaginatedResponse<any>>(this.basePath, { purchase_order: orderId.toString() });
+    async listByOrder(orderId: number): Promise<PaginatedResponse<PurchaseOrderPaymentRecord>> {
+        return this.client.get<PaginatedResponse<PurchaseOrderPaymentRecord>>(this.basePath, { purchase_order: orderId.toString() });
     }
 
-    async create(data: any): Promise<any> {
-        return this.client.post<any>(this.basePath, this.toFormData(data), true);
+    async listForManagement(params: QueryParams): Promise<PaginatedResponse<PurchaseOrderPaymentRecord>> {
+        return this.client.get<PaginatedResponse<PurchaseOrderPaymentRecord>>(
+            this.basePath,
+            this.buildQueryParams(params)
+        );
     }
 
-    async update(id: number, data: Partial<any>): Promise<any> {
-        return this.client.put<any>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    async create(data: PurchaseOrderPaymentRecordCreateRequest): Promise<PurchaseOrderPaymentRecord> {
+        return this.client.post<PurchaseOrderPaymentRecord>(this.basePath, this.toFormData(data), true);
     }
 
-    async patch(id: number, data: Partial<any>): Promise<any> {
-        return this.client.patch<any>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    async update(id: number, data: Partial<PurchaseOrderPaymentRecordCreateRequest>): Promise<PurchaseOrderPaymentRecord> {
+        return this.client.put<PurchaseOrderPaymentRecord>(`${this.basePath}${id}/`, this.toFormData(data), true);
+    }
+
+    async patch(id: number, data: Partial<PurchaseOrderPaymentRecordCreateRequest>): Promise<PurchaseOrderPaymentRecord> {
+        return this.client.patch<PurchaseOrderPaymentRecord>(`${this.basePath}${id}/`, this.toFormData(data), true);
     }
 
     async delete(id: number): Promise<void> {
