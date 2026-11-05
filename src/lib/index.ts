@@ -828,6 +828,7 @@ export interface CustomerQuotation {
     customer_detail?: CustomerBrief;
     item_detail?: BaseItem & { image?: string; weight?: string };
     price: string;
+    current_version: QuotationVersion | null;
     currency: string;
     min_quantity: number;
     lead_time_days: number | null;
@@ -874,6 +875,18 @@ export interface CustomerQuotationCreateRequest {
     item?: number | null;
     customer: number;
     price: string | number;
+    currency?: string;
+    min_quantity?: number;
+    lead_time_days?: number | null;
+    valid_from?: string | null;
+    note?: string;
+    partner_sku?: string;
+}
+
+/** 更新客户报价基础信息（价格通过版本接口变更） */
+export interface CustomerQuotationUpdateRequest {
+    customer?: number;
+    item?: number | null;
     currency?: string;
     min_quantity?: number;
     lead_time_days?: number | null;

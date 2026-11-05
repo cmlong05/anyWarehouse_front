@@ -1,17 +1,26 @@
 <script lang="ts">
-    import { quotationAPI } from '$lib/api';
-    import type { Quotation } from '$lib';
+    import type { QuotationVersion } from '$lib';
     import { NumberStepper } from '$lib/components/ui';
     import { BaseModal } from '$lib/components/modal';
 
+    interface VersionedQuotation {
+        id: number;
+        currency: string;
+        current_version: QuotationVersion | null;
+    }
+
     interface Props {
-        quotation: Quotation;
+        quotation: VersionedQuotation;
         open: boolean;
         onclose: () => void;
         onsuccess: () => void;
+        createVersion: (
+            id: number,
+            data: { price: string; note: string },
+        ) => Promise<unknown>;
     }
 
-    let { quotation, open, onclose, onsuccess }: Props = $props();
+    let { quotation, open, onclose, onsuccess, createVersion }: Props = $props();
 
     let newPrice = $state<number | undefined>(undefined);
     let note = $state('');
@@ -20,7 +29,7 @@
 
     function validate(price: number | undefined): string | null {
         if (price === undefined || price === null) return '请输入价格';
-        if (price <= 0) return '请输入有效的价格';
+        if (price < 0) return '请输入有效的价格';
         return null;
     }
 
@@ -39,7 +48,7 @@
         error = '';
         submitting = true;
         try {
-            await quotationAPI.createVersion(quotation.id, {
+            await createVersion(quotation.id, {
                 price: String(newPrice),
                 note: note || '',
             });
@@ -89,7 +98,7 @@
                     </label>
                     <NumberStepper
                         value={newPrice}
-                        min={0.01}
+                        min={0}
                         step={0.01}
                         placeholder="0.00"
                         disabled={submitting}

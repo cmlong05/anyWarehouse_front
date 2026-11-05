@@ -8,13 +8,24 @@
     import { onMount } from 'svelte';
     import { customerQuotationAPI } from '$lib/api';
     import { showConfirm } from '$lib/stores/dialog.svelte';
-    import type { CustomerQuotation } from '$lib';
-    import { Alert, Breadcrumb, Loading, QuotationDetailBody } from '$lib/components';
+    import type { CustomerQuotation, QuotationVersion } from '$lib';
+    import {
+        AdjustPriceModal,
+        Alert,
+        Breadcrumb,
+        EditButton,
+        Loading,
+        QuotationDetailBody,
+        VersionHistoryCard,
+    } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     
     let quotation = $state<CustomerQuotation | null>(null);
     let loading = $state(true);
     let error = $state('');
+    let versions = $state<QuotationVersion[]>([]);
+    let versionsLoading = $state(false);
+    let showPriceModal = $state(false);
     
     const id = $derived(parseInt(page.params.id || '0'));
     
@@ -54,9 +65,22 @@
             error = err instanceof Error ? err.message : '删除失败';
         }
     }
+
+    async function loadVersions() {
+        versionsLoading = true;
+        try {
+            const data = await customerQuotationAPI.getVersions(id);
+            versions = data.versions;
+        } catch (err) {
+            console.error('Failed to load customer quotation versions', err);
+        } finally {
+            versionsLoading = false;
+        }
+    }
     
     onMount(() => {
         loadQuotation();
+        loadVersions();
     });
 </script>
 
@@ -87,16 +111,17 @@
                 {/if}
             {/snippet}
             {#snippet actions()}
-                <a 
-                    href="/customer/quotation/{id}/edit" 
-                    class="px-4 py-2 text-white rounded-md transition-colors"
-                    title="编辑"
-                    aria-label="编辑"
+                <button
+                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                    onclick={() => showPriceModal = true}
                 >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                </a>
+                    新建报价
+                </button>
+                <EditButton
+                    href={`/customer/quotation/${id}/edit`}
+                    action="edit"
+                    variant="primary"
+                />
                 <button class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm" onclick={deleteQuotation}>删除</button>
             {/snippet}
         </PageHeader>
@@ -123,6 +148,26 @@
             note={quotation.note}
             createdAt={quotation.created_at}
             updatedAt={quotation.updated_at}
+        />
+
+        <div class="mt-6">
+            <VersionHistoryCard
+                {versions}
+                currentVersionId={quotation.current_version?.id ?? null}
+                loading={versionsLoading}
+            />
+        </div>
+
+        <AdjustPriceModal
+            {quotation}
+            open={showPriceModal}
+            createVersion={(quotationId, data) => customerQuotationAPI.createVersion(quotationId, data)}
+            onclose={() => showPriceModal = false}
+            onsuccess={() => {
+                showPriceModal = false;
+                loadQuotation();
+                loadVersions();
+            }}
         />
     {/if}
 </PageContainer>

@@ -12,6 +12,8 @@ import type {
     CustomerQuotation,
     CustomerQuotationBrief,
     CustomerQuotationCreateRequest,
+    CustomerQuotationUpdateRequest,
+    QuotationVersion,
     SalesOrder,
     SalesOrderBrief,
     SalesOrderCreateRequest,
@@ -83,7 +85,11 @@ export class CustomerAddressAPI extends BaseAPI<CustomerAddress, CustomerAddress
 
 // ========== Customer Quotation API ==========
 
-export class CustomerQuotationAPI extends BaseAPI<CustomerQuotation, CustomerQuotationCreateRequest> {
+export class CustomerQuotationAPI extends BaseAPI<
+    CustomerQuotation,
+    CustomerQuotationCreateRequest,
+    CustomerQuotationUpdateRequest
+> {
     constructor() {
         super('/customer/customer-quotation/');
     }
@@ -110,6 +116,23 @@ export class CustomerQuotationAPI extends BaseAPI<CustomerQuotation, CustomerQuo
         best_price_customer: string | null;
     }> {
         return this.client.get(`${this.basePath}comparison/`, { item_id: itemId.toString() });
+    }
+
+    /** 获取报价的所有价格版本 */
+    async getVersions(id: number): Promise<{
+        quotation_id: number;
+        versions: QuotationVersion[];
+        count: number;
+    }> {
+        return this.client.get(`${this.basePath}${id}/versions/`);
+    }
+
+    /** 为报价创建新价格版本 */
+    async createVersion(
+        id: number,
+        data: { price: string | number; note?: string; created_by?: string },
+    ): Promise<CustomerQuotation> {
+        return this.client.post(`${this.basePath}${id}/versions/`, data);
     }
 }
 

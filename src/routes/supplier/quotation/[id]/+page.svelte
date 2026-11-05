@@ -168,6 +168,7 @@
         <AdjustPriceModal
             quotation={quotation}
             open={showAdjustModal}
+            createVersion={(id, data) => quotationAPI.createVersion(id, data)}
             onclose={() => showAdjustModal = false}
             onsuccess={() => {
                 showAdjustModal = false;
