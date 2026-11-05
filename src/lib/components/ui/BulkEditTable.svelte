@@ -10,6 +10,8 @@
     import CurrencySelect from '$lib/components/ui/CurrencySelect.svelte';
     import { BaseModal } from '$lib/components/modal';
 
+    type EditableField = 'name' | 'name_en' | 'b_Price' | 'currency' | 'weight';
+
     interface Item {
         id: number;
         SKU: string;
@@ -19,7 +21,6 @@
         b_Price?: string | number | null;
         currency?: string;
         weight?: string | number;
-        [key: string]: unknown;
     }
 
     interface BulkEditTableProps {
@@ -40,7 +41,12 @@
     let successMessage = $state('');
     let editingCell: {itemId: number; field: string} | null = $state(null);
 
-    const editableFields = [
+    const editableFields: Array<{
+        key: EditableField;
+        label: string;
+        type: 'text' | 'number' | 'currency';
+        decimalPlaces?: number;
+    }> = [
         { key: 'name', label: '中文名', type: 'text' },
         { key: 'name_en', label: '英文名', type: 'text' },
         { key: 'b_Price', label: '价格', type: 'number', decimalPlaces: 2 },
@@ -57,7 +63,7 @@
         onclose?.();
     }
 
-    function getDisplayValue(item: Item, field: string): string {
+    function getDisplayValue(item: Item, field: EditableField): string {
         const key = String(item.id);
         if (editingData[key] && field in editingData[key]) {
             return String(editingData[key][field] ?? '');
@@ -65,7 +71,7 @@
         return String(item[field] ?? '');
     }
 
-    function commitCell(itemId: number, field: string, inputEl: HTMLInputElement) {
+    function commitCell(itemId: number, field: EditableField, inputEl: HTMLInputElement) {
         const value = inputEl.value;
         const key = String(itemId);
         const item = selectedItems.find(i => i.id === itemId);
@@ -81,7 +87,7 @@
         editingCell = null;
     }
 
-    function commitNumberCell(itemId: number, field: string, newValue: number | null | undefined) {
+    function commitNumberCell(itemId: number, field: EditableField, newValue: number | null | undefined) {
         const key = String(itemId);
         const item = selectedItems.find(i => i.id === itemId);
         const original = item?.[field] ?? null;

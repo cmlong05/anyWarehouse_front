@@ -10,7 +10,7 @@
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { showAlert } from '$lib/stores/dialog.svelte';
     
-    let { data } = $props<{ items: BaseItem[]; searchQuery: string }>();
+    let { data }: { data: { items: BaseItem[]; searchQuery: string } } = $props();
     
     // safely get items array
     let items = $derived(data?.items ?? []);

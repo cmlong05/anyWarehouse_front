@@ -6,7 +6,7 @@
     import type { Category } from '$lib';
     import { Folder, FolderOpen, Plus, ChevronRight, Tag } from 'lucide-svelte';
     
-    let { data } = $props<{ categories: Category[] }>();
+    let { data }: { data: { categories: Category[] } } = $props();
 
     // 构建分类树结构
     function buildCategoryTree(categories: Category[]): Category[] {

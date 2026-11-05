@@ -7,12 +7,12 @@
     import { CategoryForm } from '$lib/components';
     import type { Category } from '$lib';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             categories: Category[];
             parentCategory?: Category;
         }
-    }>();
+    } = $props();
 </script>
 
 <svelte:head>

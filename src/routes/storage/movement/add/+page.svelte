@@ -10,7 +10,7 @@
     import Svelecte from 'svelecte';
     import type { ContainerBriefID } from '$lib';
 
-    let { data } = $props<{
+    let { data }: {
         data: {
             containers: ContainerBriefID[];
             initialItemId: string | null;
@@ -18,7 +18,7 @@
             initialToContainerId: string | null;
             initialType: string;
         };
-    }>();
+    } = $props();
 
     const movementTypeOptions = [
         { value: 'inbound', label: '入库 (Inbound)' },

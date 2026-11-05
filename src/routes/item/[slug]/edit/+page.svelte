@@ -10,12 +10,12 @@
     import type { Category, ItemSet } from '$lib';
     import { apiClient } from '$lib/api';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             itemData: ItemSet;
             categories: Category[];
         }
-    }>();
+    } = $props();
 
     let showDeleteModal = $state(false);
     let deleteLoading = $state(false);
@@ -80,7 +80,7 @@
             b_Price: data.itemData.item.b_Price,
             currency: data.itemData.item.currency,
             in_fee: data.itemData.item.in_fee,
-            barcode: data.itemData.item.barcode,
+            barcode: data.itemData.item.barcode ?? '',
             category: data.itemData.item.category,
             is_variant_template: data.itemData.item.is_variant_template,
             is_variant: data.itemData.item.is_variant,

@@ -9,12 +9,12 @@
     import { goto } from '$app/navigation';
     import { apiClient } from '$lib/api';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             container: Container;
             containers: ContainerBriefID[];
         }
-    }>();
+    } = $props();
 
     async function handleDelete(containerId: number) {
         await apiClient.deleteNoContent(`/warehouse/container/${data.container.fastCode}/`);

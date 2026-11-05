@@ -7,14 +7,14 @@
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import type { ContainerBriefID } from '$lib';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             item: string; 
             itemName: string;
             itemSKU: string;
             containers: ContainerBriefID[];
         }
-    }>();
+    } = $props();
 </script>
 
 <svelte:head>

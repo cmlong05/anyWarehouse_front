@@ -7,11 +7,11 @@
     import { StorageForm } from '$lib/components';
     import type { ContainerBriefID } from '$lib';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             containers: ContainerBriefID[];
         }
-    }>();
+    } = $props();
 </script>
 
 <svelte:head>

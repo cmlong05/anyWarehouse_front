@@ -5,15 +5,16 @@
 <script lang="ts">
     import { ItemForm } from '$lib/components';
     import { PageContainer, PageHeader } from '$lib/components/layout';
-    import type { Category, Item } from '$lib';
+    import type { ComponentProps } from 'svelte';
+    import type { Category } from '$lib';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             categories: Category[];
             defaultCategoryId?: number | null;
-            copyFromItem?: Partial<Item>;
+            copyFromItem?: NonNullable<ComponentProps<typeof ItemForm>['initialData']>;
         }
-    }>();
+    } = $props();
 
     // 如果有默认分类，找到对应的分类名称用于显示
     const defaultCategory = $derived(data.defaultCategoryId 

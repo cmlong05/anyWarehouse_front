@@ -11,13 +11,13 @@
     import { showAlert } from '$lib/stores/dialog.svelte';
     import { goto } from '$app/navigation';
 
-    let { data } = $props<{ 
+    let { data }: {
         data: {
             categoryData: CategoryData;
             categories: Category[];
             emptyCheckData: { is_empty: boolean; item_count: number; children_count: number } | null;
         }
-    }>();
+    } = $props();
 
     // 获取父分类ID：ancestors数组中的最后一个就是直接父分类
     const parentId = $derived(data.categoryData.ancestors.length > 0 

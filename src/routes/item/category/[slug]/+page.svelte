@@ -9,7 +9,7 @@
     import { BulkCategoryChangeModal } from '$lib/components';
     import type { CategoryData } from '$lib';
     
-    let { data } = $props<{ category_details: CategoryData }>();
+    let { data }: { data: { category_details: CategoryData } } = $props();
     
     const apiClient = new ApiClient();
     
