@@ -6,7 +6,8 @@
 -->
 <script lang="ts">
     import type { Package } from '$lib/shipmentTypes';
-    import { hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { hasChangedFields } from '$lib/utils';
+    import { BaseModal } from '$lib/components/modal';
 
     interface Props {
         show: boolean;
@@ -46,19 +47,6 @@
         }
     });
 
-    function handleBackdropClick(event: MouseEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-           onClose();
-        }
-    }
-
-    function handleModalKeydown(event: KeyboardEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-           event.preventDefault();
-           onClose();
-        }
-    }
-
     async function handleLink() {
         const success = await onLink();
         if (success) {
@@ -68,18 +56,15 @@
     }
 </script>
 
-{#if show}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" 
-         onclick={handleBackdropClick}
-         onkeydown={handleModalKeydown}
-         role="dialog"
-         aria-modal="true"
-         tabindex="-1">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h3 class="font-bold text-lg mb-4">关联已有包裹</h3>
-            
+<BaseModal
+    open={show}
+    title="关联已有包裹"
+    size="lg"
+    busy={linking}
+    canDismiss={() => canDismiss}
+    {onClose}
+>
+            <div class="p-6">
             {#if packages.length === 0}
                 <div class="text-center py-8 text-gray-500">
                     <p>没有可关联的包裹</p>
@@ -118,8 +103,10 @@
                     {/each}
                 </div>
             {/if}
-            
-            <div class="flex justify-end gap-3 mt-6">
+            </div>
+
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button 
                     class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-transparent text-gray-600 hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed" 
                     onclick={onClose}
@@ -134,6 +121,5 @@
                     {linking ? '关联中...' : '关联到发货单'}
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

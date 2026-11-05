@@ -8,8 +8,9 @@
     import { logger } from '$lib/logger';
     import type { ItemExternalLink } from '$lib';
     import { externalLinkAPI } from '$lib/api';
-    import { hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { hasChangedFields } from '$lib/utils';
     import { showAlert } from '$lib/stores/dialog.svelte';
+    import { BaseModal } from '$lib/components/modal';
     import { DeleteConfirmModal } from '$lib/components/shipment';
     import Plus from 'lucide-svelte/icons/plus';
 
@@ -78,19 +79,6 @@
     function closeAddForm() {
         showAddForm = false;
         resetNewLink();
-    }
-
-    function handleBackdropClick(event: MouseEvent) {
-        if (shouldDismissModal(event, !isAddFormDirty)) {
-            closeAddForm();
-        }
-    }
-
-    function handleKeydown(event: KeyboardEvent) {
-        if (shouldDismissModal(event, !isAddFormDirty)) {
-            event.preventDefault();
-            closeAddForm();
-        }
     }
 
     $effect(() => {
@@ -224,37 +212,14 @@
     {/if}
 </div>
 
-{#if showAddForm}
-    <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-link-dialog-title"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-        tabindex="-1"
-        onclick={handleBackdropClick}
-        onkeydown={handleKeydown}
-    >
-        <div
-            class="absolute inset-0 bg-black/40"
-            onclick={handleBackdropClick}
-            aria-hidden="true"
-        ></div>
-
-        <div class="relative w-full max-w-md bg-white rounded-xl shadow-xl">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                <h3 id="add-link-dialog-title" class="text-base font-semibold text-gray-900">添加外部链接</h3>
-                <button
-                    type="button"
-                    onclick={closeAddForm}
-                    class="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                    aria-label="关闭"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
+<BaseModal
+    open={showAddForm}
+    title="添加外部链接"
+    size="md"
+    busy={addingLink}
+    canDismiss={() => !isAddFormDirty}
+    onClose={closeAddForm}
+>
             <div class="px-5 py-4 space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -314,7 +279,8 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 px-5 py-4 border-t border-gray-100">
+    {#snippet footer()}
+            <div class="flex justify-end gap-2 px-5 py-4">
                 <button
                     type="button"
                     onclick={closeAddForm}
@@ -327,9 +293,8 @@
                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >{addingLink ? '保存中...' : '保存'}</button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>
 
 <DeleteConfirmModal
     show={showDeleteConfirm}

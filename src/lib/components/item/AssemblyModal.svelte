@@ -3,6 +3,7 @@
     import { buildContainerRelationSearchOptions } from '$lib/utils';
     import type { AssemblyPreview, AssemblyAllocation } from '$lib';
     import { Alert } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
     import { NumberStepper } from '$lib/components/ui';
     import Svelecte from 'svelecte';
 
@@ -139,29 +140,25 @@
         }
     }
 
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === 'Escape') onClose();
+    function handleActionKeydown(event: KeyboardEvent) {
+        if ((event.key === 'Enter' || event.key === 'y' || event.key === 'Y') && !processing) {
+            event.preventDefault();
+            handleSubmit();
+        }
     }
 </script>
 
-{#if show}
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-        role="dialog" tabindex="-1" aria-modal="true"
-        onkeydown={handleKeydown}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="contents" onkeydown={handleActionKeydown}>
+    <BaseModal
+        open={show}
+        title="组装成品"
+        description={`${itemSKU} — ${itemName}`}
+        size="xl"
+        busy={processing}
+        {onClose}
     >
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">组装成品</h2>
-                    <p class="text-sm text-gray-500">{itemSKU} — {itemName}</p>
-                </div>
-                <button onclick={onClose} class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
-            </div>
-
-            <!-- Body -->
-            <div class="px-6 py-4 overflow-y-auto flex-1">
+            <div class="px-6 py-4">
                 {#if isLoading}
                     <div class="text-center py-8 text-gray-500">加载组装预览...</div>
                 {:else if error && !preview}
@@ -276,8 +273,8 @@
                 {/if}
             </div>
 
-            <!-- Footer -->
-            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between shrink-0">
+        {#snippet footer()}
+            <div class="flex items-center justify-between px-6 py-4">
                 <div class="text-sm text-gray-500">
                     {#if preview}
                         {preview.components.length} 种组件，产出 {refreshQuantity} 件成品
@@ -297,6 +294,6 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-{/if}
+        {/snippet}
+    </BaseModal>
+</div>

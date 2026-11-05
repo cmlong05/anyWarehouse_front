@@ -8,6 +8,7 @@
     import type { ApiClient } from '$lib/api';
     import NumberStepper from '$lib/components/ui/NumberStepper.svelte';
     import CurrencySelect from '$lib/components/ui/CurrencySelect.svelte';
+    import { BaseModal } from '$lib/components/modal';
 
     interface Item {
         id: number;
@@ -137,30 +138,15 @@
     }
 </script>
 
-{#if isOpen}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-         onclick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
-        <div class="bg-white rounded-lg shadow-2xl max-w-7xl w-full max-h-[90vh] flex flex-col"
-             onclick={(e) => e.stopPropagation()}>
-            <!-- 标题栏 -->
-            <div class="shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">批量编辑物品</h2>
-                    <p class="text-sm text-gray-500 mt-1">
-                        已选 {selectedItems.length} 个物品，已修改 <span class="font-medium text-blue-600">{modifiedCount}</span> 个物品
-                    </p>
-                </div>
-                <button
-                    class="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-                    onclick={closeModal}
-                    disabled={isSubmitting}
-                >✕</button>
-            </div>
-
-            <!-- 表格内容区（可滚动） -->
-            <div class="flex-1 overflow-auto p-6">
+<BaseModal
+    open={isOpen}
+    title="批量编辑物品"
+    description={`已选 ${selectedItems.length} 个物品，已修改 ${modifiedCount} 个物品`}
+    size="xl"
+    busy={isSubmitting}
+    onClose={closeModal}
+>
+            <div class="p-6">
                 <div class="border border-gray-200 rounded-lg overflow-hidden">
                     <table class="w-full">
                         <thead>
@@ -258,8 +244,8 @@
                 {/if}
             </div>
 
-            <!-- 操作栏 -->
-            <div class="shrink-0 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+    {#snippet footer()}
+            <div class="flex items-center justify-between px-6 py-4">
                 <p class="text-sm text-gray-500">
                     提示：单击单元格编辑，Enter 确认，Esc 取消
                 </p>
@@ -284,6 +270,5 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

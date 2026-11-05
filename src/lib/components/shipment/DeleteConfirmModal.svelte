@@ -5,6 +5,8 @@
 - `routes/customer/shipment/[id]/+page.svelte`
 -->
 <script lang="ts">
+    import { BaseModal } from '$lib/components/modal';
+
     interface Props {
         show: boolean;
         title: string;
@@ -16,7 +18,6 @@
     
     let { show, title, itemName, deleting, onCancel, onConfirm }: Props = $props();
 
-    // 键盘事件处理
     $effect(() => {
         if (!show) return;
         
@@ -24,9 +25,9 @@
             if (e.key === 'y' || e.key === 'Y') {
                 e.preventDefault();
                 if (!deleting) onConfirm();
-            } else if (e.key === 'Escape' || e.key === 'n' || e.key === 'N') {
+            } else if (e.key === 'n' || e.key === 'N') {
                 e.preventDefault();
-                onCancel();
+                if (!deleting) onCancel();
             }
         };
         
@@ -35,33 +36,34 @@
     });
 </script>
 
-{#if show}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" 
-         onclick={(e) => { if(e.target === e.currentTarget) onCancel(); }}
-         role="dialog"
-         aria-modal="true"
-         tabindex="-1">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 class="font-bold text-lg mb-4">{title}</h3>
-            <p class="py-2 text-gray-600">确定要删除"{itemName}"吗？此操作不可撤销。</p>
-            <p class="text-xs text-gray-400 mt-2">按 Y 确认，ESC 或 N 取消</p>
-            <div class="flex justify-end gap-3 mt-6">
-                <button 
-                    class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-transparent text-gray-600 hover:bg-gray-100 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    onclick={onCancel}
-                >
-                    取消 (N)
-                </button>
-                <button 
-                    class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 ease-in-out bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed" 
-                    onclick={onConfirm} 
-                    disabled={deleting}
-                >
-                    {deleting ? '删除中...' : '确认删除 (Y)'}
-                </button>
-            </div>
-        </div>
+<BaseModal
+    open={show}
+    {title}
+    size="sm"
+    busy={deleting}
+    onClose={onCancel}
+>
+    <div class="px-6 py-5">
+        <p class="break-words text-gray-600">确定要删除"{itemName}"吗？此操作不可撤销。</p>
+        <p class="mt-2 text-xs text-gray-400">按 Y 确认，ESC 或 N 取消</p>
     </div>
-{/if}
+
+    {#snippet footer()}
+        <div class="flex justify-end gap-3 px-6 py-4">
+            <button
+                class="cursor-pointer rounded bg-transparent px-4 py-2 text-sm font-medium text-gray-600 transition-all duration-150 ease-in-out hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                onclick={onCancel}
+                disabled={deleting}
+            >
+                取消 (N)
+            </button>
+            <button
+                class="cursor-pointer rounded bg-red-600 px-4 py-2 text-sm font-medium text-white transition-all duration-150 ease-in-out hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                onclick={onConfirm}
+                disabled={deleting}
+            >
+                {deleting ? '删除中...' : '确认删除 (Y)'}
+            </button>
+        </div>
+    {/snippet}
+</BaseModal>

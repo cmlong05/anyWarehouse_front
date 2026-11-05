@@ -8,6 +8,7 @@
     import { goto } from '$app/navigation';
     import type { ItemVariantInfo, ItemVariant, ItemAttributeValue } from '$lib/types/variant';
     import { apiClient } from '$lib/api';
+    import { BaseModal } from '$lib/components/modal';
     import VariantCreator from './VariantCreator.svelte';
     import VariantQuotationManager from './VariantQuotationManager.svelte';
 
@@ -145,36 +146,24 @@
         </div>
     </div>
 
-    <!-- 创建变体弹窗 -->
-    {#if showCreator}
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">创建变体</h3>
-                    <button
-                        onclick={() => showCreator = false}
-                        class="text-gray-400 hover:text-gray-600"
-                        aria-label="关闭"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-6">
-                    <VariantCreator
-                        parentItemId={itemId}
-                        parentItemSku={itemSku}
-                        onSuccess={() => {
-                            showCreator = false;
-                            onRefresh?.();
-                        }}
-                        onCancel={() => showCreator = false}
-                    />
-                </div>
-            </div>
+    <BaseModal
+        open={showCreator}
+        title="创建变体"
+        size="lg"
+        onClose={() => showCreator = false}
+    >
+        <div class="p-6">
+            <VariantCreator
+                parentItemId={itemId}
+                parentItemSku={itemSku}
+                onSuccess={() => {
+                    showCreator = false;
+                    onRefresh?.();
+                }}
+                onCancel={() => showCreator = false}
+            />
         </div>
-    {/if}
+    </BaseModal>
 
     <!-- 变体选择器（仅母版显示） -->
     {#if isTemplate() && variantInfo?.variant_summary?.attributes}
@@ -279,41 +268,29 @@
         </div>
     {/if}
 
-    <!-- 批量报价弹窗 -->
-    {#if showQuotationManager && variantInfo?.variants}
-        <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">批量设置变体报价</h3>
-                        <p class="text-sm text-gray-500 mt-0.5">为每个变体设置不同的采购价格</p>
-                    </div>
-                    <button
-                        onclick={() => showQuotationManager = false}
-                        class="text-gray-400 hover:text-gray-600"
-                        aria-label="关闭"
-                    >
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="p-6">
-                    <VariantQuotationManager
-                        variants={variantInfo.variants}
-                        attributes={variantInfo.variant_summary?.attributes || {}}
-                        parentItemName={itemName}
-                        parentItemSku={itemSku}
-                        onSuccess={() => {
-                            onRefresh?.();
-                            showQuotationManager = false;
-                        }}
-                        onCancel={() => showQuotationManager = false}
-                    />
-                </div>
+    <BaseModal
+        open={showQuotationManager && !!variantInfo?.variants}
+        title="批量设置变体报价"
+        description="为每个变体设置不同的采购价格"
+        size="xl"
+        onClose={() => showQuotationManager = false}
+    >
+        {#if variantInfo?.variants}
+            <div class="p-6">
+                <VariantQuotationManager
+                    variants={variantInfo.variants}
+                    attributes={variantInfo.variant_summary?.attributes || {}}
+                    parentItemName={itemName}
+                    parentItemSku={itemSku}
+                    onSuccess={() => {
+                        onRefresh?.();
+                        showQuotationManager = false;
+                    }}
+                    onCancel={() => showQuotationManager = false}
+                />
             </div>
-        </div>
-    {/if}
+        {/if}
+    </BaseModal>
 
     <!-- 变体列表（仅母版显示） -->
     {#if isTemplate() && variantInfo?.variants && variantInfo.variants.length > 0}

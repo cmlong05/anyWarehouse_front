@@ -2,6 +2,7 @@
     import { quotationAPI } from '$lib/api';
     import type { Quotation } from '$lib';
     import { NumberStepper } from '$lib/components/ui';
+    import { BaseModal } from '$lib/components/modal';
 
     interface Props {
         quotation: Quotation;
@@ -57,30 +58,13 @@
     }
 </script>
 
-{#if open}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center" onclick={handleClose} onkeydown={(e) => e.key === 'Escape' && handleClose()}>
-        <!-- 遮罩 -->
-        <div class="absolute inset-0 bg-black/50"></div>
-        <!-- 弹窗 -->
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
-        <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4" onclick={(e) => e.stopPropagation()} onkeydown={() => {}}>
-            <!-- 标题栏 -->
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">新建报价</h3>
-                <button
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                    onclick={handleClose}
-                    disabled={submitting}
-                    aria-label="关闭"
-                >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <!-- 内容 -->
+<BaseModal
+    open={open}
+    title="新建报价"
+    size="md"
+    busy={submitting}
+    onClose={handleClose}
+>
             <div class="px-6 py-4 space-y-4">
                 <!-- 当前价格 -->
                 <div>
@@ -131,8 +115,8 @@
                 </div>
             </div>
 
-            <!-- 按钮 -->
-            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                     onclick={handleClose}
@@ -148,6 +132,5 @@
                     {submitting ? '提交中...' : '确认新建'}
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

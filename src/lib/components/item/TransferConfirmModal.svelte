@@ -4,6 +4,7 @@
 - `routes/item/[slug]/+page.svelte`
 -->
 <script lang="ts">
+    import { BaseModal } from '$lib/components/modal';
     import { NumberStepper } from '$lib/components/ui';
 
     interface TransferPending {
@@ -41,39 +42,32 @@
         }
     });
 
-    function focusOnMount(node: HTMLElement) {
-        node.focus();
-    }
-
     function confirm() {
         if (!pending || processing) return;
         const maxQty = pending.fromQuantity;
         const safeQty = Math.max(1, Math.min(maxQty, Number(quantity) || 1));
         onConfirm(safeQty);
     }
+
+    function handleActionKeydown(event: KeyboardEvent) {
+        if ((event.key === 'Enter' || event.key === 'y' || event.key === 'Y') && !processing) {
+            event.preventDefault();
+            confirm();
+        }
+    }
 </script>
 
-{#if pending}
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-        role="dialog"
-        tabindex="-1"
-        aria-modal="true"
-        aria-labelledby="transfer-dialog-title"
-        use:focusOnMount
-        onkeydown={(e) => {
-            if (e.key === 'Escape') {
-                onCancel();
-                return;
-            }
-            if ((e.key === 'Enter' || e.key === 'y' || e.key === 'Y') && !processing) {
-                e.preventDefault();
-                confirm();
-            }
-        }}
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="contents" onkeydown={handleActionKeydown}>
+    <BaseModal
+        open={pending !== null}
+        title="确认移库"
+        size="sm"
+        busy={processing}
+        onClose={onCancel}
     >
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4">
-            <h3 id="transfer-dialog-title" class="text-base font-semibold text-gray-900">确认移库</h3>
+        {#if pending}
+            <div class="space-y-4 px-6 py-5">
 
             <div class="text-sm text-gray-700 bg-blue-50 border border-blue-100 rounded-md px-3 py-4 space-y-4">
                 <div class="w-full">
@@ -120,8 +114,11 @@
             {#if error}
                 <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
             {/if}
+            </div>
+        {/if}
 
-            <div class="flex justify-end gap-3 pt-1">
+        {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button
                     type="button"
                     onclick={onCancel}
@@ -132,12 +129,12 @@
                 <button
                     type="button"
                     onclick={confirm}
-                    disabled={processing || pending.fromQuantity <= 0}
+                    disabled={processing || (pending?.fromQuantity ?? 0) <= 0}
                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors"
                 >
                     {processing ? '处理中...' : '确认移库'}
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+        {/snippet}
+    </BaseModal>
+</div>

@@ -1,5 +1,7 @@
 <!-- 全部发货明细对齐确认弹窗 -->
 <script lang="ts">
+    import { BaseModal } from '$lib/components/modal';
+
     interface Props {
         isOpen?: boolean;
         onConfirm?: () => void;
@@ -12,46 +14,14 @@
         onCancel
     }: Props = $props();
 
-    function handleWindowKeydown(event: KeyboardEvent) {
-        if (isOpen && event.key === 'Escape') {
-            onCancel?.();
-        }
-    }
-
-    function handleBackdropClick(event: MouseEvent) {
-        if (event.target === event.currentTarget) {
-            onCancel?.();
-        }
-    }
 </script>
 
-<svelte:window onkeydown={handleWindowKeydown} />
-
-{#if isOpen}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-        onclick={handleBackdropClick}
-        role="presentation"
-    >
-        <div
-            class="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shipment-sync-options-title"
-        >
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h3 id="shipment-sync-options-title" class="text-lg font-semibold text-gray-900">全部明细对齐</h3>
-                <button
-                    type="button"
-                    class="flex h-8 w-8 items-center justify-center rounded-md text-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                    onclick={onCancel}
-                    aria-label="关闭弹窗"
-                >
-                    ×
-                </button>
-            </div>
-
+<BaseModal
+    open={isOpen}
+    title="全部明细对齐"
+    size="md"
+    onClose={() => onCancel?.()}
+>
             <div class="px-6 py-5">
                 <p class="text-sm leading-relaxed text-gray-600">
                     将发货单全部明细的计划数量对齐到已封箱包裹的实际数量。
@@ -61,7 +31,8 @@
                 </p>
             </div>
 
-            <div class="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button
                     type="button"
                     class="rounded-md bg-gray-100 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200"
@@ -77,6 +48,5 @@
                     执行
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

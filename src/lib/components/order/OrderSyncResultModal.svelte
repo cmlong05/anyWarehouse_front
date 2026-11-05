@@ -1,5 +1,7 @@
 <!-- 订单明细数量对齐结果弹窗 -->
 <script lang="ts">
+    import { BaseModal } from '$lib/components/modal';
+
     interface UpdatedItem {
         item_id: number;
         sku: string;
@@ -25,47 +27,15 @@
         onClose
     }: Props = $props();
 
-    function handleWindowKeydown(event: KeyboardEvent) {
-        if (isOpen && event.key === 'Escape') {
-            onClose?.();
-        }
-    }
-
-    function handleBackdropClick(event: MouseEvent) {
-        if (event.target === event.currentTarget) {
-            onClose?.();
-        }
-    }
 </script>
 
-<svelte:window onkeydown={handleWindowKeydown} />
-
-{#if isOpen}
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-        onclick={handleBackdropClick}
-        role="presentation"
-    >
-        <div
-            class="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-lg bg-white shadow-xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="order-sync-result-title"
-        >
-            <div class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
-                <h3 id="order-sync-result-title" class="text-lg font-semibold text-gray-900">{title}</h3>
-                <button
-                    type="button"
-                    class="flex h-8 w-8 items-center justify-center rounded-md text-xl text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                    onclick={onClose}
-                    aria-label="关闭弹窗"
-                >
-                    ×
-                </button>
-            </div>
-
-            <div class="overflow-y-auto px-6 py-5">
+<BaseModal
+    open={isOpen}
+    {title}
+    size="md"
+    onClose={() => onClose?.()}
+>
+            <div class="px-6 py-5">
                 <div
                     class="flex items-start gap-3 rounded-lg border px-4 py-3 {error
                         ? 'border-red-200 bg-red-50 text-red-700'
@@ -101,7 +71,8 @@
                 {/if}
             </div>
 
-            <div class="flex shrink-0 justify-end border-t border-gray-200 px-6 py-4">
+    {#snippet footer()}
+            <div class="flex justify-end px-6 py-4">
                 <button
                     type="button"
                     class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
@@ -110,6 +81,5 @@
                     知道了
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

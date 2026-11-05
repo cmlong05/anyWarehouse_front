@@ -10,6 +10,7 @@
     import { formatNumber, safeParseFloat, getErrorMessage } from '$lib/utils';
     import type { Package } from '$lib/shipmentTypes';
     import { Alert } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
     import Plus from 'lucide-svelte/icons/plus';
     import PackageCheck from 'lucide-svelte/icons/package-check';
     import PackageOpen from 'lucide-svelte/icons/package-open';
@@ -161,9 +162,9 @@
                 if (e.key === 'y' || e.key === 'Y') {
                     e.preventDefault();
                     if (!deleting) executeDelete();
-                } else if (e.key === 'Escape' || e.key === 'n' || e.key === 'N') {
+                } else if (e.key === 'n' || e.key === 'N') {
                     e.preventDefault();
-                    cancelDelete();
+                    if (!deleting) cancelDelete();
                 }
             };
             window.addEventListener('keydown', handler);
@@ -318,19 +319,20 @@
 </PageContainer>
 
 <!-- 删除确认弹窗 -->
-{#if showDeleteModal}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
-         onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }}
-         role="dialog"
-         aria-modal="true"
-         tabindex="-1">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 class="font-bold text-lg mb-4">确认删除</h3>
+<BaseModal
+    open={showDeleteModal}
+    title="确认删除"
+    size="sm"
+    busy={deleting}
+    onClose={cancelDelete}
+>
+        <div class="px-6 py-5">
             <p class="py-2 text-gray-600">确定要删除包裹 "{deletePackageNo}" 吗？此操作不可撤销。</p>
             <p class="text-xs text-gray-400 mt-2">按 Y 确认，ESC 或 N 取消</p>
-            <div class="flex justify-end gap-3 mt-6">
+        </div>
+
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button
                     type="button"
                     class="inline-flex h-9 items-center rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -343,6 +345,5 @@
                     disabled={deleting}
                 >{deleting ? '删除中...' : '确认删除 (Y)'}</button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

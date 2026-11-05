@@ -7,10 +7,11 @@
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { trackingNumberAPI } from '$lib/api';
-    import { formatDate, getErrorMessage, hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { formatDate, getErrorMessage, hasChangedFields } from '$lib/utils';
     import type { LogisticsStatus, TrackingNumber } from '$lib/shipmentTypes';
     import { Alert, Loading } from '$lib/components';
     import { ConfirmModal } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
     import TrackingNumberDetailModal from '$lib/components/shipment/TrackingNumberDetailModal.svelte';
     import Plus from 'lucide-svelte/icons/plus';
 
@@ -111,19 +112,6 @@
         showFormModal = false;
         initialFormData = null;
         isFormDirty = false;
-    }
-
-    function handleFormBackdropClick(event: MouseEvent) {
-        if (shouldDismissModal(event, !isFormDirty)) {
-            closeFormModal();
-        }
-    }
-
-    function handleFormKeydown(event: KeyboardEvent) {
-        if (shouldDismissModal(event, !isFormDirty)) {
-            event.preventDefault();
-            closeFormModal();
-        }
     }
 
     $: isFormDirty = initialFormData === null
@@ -555,28 +543,13 @@
 </div>
 
 <!-- 表单模态框 -->
-{#if showFormModal}
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <div 
-        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
-        role="dialog"
-        aria-modal="true"
-        tabindex="-1"
-        on:click={handleFormBackdropClick}
-        on:keydown={handleFormKeydown}
-    >
-        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-[95%] max-h-[90vh] overflow-y-auto">
-            <!-- 标题栏 -->
-            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200 sticky top-0 bg-white z-10">
-                <h3 class="text-gray-900 text-lg font-semibold">{editingId ? '编辑快递单号' : '新建快递单号'}</h3>
-                <button 
-                    class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
-                    on:click={closeFormModal}
-                    aria-label="关闭"
-                >×</button>
-            </div>
-
-            <!-- 表单内容 -->
+<BaseModal
+    open={showFormModal}
+    title={editingId ? '编辑快递单号' : '新建快递单号'}
+    size="lg"
+    canDismiss={() => !isFormDirty}
+    onClose={closeFormModal}
+>
             <div class="px-6 py-5 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -716,8 +689,8 @@
                 </div>
             </div>
 
-            <!-- 底部按钮 -->
-            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 sticky bottom-0 bg-white">
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button 
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors text-sm"
                     on:click={closeFormModal}
@@ -727,9 +700,8 @@
                     on:click={handleSubmit}
                 >保存</button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>
 
 <!-- 删除确认模态框 -->
 <ConfirmModal

@@ -7,7 +7,8 @@
     import { getErrorMessage } from '$lib/utils/errors';
     import type { Category } from '$lib';
     import type { ApiClient } from '$lib/api';
-    import { buildCategoryRelationSearchOptions, hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { BaseModal } from '$lib/components/modal';
+    import { buildCategoryRelationSearchOptions, hasChangedFields } from '$lib/utils';
     import Svelecte from 'svelecte';
 
     interface SelectedItem {
@@ -165,19 +166,6 @@
         }
     });
 
-    function handleBackdropClick(event: MouseEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-            closeModal();
-        }
-    }
-
-    function handleModalKeydown(event: KeyboardEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-            event.preventDefault();
-            closeModal();
-        }
-    }
-
     async function handleSubmit() {
         const normalizedTargetCategoryId = normalizedSelectedTargetCategoryId;
         if (normalizedTargetCategoryId === null) {
@@ -271,35 +259,16 @@
     }
 </script>
 
-{#if isOpen}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-         onclick={handleBackdropClick}
-         onkeydown={handleModalKeydown}
-         role="dialog"
-         aria-modal="true"
-         tabindex="-1">
-        <div class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-visible rounded-lg bg-white shadow-2xl"
-             onclick={(e) => e.stopPropagation()}>
-            <div class="shrink-0 border-b border-gray-200 px-6 py-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-semibold text-gray-900">批量调整分类</h2>
-                        <p class="mt-1 text-sm text-gray-500">
-                            当前分类：<span class="font-medium text-gray-700">{currentCategoryName}</span>
-                        </p>
-                        <p class="mt-1 text-sm text-gray-500">已选 {selectedItems.length} 个物品</p>
-                    </div>
-                    <button
-                        class="text-2xl leading-none text-gray-400 hover:text-gray-600"
-                        onclick={closeModal}
-                        disabled={isSubmitting}
-                    >✕</button>
-                </div>
-            </div>
-
-            <div class="flex-1 space-y-5 overflow-visible px-6 py-5">
+<BaseModal
+    open={isOpen}
+    title="批量调整分类"
+    description={`当前分类：${currentCategoryName} · 已选 ${selectedItems.length} 个物品`}
+    size="xl"
+    busy={isSubmitting}
+    canDismiss={() => canDismiss}
+    onClose={closeModal}
+>
+            <div class="space-y-5 px-6 py-5">
                 {#if resultTargetId !== null && changedItems.length > 0}
                     <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                         {#if resultMode === 'move'}
@@ -418,7 +387,8 @@
                 {/if}
             </div>
 
-            <div class="flex shrink-0 items-center justify-between border-t border-gray-200 px-6 py-4">
+    {#snippet footer()}
+            <div class="flex items-center justify-between px-6 py-4">
                 <p class="text-sm text-gray-500">
                     提交后会按当前分类上下文处理，不会覆盖物品的全部分类列表。
                 </p>
@@ -443,6 +413,5 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

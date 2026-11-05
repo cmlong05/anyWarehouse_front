@@ -9,6 +9,7 @@
     import { customerAddressAPI } from '$lib/api';
     import { showConfirm } from '$lib/stores/dialog.svelte';
     import AddressCard from '$lib/components/customer/AddressCard.svelte';
+    import { BaseModal } from '$lib/components/modal';
 
     interface Props {
         customerId: number;
@@ -155,12 +156,6 @@
 
 </script>
 
-<svelte:window
-    onkeydown={(e) => {
-        if (e.key === 'Escape') requestCloseModal();
-    }}
-/>
-
 <!-- 地址信息标题 + 新增按钮 -->
 <div class="flex items-center justify-between mb-3">
     <h3 class="text-base font-semibold text-gray-700">地址信息</h3>
@@ -190,22 +185,14 @@
 {/if}
 
 <!-- 新增/编辑弹窗 -->
-{#if showModal}
-    <div
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-        role="dialog"
-        aria-modal="true"
-        tabindex="-1"
-        onclick={(e) => { if (e.target === e.currentTarget) requestCloseModal(); }}
-        onkeydown={(e) => {
-            if (e.key === 'Escape') requestCloseModal();
-        }}
-    >
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                <h3 class="font-semibold text-gray-800">{editingId !== null ? '编辑地址' : '新增地址'}</h3>
-                <button type="button" onclick={() => requestCloseModal(true)} class="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
-            </div>
+<BaseModal
+    open={showModal}
+    title={editingId !== null ? '编辑地址' : '新增地址'}
+    size="lg"
+    busy={saving}
+    canDismiss={() => !isFormDirty}
+    onClose={() => requestCloseModal()}
+>
             <div class="px-6 py-4">
                 {#if error}
                     <div class="mb-3 px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{error}</div>
@@ -275,12 +262,12 @@
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
-                <button type="button" onclick={() => requestCloseModal(true)} class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm cursor-pointer">取消</button>
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
+                <button type="button" onclick={() => requestCloseModal()} class="px-4 py-2 text-gray-600 hover:text-gray-800 text-sm cursor-pointer">取消</button>
                 <button type="button" onclick={() => void handleSave()} disabled={saving} class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                     {saving ? '保存中...' : '保存'}
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

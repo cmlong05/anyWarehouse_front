@@ -6,8 +6,9 @@
 -->
 <script lang="ts">
     import { Alert } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
     import Svelecte from 'svelecte';
-    import { buildContainerRelationSearchOptions, formatNumber, hasChangedFields, shouldDismissModal } from '$lib/utils';
+    import { buildContainerRelationSearchOptions, formatNumber, hasChangedFields } from '$lib/utils';
     import { NumberStepper } from '$lib/components/ui';
     import type { ContainerBriefID } from '$lib';
 
@@ -168,29 +169,17 @@
         }
     }
 
-    function handleBackdropClick(event: MouseEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-            requestCloseModal();
-        }
-    }
-
-    function handleModalKeydown(event: KeyboardEvent) {
-        if (shouldDismissModal(event, canDismiss)) {
-            event.preventDefault();
-            requestCloseModal();
-        }
-    }
 </script>
 
-{#if show}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-8" onclick={handleBackdropClick} onkeydown={handleModalKeydown} role="presentation" tabindex="-1">
-        <div class="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div class="flex justify-between items-center p-4 px-6 border-b border-gray-200">
-                <h2 class="m-0 text-xl">{title}</h2>
-                <button class="bg-transparent border-none text-2xl cursor-pointer text-gray-500 hover:text-gray-700 p-1 leading-none" onclick={() => requestCloseModal(true)}>×</button>
-            </div>
-            <div class="p-6 overflow-y-auto max-h-[calc(90vh-70px)]">
+<BaseModal
+    open={show}
+    {title}
+    size="lg"
+    busy={updating}
+    canDismiss={() => canDismiss}
+    onClose={() => requestCloseModal()}
+>
+            <div class="p-6">
                 {#if error}
                     <Alert error={{message: error}} onDismiss={() => {}} />
                 {/if}
@@ -266,14 +255,15 @@
                         ></textarea>
                     </div>
 
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+            </div>
+            </div>
+
+    {#snippet footer()}
+                    <div class="flex justify-end gap-3 px-6 py-4">
                         <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-gray-500 text-white hover:bg-gray-600" onclick={() => requestCloseModal(true)} disabled={updating}>取消</button>
                         <button class="px-4 py-2 rounded text-sm font-medium cursor-pointer transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700" onclick={onConfirm} disabled={updating || getTotalQuantity() === 0 || hasUnassignedReceiveItems()}>
                             {updating ? '处理中...' : `确认${type === 'ship' ? '发货' : '收货'}`}
                         </button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

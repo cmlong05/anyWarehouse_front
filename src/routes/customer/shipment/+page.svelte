@@ -14,6 +14,7 @@
     import { DataTable, Pagination, FilterPanel, FormInput, FormSelect } from '$lib/components/ui';
     import { PageContainer, PageHeader } from '$lib/components/layout';
     import { Alert } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
 
     let shipments = $state<Shipment[]>([]);
     let loading = $state(true);
@@ -235,20 +236,19 @@
 </PageContainer>
 
 <!-- 删除确认模态框 -->
-{#if deleteId !== null}
-    <!-- svelte-ignore a11y_click_events_have_key_events -->
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div 
-        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
-        onclick={(e) => { if(e.target === e.currentTarget) cancelDelete(); }} 
-        role="button" 
-        tabindex="0" 
-        aria-label="关闭"
-    >
-        <div class="bg-white rounded-lg shadow-2xl max-w-md w-[90%] p-6">
-            <h3 class="text-xl font-semibold mb-4">确认删除</h3>
+<BaseModal
+    open={deleteId !== null}
+    title="确认删除"
+    size="sm"
+    busy={deleting}
+    onClose={cancelDelete}
+>
+        <div class="px-6 py-5">
             <p class="text-gray-500 mb-6">确定要删除发货单 "{deleteName}" 吗？此操作不可撤销。</p>
-            <div class="flex justify-end gap-3">
+        </div>
+
+    {#snippet footer()}
+            <div class="flex justify-end gap-3 px-6 py-4">
                 <button 
                     class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
                     onclick={cancelDelete}
@@ -263,6 +263,5 @@
                     {deleting ? '删除中...' : '确认删除'}
                 </button>
             </div>
-        </div>
-    </div>
-{/if}
+    {/snippet}
+</BaseModal>

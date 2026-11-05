@@ -9,6 +9,7 @@
     import { formatDate } from '$lib/utils';
     import type { TrackingNumber } from '$lib/shipmentTypes';
     import { Alert } from '$lib/components';
+    import { BaseModal } from '$lib/components/modal';
 
     export let isOpen = false;
     export let trackingNumber: TrackingNumber | null = null;
@@ -72,18 +73,17 @@
         : [];
 </script>
 
-{#if isOpen && trackingNumber}
-    <div
-        class="fixed inset-0 bg-black/50 flex justify-center items-center z-50"
-        role="dialog"
-        aria-modal="true"
-        tabindex="-1"
-        on:click|self={handleClose}
-        on:keydown={(e) => e.key === 'Escape' && handleClose()}
-    >
-        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-[95%] max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-200 sticky top-0 bg-white">
-                <h3 class="text-gray-900 text-lg font-semibold">物流详情</h3>
+<BaseModal
+    open={isOpen && trackingNumber !== null}
+    title="物流详情"
+    size="xl"
+    busy={syncing || registering}
+    onClose={handleClose}
+>
+    {#snippet header()}
+                <div class="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3">
+                <h3 class="text-lg font-semibold text-gray-900">物流详情</h3>
+                {#if trackingNumber}
                 <div class="flex items-center gap-2">
                     {#if trackingNumber.logistics_status !== 'cancelled'}
                         <button
@@ -107,14 +107,12 @@
                             {registering ? '注册中...' : (trackingNumber.shippo_registered ? '重新注册' : '注册')}
                         </button>
                     {/if}
-                    <button
-                        class="text-gray-500 hover:text-gray-700 hover:bg-gray-100 w-8 h-8 flex items-center justify-center rounded-md transition-all text-xl leading-none"
-                        on:click={handleClose}
-                        aria-label="关闭"
-                    >×</button>
                 </div>
-            </div>
+                {/if}
+                </div>
+    {/snippet}
 
+    {#if trackingNumber}
             {#if error}
                 <div class="px-6 py-4">
                     <Alert error={error} variant="error" onDismiss={() => error = null} />
@@ -346,6 +344,5 @@
                     {/if}
                 </div>
             </div>
-        </div>
-    </div>
-{/if}
+    {/if}
+</BaseModal>
