@@ -152,6 +152,11 @@ export class SalesOrderAPI extends BaseOrderAPI<
         return this.client.post<SalesOrder>(`${this.basePath}${orderId}/ship/`, data);
     }
 
+    /** 根据现有履约和物流数据重新计算订单状态 */
+    async recomputeStatus(orderId: number): Promise<SalesOrder> {
+        return this.client.post<SalesOrder>(`${this.basePath}${orderId}/recompute-status/`, {});
+    }
+
     /**
      * 根据发货单明细同步订单行数量。
      *

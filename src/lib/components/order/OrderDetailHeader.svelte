@@ -10,6 +10,7 @@
     interface Labels {
         backToList?: string;
         copyOrder?: string;
+        refreshStatus?: string;
         edit?: string;
         delete?: string;
     }
@@ -22,10 +23,12 @@
         transitions: StatusTransition[];
         showMeta?: boolean;
         updating?: boolean;
+        refreshing?: boolean;
         canEdit?: boolean;
         canDelete?: boolean;
         labels?: Labels;
         onBack: () => void;
+        onRefreshStatus?: () => void;
         onEdit?: () => void;
         onDelete?: () => void;
         onCopy?: () => void;
@@ -40,10 +43,12 @@
         transitions,
         showMeta = true,
         updating = false,
+        refreshing = false,
         canEdit = false,
         canDelete = false,
         labels = {},
         onBack,
+        onRefreshStatus,
         onEdit,
         onDelete,
         onCopy,
@@ -53,6 +58,7 @@
     const defaultLabels: Labels = {
         backToList: '← 返回列表',
         copyOrder: '📋 复制订单',
+        refreshStatus: '更新状态',
         edit: '编辑',
         delete: '删除',
     };
@@ -88,11 +94,33 @@
         <div class="flex flex-shrink-0 flex-col items-end gap-2">
             <!-- 正向操作按钮 -->
             <div class="flex flex-wrap items-center justify-end gap-2">
+                {#if onRefreshStatus}
+                    <button
+                        type="button"
+                        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-sky-300 bg-sky-50 px-2 text-xs font-semibold text-sky-700 transition-colors hover:border-sky-400 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        onclick={onRefreshStatus}
+                        disabled={updating || refreshing}
+                    >
+                        {#if refreshing}
+                            <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+                            更新中...
+                        {:else}
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 11a8 8 0 10-2.34 5.66M20 4v7h-7" />
+                            </svg>
+                            {l.refreshStatus}
+                        {/if}
+                    </button>
+                {/if}
+
                 {#each forwardTransitions as transition}
                     <button
                         class="inline-flex h-8 items-center rounded-md border px-2 text-xs font-semibold tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-50 {transition.value === 'cancelled' ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100' : 'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-slate-100'}"
                         onclick={() => onStatusChange(transition.value)}
-                        disabled={updating}
+                        disabled={updating || refreshing}
                     >
                         {transition.label}
                     </button>

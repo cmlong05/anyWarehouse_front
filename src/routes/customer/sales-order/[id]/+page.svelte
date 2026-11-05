@@ -49,6 +49,20 @@
     // 强制交付二次确认弹窗
     let showForceModal = $state(false);
     let forcePendingCount = $state(0);
+    let recomputingStatus = $state(false);
+
+    async function recomputeOrderStatus() {
+        if (!orderId || recomputingStatus) return;
+
+        recomputingStatus = true;
+        try {
+            orderDetail.order = await salesOrderAPI.recomputeStatus(orderId);
+        } catch (err) {
+            orderDetail.error = getErrorMessage(err, '更新订单状态失败');
+        } finally {
+            recomputingStatus = false;
+        }
+    }
 
     async function handleStatusChange(status: string) {
         if (status === 'delivered' && orderDetail.order) {
@@ -475,15 +489,18 @@
                 transitions={orderDetail.order ? orderDetail.getAvailableTransitions() : []}
                                 showMeta={false}
                 updating={orderDetail.updating}
+                refreshing={recomputingStatus}
                 canEdit={['draft', 'pending', 'confirmed', 'approved', 'partial'].includes(order.status)}
                 canDelete={['draft', 'pending', 'approved', 'cancelled'].includes(order.status)}
                 labels={{
                     backToList: '← 返回',
                     copyOrder: '复制订单',
+                    refreshStatus: '更新状态',
                     edit: '编辑',
                     delete: '删除',
                 }}
                 onBack={orderDetail.goBack}
+                onRefreshStatus={recomputeOrderStatus}
                 onEdit={editOrder}
                 onDelete={orderDetail.deleteOrder}
                 onCopy={copyOrder}
