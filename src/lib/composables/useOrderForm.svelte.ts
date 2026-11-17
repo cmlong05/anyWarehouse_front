@@ -13,6 +13,7 @@ export interface OrderFormItem extends OrderItemCreateRequestBase {
     parentId?: string; // 父项（母版）的临时 ID
     variantAttributes?: Array<{ value: string; color?: string }>; // 变体属性组合（带颜色）
     item_detail?: {
+        total_storage?: number;
         is_variant?: boolean | string | number;
         parent_item_id?: number | null;
         parent_item_name?: string;
@@ -211,7 +212,8 @@ export function useOrderForm(
             item: null,
             sku: '',
             item_name: '',
-            item_name_en: ''
+            item_name_en: '',
+            item_detail: undefined
         });
         itemErrors = {};
     }
@@ -275,6 +277,7 @@ export function useOrderForm(
         item_sku?: string; 
         item_name?: string; 
         price: string;
+        item_total_storage?: number;
     } | undefined) {
         // mutate existing object rather than replace it so bindings using
         // a previously destructured reference stay reactive.
@@ -287,7 +290,8 @@ export function useOrderForm(
                 quotation: undefined,
                 item: null,
                 sku: '',
-                item_name: ''
+                item_name: '',
+                item_detail: undefined
             });
             return;
         }
@@ -297,7 +301,10 @@ export function useOrderForm(
             item: quotation.item,
             sku: quotation.item_sku || '',
             item_name: quotation.item_name || '',
-            unit_price: parseFloat(quotation.price) || 0
+            unit_price: parseFloat(quotation.price) || 0,
+            item_detail: quotation.item_total_storage === undefined
+                ? undefined
+                : { total_storage: quotation.item_total_storage }
         });
     }
 

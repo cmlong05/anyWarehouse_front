@@ -22,6 +22,7 @@
     import { buildInitialOrderItems } from '$lib/utils/orderFormData';
     import { customerAPI, customerAddressAPI } from '$lib/api';
     import { logger } from '$lib/logger';
+    import { formatStockLabel } from '$lib/utils/orderInventory';
     import { onMount } from 'svelte';
     
     interface Props {
@@ -63,7 +64,7 @@
     // 转换为Svelecte选项格式
     const quotationOptions = $derived(quotations.map(q => ({
         value: q.id,
-        label: `${q.item_sku || '-'} - ${q.item_name || '-'} (${getCurrencySymbol(q.currency)}${q.price})`,
+        label: `${q.item_sku || '-'} - ${q.item_name || '-'} (${getCurrencySymbol(q.currency)}${q.price}) · ${formatStockLabel(q.item_total_storage ?? null)}`,
         quotation: q
     })));
     

@@ -239,6 +239,7 @@
                 item_name?: string; 
                 item_name_en?: string;
                 price: string;
+                item_total_storage?: number;
                 item_is_variant_template?: boolean;
                 is_variant_template?: boolean;
             };
@@ -345,9 +346,11 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
             id: number; 
             item?: number; 
             sku?: string; 
+            item_sku?: string;
             item_name?: string; 
             item_name_en?: string;
             price: string;
+            item_total_storage?: number;
             item_is_variant_template?: boolean;
             is_variant_template?: boolean;
             is_variant?: boolean;
@@ -384,6 +387,7 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
             expected_delivery: currentItem.expected_delivery || null,
             notes: currentItem.notes || '',
             isVariantChild: false,
+            item_detail: currentItem.item_detail,
         };
         
         // 将新项目添加到列表
@@ -412,6 +416,7 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
                         name: string;
                         name_en?: string;
                         b_Price?: string;
+                        total_storage?: number;
                     } | null;
                     
                     const variantSku = variantDetail?.SKU || '';
@@ -435,6 +440,13 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
                         isVariantChild: true,
                         parentId: parentId,
                         variantAttributes: attrValues,
+                        item_detail: {
+                            total_storage: variantDetail?.total_storage,
+                            is_variant: true,
+                            parent_item_id: quotation.item,
+                            parent_item_name: quotation.item_name,
+                            parent_item_sku: quotation.item_sku || quotation.sku || currentItem.sku,
+                        },
                     };
                 });
                 
@@ -462,6 +474,7 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
         parent_item_id?: number | null;
         parent_item_name?: string;
         parent_item_sku?: string;
+        item_total_storage?: number;
     }) {
         const parentItemId = quotation.parent_item_id!;
         
@@ -493,6 +506,7 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
                 parent_item_id: parentItemId,
                 parent_item_name: quotation.parent_item_name || '',
                 parent_item_sku: quotation.parent_item_sku || '',
+                total_storage: quotation.item_total_storage,
             },
         };
         
@@ -753,6 +767,7 @@ const quotation = (selectedQuotation?.quotation || quotationOptions.find(opt => 
         items={formData.items}
         {quotationOptions}
         {loadingQuotations}
+        showCurrentStock={type === 'sales'}
         {loading}
         {orderCurrency}
         {subtotal}

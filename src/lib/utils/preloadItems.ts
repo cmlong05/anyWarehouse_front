@@ -18,6 +18,7 @@ export interface PreloadQuotation {
     item: number | null;
     item_sku?: string;
     item_name?: string;
+    item_total_storage?: number;
     is_variant_template?: boolean;
     parent_item_id?: number | null;
 }
@@ -113,6 +114,9 @@ export async function processPreloadItems<Q extends PreloadQuotation>(
             expected_delivery: null,
             notes: '',
             isVariantChild: false,
+            item_detail: {
+                total_storage: group.parentQuotation?.item_total_storage,
+            },
         });
 
         const variants = await fetchItemVariants(Number(parentId));
@@ -123,6 +127,7 @@ export async function processPreloadItems<Q extends PreloadQuotation>(
                 SKU: string;
                 name: string;
                 b_Price?: string;
+                total_storage?: number;
             } | null;
 
             const selectedChild = group.children.find(c => c.item === variant.variant_item);
@@ -147,11 +152,19 @@ export async function processPreloadItems<Q extends PreloadQuotation>(
                 isVariantChild: true,
                 parentId: parentIdStr,
                 variantAttributes: attrValues,
+                item_detail: {
+                    total_storage: variantDetail?.total_storage,
+                    is_variant: true,
+                    parent_item_id: Number(parentId),
+                    parent_item_name: parentName,
+                    parent_item_sku: parentSku,
+                },
             });
         }
     }
 
     for (const item of independentItems) {
+        const quotation = allQuotations.find(q => q.id === item.quotation_id);
         result.push({
             id: newRowId(),
             item: item.item || null,
@@ -163,6 +176,9 @@ export async function processPreloadItems<Q extends PreloadQuotation>(
             expected_delivery: null,
             notes: '',
             isVariantChild: false,
+            item_detail: quotation
+                ? { total_storage: quotation.item_total_storage }
+                : undefined,
         });
     }
 

@@ -12,6 +12,7 @@
     import Svelecte from 'svelecte';
     import { VariantAttributeBadge } from '$lib/components';
     import { isVariantChild, getVariantParentId } from '$lib/utils/variant';
+    import { getStockQuantity, getVariantStockTotal } from '$lib/utils/orderInventory';
 
     interface QuotationOption {
         value: number;
@@ -41,6 +42,7 @@
         errors: { items?: string };
         loading: boolean;
         loadingQuotations: boolean;
+        showCurrentStock?: boolean;
         orderCurrency: string;
         subtotal: number;
         onItemSelect: (selected: QuotationOption | undefined) => void;
@@ -61,6 +63,7 @@
         errors,
         loading,
         loadingQuotations,
+        showCurrentStock = false,
         orderCurrency,
         subtotal,
         onItemSelect,
@@ -229,6 +232,14 @@
         return { quantity, total, avgUnit };
     }
 
+    function getSectionStock(section: GroupedSection): number | null {
+        if (section.type === 'parent' && section.children?.length) {
+            const variantStock = getVariantStockTotal(section.children);
+            if (variantStock !== null) return variantStock;
+        }
+        return getStockQuantity(section.item);
+    }
+
     function handleSectionRowClick(section: GroupedSection) {
         if (section.type === 'parent' && section.parentId) {
             toggleParent(section.parentId);
@@ -340,6 +351,9 @@
                         <th class="px-4 py-3 text-left font-medium text-gray-700">#</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-700">SKU</th>
                         <th class="px-4 py-3 text-left font-medium text-gray-700">物品名称</th>
+                        {#if showCurrentStock}
+                            <th class="px-4 py-3 text-right font-medium text-gray-700">当前库存</th>
+                        {/if}
                         <th class="px-4 py-3 text-right font-medium text-gray-700">数量</th>
                         <th class="px-4 py-3 text-right font-medium text-gray-700">单价</th>
                         <th class="px-4 py-3 text-right font-medium text-gray-700">小计</th>
@@ -350,6 +364,7 @@
                     {#each groupedSections as section}
                         {@const item = section.item}
                         {@const summary = section.type === 'parent' ? getParentSummary(section) : null}
+                        {@const currentStock = getSectionStock(section)}
                         <tr class="{getRowClass(section)} transition-colors" onclick={() => handleSectionRowClick(section)}>
                             <td class="p-3 text-left text-gray-700 align-top relative">
                                 {#if section.type === 'parent' && section.parentId}
@@ -405,6 +420,17 @@
                                     <span class="text-gray-900">{item.item_name || '-'}</span>
                                 {/if}
                             </td>
+                            {#if showCurrentStock}
+                                <td class="px-4 py-3 text-right align-top">
+                                    {#if currentStock !== null}
+                                        <span class={currentStock > 0 ? 'text-blue-700 font-medium' : 'text-gray-400'}>
+                                            {formatNumber(currentStock)}
+                                        </span>
+                                    {:else}
+                                        <span class="text-gray-400">-</span>
+                                    {/if}
+                                </td>
+                            {/if}
                             <td class="px-4 py-3 text-right align-top">
                                 {#if section.type === 'parent'}
                                     <span class="text-gray-700">{summary && summary.quantity > 0 ? formatNumber(summary.quantity) : '-'}</span>
@@ -460,7 +486,7 @@
                 </tbody>
                 <tfoot class="bg-gray-50 font-medium">
                     <tr>
-                        <td colspan="5" class="px-4 py-3 text-right text-gray-700">汇总:</td>
+                        <td colspan={showCurrentStock ? 6 : 5} class="px-4 py-3 text-right text-gray-700">汇总:</td>
                         <td class="px-4 py-3 text-right text-gray-900">{getCurrencySymbol(orderCurrency)}{subtotal.toFixed(2)}</td>
                         <td></td>
                     </tr>
