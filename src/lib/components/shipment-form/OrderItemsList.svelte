@@ -7,6 +7,7 @@
 <script lang="ts">
     import type { SalesOrderItem } from '$lib/index';
     import { safeParseFloat } from '$lib/utils';
+    import { getBatchAddableOrderItems } from '$lib/utils/shipment';
     import Plus from 'lucide-svelte/icons/plus';
 
     interface SalesOrderItemWithStock extends SalesOrderItem {
@@ -22,6 +23,7 @@
     }
     
     let { items, onAdd, onAddAll }: Props = $props();
+    const batchAddableCount = $derived(getBatchAddableOrderItems(items).length);
 
     function getCurrentStock(item: SalesOrderItemWithStock): number | null {
         const stock = item.item_detail?.total_storage;
@@ -35,7 +37,7 @@
 </script>
 
 <div class="p-2">
-    {#if items.length > 0 && onAddAll}
+    {#if batchAddableCount > 0 && onAddAll}
         <div class="mb-4">
             <button 
                 type="button" 
@@ -43,7 +45,7 @@
                 onclick={() => onAddAll?.()}
             >
                 <Plus class="h-4 w-4" />
-                全部添加 ({items.length})
+                全部添加 ({batchAddableCount})
             </button>
         </div>
     {/if}

@@ -6,6 +6,10 @@ import type { CustomerAddress, SalesOrderBrief, SalesOrderItem } from '$lib/inde
 import type { Shipment, ShipmentStatus, ShipmentCreateRequest } from '$lib/shipmentTypes';
 import { safeParseFloat, normalizeAddressValue, addressMatches } from '$lib/utils';
 import { getErrorMessage } from '$lib/utils/errors';
+import {
+    getBatchAddableOrderItems,
+    getMaxEditableShipmentQuantity,
+} from '$lib/utils/shipment';
 
 export interface ShipmentPlanItem {
     id: string;
@@ -124,9 +128,24 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
             if (shipment.items?.length) {
                 planItems = shipment.items.map(item => {
                     const orderItem = availableOrderItems.find(oi => oi.sku === item.sku);
-                    const qty = safeParseFloat(item.quantity);
-                    const qtyProcessed = safeParseFloat(item.quantity_processed);
-                    const editableQty = qty - qtyProcessed;  // 不再需要 quantity_packed
+                    const shipmentQuantity = Math.round(safeParseFloat(item.quantity));
+                    const qtyProcessed = Math.round(safeParseFloat(item.quantity_processed));
+                    const orderQuantity = Math.round(
+                        safeParseFloat(orderItem?.quantity, shipmentQuantity),
+                    );
+                    const maxEditableQuantity = orderItem
+                        ? getMaxEditableShipmentQuantity({
+                            orderQuantity,
+                            quantityInShipments: Math.round(
+                                safeParseFloat(
+                                    orderItem.quantity_in_shipments,
+                                    shipmentQuantity,
+                                ),
+                            ),
+                            currentShipmentQuantity: shipmentQuantity,
+                        })
+                        : Math.max(0, shipmentQuantity - qtyProcessed);
+                    const plannedQuantity = Math.max(0, shipmentQuantity - qtyProcessed);
                     
                     return {
                         id: `plan_${item.id}_${Date.now()}`,
@@ -134,11 +153,11 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
                         sku: item.sku,
                         itemName: item.product_name,
                         itemId: orderItem?.item ?? item.item_detail?.id,
-                        quantityOrdered: Math.round(safeParseFloat(orderItem?.quantity, qty)),
-                        quantityProcessed: Math.round(qtyProcessed),
+                        quantityOrdered: orderQuantity,
+                        quantityProcessed: qtyProcessed,
                         quantityPrepared: Math.round(safeParseFloat(orderItem?.quantity_prepared)),
-                        quantityPendingReal: Math.round(editableQty > 0 ? editableQty : 0),
-                        quantityPlan: Math.round(editableQty > 0 ? editableQty : 0),
+                        quantityPendingReal: maxEditableQuantity,
+                        quantityPlan: plannedQuantity,
                         currentStock: orderItem?.item_detail?.total_storage ?? null,
                     };
                 });
@@ -276,7 +295,7 @@ export function useShipmentForm(options: UseShipmentFormOptions) {
     }
 
     function addAllToPlan() {
-        const newItems = displayableOrderItems
+        const newItems = getBatchAddableOrderItems(displayableOrderItems)
             .filter(orderItem => !planItems.some(p => p.orderItemId === orderItem.id))
             .map(orderItem => {
                 const pendingReal = orderItem.quantity_pending_real || 0;

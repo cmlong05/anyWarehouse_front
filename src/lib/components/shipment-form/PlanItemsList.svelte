@@ -10,7 +10,7 @@
     import { toggleSortKey } from '$lib/utils/sort';
     import type { ShipmentPlanItem } from '$lib/composables/useShipmentForm.svelte';
 
-    type SortKey = 'sku' | 'itemName' | 'currentStock' | 'quantityPendingReal';
+    type SortKey = 'sku' | 'itemName' | 'quantityOrdered' | 'currentStock' | 'quantityPendingReal';
 
     interface Props {
         items: ShipmentPlanItem[];
@@ -38,9 +38,9 @@
             if (sortKey === 'currentStock') {
                 valueA = a.currentStock ?? -1;
                 valueB = b.currentStock ?? -1;
-            } else if (sortKey === 'quantityPendingReal') {
-                valueA = a.quantityPendingReal;
-                valueB = b.quantityPendingReal;
+            } else if (sortKey === 'quantityOrdered' || sortKey === 'quantityPendingReal') {
+                valueA = a[sortKey];
+                valueB = b[sortKey];
             } else {
                 valueA = a[sortKey] as string;
                 valueB = b[sortKey] as string;
@@ -86,9 +86,10 @@
             <thead>
                 <tr class="bg-gray-50">
                     <SortableHeader title="SKU" columnKey="sku" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} headerClass="px-3 py-2" />
-                    <SortableHeader title="商品名称" columnKey="itemName" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} headerClass="px-3 py-2" />
+                    <SortableHeader title="品名" columnKey="itemName" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} headerClass="px-3 py-2" />
+                    <SortableHeader title="订单数量" columnKey="quantityOrdered" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
                     <SortableHeader title="库存" columnKey="currentStock" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
-                    <SortableHeader title="待建发货单" columnKey="quantityPendingReal" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
+                    <SortableHeader title="待发" columnKey="quantityPendingReal" sortable sortKey={sortKey} {sortDirection} onSort={(k) => toggleSort(k as SortKey)} align="right" headerClass="px-3 py-2" />
                     <th class="px-3 py-2 text-right font-semibold text-blue-700">本次计划</th>
                     <th class="px-3 py-2 text-center font-semibold text-gray-700">操作</th>
                 </tr>
@@ -98,6 +99,7 @@
                     <tr class="border-b border-gray-100 hover:bg-gray-50">
                         <td class="px-3 py-3 align-top font-mono text-xs text-gray-500">{item.sku}</td>
                         <td class="px-3 py-3 align-top text-gray-900">{item.itemName}</td>
+                        <td class="px-3 py-3 align-top text-right text-gray-900 font-semibold">{item.quantityOrdered.toFixed(0)}</td>
                         <td class="px-3 py-3 align-top text-right {getStockClass(item.currentStock ?? null, item.quantityPlan)}">
                             {formatStock(item.currentStock ?? null)}
                         </td>

@@ -474,7 +474,7 @@
                     >
                         ← 返回列表
                     </button>
-                    <h1 class="m-0 text-2xl font-bold text-slate-900">发货详情</h1>
+                    <h1 class="m-0 text-2xl font-bold text-slate-900">发货单-详情</h1>
                 </div>
             </div>
             <div class="flex flex-shrink-0 flex-col items-end gap-2">
