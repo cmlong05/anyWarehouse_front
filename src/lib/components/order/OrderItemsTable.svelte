@@ -5,7 +5,7 @@
 - `lib/components/order/index.ts`
 -->
 <script lang="ts">
-    import { safeParseFloat, formatNumber, canPruneZeroOrderItem } from '$lib/utils';
+    import { safeParseFloat, formatNumber, canPruneZeroOrderItem, canReverseSyncOrderItem } from '$lib/utils';
     import { getCurrencySymbol as getCurrencySymbolFn } from '$lib/utils/formatters';
     import { toggleSortKey } from '$lib/utils/sort';
 
@@ -581,7 +581,7 @@ import DataTable from '$lib/components/ui/DataTable.svelte';
                                 {/if}
                                 剔除
                             </button>
-                        {:else if onReverseSync && type === 'sales' && section.type !== 'parent' && shipmentPlanned !== safeParseFloat(rowItem.quantity)}
+                        {:else if onReverseSync && type === 'sales' && section.type !== 'parent' && canReverseSyncOrderItem(rowItem)}
                             <button
                                 type="button"
                                 class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

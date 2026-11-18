@@ -8,6 +8,15 @@ const PRUNABLE_ORDER_STATUSES = new Set([
 	'partial',
 ]);
 
+export function canReverseSyncOrderItem(item: {
+	quantity?: string | number | null;
+	quantity_processed?: string | number | null;
+	quantity_in_shipments?: string | number | null;
+}): boolean {
+	const shipmentPlanned = safeParseFloat(item.quantity_in_shipments ?? item.quantity_processed);
+	return shipmentPlanned > 0 && shipmentPlanned !== safeParseFloat(item.quantity);
+}
+
 export function canPruneZeroOrderItem(
 	item: {
 		quantity?: string | number | null;
