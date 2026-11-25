@@ -717,7 +717,9 @@
 
             {#snippet footer()}
                 <div class="flex justify-end px-6 py-4">
+                    <!-- svelte-ignore a11y_autofocus -->
                     <button
+                        autofocus
                         class="px-4 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors"
                         onclick={() => allocErrorModal = null}
                     >知道了</button>

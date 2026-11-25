@@ -61,8 +61,10 @@
 						{dialog.cancelText ?? '取消'}
 					</button>
 				{/if}
+				<!-- svelte-ignore a11y_autofocus -->
 				<button
 					type="button"
+					autofocus
 					class="rounded-lg px-4 py-2 font-medium transition-colors {variantButtonClass(dialog.variant)}"
 					onclick={() => dismiss(true)}
 				>

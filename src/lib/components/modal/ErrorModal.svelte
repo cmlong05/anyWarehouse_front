@@ -19,7 +19,9 @@
 
     {#snippet footer()}
         <div class="flex justify-end px-6 py-4">
+            <!-- svelte-ignore a11y_autofocus -->
             <button
+                autofocus
                 class="rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
                 onclick={onClose}
             >
