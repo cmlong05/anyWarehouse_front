@@ -7,7 +7,9 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { purchaseOrderPaymentRecordAPI, purchaseOrderAPI } from '$lib/api';
+  import type { PurchaseOrderPaymentRecord } from '$lib';
   import { Loading } from '$lib/components';
+  import { ConfirmModal } from '$lib/components/modal';
   import { DateInput } from '$lib/components/ui';
   import { safeParseFloat } from '$lib/utils';
   import { getPurchasePaymentStatusLabel, getPurchasePaymentStatusClass } from '$lib/utils/orderBadges';
@@ -26,6 +28,7 @@
   let submitting = $state(false);
   let editingId = $state<number | null>(null);
   let deletingId = $state<number | null>(null);
+  let paymentToDelete = $state<PurchaseOrderPaymentRecord | null>(null);
 
   let order = $state<any | null>(null);
   let displayCurrency = $derived(order?.currency || currency);
@@ -136,14 +139,20 @@
     }
   }
 
-  async function removeRecord(id: number) {
+  function requestDeleteRecord(record: PurchaseOrderPaymentRecord) {
     if (deletingId) return;
-    deletingId = id;
+    paymentToDelete = record;
+  }
+
+  async function removeRecord() {
+    if (!paymentToDelete || deletingId) return;
+    deletingId = paymentToDelete.id;
     error = null;
     success = null;
     try {
-      await purchaseOrderPaymentRecordAPI.delete(id);
+      await purchaseOrderPaymentRecordAPI.delete(paymentToDelete.id);
       success = '付款记录已删除。';
+      paymentToDelete = null;
       await reload();
     } catch (e) {
       console.error(e);
@@ -305,7 +314,7 @@
                 <button
                   type="button"
                   class="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  onclick={() => removeRecord(record.id)}
+                  onclick={() => requestDeleteRecord(record)}
                   disabled={deletingId === record.id}
                 >
                   {deletingId === record.id ? '删除中...' : '删除'}
@@ -322,3 +331,17 @@
     </div>
   {/if}
 </div>
+
+<ConfirmModal
+  isOpen={Boolean(paymentToDelete)}
+  title="删除付款记录"
+  message="确定删除这笔付款记录吗？删除后订单付款状态会自动重算。"
+  itemName={paymentToDelete
+    ? `${paymentToDelete.received_date} · ${paymentToDelete.currency} ${safeParseFloat(paymentToDelete.amount).toFixed(2)}`
+    : ''}
+  loading={deletingId !== null}
+  onConfirm={() => void removeRecord()}
+  onCancel={() => {
+    if (!deletingId) paymentToDelete = null;
+  }}
+/>
