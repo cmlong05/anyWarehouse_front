@@ -91,6 +91,7 @@ export class ApiClient {
 
             const response = await fetch(`${this.baseURL}${url}`, {
                 ...options,
+                cache: 'no-store',
                 credentials: 'include',
                 signal: controller.signal,
                 headers: {
@@ -197,6 +198,7 @@ export class ApiClient {
 
             const response = await fetch(`${this.baseURL}${url}`, {
                 method: 'DELETE',
+                cache: 'no-store',
                 signal: controller.signal,
                 credentials: 'include',
                 headers,
