@@ -841,20 +841,24 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-900">包裹列表</h2>
-                    <div class="flex gap-2">
-                        <button 
-                            class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                            onclick={() => shipmentDetail.openLinkPackageModal()}
-                        >
-                            关联已有包裹
-                        </button>
-                        <button 
-                            class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            onclick={() => window.location.href = `/customer/package/add?shipment_id=${shipmentDetail.shipment?.id || ''}`}
-                        >
-                            新建包裹
-                        </button>
-                    </div>
+                    {#if shipment.status === 'draft'}
+                        <span class="text-sm text-amber-600">请先确认发货单后再创建或关联包裹</span>
+                    {:else}
+                        <div class="flex gap-2">
+                            <button 
+                                class="px-3 py-1.5 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                onclick={() => shipmentDetail.openLinkPackageModal()}
+                            >
+                                关联已有包裹
+                            </button>
+                            <button 
+                                class="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                onclick={() => window.location.href = `/customer/package/add?shipment_id=${shipmentDetail.shipment?.id || ''}`}
+                            >
+                                新建包裹
+                            </button>
+                        </div>
+                    {/if}
                 </div>
                 
                 {#if shipment.packages?.length}
