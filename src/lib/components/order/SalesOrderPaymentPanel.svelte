@@ -6,8 +6,9 @@
 -->
 <script lang="ts">
     import { salesOrderPaymentRecordAPI } from '$lib/api';
-    import type { SalesOrder, SalesOrderPaymentRecordCreateRequest } from '$lib';
+    import type { SalesOrder, SalesOrderPaymentRecord, SalesOrderPaymentRecordCreateRequest } from '$lib';
     import { DateInput, NumberStepper } from '$lib/components/ui';
+    import { ConfirmModal } from '$lib/components/modal';
     import { safeParseFloat } from '$lib/utils';
     import { getSalesPaymentStatusLabel, getSalesPaymentStatusClass } from '$lib/utils/orderBadges';
 
@@ -22,6 +23,7 @@
     let paymentError = $state<string | null>(null);
     let paymentSuccess = $state<string | null>(null);
     let deletingPaymentId = $state<number | null>(null);
+    let paymentToDelete = $state<SalesOrderPaymentRecord | null>(null);
 
     function getTodayLocalDate(): string {
         const now = new Date();
@@ -88,15 +90,21 @@
         }
     }
 
-    async function deletePaymentRecord(recordId: number) {
+    function requestDeletePaymentRecord(record: SalesOrderPaymentRecord) {
         if (deletingPaymentId) return;
+        paymentToDelete = record;
+    }
 
-        deletingPaymentId = recordId;
+    async function deletePaymentRecord() {
+        if (!paymentToDelete || deletingPaymentId) return;
+
+        deletingPaymentId = paymentToDelete.id;
         paymentError = null;
         paymentSuccess = null;
         try {
-            await salesOrderPaymentRecordAPI.delete(recordId);
+            await salesOrderPaymentRecordAPI.delete(paymentToDelete.id);
             paymentSuccess = '收款记录已删除。';
+            paymentToDelete = null;
             await onOrderReload();
         } catch (e: unknown) {
             paymentError = e instanceof Error ? e.message : '删除收款记录失败。';
@@ -245,7 +253,7 @@
                         <button
                             type="button"
                             class="self-start rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            onclick={() => deletePaymentRecord(record.id)}
+                            onclick={() => requestDeletePaymentRecord(record)}
                             disabled={deletingPaymentId === record.id}
                         >
                             {#if deletingPaymentId === record.id}
@@ -264,3 +272,17 @@
         {/if}
     </div>
 </div>
+
+<ConfirmModal
+    isOpen={Boolean(paymentToDelete)}
+    title="删除收款记录"
+    message="确定删除这笔收款记录吗？删除后订单收款状态会自动重算。"
+    itemName={paymentToDelete
+        ? `${paymentToDelete.received_date} · ${paymentToDelete.currency} ${safeParseFloat(paymentToDelete.amount).toFixed(2)}`
+        : ''}
+    loading={deletingPaymentId !== null}
+    onConfirm={() => void deletePaymentRecord()}
+    onCancel={() => {
+        if (!deletingPaymentId) paymentToDelete = null;
+    }}
+/>
